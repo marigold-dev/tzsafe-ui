@@ -11,7 +11,7 @@ import LoginButton from "./loginButton";
 
 let RenderContracts = () => {
     const state = useContext(AppStateContext);
-    return (state && state?.contracts ? (<LinkComponent path="/contracts" text={"Contracts"} />) : null);
+    return (state && state?.contracts && Object.keys(state.contracts).length > 0 ? (<LinkComponent path="/contracts" text={"Contracts"} />) : null);
 }
 
 const NavBar = (_: React.PropsWithChildren) => {
