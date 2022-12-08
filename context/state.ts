@@ -43,6 +43,7 @@ type action =
       balance: string;
     }
   | { type: "addContract", payload: {aliases: {[address: string]: string}, address: string, contract: contractStorage }}
+  | { type: "updateContract", payload: {address:string, contract: contractStorage }}
   | { type: "removeContract", address: string}
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
@@ -61,6 +62,12 @@ function reducer(state: tezosState, action: action): tezosState {
       localStorage.setItem("app_state", JSON.stringify({contracts, aliases}))
       return {
         ...state, contracts: contracts, aliases: aliases
+      }
+    }
+    case "updateContract": {
+      let contracts = {...state.contracts, [action.payload.address]: action.payload.contract}
+      return {
+        ...state, contracts: contracts
       }
     }
     case "init": {

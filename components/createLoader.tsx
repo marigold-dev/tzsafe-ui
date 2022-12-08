@@ -75,7 +75,7 @@ function Success() {
         );
     }
     return address.status === 1 ? (
-        <div className="text-xl my-auto text-gray-800 font-bold">{`Wallet successfully created! ${address.address}`}</div>
+        <div className="text-sm md:text-xl my-auto text-gray-800 font-bold">{`Wallet successfully created! ${address.address}`}</div>
     ) : (
         <div className="text-xl my-auto text-gray-800 font-bold">{`Failed to originate a wallet`}</div>
     );
