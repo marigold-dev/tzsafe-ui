@@ -44,7 +44,7 @@ function Home() {
                   Create
                 </Link>
               </div>
-              <div className="bg-gray-300 min-h-max  p-4 rounded-b-md md:rounded-r-md  md:rounded-bl-none grid grid-rows-5">
+              {/* <div className="bg-gray-300 min-h-max  p-4 rounded-b-md md:rounded-r-md  md:rounded-bl-none grid grid-rows-5">
                 <div className="row-span-6">
                   <h2 className="text-gray-700 md:text-2xl text-xl font-extrabold">
                     Import existing Multisig
@@ -65,7 +65,7 @@ function Home() {
                 >
                   Import
                 </Link>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

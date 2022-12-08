@@ -66,6 +66,9 @@ function reducer(state: tezosState, action: action): tezosState {
     }
     case "updateContract": {
       let contracts = {...state.contracts, [action.payload.address]: action.payload.contract}
+      if (state.contracts[action.payload.address]) {
+        localStorage.setItem("app_state", JSON.stringify({contracts, aliases: state.aliases}))
+      }
       return {
         ...state, contracts: contracts
       }

@@ -1,28 +1,23 @@
-import { usePathname, useRouter } from "next/navigation";
-import React, { useContext, useEffect, useReducer, useState } from "react";
+import { usePathname } from "next/navigation";
+import React, { useContext, useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import NavBar from "../../components/navbar";
 import TopUp from "../../components/topUpForm";
-import { action, AppDispatchContext, AppStateContext } from "../../context/state";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
 import BigNumber from "bignumber.js"
 import { BigMapAbstraction } from "@taquito/taquito";
 import TransferForm from "../../components/transferForm";
-type content = { execute: { amount: number, to: string, parameter: {} } } | { transfer: { amount: number, to: string, parameter: {} } }
-type proposal = {
-    approved_signers: string[],
-    content: content[],
-    executed: boolean
-    number_of_signer: number
-    proposer: string
-    timestamp: string
-}
+import Proposals from "../../components/proposals";
+import { proposal } from "../../context/types";
+
+let emptyProps: [number, proposal][] = []
 function Home() {
     let state = useContext(AppStateContext)!
     let dispatch = useContext(AppDispatchContext)!
 
     let router = usePathname()?.split("/")![2]!
-    let [contract, setContract] = useState({ contract: state.contracts[router], proposals: [] })
+    let [contract, setContract] = useState({ contract: state.contracts[router], proposals: emptyProps })
 
     useEffect(() => {
         if (router) {
@@ -35,7 +30,6 @@ function Home() {
                     signers: string[];
                     threshold: BigNumber;
                 } = await c.storage()
-                console.log(cc)
                 dispatch({
                     type: "updateContract", payload: {
                         address: router,
@@ -48,7 +42,9 @@ function Home() {
                         }
                     },
                 })
-                await fetch(new Request("https://api.ghostnet.tzkt.io/v1/bigmaps/215670/keys")).then((x) => x.json()).then(x => x.forEach((u: { value: proposal }, idx: number) => console.log([idx, u.value])))
+                const proposals: [number, proposal][] = await fetch(new Request("https://api.ghostnet.tzkt.io/v1/bigmaps/215670/keys")).then((x) => x.json()).then(x => x.map((u: { value: proposal }, idx: number) => {
+                    return ([idx, u.value])
+                }));
                 setContract({
                     contract: {
                         balance: balance?.toString() || "0",
@@ -56,10 +52,11 @@ function Home() {
                         proposal_counter: cc.proposal_counter.toString(),
                         threshold: cc?.threshold.toNumber()!,
                         signers: cc!.signers!,
-                    }, proposals: []
+                    }, proposals: proposals
                 })
             })()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router])
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
@@ -100,9 +97,23 @@ function Home() {
                                 </svg>
                             </button>
                         </div>
-                    </div> : <h1 className="text-black text-l md:text-3xl font-bold md:col-span-3">
+                        {contract.contract?.balance && <p className="text-black text-l md:text-xl font-bold">Balance: {contract?.contract?.balance} mutez</p>}
+                        {contract.contract?.threshold && <p className="text-black text-l md:text-xl font-bold">Threshold: {contract?.contract?.threshold}/{contract?.contract?.signers.length}</p>}
+
+                    </div> : <div className="md:col-span-3"><h1 className="text-black text-l md:text-3xl font-bold md:col-span-3">
                         {router}
-                    </h1>}
+                    </h1>
+                        <button type="button" className="ml-2 rounded-md md:bg-indigo-600 p-1 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800" onClick={() => { navigator.clipboard.writeText(router) }}>
+                            <span className="sr-only">copy</span>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="fill-indigo-500 w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
+                            </svg>
+                        </button>
+                        {contract.contract?.balance && <p className="text-black text-l md:text-xl font-bold">Balance: {contract?.contract?.balance} mutez</p>}
+                        {contract.contract?.threshold && <p className="text-black text-l md:text-xl font-bold">Threshold: {contract?.contract?.threshold}/{contract?.contract?.signers.length}</p>}
+
+                    </div>}
                     {state.address && <div>
                         <button
                             type="button"
@@ -142,8 +153,8 @@ function Home() {
             <main className="min-h-full bg-gray-100">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
-                        <div className="md:h-96 min-h-fit rounded-lg border-4 border-dashed border-gray-200 grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
-                            lol
+                        <div className="md:h-auto md:min-h-64 rounded-lg border-4 border-dashed border-gray-200 grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
+                            {<Proposals proposals={contract?.proposals} address={router} />}
                         </div>
                     </div>
                 </div>
