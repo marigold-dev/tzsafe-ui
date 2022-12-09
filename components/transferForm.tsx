@@ -152,7 +152,7 @@ function TransferForm(
                                                 >
                                                     <div className="flex flex-col">
                                                         <label className="text-gray-800">
-                                                            Amount in Tez
+                                                            Amount in Mutez
                                                         </label>
                                                         <Field
                                                             name={`transfers.${index}.amount`}

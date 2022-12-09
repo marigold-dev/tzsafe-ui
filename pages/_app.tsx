@@ -15,7 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
         const wallet = new BeaconWallet({
           name: "Multisig wallet",
           preferredNetwork: NetworkType.GHOSTNET,
-          disableDefaultEvents: true,
+          disableDefaultEvents: false,
           eventHandlers: {
             [BeaconEvent.PAIR_INIT]: {
               handler: defaultEventCallbacks.PAIR_INIT,

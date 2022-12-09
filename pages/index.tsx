@@ -35,7 +35,7 @@ function Home() {
                   type="button"
                   href={{ pathname: "/create" }}
                   className={
-                    " justify-self-end w-1/2 text-center row-span-1 max-w-xs text-md md:text-2xl items-center rounded-md py-2 px-2 md:py-1 font-bold md:px-2 bg-indigo-800 border-gray-800 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                    " justify-self-end w-1/2 text-center row-span-1 max-w-xs text-md md:text-2xl items-center rounded-md py-2 text-gray-100 px-2 md:py-1 font-bold md:px-2 bg-indigo-800 border-gray-800 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                   }
                   id="user-menu-button"
                   aria-expanded="false"

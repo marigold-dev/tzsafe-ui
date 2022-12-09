@@ -33,7 +33,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                     <div className="flex h-16 items-center justify-between">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <Link href={"/"} className="text-xl font-bold tracking-wider">
+                                <Link href={"/"} className="text-xl font-bold tracking-wider text-gray-100">
                                     MULTISIG
                                 </Link>
                             </div>
@@ -86,12 +86,12 @@ const NavBar = (_: React.PropsWithChildren) => {
                                             >
                                                 <span className="sr-only">Open user menu</span>
                                                 <div className="flex flex-col items-center">
-                                                    <span className="block font-md font-bold text-center">
+                                                    <span className="block font-md font-bold text-center text-gray-100">
                                                         {state?.address.slice(0, 3) +
                                                             "..." +
                                                             state?.address.slice(33)}
                                                     </span>
-                                                    <span className="block font-xs">
+                                                    <span className="block font-xs text-gray-100">
                                                         Ghostnet
                                                     </span>
                                                 </div>
