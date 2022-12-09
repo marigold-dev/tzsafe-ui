@@ -93,7 +93,7 @@ function reducer(state: tezosState, action: action): tezosState {
         balance: null,
         accountInfo: null,
         address: null,
-        connection: new TezosToolkit("https://ghostnet.ecadinfra.com"),
+        connection: new TezosToolkit("https://ghostnet.tezos.marigold.dev/"),
       };
     }
     default: {
