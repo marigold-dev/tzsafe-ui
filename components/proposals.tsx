@@ -90,7 +90,7 @@ const Card: FC<{ prop: proposal, address: string, id: number }> = ({ prop, addre
             .sign_proposal(proposal)
             .toTransferParams();
         let op = await state.connection.wallet.transfer(params).send();
-        await op.confirmation();
+        await op.confirmation(1);
     }
     return (
         <li className="border-2 border-gray-800 rounded-md p-2">

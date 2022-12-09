@@ -227,12 +227,15 @@ const NavBar = (_: React.PropsWithChildren) => {
                         id={`${loginOpen}`}
                         className={`mt-3 space-y-1 px-2 ${loginOpen ? "block" : "hidden"}`}
                     >
-                        <a
-                            href="#"
+                        <button
+                            onClick={async e => {
+                                e.preventDefault()
+                                await disconnectWallet()
+                            }}
                             className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                         >
                             Sign out
-                        </a>
+                        </button>
                     </div>
                 </div>
             </nav >

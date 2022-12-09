@@ -42,7 +42,7 @@ function Home() {
                         }
                     },
                 })
-                const proposals: [number, proposal][] = await fetch(new Request("https://api.ghostnet.tzkt.io/v1/bigmaps/215670/keys")).then((x) => x.json()).then(x => x.map((u: { value: proposal }, idx: number) => {
+                const proposals: [number, proposal][] = await fetch(new Request(`https://api.ghostnet.tzkt.io/v1/bigmaps/${cc.proposal_map.toString()}/keys`)).then((x) => x.json()).then(x => x.map((u: { value: proposal }, idx: number) => {
                     return ([idx, u.value])
                 }));
                 setContract({

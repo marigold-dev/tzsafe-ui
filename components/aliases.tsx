@@ -37,18 +37,25 @@ function Aliases() {
             validate={(values) => {
                 const errors: { validators: { address: string, name: string }[] } = { validators: [] };
                 let dedup = new Set();
+                let dedupName = new Set();
+
                 let result = values.validators.map(x => {
+                    let err = { address: "", name: "" }
                     if (dedup.has(x.address)) {
-                        return {
-                            address: "already exists",
-                            name: ""
-                        }
+                        err.address = "already exists"
                     } else {
                         dedup.add(x.address)
-                        return ({ address: validateAddress(x.address) !== 3 ? `invalid address ${x.address}` : "", name: "" })
+                        err.address = validateAddress(x.address) !== 3 ? `invalid address ${x.address}` : ''
+
                     }
+                    if (!!x.name && dedupName.has(x.name)) {
+                        err.name = "already exists"
+                    } else {
+                        dedupName.add(x.name)
+                    }
+                    return err
                 });
-                if (result.every(x => x.address === '')) {
+                if (result.every(x => x.address === '' && x.name === '')) {
                     return;
                 }
                 errors.validators = result

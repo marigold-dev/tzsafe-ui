@@ -27,7 +27,7 @@ function Success() {
                             },
                         })
                         .send();
-                    await deploy?.confirmation();
+                    await deploy?.confirmation(1);
                     let result1 = await deploy?.contract();
                     let c: {
                         proposal_counter: BigNumber;
@@ -57,6 +57,7 @@ function Success() {
                         },
                     });
                 } catch (err) {
+                    console.log(err)
                     setAddress({ status: -1, address: "" });
                     setLoading(false)
                 }

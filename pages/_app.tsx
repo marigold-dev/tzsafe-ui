@@ -13,9 +13,9 @@ export default function App({ Component, pageProps }: AppProps) {
         let a = init();
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
-          name: "Taquito React template",
+          name: "Multisig wallet",
           preferredNetwork: NetworkType.GHOSTNET,
-          disableDefaultEvents: false,
+          disableDefaultEvents: true,
           eventHandlers: {
             [BeaconEvent.PAIR_INIT]: {
               handler: defaultEventCallbacks.PAIR_INIT,

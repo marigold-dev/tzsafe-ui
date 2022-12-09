@@ -40,7 +40,7 @@ function TransferForm(
             )
             .toTransferParams();
         let op = await state.connection.wallet.transfer(params).send();
-        await op.confirmation();
+        await op.confirmation(1);
     }
     if (state?.address == null) {
         return null;
