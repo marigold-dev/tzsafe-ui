@@ -15,6 +15,7 @@ function Success() {
         (async () => {
             if (loading && address.status == 0) {
                 try {
+                    console.log('#1')
                     let deploy = await state?.connection.wallet
                         .originate({
                             code: contract,
@@ -27,17 +28,22 @@ function Success() {
                             },
                         })
                         .send();
+                     console.log("#2");   
                     await deploy?.confirmation(1);
+                    console.log("#3");
                     let result1 = await deploy?.contract();
+                    console.log("#4");
                     let c: {
                         proposal_counter: BigNumber;
                         proposal_map: BigMapAbstraction;
                         signers: string[];
                         threshold: BigNumber;
                     } = await result1!.storage()!;
+                    console.log("#5");
                     let balance = await state?.connection.tz.getBalance(
                         result1!.address!
                     );
+                    console.log("#6");
                     setAddress({ address: result1?.address!, status: 1 });
                     setLoading(false);
                     dispatch!({
