@@ -1,9 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100;300;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html {
- background-color: rgb(243 244 246 / 1);
+ background-color: #1C1D22;
+ font-family: Roboto Mono;
  min-height: 100vh;
 }
 body {

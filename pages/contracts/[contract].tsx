@@ -1,16 +1,16 @@
-import { usePathname, useRouter } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
+import { BigMapAbstraction } from "@taquito/taquito";
+import { validateAddress } from "@taquito/utils";
+import BigNumber from "bignumber.js";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import NavBar from "../../components/navbar";
-import TopUp from "../../components/topUpForm";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
-import BigNumber from "bignumber.js"
-import { BigMapAbstraction } from "@taquito/taquito";
-import TransferForm from "../../components/transferForm";
 import Proposals from "../../components/proposals";
+import TopUp from "../../components/topUpForm";
+import TransferForm from "../../components/transferForm";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { proposal } from "../../context/types";
-import { validateAddress } from "@taquito/utils"
 let emptyProps: [number, proposal][] = []
 function Home() {
     let state = useContext(AppStateContext)!
@@ -161,7 +161,7 @@ function Home() {
                 <main className="min-h-full bg-gray-100">
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
-                            <div className="md:h-auto md:min-h-64 rounded-lg border-4 border-dashed border-gray-200 grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
+                            <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
                                 {<Proposals proposals={contract?.proposals} address={router} />}
                             </div>
                         </div>

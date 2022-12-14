@@ -1,8 +1,8 @@
+import { validateAddress } from "@taquito/utils";
 import { ErrorMessage, Field, FieldArray, Form, Formik, FormikErrors } from "formik";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import FormContext from "../context/formContext";
 import { AppStateContext } from "../context/state";
-import { validateAddress } from "@taquito/utils"
 function get(s: string | FormikErrors<{ name: string; address: string; }>): boolean {
     if (typeof s == "string") {
         return false
@@ -70,28 +70,28 @@ function Aliases() {
         >
             {({ values, errors }) =>
                 <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-                    <div className="text-2xl font-medium self-center mb-2 text-gray-800">Add wallet participants below</div>
+                    <div className="text-2xl font-medium self-center mb-2 text-white">Add wallet participants below</div>
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
                         <FieldArray name="validators">
                             {({ remove, push }) => (
                                 <div className="min-w-full">
                                     {values.validators.length > 0 && values.validators.map((validator, index) => {
                                         return (
-                                            <div className="rounded-lg border-4 border-dashed border-gray-200 md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full" key={index}>
+                                            <div className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full" key={index}>
                                                 <div className="flex flex-col">
-                                                    <label className="text-gray-800">Owner Name</label>
+                                                    <label className="text-white">Owner Name</label>
                                                     <Field
                                                         name={`validators.${index}.name`}
-                                                        className="rounded-md border-2 p-2 text-sm md:text-md"
+                                                        className="border-2 p-2 text-sm md:text-md"
                                                         placeholder={validator.name || "Owner Name"}
                                                     />
                                                     <ErrorMessage name={`validators.${index}.name`} render={renderError} />
                                                 </div>
                                                 <div className="relative flex flex-col w-full md:w-auto md:grow justify-start">
-                                                    <label className="text-gray-800" htmlFor={`validators.${index}.address`}>Validator Address</label>
+                                                    <label className="text-white" htmlFor={`validators.${index}.address`}>Validator Address</label>
                                                     <Field
                                                         name={`validators.${index}.address`}
-                                                        className="w-full rounded-md border-2 p-2 text-sm md:text-md"
+                                                        className="w-full border-2 p-2 text-sm md:text-md"
                                                         placeholder={validator.address || "Validator address"}
                                                         default={validator.address}
                                                     />
@@ -101,7 +101,7 @@ function Aliases() {
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    className={(errors.validators && errors.validators[index] && get(errors.validators[index]) ? "my-auto" : "") + " rounded-md bg-indigo-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"}
+                                                    className={(errors.validators && errors.validators[index] && get(errors.validators[index]) ? "my-auto" : "") + " bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none "}
                                                     onClick={e => {
                                                         e.preventDefault()
                                                         remove(index)
@@ -113,7 +113,7 @@ function Aliases() {
                                     })}
                                     <button
                                         type="button"
-                                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                        className=" bg-primary font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto "
                                         onClick={e => {
                                             e.preventDefault()
                                             push({ name: "", address: "" })
@@ -132,7 +132,7 @@ function Aliases() {
                         </Field>
                     </div>
                     <button
-                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                        className="bg-primary font-medium text-white my-2 p-2 "
                         type="submit"
                     >
                         Continue

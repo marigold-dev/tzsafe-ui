@@ -1,12 +1,13 @@
-import React, { useContext, useEffect, useState } from "react";
-import NavBar from "../components/navbar";
-import FormContext from "../context/formContext";
-import Stepper from "../components/stepper";
-import Step from "../components/createStep";
-import Meta from "../components/meta";
 import { NetworkType } from "@airgap/beacon-sdk";
-import { AppDispatchContext, AppStateContext } from "../context/state";
 import { useRouter } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
+import Step from "../components/createStep";
+import Footer from "../components/footer";
+import Meta from "../components/meta";
+import NavBar from "../components/navbar";
+import Stepper from "../components/stepper";
+import FormContext from "../context/formContext";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 function Home() {
 
     const [formState, setFormState] = useState<any>(null)
@@ -42,9 +43,9 @@ function Home() {
             <Meta title={"Create wallet"} />
 
             <NavBar />
-            <div className="bg-white shadow">
+            <div className="bg-graybg shadow">
                 <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
-                    <h1 className="text-black text-3xl font-extrabold">
+                    <h1 className="text-white text-2xl font-extrabold">
                         Create multisig wallet
                     </h1>
                 </div>
@@ -52,7 +53,7 @@ function Home() {
             <main className=" bg-gray-100">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
-                        <div className="md:min-h-96 min-h-fit rounded-lg border-4 border-dashed border-gray-200 grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
+                        <div className="md:min-h-96 min-h-fit border-4 border-dashed border-white grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
                             <div className="col-span-2 row-span-2 justify-items-center items-center flex flex-col">
                                 <FormContext.Provider value={{ activeStepIndex: activeStepIndex, setActiveStepIndex, setFormState, formState, formStatus, setFormStatus }}>
                                     <Stepper />
@@ -63,6 +64,7 @@ function Home() {
                     </div>
                 </div>
             </main>
+            <Footer/>
         </div>
     );
 }

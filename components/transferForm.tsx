@@ -1,14 +1,14 @@
+import { validateAddress } from "@taquito/utils";
 import {
     ErrorMessage,
     Field,
     FieldArray,
     Form,
     Formik,
-    FormikErrors,
+    FormikErrors
 } from "formik";
 import React, { useContext, useState } from "react";
 import { AppStateContext } from "../context/state";
-import { validateAddress } from "@taquito/utils";
 import ContractLoader from "./contractLoader";
 function get(
     s: string | FormikErrors<{ to: string; amount: string }>
@@ -136,7 +136,7 @@ function TransferForm(
         >
             {({ values, errors }) => (
                 <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-                    <div className="text-2xl font-medium self-center mb-2 text-gray-800">
+                    <div className="text-2xl font-medium self-center mb-2 text-white">
                         Add wallet participants below
                     </div>
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
@@ -147,16 +147,16 @@ function TransferForm(
                                         values.transfers.map((transfer, index) => {
                                             return (
                                                 <div
-                                                    className="rounded-lg border-4 border-dashed border-gray-200 md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
+                                                    className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
                                                     key={index}
                                                 >
                                                     <div className="flex flex-col">
-                                                        <label className="text-gray-800">
+                                                        <label className="text-white">
                                                             Amount in Mutez
                                                         </label>
                                                         <Field
                                                             name={`transfers.${index}.amount`}
-                                                            className="rounded-md border-2 p-2 text-sm md:text-md"
+                                                            className=" border-2 p-2 text-sm md:text-md"
                                                             placeholder={transfer.amount || 0}
                                                         />
                                                         <ErrorMessage
