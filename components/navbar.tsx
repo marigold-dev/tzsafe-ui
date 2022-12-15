@@ -1,9 +1,8 @@
 
 import Link from "next/link";
 import React, {
-    FC,
     useContext,
-    useState,
+    useState
 } from "react";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
@@ -27,13 +26,13 @@ const NavBar = (_: React.PropsWithChildren) => {
         dispatch!({ type: "logout" });
     };
     return (
-        <div className="min-h-full bg-gray-100">
-            <nav className="bg-gray-800">
+        <div className="min-h-full ">
+            <nav className="border-b-4 border-gray">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
-                                <Link href={"/"} className="text-xl font-bold tracking-wider text-gray-100">
+                                <Link href={"/"} className="text-xl font-bold tracking-wider text-white">
                                     MULTISIG
                                 </Link>
                             </div>
@@ -79,26 +78,26 @@ const NavBar = (_: React.PropsWithChildren) => {
                                         <div className="flex items-end">
                                             <button
                                                 type="button"
-                                                className=" max-w-xs items-center rounded-md py-1 px-2 bg-gray-800 text-sm focus:outline-none focus:border-2 focus:border-white focus:border-offset-2 focus:border-offset-gray-800"
+                                                className=" max-w-xs items-center  py-1 px-2 bg-gray-800 text-sm focus:outline-none focus:border-2 focus:border-white focus:border-offset-2 focus:border-offset-gray-800"
                                                 id="user-menu-button"
                                                 aria-expanded="false"
                                                 aria-haspopup="true"
                                             >
                                                 <span className="sr-only">Open user menu</span>
                                                 <div className="flex flex-col items-center">
-                                                    <span className="block font-md font-bold text-center text-gray-100">
+                                                    <span className="block font-md font-bold text-center text-white">
                                                         {state?.address.slice(0, 3) +
                                                             "..." +
                                                             state?.address.slice(33)}
                                                     </span>
-                                                    <span className="block font-xs text-gray-100">
+                                                    <span className="block font-xs text-white">
                                                         Ghostnet
                                                     </span>
                                                 </div>
                                             </button>
                                         </div>
                                         <div
-                                            className={`absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 hidden group-focus-within:block  group-focus-within:outline-none `}
+                                            className={`absolute right-0 z-10 mt-2 w-48 origin-top-right  bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 hidden group-focus-within:block  group-focus-within:outline-none `}
                                             role="menu"
                                             aria-orientation="vertical"
                                             aria-labelledby="user-menu-button"
@@ -193,7 +192,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                                             "..." +
                                             state?.address.slice(33)}
                                     </div>
-                                    <div className="text-sm font-medium leading-none text-gray-400">
+                                    <div className="text-sm font-medium leading-none text-white">
                                         GhostNet
                                     </div>
                                 </div>
@@ -201,7 +200,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                             <button
                                 onClick={() => console.log("todo")}
                                 type="button"
-                                className="hidden ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                className="hidden ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                             >
                                 <span className="sr-only">View notifications</span>
                                 <svg

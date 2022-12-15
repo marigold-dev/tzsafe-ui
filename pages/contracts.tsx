@@ -1,5 +1,6 @@
 import Link from "next/link";
-import React, { useContext } from "react";
+import { useContext } from "react";
+import Footer from "../components/footer";
 import Meta from "../components/meta";
 import NavBar from "../components/navbar";
 import { AppStateContext } from "../context/state";
@@ -12,9 +13,9 @@ function Home() {
 
             <NavBar />
 
-            <div className="bg-white shadow">
+            <div className="bg-graybg shadow">
                 <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
-                    <h1 className="text-black text-3xl font-extrabold">
+                    <h1 className="text-white text-2xl font-extrabold">
                         Imported wallets
                     </h1>
                 </div>
@@ -22,7 +23,7 @@ function Home() {
             <main className="min-h-full bg-gray-100">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
-                        <div className="md:h-96 min-h-fit rounded-lg border-4 border-dashed border-gray-200 grid-rows-auto md:grid-cols-auto md:grid-rows-auto grid p-2">
+                        <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:grid-rows-auto grid p-2">
                             {state?.contracts && Object.entries(state!.contracts).map(([address, contract]) => {
                                 return (
                                     <Link
@@ -47,6 +48,7 @@ function Home() {
                     </div>
                 </div>
             </main>
+            <Footer/>
         </div>
     );
 }
