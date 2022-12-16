@@ -65,7 +65,8 @@ type action =
   | { type: "removeContract"; address: string }
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
-  | { type: "writeStorage"; payload: storage };
+  | { type: "writeStorage"; payload: storage }
+  | {type: "updateAliaces"; payload: {address: string, name: string}[]}
 
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
@@ -86,6 +87,14 @@ function reducer(state: tezosState, action: action): tezosState {
         contracts: contracts,
         aliases: aliases,
       };
+    }
+    case "updateAliaces": {
+      let al = Object.fromEntries(action.payload.map(({name, address}) => [address,name]));
+      let aliases = {...state.aliases,...al };
+      localStorage.setItem("app_state", JSON.stringify({contracts: state.contracts, aliases}))
+      return {
+        ...state, aliases: aliases
+      }
     }
     case "updateContract": {
       let contracts = {

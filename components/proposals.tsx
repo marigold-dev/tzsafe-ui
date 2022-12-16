@@ -1,6 +1,7 @@
+import { stringify } from "querystring";
 import { FC, useContext, useState } from "react";
-import { AppStateContext } from "../context/state";
-import { proposal } from "../context/types";
+import { AppStateContext, tezosState } from "../context/state";
+import { content, proposal } from "../context/types";
 function getClass(x: number, active: number): string {
     return x == active
         ? "inline-block p-4 md:w-full rounded-t-lg border-b-2 text-gray-800 text-xl md:text-2xl uppercase border-primary text-white"
@@ -113,7 +114,7 @@ const Card: FC<{ prop: proposal, address: string, id: number, signable: boolean 
             </div>
             <div>
                 <p className="md:inline-block text-white font-bold">Transactions: </p>
-                <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {prop.content.map((x: any) => `${x.transfer.amount} XTZ to ${state.aliases[x.transfer.target] || x.transfer.target}`)} ] </p>
+                <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {prop.content.map(x => `${renderContent(x, state, address)}, `)} ] </p>
             </div>
             {
                 state.address && state.contracts[address].signers.includes(state.address) && signable && <button
@@ -127,8 +128,26 @@ const Card: FC<{ prop: proposal, address: string, id: number, signable: boolean 
                     Sign
                 </button>
             }
-            {/* <p className="text-gray-800 font-Bold">{JSON.stringify(prop)}</p> */}
         </li>
     )
+}
+
+function renderContent(x: content, state: tezosState, address: string): string {
+    if ("transfer" in x) {
+        return `${x.transfer.amount} XTZ to ${state.aliases[x.transfer.target] || x.transfer.target}`
+    }
+    if ("execute" in x) {
+        return `${x.execute.amount} XTZ to ${state.aliases[x.execute.target] || x.execute.target} and pass parameter: Unit`
+    }
+    if ("add_signers" in x) {
+        return `Add [${x.add_signers.join(', ')}] to validators`
+    }
+    if ("remove_signers" in x) {
+        return `Remove [${x.remove_signers.join(', ')}] from validators`
+    }
+    if ("adjust_threshold" in x) {
+        return `Change threshold from ${state.contracts[address].threshold} to ${x.adjust_threshold}`
+    }
+    return "Not supported"
 }
 export default Proposals;
