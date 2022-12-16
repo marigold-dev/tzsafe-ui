@@ -1,7 +1,8 @@
 import { NetworkType } from "@airgap/beacon-sdk";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation"
+
 import { useContext, useEffect, useState } from "react";
-import Step from "../components/create/createStep";
+import Step from "../components/import/importStep";
 import Footer from "../components/footer";
 import Meta from "../components/meta";
 import NavBar from "../components/navbar";
@@ -9,13 +10,13 @@ import Stepper from "../components/stepper";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 function Home() {
-
-    const [formState, setFormState] = useState<any>(null)
+    let router = useRouter()
+    let params = useSearchParams()
+    const [formState, setFormState] = useState<any>({ walletAddress: !!params.get("address") ? params.get("address") : "" })
     const [activeStepIndex, setActiveStepIndex] = useState(0)
     const [formStatus, setFormStatus] = useState("")
     const state = useContext(AppStateContext);
     const dispatch = useContext(AppDispatchContext);
-    let router = useRouter()
 
     useEffect(() => {
         const connectWallet = async (): Promise<void> => {
@@ -37,17 +38,20 @@ function Home() {
             if (!state?.address && state?.beaconWallet) {
                 await connectWallet()
             }
+
         })()
-    }, [router, dispatch, state])
+
+    }, [state, dispatch, router])
+
+
     return (
         <div className="relative h-full min-h-screen">
-            <Meta title={"Create wallet"} />
-
+            <Meta title={"Import wallet"} />
             <NavBar />
             <div className="bg-graybg shadow">
                 <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
                     <h1 className="text-white text-2xl font-extrabold">
-                        Create multisig wallet
+                        Import multisig wallet
                     </h1>
                 </div>
             </div>

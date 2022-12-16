@@ -8,7 +8,7 @@ import { AppStateContext } from "../context/state";
 function Home() {
     let state = useContext(AppStateContext)!
     return (
-        <div>
+        <div className="relative h-full min-h-screen">
             <Meta title={"wallet Page"} />
 
             <NavBar />
@@ -23,12 +23,12 @@ function Home() {
             <main className="min-h-full bg-gray-100">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
-                        <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:grid-rows-auto grid p-2">
-                            {state?.contracts && Object.entries(state!.contracts).map(([address, contract]) => {
+                        <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:auto-rows-max grid p-2">
+                            {state?.contracts && Object.entries(state!.contracts).map(([address, _contract]) => {
                                 return (
                                     <Link
                                         key={address}
-                                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                        className="bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                                         href={`/contracts/${address}`}
                                     >
                                         {state.aliases[address] ? <div>
@@ -48,7 +48,7 @@ function Home() {
                     </div>
                 </div>
             </main>
-            <Footer/>
+            <Footer />
         </div>
     );
 }

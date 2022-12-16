@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
-import FormContext from "../context/formContext";
+import FormContext from "../../context/formContext";
 import Aliases from "./aliases";
 import Basic from "./basic";
-import Success from "./createLoader";
+import Success from "./importLoader";
 
 function CreateStep() {
     const { activeStepIndex } = useContext(FormContext)!;

@@ -30,7 +30,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                             props.closeModal();
                         }}
                         type="button"
-                        className="rounded-full bg-indigo-600 p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        className=" bg-primary p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -63,11 +63,11 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                 setLoading(false);
             }}
         >
-            <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-                <div className="text-2xl font-medium self-center mb-2 text-gray-800">
-                    Enter the amount you want to transfer below
+            <Form className="flex flex-col justify-center items-center  col-span-2 h-full">
+                <div className="text-2xl font-medium  mb-2 text-gray-800 self-start">
+                    Enter the amount you want to transfer below:
                 </div>
-                <div className="flex flex-col items-start mb-2">
+                <div className="flex flex-col md:flex-row items-center justify-between mb-2 w-full ">
                     <label className="font-medium text-gray-900">
                         Amount of mutez to transfer
                     </label>
@@ -78,9 +78,9 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                     />
                 </div>
                 <ErrorMessage name="amount" render={renderError} />
-                <div>
+                <div className="flex justify-between w-2/3 md:w-1/3">
                     <button
-                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                        className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                         onClick={e => {
                             e.preventDefault()
                             props.closeModal()
@@ -89,7 +89,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                         Cancel
                     </button>
                     <button
-                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                        className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                         type="submit"
                     >
                         Top up

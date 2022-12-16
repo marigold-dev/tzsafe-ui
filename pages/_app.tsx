@@ -6,7 +6,7 @@ import { useReducer, useEffect } from 'react';
 import { tezosState, action, reducer, emptyState, init, AppStateContext, AppDispatchContext } from '../context/state';
 
 export default function App({ Component, pageProps }: AppProps) {
-  let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(reducer, emptyState);
+  let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(reducer, emptyState());
   useEffect(() => {
     (async () => {
       if (state!.beaconWallet === null) {
