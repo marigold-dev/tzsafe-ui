@@ -274,7 +274,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
                             name="requiredSignatures"
                             values={values.requiredSignatures}
                         >
-                            {[...Array(values.requiredSignatures).keys()].map(idx => (
+                            {[...Array(values.validators.length).keys()].map(idx => (
                                 <option
                                     key={idx + values.validators.length}
                                     label={`${idx + 1}/${values.validators.length}`}
@@ -290,12 +290,23 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
                             }}
                         />
                     </div>
-                    <button
-                        className="bg-primary font-medium text-white my-2 p-2 "
-                        type="submit"
-                    >
-                        Continue
-                    </button>
+                    <div className="flex justify-between w-2/3 md:w-1/3">
+                        <button
+                            className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                            onClick={e => {
+                                e.preventDefault()
+                                props.closeModal()
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className="bg-primary font-medium text-white my-2 p-2 "
+                            type="submit"
+                        >
+                            Continue
+                        </button>
+                    </div>
                 </Form>
             )}
         </Formik >
