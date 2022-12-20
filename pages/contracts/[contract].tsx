@@ -8,6 +8,7 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import NavBar from "../../components/navbar";
 import Proposals from "../../components/proposals";
+import SignersForm from "../../components/signersForm";
 import TopUp from "../../components/topUpForm";
 import TransferForm from "../../components/transferForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
@@ -75,6 +76,8 @@ function Home() {
                             return <TopUp closeModal={() => setCloseModal(0)} address={router} />
                         case 2:
                             return <TransferForm closeModal={() => setCloseModal(0)} address={router} />
+                        case 3:
+                            return <SignersForm closeModal={() => setCloseModal(0)} address={router} />
                         default:
                             return null
                     }
@@ -155,6 +158,23 @@ function Home() {
                                 aria-haspopup="true"
                             >
                                 Create proposal
+                            </button>
+                        </div>}
+                        {state.address && contract.contract?.signers.includes(state?.address) && <div className="">
+                            <button
+                                type="button"
+                                onClick={e => {
+                                    e.preventDefault();
+                                    setCloseModal(3)
+                                }}
+                                className={
+                                    " justify-self-end md:row-auto md:col-start-3 w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                }
+                                id="user-menu-button"
+                                aria-expanded="false"
+                                aria-haspopup="true"
+                            >
+                                Change signers and threshold
                             </button>
                         </div>}
                     </div>
