@@ -66,7 +66,6 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         )
         let ops: content[] = []
         if (added.size > 0) {
-            console.log("pushing")
             ops.push({ add_signers: [...added.values()] })
         }
         if (removed.size > 0) {

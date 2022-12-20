@@ -29,6 +29,7 @@ let emptyState = ()  => {
     shouldObservableSubscriptionRetry: true, 
     pollingIntervalMilliseconds: 1500,
   }));
+  connection.setProvider({config: {}})
   
   return {
     beaconWallet: null,

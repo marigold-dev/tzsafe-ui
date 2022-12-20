@@ -13,14 +13,13 @@ const LoginButton = () => {
             await state?.beaconWallet!.requestPermissions({
                 network: {
                     type: NetworkType.GHOSTNET,
+                    rpcUrl: "https://ghostnet.tezos.marigold.dev/"
                 }
             });
             const userAddress: string = await state?.beaconWallet!.getPKH()!;
             const balance = await state?.connection.tz.getBalance(userAddress);
             let s = await state?.beaconWallet!.client.getActiveAccount();
             dispatch!({ type: "login", accountInfo: s!, address: userAddress, balance: balance!.toString() })
-            //await setup(userAddress);
-            //setBeaconConnection(true);
         } catch (error) {
         }
     };

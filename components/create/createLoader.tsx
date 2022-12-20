@@ -30,7 +30,12 @@ function Success() {
                         })
                         .send();
                     console.log("#2");
-                    await deploy?.confirmation(1);
+                    let dep = await deploy?.status()
+                    let confirms = await deploy?.getCurrentConfirmation()
+                    console.log(`Status ${dep}, Confirmations: ${confirms}`)
+                    if (typeof confirms != "undefined" && confirms < 1) {
+                        await deploy?.confirmation(1);
+                    }
                     console.log("#3");
                     let result1 = await deploy?.contract();
                     console.log("#4");
