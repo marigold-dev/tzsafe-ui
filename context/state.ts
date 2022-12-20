@@ -27,7 +27,7 @@ let emptyState = ()  => {
   let connection = new TezosToolkit("https://ghostnet.tezos.marigold.dev/");
   connection.setStreamProvider(connection.getFactory(PollingSubscribeProvider)({
     shouldObservableSubscriptionRetry: true, 
-    pollingIntervalMilliseconds: 1500 
+    pollingIntervalMilliseconds: 1500,
   }));
   
   return {
