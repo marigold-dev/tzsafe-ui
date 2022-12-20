@@ -103,7 +103,7 @@ function Success() {
             <Link
                 href={`/contracts/${address.address}`}
                 className="justify-self-end  w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800">
-                Go to the contract
+                Go to the wallet
             </Link>
         </div>
     ) : (

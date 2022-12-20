@@ -24,6 +24,7 @@ function get(
         }
     }
 }
+
 const SignersForm: FC<{ closeModal: () => void; address: string }> = (
     props
 ) => {
@@ -65,6 +66,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         )
         let ops: content[] = []
         if (added.size > 0) {
+            console.log("pushing")
             ops.push({ add_signers: [...added.values()] })
         }
         if (removed.size > 0) {
@@ -73,6 +75,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         if (state.contracts[props.address].threshold !== requiredSignatures) {
             ops.push({ adjust_threshold: requiredSignatures })
         }
+
         let params = cc.methods
             .create_proposal(ops)
             .toTransferParams();
