@@ -1,14 +1,14 @@
 import { AccountInfo } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
-import { TezosToolkit } from "@taquito/taquito";
+import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import { Context, createContext, Dispatch, useReducer } from "react";
 type contractStorage = {
-  proposal_counter: string, 
-  balance: string, 
-  proposal_map: string,
-  signers: string[],
-  threshold: number
-}
+  proposal_counter: string;
+  balance: string;
+  proposal_map: string;
+  signers: string[];
+  threshold: number;
+};
 type tezosState = {
   connection: TezosToolkit;
   beaconWallet: BeaconWallet | null;
@@ -23,14 +23,22 @@ type storage = {
   aliases: { [address: string]: string };
 };
 
-let emptyState = {
-  beaconWallet: null,
-  contracts: {},
-  aliases: {},
-  balance: null,
-  address: null,
-  accountInfo: null,
-  connection: new TezosToolkit("https://ghostnet.ecadinfra.com"),
+let emptyState = ()  => {
+  let connection = new TezosToolkit("https://ghostnet.tezos.marigold.dev/");
+  connection.setStreamProvider(connection.getFactory(PollingSubscribeProvider)({
+    shouldObservableSubscriptionRetry: true, 
+    pollingIntervalMilliseconds: 1500 
+  }));
+  
+  return {
+    beaconWallet: null,
+    contracts: {},
+    aliases: {},
+    balance: null,
+    address: null,
+    accountInfo: null,
+    connection,
+  };
 };
 
 type action =
@@ -42,9 +50,19 @@ type action =
       address: string;
       balance: string;
     }
-  | { type: "addContract", payload: {aliases: {[address: string]: string}, address: string, contract: contractStorage }}
-  | { type: "updateContract", payload: {address:string, contract: contractStorage }}
-  | { type: "removeContract", address: string}
+  | {
+      type: "addContract";
+      payload: {
+        aliases: { [address: string]: string };
+        address: string;
+        contract: contractStorage;
+      };
+    }
+  | {
+      type: "updateContract";
+      payload: { address: string; contract: contractStorage };
+    }
+  | { type: "removeContract"; address: string }
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage };
@@ -52,26 +70,38 @@ type action =
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
     case "beaconConnect": {
-        state.connection.setWalletProvider(action.payload);
-        return {...state, beaconWallet: action.payload}
+      state.connection.setWalletProvider(action.payload);
+      return { ...state, beaconWallet: action.payload };
     }
     case "addContract": {
       let al = action.payload.aliases;
-      let aliases = {...state.aliases,...al };
-      let contracts = {...state.contracts, [action.payload.address]: action.payload.contract}
-      localStorage.setItem("app_state", JSON.stringify({contracts, aliases}))
+      let aliases = { ...state.aliases, ...al };
+      let contracts = {
+        ...state.contracts,
+        [action.payload.address]: action.payload.contract,
+      };
+      localStorage.setItem("app_state", JSON.stringify({ contracts, aliases }));
       return {
-        ...state, contracts: contracts, aliases: aliases
-      }
+        ...state,
+        contracts: contracts,
+        aliases: aliases,
+      };
     }
     case "updateContract": {
-      let contracts = {...state.contracts, [action.payload.address]: action.payload.contract}
+      let contracts = {
+        ...state.contracts,
+        [action.payload.address]: action.payload.contract,
+      };
       if (state.contracts[action.payload.address]) {
-        localStorage.setItem("app_state", JSON.stringify({contracts, aliases: state.aliases}))
+        localStorage.setItem(
+          "app_state",
+          JSON.stringify({ contracts, aliases: state.aliases })
+        );
       }
       return {
-        ...state, contracts: contracts
-      }
+        ...state,
+        contracts: contracts,
+      };
     }
     case "init": {
       return {
@@ -102,16 +132,17 @@ function reducer(state: tezosState, action: action): tezosState {
   }
 }
 function init(): tezosState {
-      
   let rawStorage = window!.localStorage.getItem("app_state")!;
   let storage: storage = JSON.parse(rawStorage);
   return {
-    ...emptyState,
-    ...storage
-    };
+    ...emptyState(),
+    ...storage,
+  };
 }
-let AppStateContext: Context<tezosState | null> = createContext<tezosState | null>(null);
-let AppDispatchContext: Context<Dispatch<action> | null> = createContext<Dispatch<action> | null>(null);
+let AppStateContext: Context<tezosState | null> =
+  createContext<tezosState | null>(null);
+let AppDispatchContext: Context<Dispatch<action> | null> =
+  createContext<Dispatch<action> | null>(null);
 export {
   type tezosState,
   type action,
@@ -119,5 +150,5 @@ export {
   AppStateContext,
   AppDispatchContext,
   emptyState,
-  reducer
+  reducer,
 };

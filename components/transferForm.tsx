@@ -60,7 +60,7 @@ function TransferForm(
                             props.closeModal();
                         }}
                         type="button"
-                        className="ml-4 rounded-full bg-indigo-600 p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        className="ml-4 rounded-full bg-primary p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -147,7 +147,7 @@ function TransferForm(
                                         values.transfers.map((transfer, index) => {
                                             return (
                                                 <div
-                                                    className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
+                                                    className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-around items-start min-w-full"
                                                     key={index}
                                                 >
                                                     <div className="flex flex-col">
@@ -173,7 +173,7 @@ function TransferForm(
                                                         </label>
                                                         <Field
                                                             name={`transfers.${index}.to`}
-                                                            className="w-full rounded-md border-2 p-2 text-sm md:text-md"
+                                                            className="w-full border-2 p-2 text-sm md:text-md"
                                                             placeholder={transfer.to || "Destination address"}
                                                             default={transfer.to}
                                                         />
@@ -192,7 +192,7 @@ function TransferForm(
                                                                 get(errors.transfers[index])
                                                                 ? "my-auto"
                                                                 : "") +
-                                                            " rounded-md bg-indigo-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                                            " bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                                                         }
                                                         onClick={(e) => {
                                                             e.preventDefault();
@@ -206,7 +206,7 @@ function TransferForm(
                                         })}
                                     <button
                                         type="button"
-                                        className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                        className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                                         onClick={(e) => {
                                             e.preventDefault();
                                             push({ to: "", amount: 0 });
@@ -218,9 +218,9 @@ function TransferForm(
                             )}
                         </FieldArray>
                     </div>
-                    <div>
+                    <div className="flex flex-row md:w-1/3 justify-around">
                         <button
-                            className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                            className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                             onClick={(e) => {
                                 e.preventDefault();
                                 props.closeModal();
@@ -229,7 +229,7 @@ function TransferForm(
                             Cancel
                         </button>
                         <button
-                            className="rounded-md bg-indigo-500 font-medium text-white my-2 p-2 hover:bg-indigo-600 focus:bg-indigo-600 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                            className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                             type="submit"
                         >
                             Submit

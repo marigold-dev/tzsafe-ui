@@ -1,6 +1,6 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useContext } from "react";
-import FormContext from "../context/formContext";
+import FormContext from "../../context/formContext";
 
 function Basic() {
     const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
