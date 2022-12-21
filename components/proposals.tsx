@@ -88,7 +88,7 @@ const Card: FC<{ prop: proposal, address: string, id: number, signable: boolean 
     async function sign(proposal: number) {
         let cc = await state.connection.contract.at(address);
         let params = cc.methods
-            .sign_proposal(proposal + 1)
+            .sign_and_execute_proposal(proposal)
             .toTransferParams();
         let op = await state.connection.wallet.transfer(params).send();
         await op.confirmation(1);
