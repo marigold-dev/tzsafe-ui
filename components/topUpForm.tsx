@@ -18,8 +18,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
         let op = await state.connection.wallet
             .transfer({ to: props.address, amount, mutez: true })
             .send();
-        let result = await op.transactionOperation()
-        console.log(result)
+        await op.transactionOperation()
     }
 
     if (loading && result === "") {

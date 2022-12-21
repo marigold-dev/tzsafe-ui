@@ -79,8 +79,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
             .create_proposal(ops)
             .toTransferParams();
         let op = await state.connection.wallet.transfer(params).send();
-        let result = await op.transactionOperation()
-        console.log(result)
+        await op.transactionOperation()
     }
     if (loading && result === "") {
         return <ContractLoader loading={loading}></ContractLoader>;

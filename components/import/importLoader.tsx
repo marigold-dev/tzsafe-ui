@@ -16,22 +16,18 @@ function Success() {
         (async () => {
             if (loading && address.status == 0) {
                 try {
-                    console.log('#1')
                     let cc = await state?.connection.contract
                         .at(address.address)
-                    console.log("#2");
                     let storage: {
                         proposal_counter: BigNumber;
                         proposal_map: BigMapAbstraction;
                         signers: string[];
                         threshold: BigNumber;
                     } = await cc?.storage()!;
-                    console.log("#3");
 
                     let balance = await state?.connection.tz.getBalance(
                         address.address
                     );
-                    console.log("#4");
                     setAddress({ address: address.address, status: 1 });
                     setLoading(false);
                     dispatch!({

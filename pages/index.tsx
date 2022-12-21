@@ -5,7 +5,7 @@ import NavBar from "../components/navbar";
 
 function Home() {
   return (
-    <div className="relative h-full min-h-screen">
+    <div className="relative h-full flex flex-col overflow-x-auto">
       <Meta title={"Welcome"} />
       <NavBar>{/* <LinkComponent text="Dash" path={"/dash"} /> */}</NavBar>
 
@@ -16,7 +16,7 @@ function Home() {
           </h1>
         </div>
       </div>
-      <main className="min-h-full bg-gray-100 h-full">
+      <main className="bg-gray-100 h-full grow">
         <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-2 md:grid-cols-1 md:grid-rows-1 grid p-2 gap-2">

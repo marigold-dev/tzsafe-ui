@@ -24,7 +24,6 @@ function Home() {
     useEffect(() => {
         if (router && validateAddress(router) === 3) {
             (async () => {
-                console.log('running')
                 let c = await state.connection.contract.at(router)
                 let balance = await state.connection.tz.getBalance(router)
                 let cc: {
@@ -104,7 +103,7 @@ function Home() {
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
     return (
-        <div className="relative h-full min-h-screen">
+        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
             <Meta title={router} />
             <Modal opened={!!openModal} >
                 {!!openModal && (() => {
@@ -216,7 +215,7 @@ function Home() {
                         </div>}
                     </div>
                 </div>
-                <main className="min-h-full bg-gray-100">
+                <main className="bg-gray-100 h-full grow">
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
                             <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">

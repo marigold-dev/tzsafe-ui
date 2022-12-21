@@ -40,7 +40,7 @@ function Home() {
         })()
     }, [router, dispatch, state])
     return (
-        <div className="relative h-full min-h-screen">
+        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
             <Meta title={"Create wallet"} />
 
             <NavBar />
@@ -51,7 +51,7 @@ function Home() {
                     </h1>
                 </div>
             </div>
-            <main className=" bg-gray-100">
+            <main className=" bg-gray-100 grow">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
                         <div className="md:min-h-96 min-h-fit border-4 border-dashed border-white grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">

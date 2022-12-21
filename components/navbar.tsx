@@ -26,7 +26,7 @@ const NavBar = (_: React.PropsWithChildren) => {
         dispatch!({ type: "logout" });
     };
     return (
-        <div className="min-h-full ">
+        <div className="">
             <nav className="border-b-4 border-gray">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 items-center justify-between">

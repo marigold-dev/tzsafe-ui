@@ -8,7 +8,7 @@ import { AppStateContext } from "../context/state";
 function Home() {
     let state = useContext(AppStateContext)!
     return (
-        <div className="relative h-full min-h-screen">
+        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
             <Meta title={"wallet Page"} />
 
             <NavBar />
@@ -20,7 +20,7 @@ function Home() {
                     </h1>
                 </div>
             </div>
-            <main className="min-h-full bg-gray-100">
+            <main className="bg-gray-100 h-full grow">
                 <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
                         <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:auto-rows-max grid p-2">
