@@ -28,19 +28,6 @@ function Success() {
                             },
                         })
                         .send();
-                    const evts: any[] = []
-                    let sub = deploy?.confirmationObservable(3)
-                        .subscribe(
-                            event => {
-                                const entry = {
-                                    level: event.block.header.level,
-                                    currentConfirmation: event.currentConfirmation
-                                };
-                                evts.push(entry);
-                            },
-                            (e) => console.log(e),
-                            () => console.log(evts)
-                        );
                     let result1 = await deploy?.contract();
                     let c: {
                         proposal_counter: BigNumber;
