@@ -273,7 +273,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
                             name="requiredSignatures"
                             values={values.requiredSignatures}
                         >
-                            {[...Array(values.validators.length).keys()].map(idx => (
+                            {[...Array(Math.max(values.requiredSignatures, values.validators.length)).keys()].map(idx => (
                                 <option
                                     key={idx + values.validators.length}
                                     label={`${idx + 1}/${values.validators.length}`}
