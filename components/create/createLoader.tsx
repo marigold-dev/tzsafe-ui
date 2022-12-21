@@ -34,6 +34,8 @@ function Success() {
                     let confirms = await deploy?.getCurrentConfirmation()
                     console.log(`Status ${dep}, Confirmations: ${confirms}`)
                     if (typeof confirms != "undefined" && confirms < 1) {
+                        console.log(await deploy?.operationResults())
+                        console.log(await deploy?.contract())
                         await deploy?.confirmation(1);
                     }
                     console.log("#3");
