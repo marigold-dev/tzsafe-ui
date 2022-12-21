@@ -1,4 +1,4 @@
-import { BigMapAbstraction } from "@taquito/taquito";
+import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
 import { validateAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,7 @@ function Home() {
     useEffect(() => {
         if (router && validateAddress(router) === 3) {
             (async () => {
+                console.log('running')
                 let c = await state.connection.contract.at(router)
                 let balance = await state.connection.tz.getBalance(router)
                 let cc: {
@@ -44,9 +45,8 @@ function Home() {
                         }
                     },
                 })
-                const proposals: [number, proposal][] = await fetch(new Request(`https://api.ghostnet.tzkt.io/v1/bigmaps/${cc.proposal_map.toString()}/keys`)).then((x) => x.json()).then(x => x.map((u: { value: proposal }, idx: number) => {
-                    return ([idx, u.value])
-                }));
+                let pp: MichelsonMap<BigNumber, proposal> = await c.contractViews.proposals([cc.proposal_counter.toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
+                let proposals: [number, proposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
                 setContract({
                     contract: {
                         balance: balance?.toString() || "0",
@@ -62,8 +62,45 @@ function Home() {
             setInvalid(true)
         }
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router])
+    }, [dispatch, router, state?.address, state.connection.contract, state.connection.tz])
+    useEffect(() => {
+        async function updateProposals() {
+            let c = await state.connection.contract.at(router)
+            let pp: MichelsonMap<BigNumber, proposal> = await c.contractViews.proposals([state.contracts[router].proposal_counter + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
+            let proposals: [number, proposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
+            setContract(s => ({ ...s, proposals: proposals }))
+        }
+        let sub: any
+        (async () => {
+            if (router && validateAddress(router) === 3) {
+
+                try {
+                    sub = state.connection.stream.subscribeEvent({
+                        address: router
+                    });
+
+                    sub.on('data', async (event: { tag: string; }) => {
+                        switch (event.tag) {
+                            case "create_proposal": {
+                                await updateProposals()
+                            }
+                            case "sign_proposal": {
+                                await updateProposals()
+                            }
+                            default:
+                                null
+                        }
+                    });
+
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+        })();
+        return () => {
+            sub && sub.close()
+        }
+    })
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
     return (
@@ -174,7 +211,7 @@ function Home() {
                                 aria-expanded="false"
                                 aria-haspopup="true"
                             >
-                                Change signers and threshold
+                                Change owners and threshold
                             </button>
                         </div>}
                     </div>

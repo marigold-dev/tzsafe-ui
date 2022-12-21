@@ -1,10 +1,14 @@
+import { BigMapAbstraction } from "@taquito/taquito";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 import ContractLoader from "./contractLoader";
+import BigNumber from "bignumber.js"
 
 function TopUp(props: { address: string; closeModal: () => void }) {
     const state = useContext(AppStateContext)!;
+    const dispatch = useContext(AppDispatchContext)!;
+
     let [loading, setLoading] = useState(false);
     let [result, setResult] = useState("");
     const renderError = (message: string) => (
@@ -57,6 +61,26 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                 try {
                     await transfer(values.amount);
                     setResult("Transfer successfull");
+                    let c = await state.connection.contract.at(props.address)
+                    let balance = await state.connection.tz.getBalance(props.address)
+                    let cc: {
+                        proposal_counter: BigNumber;
+                        proposal_map: BigMapAbstraction;
+                        signers: string[];
+                        threshold: BigNumber;
+                    } = await c.storage()
+                    dispatch({
+                        type: "updateContract", payload: {
+                            address: props.address,
+                            contract: {
+                                balance: balance!.toString() || "0",
+                                proposal_map: cc.proposal_map.toString(),
+                                proposal_counter: cc.proposal_counter.toString(),
+                                threshold: cc!.threshold.toNumber()!,
+                                signers: cc!.signers!,
+                            }
+                        },
+                    })
                 } catch {
                     setResult("Failed to transfer mutez");
                 }

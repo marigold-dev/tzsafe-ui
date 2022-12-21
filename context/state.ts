@@ -1,7 +1,8 @@
 import { AccountInfo } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
-import { Context, createContext, Dispatch, useReducer } from "react";
+import { Context, createContext, Dispatch } from "react";
+import { RPC } from "./config";
 type contractStorage = {
   proposal_counter: string;
   balance: string;
@@ -24,7 +25,7 @@ type storage = {
 };
 
 let emptyState = ()  => {
-  let connection = new TezosToolkit("https://ghostnet.tezos.marigold.dev/");
+  let connection = new TezosToolkit(RPC);
   connection.setStreamProvider(connection.getFactory(PollingSubscribeProvider)({
     shouldObservableSubscriptionRetry: true, 
     pollingIntervalMilliseconds: 1500,
@@ -133,7 +134,7 @@ function reducer(state: tezosState, action: action): tezosState {
         balance: null,
         accountInfo: null,
         address: null,
-        connection: new TezosToolkit("https://ghostnet.tezos.marigold.dev/"),
+        connection: new TezosToolkit(RPC),
       };
     }
     default: {

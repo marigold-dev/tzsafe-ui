@@ -8,8 +8,10 @@ import {
     FormikErrors
 } from "formik";
 import React, { useContext, useState } from "react";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 import ContractLoader from "./contractLoader";
+import BigNumber from 'bignumber.js'
+import { BigMapAbstraction } from "@taquito/taquito";
 function get(
     s: string | FormikErrors<{ to: string; amount: string }>
 ): boolean {
@@ -27,6 +29,7 @@ function TransferForm(
     props: React.PropsWithoutRef<{ address: string; closeModal: () => void }>
 ) {
     const state = useContext(AppStateContext)!;
+
     let [loading, setLoading] = useState(false);
     let [result, setResult] = useState("");
 
@@ -127,6 +130,7 @@ function TransferForm(
                 try {
                     await transfer(values.transfers);
                     setResult("Created proposal successfully");
+
                 } catch (e) {
                     console.log(e);
                     setResult("Failed to create proposal");
