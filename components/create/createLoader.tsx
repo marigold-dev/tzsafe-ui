@@ -16,7 +16,6 @@ function Success() {
         (async () => {
             if (loading && address.status == 0) {
                 try {
-                    console.log("#1");
                     let deploy = await state?.connection.wallet
                         .originate({
                             code: contract,
@@ -29,29 +28,29 @@ function Success() {
                             },
                         })
                         .send();
-                    console.log("#2");
-                    let dep = await deploy?.status()
-                    let confirms = await deploy?.getCurrentConfirmation()
-                    console.log(`Status ${dep}, Confirmations: ${confirms}`)
-                    console.log(await deploy?.contract())
-                    console.log(await deploy?.operationResults())
-                    if (typeof confirms != "undefined" && confirms < 1) {
-                        await deploy?.confirmation(3);
-                    }
-                    console.log("#3");
+                    const evts: any[] = []
+                    let sub = deploy?.confirmationObservable(3)
+                        .subscribe(
+                            event => {
+                                const entry = {
+                                    level: event.block.header.level,
+                                    currentConfirmation: event.currentConfirmation
+                                };
+                                evts.push(entry);
+                            },
+                            (e) => console.log(e),
+                            () => console.log(evts)
+                        );
                     let result1 = await deploy?.contract();
-                    console.log("#4");
                     let c: {
                         proposal_counter: BigNumber;
                         proposal_map: BigMapAbstraction;
                         signers: string[];
                         threshold: BigNumber;
                     } = await result1!.storage()!;
-                    console.log("#5");
                     let balance = await state?.connection.tz.getBalance(
                         result1!.address!
                     );
-                    console.log("#6");
                     setAddress({ address: result1?.address!, status: 1 });
                     setLoading(false);
                     dispatch!({
