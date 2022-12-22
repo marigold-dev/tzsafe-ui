@@ -40,7 +40,7 @@ function Home() {
         })()
     }, [router, dispatch, state])
     return (
-        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
+        <div className="relative h-full min-h-screen flex flex-col overflow-y-auto">
             <Meta title={"Create wallet"} />
 
             <NavBar />

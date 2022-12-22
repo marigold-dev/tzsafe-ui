@@ -8,7 +8,7 @@ import { AppStateContext } from "../context/state";
 function Home() {
     let state = useContext(AppStateContext)!
     return (
-        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
+        <div className="relative h-full min-h-screen flex flex-col overflow-y-auto">
             <Meta title={"wallet Page"} />
 
             <NavBar />

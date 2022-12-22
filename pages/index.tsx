@@ -5,7 +5,7 @@ import NavBar from "../components/navbar";
 
 function Home() {
   return (
-    <div className="relative h-full flex flex-col overflow-x-auto">
+    <div className="relative h-full flex flex-col overflow-y-auto">
       <Meta title={"Welcome"} />
       <NavBar>{/* <LinkComponent text="Dash" path={"/dash"} /> */}</NavBar>
 

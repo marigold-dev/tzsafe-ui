@@ -70,7 +70,7 @@ function Aliases() {
         >
             {({ values, errors }) =>
                 <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-                    <div className="text-2xl font-medium self-center mb-2 text-white">Add wallet participants below</div>
+                    <div className="text-2xl font-medium self-center mb-2 text-white">Optionally add names of wallet participants below: </div>
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
                         <FieldArray name="validators">
                             {() => (

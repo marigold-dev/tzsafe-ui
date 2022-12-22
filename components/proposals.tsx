@@ -57,7 +57,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
                     </li>
                 </ul>
             </div>
-            <div className="md:h-96 overflow-x-auto">
+            <div className="h-96 md:h-96 overflow-y-auto">
                 <ul
                     className={(currentTab === 0 ? " " : " hidden") + ` p-1  rounded-lg :bg-gray-800 grid gap-2 `}
                     id="profile"

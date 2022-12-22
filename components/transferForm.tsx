@@ -8,7 +8,7 @@ import {
     FormikErrors
 } from "formik";
 import React, { useContext, useState } from "react";
-import {  AppStateContext } from "../context/state";
+import { AppStateContext } from "../context/state";
 import ContractLoader from "./contractLoader";
 
 function get(
@@ -54,7 +54,7 @@ function TransferForm(
         return (
             <div className="flex justify-between items-center w-full md:h-12">
                 <ContractLoader loading={loading}>
-                    <span className="text-sm md:text-xl my-auto text-gray-800 font-bold">
+                    <span className="text-sm md:text-xl my-auto text-white font-bold">
                         {result}
                     </span>
                     <button

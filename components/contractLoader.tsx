@@ -13,7 +13,7 @@ const ContractLoader: FC<{ loading: boolean } & React.PropsWithChildren> = (prop
         );
     }
 
-    return <div className="w-full h-full mx-auto my-auto flex items-center justify-center"> {props.children}</div>
+    return <div className="w-full h-full mx-auto my-auto flex items-center justify-around"> {props.children}</div>
 }
 
 

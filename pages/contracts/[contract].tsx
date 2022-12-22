@@ -104,13 +104,45 @@ function Home() {
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
     return (
-        <div className="relative h-full min-h-screen flex flex-col overflow-x-auto">
+        <div className="relative h-full flex flex-col overflow-y-auto">
             <Meta title={router} />
             <Modal opened={!!openModal} >
                 {!!openModal && (() => {
                     switch (openModal) {
                         case 1:
-                            return <TopUp closeModal={() => setCloseModal(0)} address={router} />
+                            return <TopUp closeModal={async () => {
+                                let c = await state.connection.contract.at(router)
+                                let balance = await state.connection.tz.getBalance(router)
+                                let cc: {
+                                    proposal_counter: BigNumber;
+                                    proposal_map: BigMapAbstraction;
+                                    signers: string[];
+                                    threshold: BigNumber;
+                                } = await c.storage()
+                                dispatch({
+                                    type: "updateContract", payload: {
+                                        address: router,
+                                        contract: {
+                                            balance: balance!.toString() || "0",
+                                            proposal_map: cc.proposal_map.toString(),
+                                            proposal_counter: cc.proposal_counter.toString(),
+                                            threshold: cc!.threshold.toNumber()!,
+                                            signers: cc!.signers!,
+                                        }
+                                    },
+                                })
+                                setContract(s => ({
+                                    ...s,
+                                    contract: {
+                                        balance: balance?.toString() || "0",
+                                        proposal_map: cc.proposal_map.toString(),
+                                        proposal_counter: cc.proposal_counter.toString(),
+                                        threshold: cc?.threshold.toNumber()!,
+                                        signers: cc!.signers!,
+                                    }
+                                }))
+                                setCloseModal(0)
+                            }} address={router} />
                         case 2:
                             return <TransferForm closeModal={() => setCloseModal(0)} address={router} />
                         case 3:
@@ -125,7 +157,7 @@ function Home() {
                 <div className="bg-graybg shadow p-2 w-full mx-auto flex justify-center items-center">
                     <p className="mx-auto font-bold text-xl text-gray-800">Invalid contract address: {router}</p>
                 </div>}
-            {!invalid && <div>
+            {!invalid && <div className="flex flex-col h-full grow overflow-y-auto">
                 <div className="bg-graybg shadow">
                     <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8 grid grid-flow-row grid-cols-1 md:grid-flow-row md:grid-cols-3  gap-1 justify-start">
                         {alias ? <div className="md:col-span-3">
@@ -219,7 +251,7 @@ function Home() {
                 <main className="bg-gray-100 h-full grow">
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
-                            <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white grid-rows-2 md:grid-cols-2 md:grid-rows-1 grid p-2">
+                            <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
                                 {<Proposals proposals={contract?.proposals} address={router} />}
                             </div>
                         </div>

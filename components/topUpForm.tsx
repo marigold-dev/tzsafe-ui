@@ -28,7 +28,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
         return (
             <div className="flex justify-between items-center w-full md:h-12">
                 <ContractLoader loading={loading}>
-                    <span className="text-sm md:text-xl my-auto text-gray-800 font-bold">{result}</span>
+                    <span className="text-sm md:text-xl my-auto text-white font-bold">{result}</span>
                     <button
                         onClick={() => {
                             props.closeModal();
