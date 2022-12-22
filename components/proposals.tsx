@@ -90,10 +90,10 @@ function getState(t: viewProposal): string {
         return "Active"
     }
     if ("done" in t.state) {
-        return "Done"
+        return "Executed"
     }
     if ("closed" in t.state) {
-        return "Closed"
+        return "Rejected"
     }
     return "Unknown"
 }
