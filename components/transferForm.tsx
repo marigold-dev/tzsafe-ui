@@ -8,10 +8,9 @@ import {
     FormikErrors
 } from "formik";
 import React, { useContext, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import {  AppStateContext } from "../context/state";
 import ContractLoader from "./contractLoader";
-import BigNumber from 'bignumber.js'
-import { BigMapAbstraction } from "@taquito/taquito";
+
 function get(
     s: string | FormikErrors<{ to: string; amount: string }>
 ): boolean {
@@ -232,12 +231,12 @@ function TransferForm(
                         >
                             Cancel
                         </button>
-                        <button
+                        {values.transfers.length > 0 && <button
                             className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                             type="submit"
                         >
                             Submit
-                        </button>
+                        </button>}
                     </div>
                 </Form>
             )}

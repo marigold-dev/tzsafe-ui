@@ -6,16 +6,16 @@ const contract = `{ parameter
                      (or (set %remove_signers address)
                          (pair %transfer (address %target) (unit %parameter) (mutez %amount)))))
               (unit %default))
-          (or (nat %execute_proposal) (nat %sign_and_execute_proposal)))
-      (nat %sign_proposal_only)) ;
+          (or (nat %execute_proposal) (pair %sign_and_execute_proposal nat bool)))
+      (pair %sign_proposal_only nat bool)) ;
 storage
   (pair (nat %proposal_counter)
         (big_map %proposal_map
            nat
-           (pair (set %approved_signers address)
+           (pair (or %state (or (unit %active) (unit %closed)) (unit %done))
+                 (map %signatures address bool)
                  (address %proposer)
                  (option %executed address)
-                 (nat %number_of_signer)
                  (timestamp %timestamp)
                  (list %content
                     (or (or (or (set %add_signers address) (nat %adjust_threshold))
@@ -26,13 +26,14 @@ storage
         (set %signers address)
         (nat %threshold)
         (big_map %metadata string bytes)) ;
-code { PUSH string "Only the contract signers can perform this operation" ;
+code { PUSH bool True ;
+       PUSH string "Only the contract signers can perform this operation" ;
        PUSH string "No proposal exists for this counter" ;
        PUSH string "You have already signed this proposal" ;
        PUSH string "Unknown contract" ;
        PUSH string "Threshold must be greater than 1" ;
        NIL operation ;
-       DIG 6 ;
+       DIG 7 ;
        UNPAIR ;
        PUSH nat 0 ;
        DUP 3 ;
@@ -62,7 +63,8 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                DIG 4 ;
                DIG 5 ;
                DIG 6 ;
-               DROP 4 ;
+               DIG 8 ;
+               DROP 5 ;
                IF_LEFT
                  { DUP 2 ;
                    GET 5 ;
@@ -87,10 +89,12 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    DIG 2 ;
                    DROP ;
                    NOW ;
-                   PUSH nat 0 ;
                    NONE address ;
                    SENDER ;
-                   EMPTY_SET address ;
+                   EMPTY_MAP address bool ;
+                   UNIT ;
+                   LEFT unit ;
+                   LEFT unit ;
                    PAIR 6 ;
                    PUSH nat 1 ;
                    DUP 3 ;
@@ -114,10 +118,10 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    PAIR ;
                    EMIT %create_proposal
                      (pair nat
-                           (set %approved_signers address)
+                           (or %state (or (unit %active) (unit %closed)) (unit %done))
+                           (map %signatures address bool)
                            (address %proposer)
                            (option %executed address)
-                           (nat %number_of_signer)
                            (timestamp %timestamp)
                            (list %content
                               (or (or (or (set %add_signers address) (nat %adjust_threshold))
@@ -152,25 +156,55 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    GET ;
                    IF_NONE { DIG 4 ; FAILWITH } { DIG 5 ; DROP } ;
                    DUP ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool True } { DROP ; PUSH bool False } ;
+                   GET 7 ;
+                   IF_NONE { DUP 6 } { DROP ; PUSH bool False } ;
                    IF {} { PUSH string "This proposal has been executed" ; FAILWITH } ;
                    SENDER ;
-                   DUP 2 ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool True } { DROP ; PUSH bool False } ;
+                   DUP 4 ;
+                   GET 7 ;
+                   PUSH nat 0 ;
+                   PUSH nat 0 ;
+                   PAIR ;
+                   DUP 4 ;
+                   GET 3 ;
+                   ITER { SWAP ;
+                          UNPAIR ;
+                          DIG 2 ;
+                          CDR ;
+                          IF { SWAP ; PUSH nat 1 ; DIG 2 ; ADD }
+                             { PUSH nat 1 ; DIG 2 ; ADD ; SWAP } ;
+                          PAIR } ;
+                   UNPAIR ;
                    DUP 5 ;
                    GET 7 ;
+                   IF_NONE { DUP 10 } { DROP ; PUSH bool False } ;
                    DUP 4 ;
-                   CAR ;
-                   SIZE ;
+                   DIG 2 ;
                    COMPARE ;
                    GE ;
                    AND ;
-                   IF { SWAP ; SENDER ; SOME ; UPDATE 5 } { SWAP } ;
-                   DUP ;
+                   IF { DIG 3 ; UNIT ; RIGHT (or unit unit) ; UPDATE 1 ; SENDER ; SOME ; UPDATE 7 }
+                      { DIG 3 } ;
+                   DIG 2 ;
+                   DUP 6 ;
                    GET 5 ;
-                   IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                   SIZE ;
+                   SUB ;
+                   ABS ;
+                   DUG 2 ;
+                   DUP ;
+                   GET 7 ;
+                   IF_NONE { DUP 9 } { DROP ; PUSH bool False } ;
+                   DIG 3 ;
+                   DIG 3 ;
+                   COMPARE ;
+                   GT ;
+                   AND ;
+                   IF { UNIT ; RIGHT unit ; LEFT unit ; UPDATE 1 ; SENDER ; SOME ; UPDATE 7 }
+                      {} ;
+                   DUP ;
+                   GET 7 ;
+                   IF_NONE { DIG 6 ; DROP ; PUSH bool False } { DROP ; DIG 6 } ;
                    IF {}
                       { PUSH string "No enough approval to execute the proposal" ; FAILWITH } ;
                    DUP 4 ;
@@ -181,9 +215,12 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    DUP 6 ;
                    UPDATE ;
                    UPDATE 3 ;
-                   DUP 2 ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                   UNIT ;
+                   RIGHT (or unit unit) ;
+                   DUP 3 ;
+                   CAR ;
+                   COMPARE ;
+                   EQ ;
                    IF { DIG 4 ;
                         PAIR ;
                         SWAP ;
@@ -245,52 +282,78 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    PAIR ;
                    EMIT %execute_proposal (pair nat address) ;
                    CONS }
-                 { DUP 2 ;
+                 { UNPAIR ;
+                   DUP 3 ;
                    GET 5 ;
                    SENDER ;
                    MEM ;
-                   IF { DIG 6 ; DROP } { DIG 6 ; FAILWITH } ;
-                   DUP 2 ;
+                   IF { DIG 7 ; DROP } { DIG 7 ; FAILWITH } ;
+                   DUP 3 ;
                    GET 3 ;
                    DUP 2 ;
                    GET ;
-                   IF_NONE { DIG 5 ; FAILWITH } { DIG 6 ; DROP } ;
+                   IF_NONE { DIG 6 ; FAILWITH } { DIG 7 ; DROP } ;
                    DUP ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool True } { DROP ; PUSH bool False } ;
+                   GET 7 ;
+                   IF_NONE { DUP 8 } { DROP ; PUSH bool False } ;
                    IF {} { PUSH string "This proposal has been executed" ; FAILWITH } ;
                    DUP ;
-                   CAR ;
+                   GET 3 ;
                    SENDER ;
                    MEM ;
                    NOT ;
-                   IF { DIG 5 ; DROP } { DIG 5 ; FAILWITH } ;
+                   IF { DIG 6 ; DROP } { DIG 6 ; FAILWITH } ;
                    SENDER ;
-                   DUP 2 ;
-                   DUP 3 ;
-                   CAR ;
-                   DUP 3 ;
-                   PUSH bool True ;
-                   SWAP ;
-                   UPDATE ;
-                   UPDATE 1 ;
-                   PUSH nat 1 ;
-                   DIG 3 ;
-                   GET 7 ;
-                   ADD ;
-                   UPDATE 7 ;
-                   DUP ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool True } { DROP ; PUSH bool False } ;
                    DUP 5 ;
                    GET 7 ;
                    DUP 3 ;
-                   CAR ;
-                   SIZE ;
+                   DIG 3 ;
+                   GET 3 ;
+                   DIG 5 ;
+                   SOME ;
+                   DUP 5 ;
+                   UPDATE ;
+                   UPDATE 3 ;
+                   PUSH nat 0 ;
+                   PUSH nat 0 ;
+                   PAIR ;
+                   DUP 2 ;
+                   GET 3 ;
+                   ITER { SWAP ;
+                          UNPAIR ;
+                          DIG 2 ;
+                          CDR ;
+                          IF { SWAP ; PUSH nat 1 ; DIG 2 ; ADD }
+                             { PUSH nat 1 ; DIG 2 ; ADD ; SWAP } ;
+                          PAIR } ;
+                   UNPAIR ;
+                   DUP 3 ;
+                   GET 7 ;
+                   IF_NONE { DUP 10 } { DROP ; PUSH bool False } ;
+                   DUP 5 ;
+                   DIG 2 ;
                    COMPARE ;
                    GE ;
                    AND ;
-                   IF { SENDER ; SOME ; UPDATE 5 } {} ;
+                   IF { SWAP ; UNIT ; RIGHT (or unit unit) ; UPDATE 1 ; SENDER ; SOME ; UPDATE 7 }
+                      { SWAP } ;
+                   DIG 2 ;
+                   DUP 6 ;
+                   GET 5 ;
+                   SIZE ;
+                   SUB ;
+                   ABS ;
+                   DUG 2 ;
+                   DUP ;
+                   GET 7 ;
+                   IF_NONE { DUP 9 } { DROP ; PUSH bool False } ;
+                   DIG 3 ;
+                   DIG 3 ;
+                   COMPARE ;
+                   GT ;
+                   AND ;
+                   IF { UNIT ; RIGHT unit ; LEFT unit ; UPDATE 1 ; SENDER ; SOME ; UPDATE 7 }
+                      {} ;
                    DUP 4 ;
                    DIG 4 ;
                    GET 3 ;
@@ -299,9 +362,12 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    DUP 6 ;
                    UPDATE ;
                    UPDATE 3 ;
-                   DUP 2 ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                   UNIT ;
+                   RIGHT (or unit unit) ;
+                   DUP 3 ;
+                   CAR ;
+                   COMPARE ;
+                   EQ ;
                    IF { DIG 4 ;
                         PAIR ;
                         DUP 2 ;
@@ -364,56 +430,51 @@ code { PUSH string "Only the contract signers can perform this operation" ;
                    EMIT %sign_proposal (pair nat address) ;
                    CONS ;
                    DIG 2 ;
-                   GET 5 ;
-                   IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                   GET 7 ;
+                   IF_NONE { DIG 4 ; DROP ; PUSH bool False } { DROP ; DIG 4 } ;
                    IF { DIG 2 ; DIG 3 ; PAIR ; EMIT %execute_proposal (pair nat address) ; CONS }
                       { DIG 2 ; DIG 3 ; DROP 2 } } } }
          { DIG 2 ;
            DIG 3 ;
            DIG 4 ;
            DROP 3 ;
-           DUP 2 ;
+           UNPAIR ;
+           DUP 3 ;
            GET 5 ;
            SENDER ;
            MEM ;
-           IF { DIG 4 ; DROP } { DIG 4 ; FAILWITH } ;
-           DUP 2 ;
+           IF { DIG 5 ; DROP } { DIG 5 ; FAILWITH } ;
+           DUP 3 ;
            GET 3 ;
            DUP 2 ;
            GET ;
-           IF_NONE { DIG 3 ; FAILWITH } { DIG 4 ; DROP } ;
+           IF_NONE { DIG 4 ; FAILWITH } { DIG 5 ; DROP } ;
            DUP ;
-           GET 5 ;
-           IF_NONE { PUSH bool True } { DROP ; PUSH bool False } ;
+           GET 7 ;
+           IF_NONE { DIG 5 } { DIG 6 ; DROP 2 ; PUSH bool False } ;
            IF {} { PUSH string "This proposal has been executed" ; FAILWITH } ;
            DUP ;
-           CAR ;
+           GET 3 ;
            SENDER ;
            MEM ;
            NOT ;
-           IF { DIG 3 ; DROP } { DIG 3 ; FAILWITH } ;
+           IF { DIG 4 ; DROP } { DIG 4 ; FAILWITH } ;
            SENDER ;
-           DUP 2 ;
-           DUP 3 ;
-           CAR ;
-           DUP 3 ;
-           PUSH bool True ;
-           SWAP ;
-           UPDATE ;
-           UPDATE 1 ;
-           PUSH nat 1 ;
-           DIG 3 ;
-           GET 7 ;
-           ADD ;
-           UPDATE 7 ;
-           SWAP ;
-           DUP 3 ;
+           DUP ;
+           DUP 4 ;
            PAIR ;
            EMIT %sign_proposal (pair nat address) ;
-           DUP 4 ;
-           DIG 4 ;
+           DUP 6 ;
+           DIG 6 ;
            GET 3 ;
-           DIG 3 ;
+           DUP 5 ;
+           DIG 5 ;
+           GET 3 ;
+           DIG 7 ;
+           SOME ;
+           DIG 6 ;
+           UPDATE ;
+           UPDATE 3 ;
            SOME ;
            DIG 4 ;
            UPDATE ;
@@ -426,10 +487,10 @@ view "signers" unit (set address) { CDR ; GET 5 } ;
 view "threshold" unit nat { CDR ; GET 7 } ;
 view "proposal"
      nat
-     (pair (set %approved_signers address)
+     (pair (or %state (or (unit %active) (unit %closed)) (unit %done))
+           (map %signatures address bool)
            (address %proposer)
            (option %executed address)
-           (nat %number_of_signer)
            (timestamp %timestamp)
            (list %content
               (or (or (or (set %add_signers address) (nat %adjust_threshold))
@@ -468,10 +529,10 @@ view "proposal"
 view "proposals"
      (pair nat nat)
      (map nat
-          (pair (set %approved_signers address)
+          (pair (or %state (or (unit %active) (unit %closed)) (unit %done))
+                (map %signatures address bool)
                 (address %proposer)
                 (option %executed address)
-                (nat %number_of_signer)
                 (timestamp %timestamp)
                 (list %content
                    (or (or (or (set %add_signers address) (nat %adjust_threshold))
@@ -485,10 +546,10 @@ view "proposals"
        ADD ;
        EMPTY_MAP
          nat
-         (pair (set address)
+         (pair (or (or unit unit) unit)
+               (map address bool)
                address
                (option address)
-               nat
                timestamp
                (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                          (or (set address) (pair address unit mutez))))) ;
@@ -500,10 +561,10 @@ view "proposals"
        PAIR ;
        PAIR ;
        LEFT (map nat
-                 (pair (set address)
+                 (pair (or (or unit unit) unit)
+                       (map address bool)
                        address
                        (option address)
-                       nat
                        timestamp
                        (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                                  (or (set address) (pair address unit mutez)))))) ;
@@ -526,18 +587,18 @@ view "proposals"
                   (pair (pair nat nat)
                         (big_map
                            nat
-                           (pair (set address)
+                           (pair (or (or unit unit) unit)
+                                 (map address bool)
                                  address
                                  (option address)
-                                 nat
                                  timestamp
                                  (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                                            (or (set address) (pair address unit mutez))))))
                         (map nat
-                             (pair (set address)
+                             (pair (or (or unit unit) unit)
+                                   (map address bool)
                                    address
                                    (option address)
-                                   nat
                                    timestamp
                                    (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                                              (or (set address) (pair address unit mutez))))))) }
@@ -551,26 +612,26 @@ view "proposals"
                 PAIR ;
                 PAIR ;
                 LEFT (map nat
-                          (pair (set address)
+                          (pair (or (or unit unit) unit)
+                                (map address bool)
                                 address
                                 (option address)
-                                nat
                                 timestamp
                                 (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                                           (or (set address) (pair address unit mutez)))))) } } ;
        LAMBDA
          (pair nat
-               (set address)
+               (or (or unit unit) unit)
+               (map address bool)
                address
                (option address)
-               nat
                timestamp
                (list (or (or (or (set address) nat) (or (pair address unit mutez) (lambda unit operation)))
                          (or (set address) (pair address unit mutez)))))
-         (pair (set address)
+         (pair (or (or unit unit) unit)
+               (map address bool)
                address
                (option address)
-               nat
                timestamp
                (list (or (or (or (set address) nat) (or (pair address unit mutez) unit))
                          (or (set address) (pair address unit mutez)))))

@@ -12,8 +12,8 @@ import SignersForm from "../../components/signersForm";
 import TopUp from "../../components/topUpForm";
 import TransferForm from "../../components/transferForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
-import { proposal } from "../../context/types";
-let emptyProps: [number, proposal][] = []
+import { proposal, viewProposal } from "../../context/types";
+let emptyProps: [number, viewProposal][] = []
 function Home() {
     let state = useContext(AppStateContext)!
     let dispatch = useContext(AppDispatchContext)!
@@ -44,8 +44,8 @@ function Home() {
                         }
                     },
                 })
-                let pp: MichelsonMap<BigNumber, proposal> = await c.contractViews.proposals([cc.proposal_counter.toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
-                let proposals: [number, proposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
+                let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([cc.proposal_counter.toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
+                let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
                 setContract({
                     contract: {
                         balance: balance?.toString() || "0",
@@ -61,18 +61,18 @@ function Home() {
             setInvalid(true)
         }
 
-    }, [dispatch, router, state?.address, state.connection.contract, state.connection.tz])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router])
     useEffect(() => {
         async function updateProposals() {
             let c = await state.connection.contract.at(router)
-            let pp: MichelsonMap<BigNumber, proposal> = await c.contractViews.proposals([state.contracts[router].proposal_counter + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
-            let proposals: [number, proposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
+            let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([state.contracts[router].proposal_counter + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
+            let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
             setContract(s => ({ ...s, proposals: proposals }))
         }
         let sub: any
         (async () => {
             if (router && validateAddress(router) === 3) {
-
                 try {
                     sub = state.connection.stream.subscribeEvent({
                         address: router
@@ -99,7 +99,8 @@ function Home() {
         return () => {
             sub && sub.close()
         }
-    })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router])
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
     return (

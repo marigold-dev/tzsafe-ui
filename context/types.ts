@@ -1,3 +1,5 @@
+import { MichelsonMap } from "@taquito/taquito";
+
 type content =
   | { execute: { amount: number; target: string; parameter: {} } }
   | { transfer: { amount: number; target: string; parameter: {} } }
@@ -12,4 +14,12 @@ type proposal = {
   proposer: string;
   timestamp: string;
 };
-export { type content, type proposal };
+type viewProposal = {
+  signatures: MichelsonMap<string,boolean>;
+  state: {active: Symbol} | {done: Symbol} | {closed: Symbol}
+  content: content[];
+  executed?: string;
+  proposer: string;
+  timestamp: string;
+};
+export { type content, type proposal, type viewProposal };
