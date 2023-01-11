@@ -143,6 +143,23 @@ function reducer(state: tezosState, action: action): tezosState {
         connection: new TezosToolkit(RPC),
       };
     }
+    case "removeContract": {
+      let 
+       {
+        [action.address]: _,
+        ...contracts      
+      } = state.contracts;
+      if (state.contracts[action.address]) {
+        localStorage.setItem(
+          "app_state",
+          JSON.stringify({ contracts, aliases: state.aliases })
+        );
+      }
+      return {
+        ...state,
+        contracts: contracts,
+      };
+    }
     default: {
       throw "notImplemented";
     }

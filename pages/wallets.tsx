@@ -3,10 +3,11 @@ import { useContext } from "react";
 import Footer from "../components/footer";
 import Meta from "../components/meta";
 import NavBar from "../components/navbar";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 
 function Home() {
     let state = useContext(AppStateContext)!
+    let dispatch = useContext(AppDispatchContext)!;
     return (
         <div className="relative h-full min-h-screen flex flex-col overflow-y-auto">
             <Meta title={"Wallets"} />
@@ -26,7 +27,7 @@ function Home() {
                                 return (
                                     <Link
                                         key={address}
-                                        className="bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                        className=" flex md:flex-row flex-col justify-between bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                                         href={`/wallets/${address}`}
                                     >
                                         {state.aliases[address] ?
@@ -42,6 +43,15 @@ function Home() {
                                                 {address} {state.contracts[address].version || "Unknown version"}
                                             </p>
                                         }
+                                        <button
+                                            className="bg-dark hover:bg-neutral-800  font-medium text-white my-2 p-2 md:text-xl text-s hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                            onClick={e => {
+                                                e.preventDefault();
+                                                dispatch!({ type: "removeContract", address: address })
+                                            }}
+                                        >
+                                            Remove wallet
+                                        </button>
                                     </Link>)
                             })}
                         </div>
