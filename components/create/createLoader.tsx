@@ -3,8 +3,10 @@ import FormContext from "../../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import contract from "../../context/unitContract";
 import BigNumber from "bignumber.js";
-import { BigMapAbstraction } from "@taquito/taquito";
+import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
 import Link from "next/link";
+import { bytes2Char, char2Bytes, tzip16 } from "@taquito/tzip16";
+import fetchVersion from "../../context/metadata";
 function Success() {
     const { formState } = useContext(FormContext)!;
     let state = useContext(AppStateContext);
@@ -16,6 +18,11 @@ function Success() {
         (async () => {
             if (loading && address.status == 0) {
                 try {
+                    const metadataMap = new MichelsonMap();
+                    metadataMap.set(
+                        "version",
+                        char2Bytes("0.0.6")
+                    );
                     let deploy = await state?.connection.wallet
                         .originate({
                             code: contract,
@@ -24,7 +31,7 @@ function Success() {
                                 proposal_map: [],
                                 signers: formState!.validators.map((x) => x.address),
                                 threshold: formState!.requiredSignatures,
-                                metadata: [],
+                                metadata: metadataMap,
                             },
                         })
                         .send();
@@ -33,8 +40,9 @@ function Success() {
                         proposal_counter: BigNumber;
                         proposal_map: BigMapAbstraction;
                         signers: string[];
-                        threshold: BigNumber;
-                    } = await result1!.storage()!;
+                        metadata: BigMapAbstraction
+                    } = await result1!.storage()
+                    let version = await fetchVersion(c.metadata);
                     let balance = await state?.connection.tz.getBalance(
                         result1!.address!
                     );
@@ -53,6 +61,7 @@ function Success() {
                                 proposal_counter: c.proposal_counter.toString(),
                                 threshold: formState?.requiredSignatures!,
                                 signers: formState!.validators!.map((x) => x.address),
+                                version: version
                             },
                             address: result1!.address!,
                         },
@@ -70,7 +79,7 @@ function Success() {
             <div role="status">
                 <svg
                     aria-hidden="true"
-                    className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-indigo-600"
+                    className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-red-600"
                     viewBox="0 0 100 101"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -94,7 +103,7 @@ function Success() {
                 {`Wallet successfully created! ${address.address}`}
             </p>
             <Link
-                href={`/contracts/${address.address}`}
+                href={`/wallets/${address.address}`}
                 className="justify-self-end  w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800">
                 Go to the wallet
             </Link>

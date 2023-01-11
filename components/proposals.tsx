@@ -4,8 +4,8 @@ import { AppStateContext, tezosState } from "../context/state";
 import { content, proposal, viewProposal } from "../context/types";
 function getClass(x: number, active: number): string {
     return x == active
-        ? "inline-block p-4 md:w-full rounded-t-lg border-b-2 text-gray-800 text-xl md:text-2xl uppercase border-primary text-white"
-        : "inline-block p-4 md:w-full text-gray-800 text-xl md:text-2xl uppercase rounded-t-lg border-b-2 border-transparent hover:text-gray-600 hover:border-primary text-white ";
+        ? "inline-block p-4 md:w-full rounded-t-lg border-b-2  text-xl md:text-2xl uppercase border-primary text-white"
+        : "inline-block p-4 md:w-full text-xl md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
 }
 const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = ({ proposals, address }) => {
     let [currentTab, setCurrentTab] = useState(0);
@@ -14,7 +14,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
     return (
         <div className="col-span-1 md:col-span-2">
             <h3 className="text-3xl font-bold text-white">Proposals</h3>
-            <div className="mb-4 border-b border-gray-600 ">
+            <div className="mb-4 border-b border-gray-100 ">
                 <ul
                     className="grid grid-flow-col -mb-px text-sm font-medium text-center"
                     id="myTab"
@@ -35,7 +35,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
                             aria-controls="profile"
                             aria-selected="false"
                         >
-                            Pending
+                            Waiting for signatures
                         </button>
                     </li>
                     <li className="md:mr-2 md:w-full " role="presentation">
@@ -108,7 +108,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
         await op.confirmation(1);
     }
     return (
-        <li className="border-2 border-gray-800  p-2">
+        <li className="border-2 border-white p-2">
             <div>
                 <p className="md:inline-block text-white font-bold">Status: </p>
                 <p className="md:inline-block text-white font-bold text-sm md:text-md">{getState(prop)}</p>
@@ -144,7 +144,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                 {
                     state.address && state.contracts[address].signers.includes(state.address) && signable && <button
                         type="button"
-                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"}
+                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
                         onClick={async (e) => {
                             e.preventDefault();
                             await sign(id, false)
@@ -156,7 +156,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                 {
                     state.address && state.contracts[address].signers.includes(state.address) && signable && <button
                         type="button"
-                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"}
+                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
                         onClick={async (e) => {
                             e.preventDefault();
                             await sign(id, true)
@@ -165,6 +165,11 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                         Sign
                     </button>
                 }
+                {state.address && state.contracts[address].signers.includes(state.address) && !signable && !prop.executed && (
+                    <p className="mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none border-2">
+                        Waiting for signatures of other owners
+                    </p>
+                )}
             </div>
         </li >
     )

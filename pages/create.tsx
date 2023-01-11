@@ -47,7 +47,7 @@ function Home() {
             <div className="bg-graybg shadow">
                 <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
                     <h1 className="text-white text-2xl font-extrabold">
-                        Create multisig wallet
+                        Create multisig wallet (version 0.0.6)
                     </h1>
                 </div>
             </div>

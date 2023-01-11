@@ -14,7 +14,7 @@ function Basic() {
     return (
         <Formik
             initialValues={{
-                walletName: "example-safe",
+                walletName: "example-wallet",
             }}
             onSubmit={(values) => {
                 const data = { ...formState, requiredSignatures: 1, ...values };
@@ -29,7 +29,7 @@ function Basic() {
                     <Field
                         name="walletName"
                         className=" border-2 p-2"
-                        placeholder="example-safe"
+                        placeholder="example-wallet"
                     />
                 </div>
                 <ErrorMessage name="walletName" render={renderError} />

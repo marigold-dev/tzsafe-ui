@@ -10,7 +10,7 @@ import LoginButton from "./loginButton";
 
 let RenderContracts = () => {
     const state = useContext(AppStateContext);
-    return (state && state?.contracts && Object.keys(state.contracts).length > 0 ? (<LinkComponent path="/contracts" text={"Wallets"} />) : null);
+    return (state && state?.contracts && Object.keys(state.contracts).length > 0 ? (<LinkComponent path="/wallets" text={"Wallets"} />) : null);
 }
 
 const NavBar = (_: React.PropsWithChildren) => {
@@ -33,7 +33,8 @@ const NavBar = (_: React.PropsWithChildren) => {
                         <div className="flex items-center">
                             <div className="flex-shrink-0">
                                 <Link href={"/"} className="text-xl font-bold tracking-wider text-white">
-                                    MULTISIG
+                                    <span>MULTISIG</span>
+                                    <span className="text-xs ml-4">BETA</span>
                                 </Link>
                             </div>
                             <div className="hidden md:block">
