@@ -80,9 +80,8 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                         proposal_map: BigMapAbstraction;
                         signers: string[];
                         threshold: BigNumber;
-                        metadata: BigMapAbstraction
                     } = await c.storage()
-                    let version = await fetchVersion(cc.metadata);
+                    let version = await fetchVersion(c);
                     dispatch({
                         type: "updateContract", payload: {
                             address: props.address,

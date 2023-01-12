@@ -5,8 +5,9 @@ import contract from "../../context/unitContract";
 import BigNumber from "bignumber.js";
 import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
 import Link from "next/link";
-import { bytes2Char, char2Bytes, tzip16 } from "@taquito/tzip16";
+import { char2Bytes, tzip16 } from "@taquito/tzip16";
 import fetchVersion from "../../context/metadata";
+import metadata_blob from "../../context/metadata_blob";
 function Success() {
     const { formState } = useContext(FormContext)!;
     let state = useContext(AppStateContext);
@@ -18,11 +19,6 @@ function Success() {
         (async () => {
             if (loading && address.status == 0) {
                 try {
-                    const metadataMap = new MichelsonMap();
-                    metadataMap.set(
-                        "version",
-                        char2Bytes("0.0.6")
-                    );
                     let deploy = await state?.connection.wallet
                         .originate({
                             code: contract,
@@ -31,7 +27,7 @@ function Success() {
                                 proposal_map: [],
                                 signers: formState!.validators.map((x) => x.address),
                                 threshold: formState!.requiredSignatures,
-                                metadata: metadataMap,
+                                ...metadata_blob,
                             },
                         })
                         .send();
@@ -42,7 +38,8 @@ function Success() {
                         signers: string[];
                         metadata: BigMapAbstraction
                     } = await result1!.storage()
-                    let version = await fetchVersion(c.metadata);
+                    let ct = await state?.connection.contract.at(result1?.address!, tzip16)!;
+                    let version = await fetchVersion(ct);
                     let balance = await state?.connection.tz.getBalance(
                         result1!.address!
                     );

@@ -13,7 +13,7 @@ function Basic() {
         <p className="italic text-red-600">{message}</p>
     );
     let [initialState, set] = useState({
-        walletName: "example-safe",
+        walletName: "example-wallet",
         walletAddress: formState?.walletAddress || ""
     })
     useEffect(() => {
