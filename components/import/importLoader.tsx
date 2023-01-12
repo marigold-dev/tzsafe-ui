@@ -31,7 +31,7 @@ function Success() {
                     let balance = await state?.connection.tz.getBalance(
                         address.address
                     );
-                    let version = await fetchVersion(storage!.metadata)
+                    let version = await fetchVersion(cc!)
                     setAddress({ address: address.address, status: 1 });
                     setLoading(false);
                     dispatch!({
