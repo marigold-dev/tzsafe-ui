@@ -30,7 +30,7 @@ function TransferForm(
     const state = useContext(AppStateContext)!;
 
     let [loading, setLoading] = useState(false);
-    let [result, setResult] = useState("");
+    let [result, setResult] = useState<boolean | undefined>(undefined);
 
     async function transfer(txs: { to: string; amount: number }[]) {
         let cc = await state.connection.contract.at(props.address);
@@ -47,22 +47,32 @@ function TransferForm(
     if (state?.address == null) {
         return null;
     }
-    if (loading && result === "") {
+    if (loading && typeof result == "undefined") {
         return <ContractLoader loading={loading}></ContractLoader>;
     }
-    if (!loading && result !== "") {
+    if (!loading && typeof result != "undefined") {
         return (
             <div className="flex justify-between items-center w-full md:h-12">
                 <ContractLoader loading={loading}>
-                    <span className="text-sm md:text-xl my-auto text-white font-bold">
-                        {result}
-                    </span>
+                    <div className="text-sm md:text-xl my-auto text-white font-bold">
+                        {result ? <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-row">
+                            <span>Created proposal successfully</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 ml-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+
+                        </div> :
+                            <span className="text-sm md:text-xl my-auto text-white font-bold">
+                                Failed to create proposal
+                            </span>
+                        }
+                    </div>
                     <button
                         onClick={() => {
                             props.closeModal();
                         }}
                         type="button"
-                        className="ml-4 rounded-full bg-primary p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -128,11 +138,11 @@ function TransferForm(
                 setLoading(true);
                 try {
                     await transfer(values.transfers);
-                    setResult("Created proposal successfully");
+                    setResult(true);
 
                 } catch (e) {
                     console.log(e);
-                    setResult("Failed to create proposal");
+                    setResult(false);
                 }
                 setLoading(false);
             }}
@@ -140,7 +150,7 @@ function TransferForm(
             {({ values, errors }) => (
                 <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
                     <div className="text-2xl font-medium self-center mb-2 text-white">
-                        Add wallet participants below
+                        Add transactions below
                     </div>
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
                         <FieldArray name="transfers">
@@ -169,7 +179,7 @@ function TransferForm(
                                                     </div>
                                                     <div className="relative flex flex-col w-full md:w-auto md:grow justify-start">
                                                         <label
-                                                            className="text-gray-800"
+                                                            className="text-white"
                                                             htmlFor={`transfers.${index}.to`}
                                                         >
                                                             Transfer to:

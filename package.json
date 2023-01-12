@@ -12,6 +12,7 @@
     "@airgap/beacon-sdk": "^3.3.0",
     "@taquito/beacon-wallet": "^15.0.0",
     "@taquito/taquito": "^15.0.0",
+    "@taquito/tzip16": "^15.0.0",
     "@types/node": "18.11.9",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",

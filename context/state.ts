@@ -3,12 +3,15 @@ import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import { Context, createContext, Dispatch } from "react";
 import { RPC } from "./config";
+import { Tzip16Module } from '@taquito/tzip16';
+
 type contractStorage = {
   proposal_counter: string;
   balance: string;
   proposal_map: string;
   signers: string[];
   threshold: number;
+  version: string;
 };
 type tezosState = {
   connection: TezosToolkit;
@@ -30,6 +33,9 @@ let emptyState = ()  => {
     shouldObservableSubscriptionRetry: true, 
     pollingIntervalMilliseconds: 1500,
   }));
+  
+  connection.addExtension(new Tzip16Module());
+
   connection.setProvider({config: {}})
   
   return {
@@ -135,6 +141,23 @@ function reducer(state: tezosState, action: action): tezosState {
         accountInfo: null,
         address: null,
         connection: new TezosToolkit(RPC),
+      };
+    }
+    case "removeContract": {
+      let 
+       {
+        [action.address]: _,
+        ...contracts      
+      } = state.contracts;
+      if (state.contracts[action.address]) {
+        localStorage.setItem(
+          "app_state",
+          JSON.stringify({ contracts, aliases: state.aliases })
+        );
+      }
+      return {
+        ...state,
+        contracts: contracts,
       };
     }
     default: {

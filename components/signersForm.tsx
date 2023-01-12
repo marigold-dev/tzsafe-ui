@@ -32,7 +32,7 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
     let dispatch = useContext(AppDispatchContext)!
 
     let [loading, setLoading] = useState(false);
-    let [result, setResult] = useState("");
+    let [result, setResult] = useState<undefined | boolean>(undefined);
     if (state?.address == null) {
         return null;
     }
@@ -81,22 +81,30 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         let op = await state.connection.wallet.transfer(params).send();
         await op.transactionOperation()
     }
-    if (loading && result === "") {
+    if (loading && typeof result == "undefined") {
         return <ContractLoader loading={loading}></ContractLoader>;
     }
-    if (!loading && result !== "") {
+    if (!loading && typeof result != "undefined") {
         return (
             <div className="flex justify-between items-center w-full md:h-12">
                 <ContractLoader loading={loading}>
-                    <span className="text-sm md:text-xl my-auto text-white font-bold">
-                        {result}
-                    </span>
+                    {result ? <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-row">
+                        <span>Created proposal successfully</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 ml-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+
+                    </div> :
+                        <span className="text-sm md:text-xl my-auto text-white font-bold">
+                            Failed to create proposal
+                        </span>
+                    }
                     <button
                         onClick={() => {
                             props.closeModal();
                         }}
                         type="button"
-                        className="ml-4 rounded-full bg-primary p-1 md:px-2 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                        className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -164,11 +172,11 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
                 setLoading(true);
                 try {
                     await changeSettings(values.validators, values.requiredSignatures);
-                    setResult("Created proposal successfully");
+                    setResult(true);
                     dispatch!({ type: "updateAliaces", payload: values.validators })
                 } catch (e) {
                     console.log(e);
-                    setResult("Failed to create proposal");
+                    setResult(false);
                 }
                 setLoading(false);
             }}
