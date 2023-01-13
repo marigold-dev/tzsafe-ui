@@ -3,7 +3,7 @@ import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import { Context, createContext, Dispatch } from "react";
 import { RPC } from "./config";
-import { Tzip16Module } from '@taquito/tzip16';
+import { Tzip16Module } from "@taquito/tzip16";
 
 type contractStorage = {
   proposal_counter: string;
@@ -27,17 +27,17 @@ type storage = {
   aliases: { [address: string]: string };
 };
 
-let emptyState = ()  => {
+let emptyState = () => {
   let connection = new TezosToolkit(RPC);
-  connection.setStreamProvider(connection.getFactory(PollingSubscribeProvider)({
-    shouldObservableSubscriptionRetry: true, 
-    pollingIntervalMilliseconds: 1500,
-  }));
-  
+  connection.setStreamProvider(
+    connection.getFactory(PollingSubscribeProvider)({
+      shouldObservableSubscriptionRetry: true,
+      pollingIntervalMilliseconds: 500,
+    })
+  );
+
   connection.addExtension(new Tzip16Module());
 
-  connection.setProvider({config: {}})
-  
   return {
     beaconWallet: null,
     contracts: {},
@@ -74,7 +74,7 @@ type action =
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
-  | {type: "updateAliaces"; payload: {address: string, name: string}[]}
+  | { type: "updateAliaces"; payload: { address: string; name: string }[] };
 
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
@@ -97,12 +97,18 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "updateAliaces": {
-      let al = Object.fromEntries(action.payload.map(({name, address}) => [address,name]));
-      let aliases = {...state.aliases,...al };
-      localStorage.setItem("app_state", JSON.stringify({contracts: state.contracts, aliases}))
+      let al = Object.fromEntries(
+        action.payload.map(({ name, address }) => [address, name])
+      );
+      let aliases = { ...state.aliases, ...al };
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({ contracts: state.contracts, aliases })
+      );
       return {
-        ...state, aliases: aliases
-      }
+        ...state,
+        aliases: aliases,
+      };
     }
     case "updateContract": {
       let contracts = {
@@ -134,21 +140,19 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "logout": {
+      let { connection } = emptyState();
+
       return {
         ...state,
         beaconWallet: null,
         balance: null,
         accountInfo: null,
         address: null,
-        connection: new TezosToolkit(RPC),
+        connection: connection,
       };
     }
     case "removeContract": {
-      let 
-       {
-        [action.address]: _,
-        ...contracts      
-      } = state.contracts;
+      let { [action.address]: _, ...contracts } = state.contracts;
       if (state.contracts[action.address]) {
         localStorage.setItem(
           "app_state",

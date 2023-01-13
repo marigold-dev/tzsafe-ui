@@ -97,9 +97,13 @@ function Home() {
     useEffect(() => {
         async function updateProposals() {
             let c = await state.connection.contract.at(router)
-            let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([state.contracts[router].proposal_counter + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
+            let {
+                proposal_counter
+            }: { proposal_counter: BigNumber } = await c.storage()
+            let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([proposal_counter.toNumber() + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
             let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
-            setContract(s => ({ ...s, proposals: proposals }))
+            let balance = await state.connection.tz.getBalance(router)
+            setContract(s => ({ ...s, proposal_counter: proposal_counter.toNumber(), balance: balance.toString(), proposals: proposals }))
         }
         let sub: any
         (async () => {
@@ -111,13 +115,24 @@ function Home() {
 
                     sub.on('data', async (event: { tag: string; }) => {
                         switch (event.tag) {
+                            case "default": {
+                                await updateProposals()
+                                break;
+                            }
                             case "create_proposal": {
                                 await updateProposals()
+                                break;
                             }
                             case "sign_proposal": {
                                 await updateProposals()
+                                break;
+                            }
+                            case "execute_proposal": {
+                                await updateProposals()
+                                break;
                             }
                             default:
+                                console.log("unknown event")
                                 null
                         }
                     });
@@ -216,7 +231,7 @@ function Home() {
                                 </button>
                             </div>
                             <Spinner cond={!!contract.contract?.version} value={contract.contract?.version} text={"Version"} />
-                            <Spinner cond={!!contract.contract?.balance} value={balance.toString()} text={"Balance"} />
+                            <Spinner cond={!!contract.contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
                             <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.signers.length}`} text={"Threshold"} />
                         </div> : <div className="md:col-span-3"><h1 className="text-white text-l md:text-3xl font-bold md:col-span-3">
                             {router}
@@ -229,7 +244,7 @@ function Home() {
                                 </svg>
                             </button>
                             <Spinner cond={!!contract.contract?.version} value={contract.contract?.version} text={"Version"} />
-                            <Spinner cond={!!contract.contract?.balance} value={balance.toString()} text={"Balance"} />
+                            <Spinner cond={!!contract.contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
                             <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.signers.length}`} text={"Threshold"} />
                         </div>}
                         {state.address && <div>
@@ -289,7 +304,7 @@ function Home() {
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
                             <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
-                                {<Proposals proposals={contract?.proposals} address={router} />}
+                                <Proposals proposals={contract?.proposals} address={router} />
                             </div>
                         </div>
                     </div>

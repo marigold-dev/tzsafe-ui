@@ -2,6 +2,7 @@ import { stringify } from "querystring";
 import { FC, useContext, useState } from "react";
 import { AppStateContext, tezosState } from "../context/state";
 import { content, proposal, viewProposal } from "../context/types";
+import ContractLoader from "./contractLoader";
 function getClass(x: number, active: number): string {
     return x == active
         ? "inline-block p-4 md:w-full rounded-t-lg border-b-2  text-xl md:text-2xl uppercase border-primary text-white"
@@ -12,7 +13,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
     let state = useContext(AppStateContext)!
 
     return (
-        <div className="col-span-1 md:col-span-2">
+        <div className="col-span-1 md:col-span-2" id={`${proposals.map(([num, _]) => num).join(",")}`}>
             <h3 className="text-3xl font-bold text-white">Proposals</h3>
             <div className="mb-4 border-b border-gray-100 ">
                 <ul
@@ -99,13 +100,20 @@ function getState(t: viewProposal): string {
 }
 const Card: FC<{ prop: viewProposal, address: string, id: number, signable: boolean }> = ({ prop, address, id, signable }) => {
     let state = useContext(AppStateContext)!
+    let [loading, setLoading] = useState(false)
     async function sign(proposal: number, flag: boolean) {
-        let cc = await state.connection.contract.at(address);
-        let params = cc.methods
-            .sign_and_execute_proposal(proposal, flag)
-            .toTransferParams();
-        let op = await state.connection.wallet.transfer(params).send();
-        await op.confirmation(1);
+        setLoading(true)
+        try {
+            let cc = await state.connection.contract.at(address);
+            let params = cc.methods
+                .sign_and_execute_proposal(proposal, flag)
+                .toTransferParams();
+            let op = await state.connection.wallet.transfer(params).send();
+            await op.confirmation(1);
+        } catch (e) {
+            alert("failed to sign proposal")
+        }
+        setLoading(false)
     }
     return (
         <li className="border-2 border-white p-2">
@@ -141,35 +149,37 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                 <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {prop.content.map(x => `${renderContent(x, state, address)}`).join(", ")} ] </p>
             </div>
             <div className="flex flex-col md:flex-row mt-4">
-                {
-                    state.address && state.contracts[address].signers.includes(state.address) && signable && <button
-                        type="button"
-                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
-                        onClick={async (e) => {
-                            e.preventDefault();
-                            await sign(id, false)
-                        }}
-                    >
-                        Reject
-                    </button>
-                }
-                {
-                    state.address && state.contracts[address].signers.includes(state.address) && signable && <button
-                        type="button"
-                        className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
-                        onClick={async (e) => {
-                            e.preventDefault();
-                            await sign(id, true)
-                        }}
-                    >
-                        Sign
-                    </button>
-                }
-                {state.address && state.contracts[address].signers.includes(state.address) && !signable && !prop.executed && (
-                    <p className="mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none border-2">
-                        Waiting for signatures of other owners
-                    </p>
-                )}
+                <ContractLoader loading={loading}>
+                    {
+                        state.address && state.contracts[address].signers.includes(state.address) && signable && <button
+                            type="button"
+                            className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
+                            onClick={async (e) => {
+                                e.preventDefault();
+                                await sign(id, false)
+                            }}
+                        >
+                            Reject
+                        </button>
+                    }
+                    {
+                        state.address && state.contracts[address].signers.includes(state.address) && signable && <button
+                            type="button"
+                            className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
+                            onClick={async (e) => {
+                                e.preventDefault();
+                                await sign(id, true)
+                            }}
+                        >
+                            Sign
+                        </button>
+                    }
+                    {state.address && state.contracts[address].signers.includes(state.address) && !signable && !prop.executed && (
+                        <p className="mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none border-2">
+                            Waiting for signatures of other owners
+                        </p>
+                    )}
+                </ContractLoader>
             </div>
         </li >
     )
@@ -177,10 +187,10 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
 
 function renderContent(x: content, state: tezosState, address: string): string {
     if ("transfer" in x) {
-        return `${x.transfer.amount} XTZ to ${state.aliases[x.transfer.target] || x.transfer.target}`
+        return `${x.transfer.amount} mutez to ${state.aliases[x.transfer.target] || x.transfer.target}`
     }
     if ("execute" in x) {
-        return `${x.execute.amount} XTZ to ${state.aliases[x.execute.target] || x.execute.target} and pass parameter: Unit`
+        return `${x.execute.amount} mutez to ${state.aliases[x.execute.target] || x.execute.target} and pass parameter: Unit`
     }
     if ("add_signers" in x) {
         return `Add [${x.add_signers.join(', ')}] to validators`
