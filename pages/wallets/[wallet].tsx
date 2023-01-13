@@ -47,7 +47,8 @@ function Home() {
     let dispatch = useContext(AppDispatchContext)!
     let [invalid, setInvalid] = useState(false)
     let router = usePathname()?.split("/")![2]!
-    let [contract, setContract] = useState({ contract: state.contracts[router], proposals: emptyProps })
+    let [contract, setContract] = useState(state.contracts[router])
+    let [proposals, setProposals] = useState(emptyProps)
 
     useEffect(() => {
         if (router && validateAddress(router) === 3) {
@@ -77,15 +78,15 @@ function Home() {
                 let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([cc.proposal_counter.toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
                 let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
                 setContract({
-                    contract: {
-                        balance: balance?.toString() || "0",
-                        proposal_map: cc.proposal_map.toString(),
-                        proposal_counter: cc.proposal_counter.toString(),
-                        threshold: cc?.threshold.toNumber()!,
-                        signers: cc!.signers!,
-                        version: version
-                    }, proposals: proposals
+                    balance: balance?.toString() || "0",
+                    proposal_map: cc.proposal_map.toString(),
+                    proposal_counter: cc.proposal_counter.toString(),
+                    threshold: cc?.threshold.toNumber()!,
+                    signers: cc!.signers!,
+                    version: version
+
                 })
+                setProposals(proposals)
             })()
         }
         if (router && validateAddress(router) != 3) {
@@ -95,7 +96,7 @@ function Home() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router])
     useEffect(() => {
-        async function updateProposals() {
+        async function updateProposals(executed: boolean) {
             let c = await state.connection.contract.at(router)
             let {
                 proposal_counter,
@@ -107,7 +108,16 @@ function Home() {
             let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([proposal_counter.toNumber() + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
             let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
             let balance = await state.connection.tz.getBalance(router)
-            setContract(s => ({ ...s, threshold: threshold.toNumber(), proposal_counter: proposal_counter.toNumber(), balance: balance.toString(), proposals: proposals, signers }))
+            setContract(s => {
+                if (executed) {
+                    return ({ ...s, threshold: threshold.toNumber(), proposal_counter: proposal_counter.toString(), balance: balance.toString(), signers })
+                }
+                else {
+                    return ({ ...s, proposal_counter: proposal_counter.toString() })
+
+                }
+            });
+            setProposals(proposals)
         }
         let sub: any
         (async () => {
@@ -120,19 +130,19 @@ function Home() {
                     sub.on('data', async (event: { tag: string; }) => {
                         switch (event.tag) {
                             case "default": {
-                                await updateProposals()
+                                await updateProposals(true)
                                 break;
                             }
                             case "create_proposal": {
-                                await updateProposals()
+                                await updateProposals(false)
                                 break;
                             }
                             case "sign_proposal": {
-                                await updateProposals()
+                                await updateProposals(false)
                                 break;
                             }
                             case "execute_proposal": {
-                                await updateProposals()
+                                await updateProposals(true)
                                 break;
                             }
                             default:
@@ -153,7 +163,8 @@ function Home() {
     }, [router])
     let alias = state.aliases[router]
     let [openModal, setCloseModal] = useState(0)
-    let balance = new BigNumber(contract?.contract?.balance);
+
+    let balance = new BigNumber(contract?.balance);
     balance = balance.div(10 ** 6, 10);
     return (
         <div className="relative h-full flex flex-col overflow-y-auto">
@@ -234,9 +245,9 @@ function Home() {
                                     </svg>
                                 </button>
                             </div>
-                            <Spinner cond={!!contract.contract?.version} value={contract.contract?.version} text={"Version"} />
-                            <Spinner cond={!!contract.contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
-                            <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.threshold}`} text={"Threshold"} />
+                            <Spinner cond={!!contract?.version} value={contract?.version} text={"Version"} />
+                            <Spinner key={contract?.balance} cond={!!contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
+                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${contract?.signers.length}`} text={"Threshold"} />
                         </div> : <div className="md:col-span-3"><h1 className="text-white text-l md:text-3xl font-bold md:col-span-3">
                             {router}
                         </h1>
@@ -247,9 +258,9 @@ function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0118 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3l1.5 1.5 3-3.75" />
                                 </svg>
                             </button>
-                            <Spinner cond={!!contract.contract?.version} value={contract.contract?.version} text={"Version"} />
-                            <Spinner cond={!!contract.contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
-                            <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.signers.length}`} text={"Threshold"} />
+                            <Spinner cond={!!contract?.version} value={contract?.version} text={"Version"} />
+                            <Spinner key={contract?.balance} cond={!!contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
+                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${contract?.signers.length}`} text={"Threshold"} />
                         </div>}
                         {state.address && <div>
                             <button
@@ -268,7 +279,7 @@ function Home() {
                                 Top up wallet
                             </button>
                         </div>}
-                        {state.address && contract.contract?.signers.includes(state?.address) && <div className="">
+                        {state.address && contract?.signers.includes(state?.address) && <div className="">
                             <button
                                 type="button"
                                 onClick={e => {
@@ -285,7 +296,7 @@ function Home() {
                                 Create proposal
                             </button>
                         </div>}
-                        {state.address && contract.contract?.signers.includes(state?.address) && <div className="">
+                        {state.address && contract?.signers.includes(state?.address) && <div className="">
                             <button
                                 type="button"
                                 onClick={e => {
@@ -308,7 +319,7 @@ function Home() {
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
                             <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
-                                <Proposals proposals={contract?.proposals} contract={contract} address={router} />
+                                <Proposals proposals={proposals} contract={contract} address={router} />
                             </div>
                         </div>
                     </div>

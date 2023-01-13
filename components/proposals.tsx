@@ -9,16 +9,15 @@ function getClass(x: number, active: number): string {
         : "inline-block p-4 md:w-full text-xl md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
 }
 const Proposals: FC<{
-    proposals: [number, viewProposal][], address: string, contract: {
-        contract: contractStorage;
-        proposals: [number, viewProposal][];
-    }
+    proposals: [number, viewProposal][], address: string, contract:
+    contractStorage;
+
 }> = ({ proposals, address, contract }) => {
     let [currentTab, setCurrentTab] = useState(0);
     let state = useContext(AppStateContext)!
 
     return (
-        <div className="col-span-1 md:col-span-2" id={`${proposals.map(([num, _]) => num).join(",")}`}>
+        <div className="col-span-1 md:col-span-2" >
             <h3 className="text-3xl font-bold text-white">Proposals</h3>
             <div className="mb-4 border-b border-gray-100 ">
                 <ul
@@ -71,7 +70,7 @@ const Proposals: FC<{
                     aria-labelledby="profile-tab"
                 >
                     {proposals && proposals.length > 0 && [...proposals.filter(x => "active" in x[1].state)].sort((a, b) => b[0] - a[0]).map(x => {
-                        return <Card contract={contract.contract} id={x[0]} key={x[0]} prop={x[1]} address={address} signable={!!state.address && !x[1].signatures.has(state.address) && true} />
+                        return <Card contract={contract} id={x[0]} key={JSON.stringify(x[1])} prop={x[1]} address={address} signable={!!state.address && !x[1].signatures.has(state.address) && true} />
                     }
                     )}
                 </ul>
@@ -82,7 +81,7 @@ const Proposals: FC<{
                     aria-labelledby="profile-tab"
                 >
                     {proposals && proposals.length > 0 && [...proposals.filter(x => !("active" in x[1].state))].sort((a, b) => b[0] - a[0]).map(x => {
-                        return <Card contract={contract.contract} id={x[0]} key={x[0]} prop={x[1]} address={address} signable={false} />
+                        return <Card contract={contract} id={x[0]} key={x[0]} prop={x[1]} address={address} signable={false} />
                     }
                     )}
                 </ul>
@@ -179,7 +178,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                             Sign
                         </button>
                     }
-                    {state.address && contract.signers.includes(state.address) && !signable && !prop.executed && (
+                    {state.address && contract.signers.includes(state.address) && !signable && ("active" in prop.state) && (
                         <p className="mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none border-2">
                             Waiting for signatures of other owners
                         </p>
