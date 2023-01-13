@@ -98,12 +98,16 @@ function Home() {
         async function updateProposals() {
             let c = await state.connection.contract.at(router)
             let {
-                proposal_counter
-            }: { proposal_counter: BigNumber } = await c.storage()
+                proposal_counter,
+                threshold,
+                signers
+            }: {
+                proposal_counter: BigNumber, threshold: BigNumber, signers: string[];
+            } = await c.storage()
             let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([proposal_counter.toNumber() + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
             let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
             let balance = await state.connection.tz.getBalance(router)
-            setContract(s => ({ ...s, proposal_counter: proposal_counter.toNumber(), balance: balance.toString(), proposals: proposals }))
+            setContract(s => ({ ...s, threshold: threshold.toNumber(), proposal_counter: proposal_counter.toNumber(), balance: balance.toString(), proposals: proposals, signers }))
         }
         let sub: any
         (async () => {
