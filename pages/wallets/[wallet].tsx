@@ -308,7 +308,7 @@ function Home() {
                     <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
                         <div className="px-4 py-6 sm:px-0">
                             <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
-                                <Proposals proposals={contract?.proposals} address={router} />
+                                <Proposals proposals={contract?.proposals} contract={contract} address={router} />
                             </div>
                         </div>
                     </div>

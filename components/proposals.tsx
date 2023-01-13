@@ -1,14 +1,19 @@
 import { stringify } from "querystring";
 import { FC, useContext, useState } from "react";
-import { AppStateContext, tezosState } from "../context/state";
-import { content, proposal, viewProposal } from "../context/types";
+import { AppStateContext, tezosState, contractStorage } from "../context/state";
+import { content, viewProposal } from "../context/types";
 import ContractLoader from "./contractLoader";
 function getClass(x: number, active: number): string {
     return x == active
         ? "inline-block p-4 md:w-full rounded-t-lg border-b-2  text-xl md:text-2xl uppercase border-primary text-white"
         : "inline-block p-4 md:w-full text-xl md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
 }
-const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = ({ proposals, address }) => {
+const Proposals: FC<{
+    proposals: [number, viewProposal][], address: string, contract: {
+        contract: contractStorage;
+        proposals: [number, viewProposal][];
+    }
+}> = ({ proposals, address, contract }) => {
     let [currentTab, setCurrentTab] = useState(0);
     let state = useContext(AppStateContext)!
 
@@ -66,7 +71,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
                     aria-labelledby="profile-tab"
                 >
                     {proposals && proposals.length > 0 && [...proposals.filter(x => "active" in x[1].state)].sort((a, b) => b[0] - a[0]).map(x => {
-                        return <Card id={x[0]} key={x[0]} prop={x[1]} address={address} signable={!!state.address && !x[1].signatures.has(state.address) && true} />
+                        return <Card contract={contract.contract} id={x[0]} key={x[0]} prop={x[1]} address={address} signable={!!state.address && !x[1].signatures.has(state.address) && true} />
                     }
                     )}
                 </ul>
@@ -77,7 +82,7 @@ const Proposals: FC<{ proposals: [number, viewProposal][], address: string }> = 
                     aria-labelledby="profile-tab"
                 >
                     {proposals && proposals.length > 0 && [...proposals.filter(x => !("active" in x[1].state))].sort((a, b) => b[0] - a[0]).map(x => {
-                        return <Card id={x[0]} key={x[0]} prop={x[1]} address={address} signable={false} />
+                        return <Card contract={contract.contract} id={x[0]} key={x[0]} prop={x[1]} address={address} signable={false} />
                     }
                     )}
                 </ul>
@@ -98,7 +103,7 @@ function getState(t: viewProposal): string {
     }
     return "Unknown"
 }
-const Card: FC<{ prop: viewProposal, address: string, id: number, signable: boolean }> = ({ prop, address, id, signable }) => {
+const Card: FC<{ prop: viewProposal, address: string, id: number, signable: boolean, contract: contractStorage }> = ({ contract, prop, address, id, signable }) => {
     let state = useContext(AppStateContext)!
     let [loading, setLoading] = useState(false)
     async function sign(proposal: number, flag: boolean) {
@@ -128,7 +133,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
             {!("closed" in prop.state) &&
                 <div>
                     <p className="md:inline-block text-white font-bold">Signatures: </p>
-                    <p className="md:inline-block text-white font-bold text-sm md:text-md">{prop.signatures.size}/{state.contracts[address].threshold}</p>
+                    <p className="md:inline-block text-white font-bold text-sm md:text-md">{prop.signatures.size}/{contract.threshold}</p>
                 </div>
             }
             {!("closed" in prop.state) &&
@@ -141,17 +146,17 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
             {
                 "active" in prop.state && <div>
                     <p className="md:inline-block text-white font-bold">Waiting for signatures from: </p>
-                    <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {state.contracts[address].signers.filter(x => !prop.signatures.has(x)).map(x => state.aliases[x] || x).join(", ")} ] </p>
+                    <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {contract.signers.filter(x => !prop.signatures.has(x)).map(x => state.aliases[x] || x).join(", ")} ] </p>
                 </div>
             }
             <div>
                 <p className="md:inline-block text-white font-bold">Transactions: </p>
-                <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {prop.content.map(x => `${renderContent(x, state, address)}`).join(", ")} ] </p>
+                <p className="md:inline-block text-white font-bold text-sm md:text-md">[ {prop.content.map(x => `${renderContent(x, state, address, contract)}`).join(", ")} ] </p>
             </div>
             <div className="flex flex-col md:flex-row mt-4">
                 <ContractLoader loading={loading}>
                     {
-                        state.address && state.contracts[address].signers.includes(state.address) && signable && <button
+                        state.address && contract.signers.includes(state.address) && signable && <button
                             type="button"
                             className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
                             onClick={async (e) => {
@@ -163,7 +168,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                         </button>
                     }
                     {
-                        state.address && state.contracts[address].signers.includes(state.address) && signable && <button
+                        state.address && contract.signers.includes(state.address) && signable && <button
                             type="button"
                             className={"mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-100  hover:border-offset-2  hover:border-offset-gray-100"}
                             onClick={async (e) => {
@@ -174,7 +179,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
                             Sign
                         </button>
                     }
-                    {state.address && state.contracts[address].signers.includes(state.address) && !signable && !prop.executed && (
+                    {state.address && contract.signers.includes(state.address) && !signable && !prop.executed && (
                         <p className="mx-auto w-full  md:w-1/3 bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none border-2">
                             Waiting for signatures of other owners
                         </p>
@@ -185,7 +190,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
     )
 }
 
-function renderContent(x: content, state: tezosState, address: string): string {
+function renderContent(x: content, state: tezosState, address: string, contract: contractStorage): string {
     if ("transfer" in x) {
         return `${x.transfer.amount} mutez to ${state.aliases[x.transfer.target] || x.transfer.target}`
     }
@@ -199,7 +204,7 @@ function renderContent(x: content, state: tezosState, address: string): string {
         return `Remove [${x.remove_signers.join(', ')}] from validators`
     }
     if ("adjust_threshold" in x) {
-        return `Change threshold from ${state.contracts[address].threshold} to ${x.adjust_threshold}`
+        return `Change threshold from ${contract.threshold} to ${x.adjust_threshold}`
     }
     return "Not supported"
 }

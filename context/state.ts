@@ -184,6 +184,7 @@ let AppDispatchContext: Context<Dispatch<action> | null> =
 export {
   type tezosState,
   type action,
+  type contractStorage,
   init,
   AppStateContext,
   AppDispatchContext,
