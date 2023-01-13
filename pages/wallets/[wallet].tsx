@@ -232,7 +232,7 @@ function Home() {
                             </div>
                             <Spinner cond={!!contract.contract?.version} value={contract.contract?.version} text={"Version"} />
                             <Spinner cond={!!contract.contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
-                            <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.signers.length}`} text={"Threshold"} />
+                            <Spinner cond={!!contract.contract?.threshold} value={`${contract?.contract?.threshold}/${contract?.contract?.threshold}`} text={"Threshold"} />
                         </div> : <div className="md:col-span-3"><h1 className="text-white text-l md:text-3xl font-bold md:col-span-3">
                             {router}
                         </h1>

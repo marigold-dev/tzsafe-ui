@@ -128,7 +128,7 @@ const Card: FC<{ prop: viewProposal, address: string, id: number, signable: bool
             {!("closed" in prop.state) &&
                 <div>
                     <p className="md:inline-block text-white font-bold">Signatures: </p>
-                    <p className="md:inline-block text-white font-bold text-sm md:text-md">{prop.signatures.size}/{state.contracts[address].signers.length}</p>
+                    <p className="md:inline-block text-white font-bold text-sm md:text-md">{prop.signatures.size}/{state.contracts[address].threshold}</p>
                 </div>
             }
             {!("closed" in prop.state) &&
