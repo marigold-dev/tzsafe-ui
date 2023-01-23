@@ -1,4 +1,4 @@
-import { Contract, TezosToolkit } from "@taquito/taquito";
+import { BigMapAbstraction, Contract, TezosToolkit } from "@taquito/taquito";
 import {
   content,
   proposal as p1,
@@ -73,8 +73,10 @@ class Version008 extends Versioned {
     p: any,
     result: boolean
   ): Promise<void> {
+    let proposals: { proposals: BigMapAbstraction } = await cc.storage();
+    let prop: any = await proposals.proposals.get(BigNumber(proposal));
     let params = cc.methods
-      .sign_and_resolve_proposal(proposal, (p as p1).contents, result)
+      .sign_and_resolve_proposal(BigNumber(proposal), prop.contents, result)
       .toTransferParams();
     let op = await t.wallet.transfer(params).send();
     await op.confirmation(1);
