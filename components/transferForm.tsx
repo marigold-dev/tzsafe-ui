@@ -1,48 +1,24 @@
-import { validateAddress } from "@taquito/utils";
 import {
     ErrorMessage,
     Field,
     FieldArray,
     Form,
     Formik,
-    FormikErrors
 } from "formik";
 import React, { useContext, useState } from "react";
-import { AppStateContext } from "../context/state";
+import { AppStateContext, contractStorage } from "../context/state";
+import { VersionedApi } from "../versioned/apis";
+import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
 
-function get(
-    s: string | FormikErrors<{ to: string; amount: string }>
-): boolean {
-    if (typeof s == "string") {
-        return false;
-    } else {
-        if (s.to || s.amount) {
-            return s?.to?.length !== 0 && s?.amount?.length == 0;
-        } else {
-            return false;
-        }
-    }
-}
+
 function TransferForm(
-    props: React.PropsWithoutRef<{ address: string; closeModal: () => void }>
+    props: React.PropsWithoutRef<{ address: string; closeModal: () => void, contract: contractStorage }>
 ) {
     const state = useContext(AppStateContext)!;
     let [loading, setLoading] = useState(false);
     let [result, setResult] = useState<boolean | undefined>(undefined);
 
-    async function transfer(txs: { to: string; amount: number }[]) {
-        let cc = await state.connection.contract.at(props.address);
-        let params = cc.methods
-            .create_proposal(
-                txs.map((x) => ({
-                    transfer: { target: x.to, amount: x.amount, parameter: {} },
-                }))
-            )
-            .toTransferParams();
-        let op = await state.connection.wallet.transfer(params).send();
-        await op.transactionOperation()
-    }
     if (state?.address == null) {
         return null;
     }
@@ -95,7 +71,20 @@ function TransferForm(
     const renderError = (message: string) => {
         return <p className="italic text-red-600">{message}</p>;
     };
-    const initialProps: { transfers: { to: string; amount: number }[] } = {
+    const initialProps: {
+        transfers: {
+            type: "lambda" | "transfer"
+            values: { [key: string]: string };
+            fields: {
+                field: string;
+                label: string;
+                kind?: "textarea";
+                path: string;
+                placeholder: string;
+                validate: (p: string) => string | undefined;
+            }[];
+        }[]
+    } = {
         transfers: [],
     };
 
@@ -103,40 +92,32 @@ function TransferForm(
         <Formik
             initialValues={initialProps}
             validate={(values) => {
-                const errors: { transfers: { to: string; amount: string }[] } = {
+                const errors: {
+                    transfers: { values: { [key: string]: string } }[]
+                } = {
                     transfers: [],
                 };
-                let dedup = new Set();
-                let result = values.transfers.map((x) => {
-                    if (isNaN(x.amount) || x.amount == 0) {
-                        return {
-                            to: "",
-                            amount: `invalid amount ${x}`,
-                        };
-                    }
-                    if (dedup.has(x.to)) {
-                        return {
-                            to: "already included in list",
-                            amount: "",
-                        };
-                    } else {
-                        dedup.add(x.to);
-                        return {
-                            to: validateAddress(x.to) !== 3 ? `invalid address ${x.to}` : "",
-                            amount: "",
-                        };
-                    }
+                values.transfers.forEach((element, idx) => {
+                    Object.entries(element.values).forEach(([labl, value]) => {
+                        let field = element.fields.find(x => x.field === labl)
+                        let validate = field?.placeholder !== value ? field?.validate(value) : undefined
+                        if (validate) {
+                            if (!errors.transfers[idx]) {
+                                errors.transfers[idx] = { values: {} }
+                            }
+                            errors.transfers[idx].values[labl] = validate
+                        }
+                    })
                 });
-                if (result.every((x) => x.to === "" && x.amount == "")) {
-                    return;
-                }
-                errors.transfers = result;
-                return errors;
+                return errors.transfers.length === 0 ? undefined : errors
             }}
             onSubmit={async (values) => {
                 setLoading(true);
                 try {
-                    await transfer(values.transfers);
+                    let cc = await state.connection.contract.at(props.address);
+
+                    let versioned = VersionedApi(props.contract.version, props.address)
+                    await versioned.submitTxProposals(cc, state.connection, values)
                     setResult(true);
                 } catch (e) {
                     console.log(e);
@@ -159,51 +140,41 @@ function TransferForm(
                                 <div className="min-w-full">
                                     {values.transfers.length > 0 &&
                                         values.transfers.map((transfer, index) => {
+                                            const withTextArea = transfer.fields.find(x => x?.kind === "textarea") ? " flex-col md:flex-col" : ""
                                             return (
                                                 <div
-                                                    className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-around items-start min-w-full"
+                                                    className={withTextArea + " border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col  justify-around items-start min-w-full  min-h-fit h-fit"}
                                                     key={index}
                                                 >
-                                                    <div className="flex flex-col">
-                                                        <label className="text-white">
-                                                            Amount in Mutez
-                                                        </label>
-                                                        <Field
-                                                            name={`transfers.${index}.amount`}
-                                                            className=" border-2 p-2 text-sm md:text-md"
-                                                            placeholder={transfer.amount || 0}
-                                                        />
-                                                        <ErrorMessage
-                                                            name={`transfers.${index}.amount`}
-                                                            render={renderError}
-                                                        />
-                                                    </div>
-                                                    <div className="relative flex flex-col w-full md:w-auto md:grow justify-start">
-                                                        <label
-                                                            className="text-white"
-                                                            htmlFor={`transfers.${index}.to`}
-                                                        >
-                                                            Transfer to:
-                                                        </label>
-                                                        <Field
-                                                            name={`transfers.${index}.to`}
-                                                            className="w-full border-2 p-2 text-sm md:text-md"
-                                                            placeholder={transfer.to || "Destination address"}
-                                                            default={transfer.to}
-                                                        />
-                                                        <ErrorMessage
-                                                            name={`transfers.${index}.to`}
-                                                            render={(x) => {
-                                                                return renderError(x);
-                                                            }}
-                                                        />
-                                                    </div>
+                                                    {transfer.fields.map((value, idx, arr) => {
+                                                        const withTextArea = transfer.fields.find(x => x?.kind === "textarea") ? " w-full md:w-full " : ""
+                                                        let width = arr.length === 1 && !transfer.fields.find(x => x?.kind === "textarea") ? " w-3/4 " : ""
+                                                        let classn = (idx + 1) % 2 === 0 ? "relative flex flex-col w-full md:grow justify-start" : "flex flex-col"
+                                                        return (
+                                                            <div className={classn + width + withTextArea} key={idx}>
+                                                                <label className="text-white">
+                                                                    {value.label}
+                                                                </label>
+                                                                <Field
+                                                                    as={value.kind}
+                                                                    name={`transfers.${index}.values.${value.field}`}
+                                                                    className={" border-2 p-2 text-sm md:text-md min-h-fit h-fit" + withTextArea}
+                                                                    placeholder={value.placeholder}
+                                                                    rows={10}
+                                                                />
+                                                                <ErrorMessage
+                                                                    name={`transfers.${index}.values.${value.field}`}
+                                                                    render={renderError}
+                                                                />
+                                                            </div>
+                                                        )
+                                                    }
+                                                    )}
                                                     <button
                                                         type="button"
                                                         className={
                                                             (errors.transfers &&
-                                                                errors.transfers[index] &&
-                                                                get(errors.transfers[index])
+                                                                errors.transfers[index]
                                                                 ? "my-auto"
                                                                 : "") +
                                                             " bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
@@ -213,21 +184,34 @@ function TransferForm(
                                                             remove(index);
                                                         }}
                                                     >
-                                                        Remove transfer
+                                                        Remove TX
                                                     </button>
                                                 </div>
-                                            );
+                                            )
+
                                         })}
-                                    <button
-                                        type="button"
-                                        className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            push({ to: "", amount: 0 });
-                                        }}
-                                    >
-                                        Add transfer
-                                    </button>
+                                    <div className="flex flex-col md:flex-row">
+                                        <button
+                                            type="button"
+                                            className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                push({ type: "transfer", ...Versioned.transferForm(props.contract) });
+                                            }}
+                                        >
+                                            Add transfer
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                push({ type: "lambda", ...Versioned.lambdaForm(props.contract) });
+                                            }}
+                                        >
+                                            Add execute lambda
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </FieldArray>
@@ -251,7 +235,7 @@ function TransferForm(
                     </div>
                 </Form>
             )}
-        </Formik>
+        </Formik >
     );
 }
 

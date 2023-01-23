@@ -7,8 +7,12 @@ import {
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
 import { hex2buf } from "@taquito/utils";
+import { version } from "../types/display";
 declare const ABSTRACTION_KEY: unique symbol;
-
+const dispatch: { [key: string]: version } = {
+  "0.0.6": "0.0.6",
+  "0.0.8": "0.0.8",
+};
 async function fetchVersion(
   metadata: ContractAbstraction<ContractProvider> & {
     tzip16(
@@ -17,10 +21,11 @@ async function fetchVersion(
       }
     ): Tzip16ContractAbstraction;
   }
-): Promise<string> {
+): Promise<version> {
   try {
     let metar = await metadata.tzip16().getMetadata();
-    return metar.metadata.version!;
+    let version = metar.metadata.version!;
+    return dispatch[version] || "unknown version";
   } catch {
     return "unknown version";
   }

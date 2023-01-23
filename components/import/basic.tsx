@@ -4,6 +4,9 @@ import FormContext from "../../context/formContext";
 import { validateAddress } from "@taquito/utils"
 import { AppStateContext } from "../../context/state";
 import { useSearchParams } from "next/navigation";
+import { signers, toStorage } from "../../versioned/apis";
+import fetchVersion from "../../context/metadata";
+import { tzip16 } from "@taquito/tzip16";
 function Basic() {
     const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
         useContext(FormContext)!;
@@ -47,9 +50,14 @@ function Basic() {
                 return errors
             }}
             onSubmit={async (values) => {
-                const contract = await state.connection.contract.at(values.walletAddress)
+                const contract = await state.connection.contract.at(values.walletAddress, tzip16)
                 const storage: any = await contract.storage()
-                const validators = storage.signers.map((x: string) => ({ address: x, name: state.aliases[x] || "" }));
+                let version = await fetchVersion(contract!)
+                let balance = await state?.connection.tz.getBalance(
+                    values.walletAddress
+                );
+                let v = toStorage(version, storage, balance)
+                const validators = signers(v).map((x: string) => ({ address: x, name: state.aliases[x] || "" }));
                 const data = { ...formState, ...values, validators, requiredSignatures: storage.threshold.toNumber() };
                 setFormState(data);
                 setActiveStepIndex(activeStepIndex + 1);

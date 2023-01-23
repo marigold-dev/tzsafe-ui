@@ -8,6 +8,7 @@ import Link from "next/link";
 import { char2Bytes, tzip16 } from "@taquito/tzip16";
 import fetchVersion from "../../context/metadata";
 import metadata_blob from "../../context/metadata_blob";
+import { toStorage } from "../../versioned/apis";
 function Success() {
     const { formState } = useContext(FormContext)!;
     let state = useContext(AppStateContext);
@@ -24,20 +25,15 @@ function Success() {
                             code: contract,
                             storage: {
                                 proposal_counter: 0,
-                                proposal_map: [],
-                                signers: formState!.validators.map((x) => x.address),
+                                proposals: [],
+                                owners: formState!.validators.map((x) => x.address),
                                 threshold: formState!.requiredSignatures,
                                 ...metadata_blob,
                             },
                         })
                         .send();
                     let result1 = await deploy?.contract();
-                    let c: {
-                        proposal_counter: BigNumber;
-                        proposal_map: BigMapAbstraction;
-                        signers: string[];
-                        metadata: BigMapAbstraction
-                    } = await result1!.storage()
+                    let c = await result1!.storage()
                     let ct = await state?.connection.contract.at(result1?.address!, tzip16)!;
                     let version = await fetchVersion(ct);
                     let balance = await state?.connection.tz.getBalance(
@@ -52,14 +48,7 @@ function Success() {
                                 ...formState!.validators!.map((x) => [x.address, x.name]),
                                 [result1?.address!, formState?.walletName || ""],
                             ]),
-                            contract: {
-                                balance: balance?.toString() || "0",
-                                proposal_map: c.proposal_map.toString(),
-                                proposal_counter: c.proposal_counter.toString(),
-                                threshold: formState?.requiredSignatures!,
-                                signers: formState!.validators!.map((x) => x.address),
-                                version: version
-                            },
+                            contract: toStorage(version, c, balance!),
                             address: result1!.address!,
                         },
                     });

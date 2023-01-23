@@ -4,15 +4,8 @@ import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import { Context, createContext, Dispatch } from "react";
 import { RPC } from "./config";
 import { Tzip16Module } from "@taquito/tzip16";
+import { contractStorage } from "../types/app";
 
-type contractStorage = {
-  proposal_counter: string;
-  balance: string;
-  proposal_map: string;
-  signers: string[];
-  threshold: number;
-  version: string;
-};
 type tezosState = {
   connection: TezosToolkit;
   beaconWallet: BeaconWallet | null;

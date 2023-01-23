@@ -1,16 +1,14 @@
-import { BigMapAbstraction } from "@taquito/taquito";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext, contractStorage } from "../context/state";
 import ContractLoader from "./contractLoader";
-import BigNumber from "bignumber.js"
-import { bytes2Char, tzip16 } from "@taquito/tzip16";
+import { tzip16 } from "@taquito/tzip16";
 import fetchVersion from "../context/metadata";
+import { toStorage } from "../versioned/apis";
 
-function TopUp(props: { address: string; closeModal: () => void }) {
+function TopUp(props: { address: string; closeModal: (contract: contractStorage) => void }) {
     const state = useContext(AppStateContext)!;
     const dispatch = useContext(AppDispatchContext)!;
-
     let [loading, setLoading] = useState(false);
     let [result, setResult] = useState<undefined | boolean>(undefined);
     const renderError = (message: string) => (
@@ -43,7 +41,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                     }
                     <button
                         onClick={() => {
-                            props.closeModal();
+                            props.closeModal(state.contracts[props.address]);
                         }}
                         type="button"
                         className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
@@ -75,32 +73,20 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                     setResult(true);
                     let c = await state.connection.contract.at(props.address, tzip16)
                     let balance = await state.connection.tz.getBalance(props.address)
-                    let cc: {
-                        proposal_counter: BigNumber;
-                        proposal_map: BigMapAbstraction;
-                        signers: string[];
-                        threshold: BigNumber;
-                    } = await c.storage()
+                    let cc = await c.storage()
                     let version = await fetchVersion(c);
-                    dispatch({
+                    state.contracts[props.address] ? dispatch({
                         type: "updateContract", payload: {
                             address: props.address,
-                            contract: {
-                                balance: balance!.toString() || "0",
-                                proposal_map: cc.proposal_map.toString(),
-                                proposal_counter: cc.proposal_counter.toString(),
-                                threshold: cc!.threshold.toNumber()!,
-                                signers: cc!.signers!,
-                                version: version
-                            }
+                            contract: toStorage(version, cc, balance)
                         },
-                    })
+                    }) : null
                 } catch {
                     setResult(false);
                 }
                 setLoading(false);
                 setTimeout(() => {
-                    props.closeModal()
+                    props.closeModal(state.contracts[props.address])
                 }, 1500)
             }}
         >
@@ -124,7 +110,7 @@ function TopUp(props: { address: string; closeModal: () => void }) {
                         className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                         onClick={e => {
                             e.preventDefault()
-                            props.closeModal()
+                            props.closeModal(state.contracts[props.address])
                         }}
                     >
                         Cancel

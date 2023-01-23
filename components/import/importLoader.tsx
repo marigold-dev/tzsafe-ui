@@ -7,6 +7,7 @@ import { BigMapAbstraction } from "@taquito/taquito";
 import Link from "next/link";
 import { bytes2Char, tzip16 } from "@taquito/tzip16";
 import fetchVersion from "../../context/metadata";
+import { toStorage } from "../../versioned/apis";
 function Success() {
     const { formState } = useContext(FormContext)!;
     let state = useContext(AppStateContext);
@@ -20,18 +21,13 @@ function Success() {
                 try {
                     let cc = await state?.connection.contract
                         .at(address.address, tzip16)
-                    let storage: {
-                        proposal_counter: BigNumber;
-                        proposal_map: BigMapAbstraction;
-                        signers: string[];
-                        threshold: BigNumber;
-                        metadata: BigMapAbstraction;
-                    } = await cc?.storage()!;
-
+                    let storage = await cc?.storage()!;
                     let balance = await state?.connection.tz.getBalance(
                         address.address
                     );
                     let version = await fetchVersion(cc!)
+                    let v = toStorage(version, storage, balance!)
+
                     setAddress({ address: address.address, status: 1 });
                     setLoading(false);
                     dispatch!({
@@ -40,14 +36,7 @@ function Success() {
                             aliases: Object.fromEntries(
                                 [...formState!.validators!.map((x) => [x.address, x.name]), [address.address!, formState?.walletName || ""]]
                             ),
-                            contract: {
-                                balance: balance?.toString() || "0",
-                                proposal_map: storage.proposal_map.toString(),
-                                proposal_counter: storage.proposal_counter.toString(),
-                                threshold: formState?.requiredSignatures!,
-                                signers: formState!.validators!.map((x) => x.address),
-                                version: version
-                            },
+                            contract: v,
                             address: address.address,
                         },
                     });

@@ -8,8 +8,9 @@ import {
     FormikErrors,
 } from "formik";
 import { FC, useContext, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
-import { content } from "../context/types";
+import { AppDispatchContext, AppStateContext, contractStorage } from "../context/state";
+import { ownersForm } from "../versioned/forms";
+import { signers, VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 function get(
     s: string | FormikErrors<{ name: string; address: string }>
@@ -25,7 +26,7 @@ function get(
     }
 }
 
-const SignersForm: FC<{ closeModal: () => void; address: string }> = (
+const SignersForm: FC<{ closeModal: () => void; address: string, contract: contractStorage }> = (
     props
 ) => {
     const state = useContext(AppStateContext)!;
@@ -45,18 +46,18 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         requiredSignatures: number;
         validatorsError?: string
     } = {
-        validators: state.contracts[props.address].signers.map((x) => ({
+        validators: signers(props.contract).map((x) => ({
             address: x,
             name: state.aliases[x] || "",
         })),
-        requiredSignatures: state.contracts[props.address].threshold,
+        requiredSignatures: props.contract.threshold,
     };
     async function changeSettings(
         txs: { name: string; address: string }[],
         requiredSignatures: number
     ) {
         let cc = await state.connection.contract.at(props.address);
-        let initialSigners = new Set(state.contracts[props.address].signers);
+        let initialSigners = new Set(signers(props.contract));
         let input = new Set(txs.map((x) => x.address));
         let removed = new Set(
             [...initialSigners.values()].filter((x) => !input.has(x))
@@ -64,22 +65,18 @@ const SignersForm: FC<{ closeModal: () => void; address: string }> = (
         let added = new Set(
             [...input.values()].filter((x) => !initialSigners.has(x))
         )
-        let ops: content[] = []
+        let ops: ownersForm[] = []
         if (added.size > 0) {
-            ops.push({ add_signers: [...added.values()] })
+            ops.push({ addOwners: [...added.values()] })
         }
         if (removed.size > 0) {
-            ops.push({ remove_signers: [...removed.values()] })
+            ops.push({ removeOwners: [...removed.values()] })
         }
-        if (state.contracts[props.address].threshold !== requiredSignatures) {
-            ops.push({ adjust_threshold: requiredSignatures })
+        if (props.contract.threshold !== requiredSignatures) {
+            ops.push({ changeThreshold: requiredSignatures })
         }
-
-        let params = cc.methods
-            .create_proposal(ops)
-            .toTransferParams();
-        let op = await state.connection.wallet.transfer(params).send();
-        await op.transactionOperation()
+        let api = VersionedApi(props.contract.version, props.address)
+        await api.submitSettingsProposals(cc, state.connection, ops)
     }
     if (loading && typeof result == "undefined") {
         return <ContractLoader loading={loading}></ContractLoader>;
