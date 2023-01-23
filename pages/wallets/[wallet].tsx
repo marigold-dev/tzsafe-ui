@@ -1,5 +1,5 @@
-import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
-import { bytes2Char, tzip16 } from "@taquito/tzip16";
+import { MichelsonMap } from "@taquito/taquito";
+import { tzip16 } from "@taquito/tzip16";
 import { validateAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
@@ -13,9 +13,11 @@ import SignersForm from "../../components/signersForm";
 import TopUp from "../../components/topUpForm";
 import TransferForm from "../../components/transferForm";
 import fetchVersion from "../../context/metadata";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
-import { proposal, viewProposal } from "../../context/types";
-let emptyProps: [number, viewProposal][] = []
+import { AppDispatchContext, AppStateContext, contractStorage } from "../../context/state";
+import { proposal, version } from "../../types/display";
+import { signers, toProposal, toStorage } from "../../versioned/apis";
+import { Versioned } from "../../versioned/interface";
+let emptyProps: [number, { og: any, ui: proposal }][] = []
 const Spinner: FC<{ cond: boolean, value: string, text: string }> = ({ cond, value, text }) => {
     return cond ?
         <p className="text-white text-l md:text-xl font-bold">{text}: {value}</p> :
@@ -47,7 +49,7 @@ function Home() {
     let dispatch = useContext(AppDispatchContext)!
     let [invalid, setInvalid] = useState(false)
     let router = usePathname()?.split("/")![2]!
-    let [contract, setContract] = useState(state.contracts[router])
+    let [contract, setContract] = useState<contractStorage>(state.contracts[router])
     let [proposals, setProposals] = useState(emptyProps)
 
     useEffect(() => {
@@ -55,37 +57,18 @@ function Home() {
             (async () => {
                 let c = await state.connection.contract.at(router, tzip16)
                 let balance = await state.connection.tz.getBalance(router)
-                let cc: {
-                    proposal_counter: BigNumber;
-                    proposal_map: BigMapAbstraction;
-                    signers: string[];
-                    threshold: BigNumber;
-                } = await c.storage()
-                let version = await fetchVersion(c)
-                dispatch({
+                let cc = await c.storage()
+                let version = await (state.contracts[router] ? Promise.resolve<version>(state.contracts[router].version) : fetchVersion(c))
+                const updatedContract = toStorage(version, cc, balance);
+                state.contracts[router] ? dispatch({
                     type: "updateContract", payload: {
                         address: router,
-                        contract: {
-                            balance: balance!.toString() || "0",
-                            proposal_map: cc.proposal_map.toString(),
-                            proposal_counter: cc.proposal_counter.toString(),
-                            threshold: cc!.threshold.toNumber()!,
-                            signers: cc!.signers!,
-                            version: version
-                        }
+                        contract: updatedContract
                     },
-                })
-                let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([cc.proposal_counter.toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
-                let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
-                setContract({
-                    balance: balance?.toString() || "0",
-                    proposal_map: cc.proposal_map.toString(),
-                    proposal_counter: cc.proposal_counter.toString(),
-                    threshold: cc?.threshold.toNumber()!,
-                    signers: cc!.signers!,
-                    version: version
-
-                })
+                }) : null
+                let pp: MichelsonMap<BigNumber, any> = await c.contractViews.proposals([Versioned.proposalCounter(updatedContract).toNumber(), 0]).executeView({ source: state?.address || "", viewCaller: router });
+                let proposals: [number, any][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), { ui: toProposal(version, y), og: y }]))
+                setContract(updatedContract)
                 setProposals(proposals)
             })()
         }
@@ -96,27 +79,15 @@ function Home() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router])
     useEffect(() => {
-        async function updateProposals(executed: boolean) {
-            let c = await state.connection.contract.at(router)
-            let {
-                proposal_counter,
-                threshold,
-                signers
-            }: {
-                proposal_counter: BigNumber, threshold: BigNumber, signers: string[];
-            } = await c.storage()
-            let pp: MichelsonMap<BigNumber, viewProposal> = await c.contractViews.proposals([proposal_counter.toNumber() + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
-            let proposals: [number, viewProposal][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), y]))
+        async function updateProposals() {
+            let c = await state.connection.contract.at(router, tzip16)
+            let cc = await c.storage()
             let balance = await state.connection.tz.getBalance(router)
-            setContract(s => {
-                if (executed) {
-                    return ({ ...s, threshold: threshold.toNumber(), proposal_counter: proposal_counter.toString(), balance: balance.toString(), signers })
-                }
-                else {
-                    return ({ ...s, proposal_counter: proposal_counter.toString() })
-
-                }
-            });
+            let version = await (state.contracts[router] ? Promise.resolve<version>(state.contracts[router].version) : fetchVersion(c))
+            const updatedContract = toStorage(version, cc, balance);
+            let pp: MichelsonMap<BigNumber, any> = await c.contractViews.proposals([Versioned.proposalCounter(updatedContract).toNumber() + 1, 0]).executeView({ source: state?.address || "", viewCaller: router });
+            let proposals: [number, any][] = [...pp.entries()].map(([x, y]) => ([x.toNumber(), { ui: toProposal(version, y), og: y }]))
+            setContract(updatedContract);
             setProposals(proposals)
         }
         let sub: any
@@ -130,19 +101,23 @@ function Home() {
                     sub.on('data', async (event: { tag: string; }) => {
                         switch (event.tag) {
                             case "default": {
-                                await updateProposals(true)
+                                await updateProposals()
                                 break;
                             }
                             case "create_proposal": {
-                                await updateProposals(false)
+                                await updateProposals()
                                 break;
                             }
                             case "sign_proposal": {
-                                await updateProposals(false)
+                                await updateProposals()
                                 break;
                             }
                             case "execute_proposal": {
-                                await updateProposals(true)
+                                await updateProposals()
+                                break;
+                            }
+                            case "resolve_proposal": {
+                                await updateProposals()
                                 break;
                             }
                             default:
@@ -173,47 +148,17 @@ function Home() {
                 {!!openModal && (() => {
                     switch (openModal) {
                         case 1:
-                            return <TopUp closeModal={async () => {
-                                let c = await state.connection.contract.at(router, tzip16)
-                                let balance = await state.connection.tz.getBalance(router)
-                                let cc: {
-                                    proposal_counter: BigNumber;
-                                    proposal_map: BigMapAbstraction;
-                                    signers: string[];
-                                    threshold: BigNumber;
-                                    metadata: BigMapAbstraction
-                                } = await c.storage()
-                                let version = await fetchVersion(c)
-                                dispatch({
-                                    type: "updateContract", payload: {
-                                        address: router,
-                                        contract: {
-                                            balance: balance!.toString() || "0",
-                                            proposal_map: cc.proposal_map.toString(),
-                                            proposal_counter: cc.proposal_counter.toString(),
-                                            threshold: cc!.threshold.toNumber()!,
-                                            signers: cc!.signers!,
-                                            version: version,
-                                        }
-                                    },
-                                })
-                                setContract(s => ({
+                            return <TopUp closeModal={async (c: contractStorage) => {
+                                setContract((s: contractStorage) => ({
                                     ...s,
-                                    contract: {
-                                        balance: balance?.toString() || "0",
-                                        proposal_map: cc.proposal_map.toString(),
-                                        proposal_counter: cc.proposal_counter.toString(),
-                                        threshold: cc?.threshold.toNumber()!,
-                                        signers: cc!.signers!,
-                                        version: version,
-                                    }
+                                    contract: c
                                 }))
                                 setCloseModal(0)
                             }} address={router} />
                         case 2:
-                            return <TransferForm closeModal={() => setCloseModal(0)} address={router} />
+                            return <TransferForm contract={contract} closeModal={() => setCloseModal(0)} address={router} />
                         case 3:
-                            return <SignersForm closeModal={() => setCloseModal(0)} address={router} />
+                            return <SignersForm contract={contract} closeModal={() => setCloseModal(0)} address={router} />
                         default:
                             return null
                     }
@@ -247,7 +192,7 @@ function Home() {
                             </div>
                             <Spinner cond={!!contract?.version} value={contract?.version} text={"Version"} />
                             <Spinner key={contract?.balance} cond={!!contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
-                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${contract?.signers.length}`} text={"Threshold"} />
+                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${signers(contract).length}`} text={"Threshold"} />
                         </div> : <div className="md:col-span-3"><h1 className="text-white text-l md:text-3xl font-bold md:col-span-3">
                             {router}
                         </h1>
@@ -260,7 +205,7 @@ function Home() {
                             </button>
                             <Spinner cond={!!contract?.version} value={contract?.version} text={"Version"} />
                             <Spinner key={contract?.balance} cond={!!contract?.balance} value={`${balance.toString()} xtz`} text={"Balance"} />
-                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${contract?.signers.length}`} text={"Threshold"} />
+                            <Spinner key={contract?.threshold} cond={!!contract?.threshold} value={`${contract?.threshold}/${signers(contract).length}`} text={"Threshold"} />
                         </div>}
                         {state.address && <div>
                             <button
@@ -279,7 +224,7 @@ function Home() {
                                 Top up wallet
                             </button>
                         </div>}
-                        {state.address && contract?.signers.includes(state?.address) && <div className="">
+                        {state.address && signers(contract).includes(state?.address) && <div className="">
                             <button
                                 type="button"
                                 onClick={e => {
@@ -296,7 +241,7 @@ function Home() {
                                 Create proposal
                             </button>
                         </div>}
-                        {state.address && contract?.signers.includes(state?.address) && <div className="">
+                        {state.address && signers(contract).includes(state?.address) && <div className="">
                             <button
                                 type="button"
                                 onClick={e => {
