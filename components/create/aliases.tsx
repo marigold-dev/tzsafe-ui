@@ -1,8 +1,10 @@
 import { validateAddress } from "@taquito/utils";
-import { ErrorMessage, Field, FieldArray, Form, Formik, FormikErrors } from "formik";
+import { ErrorMessage, Field, FieldArray, FieldHookConfig, Form, Formik, FormikErrors, useField } from "formik";
+import React, { FC } from "react";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
+import TextInputWithCompletion from "../textInputWithComplete";
 function get(s: string | FormikErrors<{ name: string; address: string; }>): boolean {
     if (typeof s == "string") {
         return false
@@ -14,10 +16,12 @@ function get(s: string | FormikErrors<{ name: string; address: string; }>): bool
         }
     }
 }
+
 function Aliases() {
     const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
         useContext(FormContext)!;
     const state = useContext(AppStateContext);
+    let byName = Object.fromEntries(Object.entries(state?.aliases || {}).map(([k, v]) => ([v, k])))
     if (state?.address == null) {
         return null;
     }
@@ -51,8 +55,8 @@ function Aliases() {
                         err.address = validateAddress(x.address) !== 3 ? `invalid address ${x.address}` : ''
 
                     }
-                    if (!!x.name && dedupName.has(x.name)) {
-                        err.name = "already exists"
+                    if (!!x.name && (dedupName.has(x.name) || byName[x.name])) {
+                        err.name = "alias already exists"
                     } else {
                         dedupName.add(x.name)
                     }
@@ -77,7 +81,7 @@ function Aliases() {
                     <ErrorMessage name={`validatorsError`} render={renderError} />
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
                         <FieldArray name="validators">
-                            {({ remove, push }) => (
+                            {({ remove, push, replace }) => (
                                 <div className="min-w-full">
                                     {values.validators.length > 0 && values.validators.map((validator, index) => {
                                         return (
@@ -89,6 +93,13 @@ function Aliases() {
                                                         className="border-2 p-2 text-sm md:text-md"
                                                         placeholder={validator.name || "Owner Name"}
                                                     />
+                                                    <TextInputWithCompletion
+                                                        setTerms={({ payload, term }) => {
+                                                            replace(index, { ...validator, name: term, address: payload })
+                                                        }}
+                                                        name={`validators.${index}.name`}
+                                                        className="border-2 p-2 text-sm md:text-md"
+                                                        placeholder={validator.name || "Owner Name"} />
                                                     <ErrorMessage name={`validators.${index}.name`} render={renderError} />
                                                 </div>
                                                 <div className="grid grid-rows-3 grid-flow-col grid-cols-1 md:grow">

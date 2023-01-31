@@ -19,6 +19,8 @@ function Basic() {
         walletName: "example-wallet",
         walletAddress: formState?.walletAddress || ""
     })
+    let byName = Object.fromEntries(Object.entries(state?.aliases || {}).map(([k, v]) => ([v, k])))
+
     useEffect(() => {
         if (!initialState.walletAddress && !!params.get("address")) {
             set(initial => ({ ...initial, walletAddress: params.get("address") || "" }))
@@ -45,7 +47,10 @@ function Basic() {
                     errors.walletAddress = `Contract does not exist at address ${values.walletAddress}`
                 }
                 if (state.contracts[values.walletAddress]) {
-                    errors.walletAddress = `Contract already imported ${values.walletAddress}`
+                    errors.walletName = `Contract already imported ${values.walletAddress}`
+                }
+                if (byName[values.walletName]) {
+                    errors.walletName = `Contract name already taken: ${byName[values.walletName]}`
                 }
                 return errors
             }}
@@ -66,12 +71,12 @@ function Basic() {
             <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-2 w-full">
                 <div className="text-2xl font-medium self-center mb-2 text-white">Enter imported wallet name and address below</div>
                 <div className="flex flex-col w-full justify-center md:flex-row">
-                    <div className="flex flex-col">
-                        <div className="flex flex-col items-start mb-2">
+                    <div className="flex flex-col w-1/2">
+                        <div className="flex flex-col items-start mb-2 w-full">
                             <label className="font-medium text-white">Wallet name</label>
                             <Field
                                 name="walletName"
-                                className=" border-2 p-2"
+                                className=" border-2 p-2 w-full"
                                 placeholder="example-wallet"
                             />
                         </div>

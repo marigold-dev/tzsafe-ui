@@ -156,6 +156,7 @@ abstract class Versioned {
       field: string;
       label: string;
       path: string;
+      kind?: "input-complete";
       placeholder: string;
       validate: (p: string) => string | undefined;
     }[];
@@ -165,6 +166,7 @@ abstract class Versioned {
         return {
           values: {
             amount: "0",
+            to: "",
           },
           fields: [
             {
@@ -184,6 +186,7 @@ abstract class Versioned {
               field: "to",
               label: "Transfer to:",
               path: ".to",
+              kind: "input-complete",
               placeholder: "destination address",
               validate: (x: string) => {
                 return validateAddress(x) !== 3
@@ -197,6 +200,7 @@ abstract class Versioned {
         return {
           values: {
             amount: "0",
+            to: "",
           },
           fields: [
             {
@@ -216,6 +220,7 @@ abstract class Versioned {
               field: "to",
               label: "Transfer to:",
               path: ".to",
+              kind: "input-complete",
               placeholder: "destination address",
               validate: (x: string) => {
                 return validateAddress(x) !== 3

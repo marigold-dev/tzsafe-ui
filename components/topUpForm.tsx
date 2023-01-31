@@ -70,7 +70,6 @@ function TopUp(props: { address: string; closeModal: (contract: contractStorage)
                 setLoading(true);
                 try {
                     await transfer(values.amount);
-                    setResult(true);
                     let c = await state.connection.contract.at(props.address, tzip16)
                     let balance = await state.connection.tz.getBalance(props.address)
                     let cc = await c.storage()
@@ -81,6 +80,8 @@ function TopUp(props: { address: string; closeModal: (contract: contractStorage)
                             contract: toStorage(version, cc, balance)
                         },
                     }) : null
+                    setResult(true);
+                    setLoading(false);
                 } catch {
                     setResult(false);
                 }

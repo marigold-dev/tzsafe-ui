@@ -26,6 +26,7 @@ function Aliases() {
             <p className="italic text-red-600">{message}</p>
         )
     };
+    let byName = Object.fromEntries(Object.entries(state?.aliases || {}).map(([k, v]) => ([v, k])))
     const initialProps: { validators: { name: string, address: string }[], requiredSignatures: number } = {
         validators: formState?.validators!,
         requiredSignatures: formState?.requiredSignatures!
@@ -48,8 +49,8 @@ function Aliases() {
                         err.address = validateAddress(x.address) !== 3 ? `invalid address ${x.address}` : ''
 
                     }
-                    if (!!x.name && dedupName.has(x.name)) {
-                        err.name = "already exists"
+                    if (!!x.name && (dedupName.has(x.name) || byName[x.name])) {
+                        err.name = "alias already exists"
                     } else {
                         dedupName.add(x.name)
                     }

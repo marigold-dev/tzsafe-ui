@@ -5,8 +5,8 @@ import { signers, VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 function getClass(x: number, active: number): string {
     return x == active
-        ? "inline-block p-4 md:w-full rounded-t-lg border-b-2  text-xl md:text-2xl uppercase border-primary text-white"
-        : "inline-block p-4 md:w-full text-xl md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
+        ? "inline-block p-4 w-full md:w-full text-left md:text-center break-normal rounded-t-lg border-b-2  text-md md:text-2xl uppercase border-primary text-white"
+        : "inline-block p-4 w-full md:w-full text-left md:text-center text-md md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
 }
 const Proposals: FC<{
     proposals: [number, { og: any, ui: proposal }][], address: string, contract:
