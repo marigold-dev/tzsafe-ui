@@ -1,20 +1,30 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
+import { AppStateContext } from "../../context/state";
 
 function Basic() {
     const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
         useContext(FormContext)!;
+    const state = useContext(AppStateContext)!
 
     const renderError = (message: string) => (
         <p className="italic text-red-600">{message}</p>
     );
+    let byName = Object.fromEntries(Object.entries(state?.aliases || {}).map(([k, v]) => ([v, k])))
 
 
     return (
         <Formik
             initialValues={{
                 walletName: "example-wallet",
+            }}
+            validate={values => {
+                let errors: any = {}
+                if (byName[values.walletName]) {
+                    errors.walletName = `Contract name already taken by ${byName[values.walletName]}`
+                }
+                return errors
             }}
             onSubmit={(values) => {
                 const data = { ...formState, requiredSignatures: 1, ...values };
@@ -28,7 +38,7 @@ function Basic() {
                     <label className="font-medium text-white">Wallet name</label>
                     <Field
                         name="walletName"
-                        className=" border-2 p-2"
+                        className=" border-2 p-2 w-full"
                         placeholder="example-wallet"
                     />
                 </div>

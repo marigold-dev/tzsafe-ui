@@ -40,6 +40,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                             <div className="hidden md:block">
                                 <div className="ml-10 flex items-baseline space-x-4">
                                     <RenderContracts />
+                                    <LinkComponent path="/address-book" text={"Address book"} />
                                     {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" --> */}
                                 </div>
                             </div>
@@ -125,13 +126,13 @@ const NavBar = (_: React.PropsWithChildren) => {
                                 onClick={() => {
                                     menuOpen ? setMenuOpen(false) : setMenuOpen(true);
                                 }}
-                                className="inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                className="inline-flex items-center text-white justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none"
                                 aria-controls="mobile-menu"
                                 aria-expanded="false"
                             >
                                 <span className="sr-only">Open main menu</span>
                                 <svg
-                                    className="block h-6 w-6"
+                                    className="block h-6 w-6 fill-white"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -171,6 +172,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                             }`}
                     >
                         <RenderContracts />
+                        <LinkComponent path="/address-book" text={"Address book"} />
                     </div>
                     {state?.address == null ? (
                         <div className="flex items-center justify-end mx-2 pb-2">
@@ -205,12 +207,12 @@ const NavBar = (_: React.PropsWithChildren) => {
                             >
                                 <span className="sr-only">View notifications</span>
                                 <svg
-                                    className="h-6 w-6"
+                                    className="h-6 w-6 fill-white"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     strokeWidth="1.5"
-                                    stroke="currentColor"
+                                    stroke="white"
                                     aria-hidden="true"
                                 >
                                     <path
@@ -232,7 +234,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                                 e.preventDefault()
                                 await disconnectWallet()
                             }}
-                            className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                            className="block rounded-md px-3 py-2 text-base font-medium  hover:bg-gray-700 hover:text-white text-white"
                         >
                             Sign out
                         </button>

@@ -2,14 +2,17 @@ import {
     ErrorMessage,
     Field,
     FieldArray,
+
     Form,
     Formik,
+
 } from "formik";
 import React, { useContext, useState } from "react";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
+import TextInputWithCompletion from "./textInputWithComplete";
 
 
 function TransferForm(
@@ -78,7 +81,7 @@ function TransferForm(
             fields: {
                 field: string;
                 label: string;
-                kind?: "textarea";
+                kind?: "textarea" | "input-complete";
                 path: string;
                 placeholder: string;
                 validate: (p: string) => string | undefined;
@@ -136,7 +139,7 @@ function TransferForm(
                     </div>
                     <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
                         <FieldArray name="transfers">
-                            {({ remove, push }) => (
+                            {({ remove, push, replace }) => (
                                 <div className="min-w-full">
                                     {values.transfers.length > 0 &&
                                         values.transfers.map((transfer, index) => {
@@ -150,18 +153,36 @@ function TransferForm(
                                                         const withTextArea = transfer.fields.find(x => x?.kind === "textarea") ? " w-full md:w-full " : ""
                                                         let width = arr.length === 1 && !transfer.fields.find(x => x?.kind === "textarea") ? " w-3/4 " : ""
                                                         let classn = (idx + 1) % 2 === 0 ? "relative flex flex-col w-full md:grow justify-start" : "flex flex-col"
+
+                                                        // let onRef = (!!value.kind && value.kind === "input-complete") ? ((e: HTMLInputElement) => {
+                                                        //     if (e) {
+                                                        //         !!e.value ? shouldComplete.current = true : shouldComplete.current = false
+                                                        //     }
+                                                        // }) : (() => { })
+                                                        // console.log(shouldComplete.current)
                                                         return (
                                                             <div className={classn + width + withTextArea} key={idx}>
                                                                 <label className="text-white">
                                                                     {value.label}
                                                                 </label>
-                                                                <Field
-                                                                    as={value.kind}
+                                                                {(!!value.kind && value.kind === "input-complete") ? <TextInputWithCompletion
+                                                                    setTerms={({ payload, term: _ }) => {
+                                                                        replace(index, { ...values.transfers[index], values: { ...values.transfers[index].values, to: payload } })
+                                                                    }}
+                                                                    as="input"
                                                                     name={`transfers.${index}.values.${value.field}`}
-                                                                    className={" border-2 p-2 text-sm md:text-md min-h-fit h-fit" + withTextArea}
+                                                                    className={"relative border-2 p-2 text-sm md:text-md min-h-fit h-fit w-full" + withTextArea}
                                                                     placeholder={value.placeholder}
                                                                     rows={10}
-                                                                />
+
+                                                                /> : <Field
+                                                                    component={value.kind}
+                                                                    name={`transfers.${index}.values.${value.field}`}
+                                                                    className={"relative border-2 p-2 text-sm md:text-md min-h-fit h-fit" + withTextArea}
+                                                                    placeholder={value.placeholder}
+                                                                    rows={10}
+
+                                                                />}
                                                                 <ErrorMessage
                                                                     name={`transfers.${index}.values.${value.field}`}
                                                                     render={renderError}
@@ -184,7 +205,7 @@ function TransferForm(
                                                             remove(index);
                                                         }}
                                                     >
-                                                        Remove TX
+                                                        Remove
                                                     </button>
                                                 </div>
                                             )
@@ -233,8 +254,9 @@ function TransferForm(
                             Submit
                         </button>}
                     </div>
-                </Form>
-            )}
+                </Form >
+            )
+            }
         </Formik >
     );
 }

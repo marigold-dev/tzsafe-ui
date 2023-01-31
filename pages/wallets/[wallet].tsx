@@ -1,5 +1,6 @@
 import { MichelsonMap } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
+import { Parser, emitMicheline } from "@taquito/michel-codec"
 import { validateAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
@@ -57,6 +58,7 @@ function Home() {
             (async () => {
                 let c = await state.connection.contract.at(router, tzip16)
                 let balance = await state.connection.tz.getBalance(router)
+
                 let cc = await c.storage()
                 let version = await (state.contracts[router] ? Promise.resolve<version>(state.contracts[router].version) : fetchVersion(c))
                 const updatedContract = toStorage(version, cc, balance);

@@ -5,6 +5,7 @@ import { Context, createContext, Dispatch } from "react";
 import { RPC } from "./config";
 import { Tzip16Module } from "@taquito/tzip16";
 import { contractStorage } from "../types/app";
+import { Trie } from "../utils/radixTrie";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -14,6 +15,7 @@ type tezosState = {
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  aliasTrie: Trie<string>;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -39,6 +41,7 @@ let emptyState = () => {
     address: null,
     accountInfo: null,
     connection,
+    aliasTrie: new Trie<string>(),
   };
 };
 
@@ -87,6 +90,7 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts: contracts,
         aliases: aliases,
+        aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
     case "updateAliaces": {
@@ -101,6 +105,7 @@ function reducer(state: tezosState, action: action): tezosState {
       return {
         ...state,
         aliases: aliases,
+        aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
     case "updateContract": {
@@ -122,6 +127,7 @@ function reducer(state: tezosState, action: action): tezosState {
     case "init": {
       return {
         ...action.payload,
+        aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
     }
     case "login": {
