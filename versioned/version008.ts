@@ -80,6 +80,9 @@ class Version008 extends Versioned {
     await op.transactionOperation();
     await op.confirmation(1);
   }
+  static override getProposalsId(_contract: c1): string {
+    return  _contract.proposals.toString()
+   }
   async signProposal(
     cc: Contract,
     t: TezosToolkit,
@@ -132,8 +135,8 @@ class Version008 extends Versioned {
     if ("execute_lambda" in content) {
       return {
         executeLambda: {
-          metadata: !!content.execute_lambda
-            ? bytes2Char(content.execute_lambda as any)
+          metadata: !!content.execute_lambda?.metadata
+            ? bytes2Char(content.execute_lambda.metadata)
             : "No metadata",
           content: "Unable to display",
         },
@@ -173,7 +176,7 @@ class Version008 extends Versioned {
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
-      signatures: [...prop.signatures.entries()].map(([k, v]) => ({
+      signatures: [...Object.entries(prop.signatures)].map(([k, v]) => ({
         signer: k,
         result: v,
       })),

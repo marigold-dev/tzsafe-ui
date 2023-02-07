@@ -1,4 +1,4 @@
-import { MichelsonMap } from "@taquito/taquito";
+import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
 import { Parser, emitMicheline } from "@taquito/michel-codec";
 import { validateAddress } from "@taquito/utils";
@@ -20,8 +20,14 @@ import {
   contractStorage,
 } from "../../context/state";
 import { proposal, version } from "../../types/display";
-import { signers, toProposal, toStorage } from "../../versioned/apis";
+import {
+  signers,
+  toProposal,
+  toStorage,
+  getProposalsId,
+} from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
+import { getProposals } from "../../context/proposals";
 let emptyProps: [number, { og: any; ui: proposal }][] = [];
 const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   cond,
@@ -87,12 +93,13 @@ function Home() {
               },
             })
           : null;
-        let pp: MichelsonMap<BigNumber, any> = await c.contractViews
-          .proposals([Versioned.proposalCounter(updatedContract).toNumber(), 0])
-          .executeView({ source: state?.address || "", viewCaller: router });
-        let proposals: [number, any][] = [...pp.entries()].map(([x, y]) => [
-          x.toNumber(),
-          { ui: toProposal(version, y), og: y },
+        let bigmap: { key: string; value: any }[] = await getProposals(
+          getProposalsId(version, cc)
+        );
+
+        let proposals: [number, any][] = bigmap.map(({ key, value }) => [
+          Number.parseInt(key),
+          { ui: toProposal(version, value), og: value },
         ]);
         setContract(updatedContract);
         setProposals(proposals);
@@ -112,16 +119,15 @@ function Home() {
       let version = await (state.contracts[router]
         ? Promise.resolve<version>(state.contracts[router].version)
         : fetchVersion(c));
+
       const updatedContract = toStorage(version, cc, balance);
-      let pp: MichelsonMap<BigNumber, any> = await c.contractViews
-        .proposals([
-          Versioned.proposalCounter(updatedContract).toNumber() + 1,
-          0,
-        ])
-        .executeView({ source: state?.address || "", viewCaller: router });
-      let proposals: [number, any][] = [...pp.entries()].map(([x, y]) => [
-        x.toNumber(),
-        { ui: toProposal(version, y), og: y },
+      let bigmap: { key: string; value: any }[] = await getProposals(
+        getProposalsId(version, cc)
+      );
+
+      let proposals: [number, any][] = bigmap.map(({ key, value }) => [
+        Number.parseInt(key),
+        { ui: toProposal(version, value), og: value },
       ]);
       setContract(updatedContract);
       setProposals(proposals);

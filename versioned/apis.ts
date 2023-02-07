@@ -40,7 +40,13 @@ function toStorage(
 ): contractStorage {
   return dispatchUi[version].toContractState(c, balance);
 }
+function getProposalsId(
+  version: version,
+  c: any,
+): string {
+  return dispatchUi[version].getProposalsId(c);
+}
 function toProposal(version: version, c: any): proposal {
   return dispatchUi[version].toProposal(c);
 }
-export { toStorage, signers, toProposal, VersionedApi };
+export { toStorage, signers, toProposal, VersionedApi, getProposalsId };
