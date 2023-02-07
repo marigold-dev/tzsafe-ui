@@ -4,9 +4,16 @@ import {
   FieldArray,
   Form,
   Formik,
+  prepareDataForValidation,
   useFormikContext,
 } from "formik";
-import React, { SetStateAction, useContext, useEffect, useState } from "react";
+import React, {
+  SetStateAction,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
@@ -82,6 +89,7 @@ function makeForm(
           return {
             type: "field",
             name: field,
+            placeholder: value.__michelsonType,
             init: f.init,
             fields: f,
             mapValue: (x: any) => {
@@ -214,7 +222,7 @@ function RenderItem({
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name))
-              ? parent[parent.length - 1].toString()
+              ? `${item.type}: ${item.fields[0].type}`
               : item.name
           )}
         </label>
@@ -289,8 +297,12 @@ function RenderItem({
         {({ push, pop }) => {
           return (
             <div className="w-full grid gap-2 grid-flow-row grid-cols-1">
-              {isNaN(Number(item.name)) && (
+              {isNaN(Number(item.name)) ? (
                 <p className="text-white">{item.name}</p>
+              ) : (
+                <p className="text-white">
+                  {item.type}: {item.fields.type}
+                </p>
               )}
               {path &&
                 path
@@ -361,7 +373,7 @@ function RenderItem({
       <div className="w-full grid gap-2 grid-flow-row grid-cols-1">
         <label className="text-white">
           {capitalizeFirstLetter(
-            !Number.isNaN(Number(item.name)) ? "Item N:" + item.name : item.name
+            !Number.isNaN(Number(item.name)) ? item.placeholder : item.name
           )}
         </label>
         <Field
@@ -422,6 +434,7 @@ function RenderItem({
           placeholder={"Enter lambda here"}
           rows={10}
           name={fieldName}
+          defaultValue={""}
           as="textarea"
         />
       </div>
@@ -450,14 +463,13 @@ function Basic({
   const renderError = (message: string) => (
     <p className="italic text-red-600">{message}</p>
   );
-  let [initialState, set] = useState({
+  let initialState = {
     amount: 0,
     walletAddress: "",
-  });
+  };
 
   return (
     <Formik
-      enableReinitialize={true}
       initialValues={initialState}
       validate={async (values) => {
         let errors: any = {};
@@ -528,105 +540,128 @@ function ExecuteForm(
   props: React.PropsWithoutRef<{
     address: string;
     amount: number;
+    shape: any;
+    reset: () => void;
     setField: (lambda: string, metadata: string) => void;
+    setLoading: (x: boolean) => void;
+    setState: (shape: any) => void;
+    loading: boolean;
   }>
 ) {
   let state = useContext(AppStateContext)!;
-  let [shape, setShape] = useState<any>(null);
   let address = props.address;
+  let conn = state.connection;
+  let setLoading = props.setLoading;
+  let loading = props.loading;
   useEffect(() => {
-    (async () => {
-      let c = await state.connection.contract.at(address);
+    if (!Object.keys(props.shape).length && !loading) {
+      (async () => {
+        try {
+          setLoading(true);
+          let c = await conn.contract.at(address);
 
-      // this is needed
-      let res = makeForm(c.parameterSchema.generateSchema());
+          // this is needed
+          let res = makeForm(c.parameterSchema.generateSchema());
 
-      let initial = {
-        entrypoint: {
-          ...Object.fromEntries(
-            (res as any).fields.map((x: any) => [x.name, x.init])
-          ),
-          ...res.init,
-        },
-      };
-      setShape({
-        entrypoint: initial,
-        form: res,
-        schema: c,
-      });
-    })();
-  }, [address]);
+          let initial = {
+            entrypoint: {
+              ...Object.fromEntries(
+                (res as any).fields.map((x: any) => [x.name, x.init])
+              ),
+              ...res.init,
+            },
+          };
+          props.setState({
+            entrypoint: initial,
+            form: res,
+            schema: c,
+          });
+          setLoading(false);
+        } catch {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [address, loading, props.shape]);
 
   return (
     <div className="text-white w-full">
       <Formik
         enableReinitialize
-        initialValues={shape?.entrypoint}
+        initialValues={props.shape?.entrypoint}
         onSubmit={async (values) => {
-          function merge(x: form, v: any): any {
-            if (x.type === "select") {
-              let field = x.fields.find((x) => x.name == v.kind);
-              if (field?.type == "constant") {
-                return { [field.name]: v[v.kind] };
+          props.setLoading(true);
+          try {
+            function merge(x: form, v: any): any {
+              if (x.type === "select") {
+                let field = x.fields.find((x) => x.name == v.kind);
+                if (
+                  field?.type == "constant" &&
+                  field?.name != v[v.kind].toString()
+                ) {
+                  return { [field.name]: v[v.kind] };
+                }
+                return "mapValue" in field! && !(v.kind in v)
+                  ? field.mapValue(merge(field!, v[v.kind]))
+                  : merge(field!, v[v.kind]);
               }
-              return "mapValue" in field! && !(v.kind in v)
-                ? field.mapValue(merge(field!, v[v.kind]))
-                : merge(field!, v[v.kind]);
-            }
-            if (x.type === "constant") {
-              return v;
-            }
-            if (x.type === "array") {
-              if (x.name === "map") {
-                return {
-                  [merge(x.fields.find((y) => y.name === "key")!, v.key)]:
-                    merge(x.fields.find((y) => y.name === "value")!, v.value),
-                };
+              if (x.type === "constant") {
+                return v;
               }
-              let res = Object.fromEntries(
-                Object.entries(v).map(([k, v]: any) => [
-                  k,
-                  merge(x.fields.find((y) => y.name === k)!, v),
-                ])
-              );
-              if ("mapValue" in x) {
-                return (x as any).mapValue(res);
+              if (x.type === "array") {
+                if (x.name === "map") {
+                  return {
+                    [merge(x.fields.find((y) => y.name === "key")!, v.key)]:
+                      merge(x.fields.find((y) => y.name === "value")!, v.value),
+                  };
+                }
+                let res = Object.fromEntries(
+                  Object.entries(v).map(([k, v]: any) => [
+                    k,
+                    merge(x.fields.find((y) => y.name === k)!, v),
+                  ])
+                );
+                if ("mapValue" in x) {
+                  return (x as any).mapValue(res);
+                }
+                return res;
               }
-              return res;
-            }
-            if (x.type === "record") {
-              let res = Object.fromEntries(
-                Object.entries(v).map(([k, v]: any) => [
-                  k,
-                  merge(x.fields.find((y) => y.name === k)!, v),
-                ])
-              );
-              if ("mapValue" in x) {
-                return (x as any).mapValue(res);
+              if (x.type === "record") {
+                let res = Object.fromEntries(
+                  Object.entries(v).map(([k, v]: any) => [
+                    k,
+                    merge(x.fields.find((y) => y.name === k)!, v),
+                  ])
+                );
+                if ("mapValue" in x) {
+                  return (x as any).mapValue(res);
+                }
+                return res;
               }
-              return res;
+              if (x.type === "list") {
+                let li = v.map((y: any) => merge(x.fields, y));
+                return x.mapValue(li);
+              }
+              if (x.type === "field") {
+                return merge(x.fields, v);
+              }
+              if (x.type === "input" || x.type == "textarea") {
+                return x.mapValue(v);
+              }
             }
-            if (x.type === "list") {
-              let li = v.map((y: any) => merge(x.fields, y));
-              return x.mapValue(li);
-            }
-            if (x.type === "field") {
-              return merge(x.fields, v);
-            }
-            if (x.type === "input" || x.type == "textarea") {
-              return x.mapValue(v);
-            }
-          }
-          let res = merge(shape.form, values.entrypoint);
-          let p = new Parser();
-          let param = emitMicheline(
-            p.parseJSON(shape.schema.parameterSchema.EncodeObject(res))
-          );
-          let typ = emitMicheline(shape.schema.script.code[0].args[0] as any, {
-            indent: "",
-            newline: "",
-          });
-          let lambda = `
+            let res = merge(props.shape.form, values.entrypoint);
+            let p = new Parser();
+            let param = emitMicheline(
+              p.parseJSON(props.shape.schema.parameterSchema.EncodeObject(res))
+            );
+            let typ = emitMicheline(
+              props.shape.schema.script.code[0].args[0] as any,
+              {
+                indent: "",
+                newline: "",
+              }
+            );
+            let lambda = `
           { 
             DROP ;                                        
             PUSH address "${props.address}";
@@ -636,11 +671,11 @@ function ExecuteForm(
             PUSH ${typ} ${param} ;
             TRANSFER_TOKENS 
           }`;
-          console.log("typ", typ, res);
-          console.log("p", param);
-          console.log(lambda);
-          console.log(emitMicheline(p.parseMichelineExpression(lambda)!));
-          props.setField(lambda, JSON.stringify(res, null, 2));
+            props.setField(lambda, JSON.stringify(res, null, 2));
+            props.setLoading(false);
+          } catch {
+            props.setLoading(false);
+          }
         }}
       >
         {({ resetForm }) => (
@@ -649,17 +684,19 @@ function ExecuteForm(
               Add items below
             </div>
             <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full md:h-fit-content md:max-h-96 overflow-y-auto">
-              {shape && <RenderItem item={shape.form} parent={[]} />}
+              {!!props.shape && (
+                <RenderItem item={props.shape.form} parent={[]} />
+              )}
             </div>
             <div className="flex flex-row md:w-1/3 justify-around">
               <button
                 className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
                 onClick={(e) => {
                   e.preventDefault();
-                  resetForm();
+                  props.reset();
                 }}
               >
-                Cancel
+                Reset
               </button>
               {
                 <button
@@ -682,8 +719,32 @@ function ExecuteContractForm(
     getFieldProps: () => string;
   }>
 ) {
-  let [state, setState] = useState({ address: "", amount: 0 });
+  let [state, setState] = useState({ address: "", amount: 0, shape: {} });
+  let [loading, setLoading] = useState(false);
   let [done, setDone] = useState(false);
+  let setLoader = useCallback((x: boolean) => {
+    setLoading((prev: boolean) => {
+      if (prev == x) {
+        return prev;
+      }
+      return x;
+    });
+  }, []);
+  let setStater = useCallback(({ shape }: { shape: object }) => {
+    setState((prev: any) => {
+      if (Object.keys(prev.shape).length) {
+        return prev;
+      }
+      return { ...prev, shape };
+    });
+  }, []);
+  if (loading) {
+    return (
+      <div className=" w-full border-2 mb-2 border-white p-2 flex align-middle items-center justify-center">
+        <ContractLoader loading={loading}></ContractLoader>
+      </div>
+    );
+  }
   if (done) {
     return (
       <div className=" w-full text-white border-2 mb-2 border-white p-2">
@@ -696,7 +757,7 @@ function ExecuteContractForm(
     return (
       <div className=" w-full text-white">
         <p className="text-white text-lg">Execute contract:</p>
-        <Basic setFormState={setState} />
+        <Basic setFormState={(x) => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
@@ -704,6 +765,13 @@ function ExecuteContractForm(
       <div className=" w-full text-white">
         <p className="text-white text-lg">Execute contract:</p>
         <ExecuteForm
+          loading={loading}
+          setLoading={setLoader}
+          shape={state.shape}
+          setState={(shape) => {
+            setStater({ shape: shape });
+          }}
+          reset={() => setState({ address: "", amount: 0, shape: {} })}
           address={state.address}
           amount={state.amount}
           setField={(lambda: string, metadata: string) => {
