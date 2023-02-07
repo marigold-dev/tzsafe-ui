@@ -46,6 +46,9 @@ abstract class Versioned {
   static toContractState(_contract: any, _balance: BigNumber): contractStorage {
     throw new Error("not implemented!");
   }
+  static getProposalsId(_contract: any): string {
+    throw new Error("not implemented!");
+  }
   static toProposal(_proposal: any): proposal {
     throw new Error("not implemented!");
   }

@@ -4,7 +4,7 @@ import {
   BigMapAbstraction,
   MichelsonMap,
 } from "@taquito/taquito";
-import { content } from "../types/006Proposal";
+import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
@@ -65,6 +65,9 @@ class Version006 extends Versioned {
     let op = await t.wallet.transfer(params).send();
     await op.transactionOperation();
     await op.confirmation(1);
+  }
+  static  override getProposalsId(_contract: storage): string {
+   return  _contract.proposal_map.toString()
   }
   async signProposal(
     cc: Contract,
@@ -167,7 +170,7 @@ class Version006 extends Versioned {
       author: prop.proposer,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.content.map(this.mapContent),
-      signatures: [...prop.signatures.entries()].map(([k, v]) => ({
+      signatures: [...Object.entries(prop.signatures)].map(([k, v]) => ({
         signer: k,
         result: v,
       })),
