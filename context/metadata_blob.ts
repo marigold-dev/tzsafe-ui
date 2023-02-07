@@ -2,19 +2,23 @@ import { MichelsonMap } from "@taquito/taquito";
 import { buf2hex } from "@taquito/utils";
 
 let meta = {
-  name: "multisig",
-  description: "Marigold Multisig Contract",
-  version: "0.0.8",
-  license: {
-    name: "MIT",
-  },
-  authors: ["Marigold <contract@marigold.dev>"],
-  homepage: "https://marigold.dev",
-  source: {
-    tools: "cameligo",
-    location: "https://github.com/marigold-dev/multisig/",
-  },
-  interfaces: ["TZIP-016"],
+    "name": "multisig",
+    "description": "Marigold Multisig Contract",
+    "version": "0.0.9",
+    "license": {
+        "name": "MIT"
+    },
+    "authors": [
+        "Marigold <contract@marigold.dev>"
+    ],
+    "homepage": "https://marigold.dev",
+    "source": {
+        "tools": "cameligo",
+        "location": "https://github.com/marigold-dev/multisig/"
+    },
+    "interfaces": [
+        "TZIP-016"
+    ]
 };
 let exported = {
   metadata: MichelsonMap.fromLiteral({

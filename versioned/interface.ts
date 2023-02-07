@@ -56,6 +56,7 @@ abstract class Versioned {
     switch (c.version) {
       case "0.0.6":
         return c.signers;
+      case "0.0.9":
       case "0.0.8":
         return c.owners;
       default:
@@ -66,6 +67,7 @@ abstract class Versioned {
     switch (c.version) {
       case "0.0.6":
         return BigNumber(c.proposal_counter);
+      case "0.0.9":
       case "0.0.8":
         return BigNumber(c.proposal_counter);
       default:
@@ -110,6 +112,7 @@ abstract class Versioned {
             },
           ],
         };
+      case "0.0.9":
       case "0.0.8":
         return {
           values: {
@@ -196,6 +199,7 @@ abstract class Versioned {
             },
           ],
         };
+      case "0.0.9":
       case "0.0.8":
         return {
           values: {

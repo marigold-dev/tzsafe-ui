@@ -18,7 +18,7 @@ type proposal = {
   signatures: { signer: string; result: boolean }[];
   content: proposalContent[];
 };
-type version = "0.0.6" | "0.0.8" | "unknown version";
+type version = "0.0.6" | "0.0.8" | "0.0.9"| "unknown version";
 export {
   type proposal,
   type changeThreshold,

@@ -3,7 +3,9 @@ const contract = `
   (or (or (or (list %create_proposal
                  (or (or (or (set %add_owners address) (nat %adjust_threshold))
                          (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                             (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                             (pair %execute_lambda
+                                (option %lambda (lambda unit operation))
+                                (option %metadata bytes))))
                      (or (set %remove_owners address)
                          (pair %transfer (address %target) (unit %parameter) (mutez %amount)))))
               (unit %default))
@@ -11,14 +13,18 @@ const contract = `
                  nat
                  (list (or (or (or (set %add_owners address) (nat %adjust_threshold))
                                (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                                   (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                                   (pair %execute_lambda
+                                      (option %lambda (lambda unit operation))
+                                      (option %metadata bytes))))
                            (or (set %remove_owners address)
                                (pair %transfer (address %target) (unit %parameter) (mutez %amount))))))
               (pair %sign_and_resolve_proposal
                  (pair nat
                        (list (or (or (or (set %add_owners address) (nat %adjust_threshold))
                                      (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                                         (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                                         (pair %execute_lambda
+                                            (option %lambda (lambda unit operation))
+                                            (option %metadata bytes))))
                                  (or (set %remove_owners address)
                                      (pair %transfer (address %target) (unit %parameter) (mutez %amount))))))
                  bool)))
@@ -26,7 +32,9 @@ const contract = `
          (pair nat
                (list (or (or (or (set %add_owners address) (nat %adjust_threshold))
                              (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                                 (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                                 (pair %execute_lambda
+                                    (option %lambda (lambda unit operation))
+                                    (option %metadata bytes))))
                          (or (set %remove_owners address)
                              (pair %transfer (address %target) (unit %parameter) (mutez %amount))))))
          bool)) ;
@@ -41,7 +49,9 @@ storage
                  (list %contents
                     (or (or (or (set %add_owners address) (nat %adjust_threshold))
                             (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                                (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                                (pair %execute_lambda
+                                   (option %lambda (lambda unit operation))
+                                   (option %metadata bytes))))
                         (or (set %remove_owners address)
                             (pair %transfer (address %target) (unit %parameter) (mutez %amount)))))))
         (set %owners address)
@@ -52,10 +62,11 @@ code { PUSH string "Only the contract owners can perform this operation" ;
        PUSH string "You have already signed this proposal" ;
        PUSH string "Unknown contract" ;
        PUSH string "Threshold must be greater than 1" ;
+       PUSH string "There is no content in proposal" ;
        PUSH string "No owner to be added or removed" ;
        PUSH string "The proposal content doesn't match" ;
        NIL operation ;
-       DIG 8 ;
+       DIG 9 ;
        UNPAIR ;
        PUSH nat 0 ;
        DUP 3 ;
@@ -78,21 +89,21 @@ code { PUSH string "Only the contract owners can perform this operation" ;
        GET 7 ;
        COMPARE ;
        GT ;
-       IF {} { DUP 6 ; FAILWITH } ;
+       IF {} { DUP 7 ; FAILWITH } ;
        IF_LEFT
          { IF_LEFT
              { DIG 2 ;
                DIG 3 ;
-               DIG 6 ;
                DIG 7 ;
                DIG 8 ;
+               DIG 9 ;
                DROP 5 ;
                IF_LEFT
                  { DUP 2 ;
                    GET 5 ;
                    SENDER ;
                    MEM ;
-                   IF { DIG 4 ; DROP } { DIG 4 ; FAILWITH } ;
+                   IF { DIG 5 ; DROP } { DIG 5 ; FAILWITH } ;
                    AMOUNT ;
                    PUSH mutez 0 ;
                    SWAP ;
@@ -105,7 +116,7 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                    SIZE ;
                    COMPARE ;
                    GT ;
-                   IF {} { PUSH string "There is no content in proposal" ; FAILWITH } ;
+                   IF {} { DUP 4 ; FAILWITH } ;
                    DUP ;
                    ITER { IF_LEFT
                             { IF_LEFT
@@ -116,8 +127,12 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                                       COMPARE ;
                                       GT ;
                                       IF {} { DUP 3 ; FAILWITH } }
-                                    { PUSH nat 0 ; SWAP ; COMPARE ; GT ; IF {} { DUP 4 ; FAILWITH } } }
-                                { IF_LEFT { DROP } { DROP } } }
+                                    { PUSH nat 0 ; SWAP ; COMPARE ; GT ; IF {} { DUP 5 ; FAILWITH } } }
+                                { IF_LEFT
+                                    { DROP }
+                                    { CAR ;
+                                      IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                                      IF {} { DUP 4 ; FAILWITH } } } }
                             { IF_LEFT
                                 { PUSH nat 0 ;
                                   SWAP ;
@@ -134,7 +149,8 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                                   IF {} { PUSH string "Amount should be greater than zero" ; FAILWITH } } } } ;
                    DIG 2 ;
                    DIG 3 ;
-                   DROP 2 ;
+                   DIG 4 ;
+                   DROP 3 ;
                    NONE (pair address timestamp) ;
                    NOW ;
                    SENDER ;
@@ -173,13 +189,16 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                            (list %contents
                               (or (or (or (set %add_owners address) (nat %adjust_threshold))
                                       (or (pair %execute (address %target) (unit %parameter) (mutez %amount))
-                                          (pair %execute_lambda (lambda %lambda unit operation) (option %metadata bytes))))
+                                          (pair %execute_lambda
+                                             (option %lambda (lambda unit operation))
+                                             (option %metadata bytes))))
                                   (or (set %remove_owners address)
                                       (pair %transfer (address %target) (unit %parameter) (mutez %amount)))))) }
                  { DIG 2 ;
                    DIG 3 ;
                    DIG 4 ;
-                   DROP 4 ;
+                   DIG 5 ;
+                   DROP 5 ;
                    AMOUNT ;
                    SENDER ;
                    PAIR ;
@@ -190,7 +209,8 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                CONS }
              { DIG 4 ;
                DIG 5 ;
-               DROP 2 ;
+               DIG 6 ;
+               DROP 3 ;
                IF_LEFT
                  { DIG 5 ;
                    DROP ;
@@ -314,66 +334,114 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                    CAR ;
                    COMPARE ;
                    EQ ;
-                   IF { DIG 4 ;
+                   IF { NIL (or (or (or (set address) nat)
+                                    (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
+                                (or (set address) (pair address unit mutez))) ;
+                        DIG 5 ;
                         PAIR ;
-                        SWAP ;
+                        PAIR ;
+                        DUP 2 ;
                         GET 8 ;
                         ITER { SWAP ;
                                UNPAIR ;
-                               DIG 2 ;
+                               UNPAIR ;
+                               DUP 4 ;
                                IF_LEFT
                                  { IF_LEFT
                                      { IF_LEFT
-                                         { DUP 3 ;
-                                           DIG 3 ;
+                                         { DUP 4 ;
+                                           DIG 4 ;
                                            GET 5 ;
                                            DIG 2 ;
                                            ITER { PUSH bool True ; SWAP ; UPDATE } ;
                                            UPDATE 5 }
-                                         { DIG 2 ; SWAP ; UPDATE 7 } ;
+                                         { DIG 3 ; SWAP ; UPDATE 7 } ;
+                                       DIG 3 ;
                                        NONE operation }
                                      { IF_LEFT
-                                         { DIG 2 ;
-                                           DUP 2 ;
+                                         { DIG 3 ;
+                                           DIG 4 ;
+                                           DUP 3 ;
                                            CAR ;
                                            CONTRACT unit ;
-                                           IF_NONE { DUP 6 ; FAILWITH } {} ;
-                                           DUP 3 ;
+                                           IF_NONE { DUP 9 ; FAILWITH } {} ;
+                                           DUP 4 ;
                                            GET 4 ;
-                                           DIG 3 ;
+                                           DIG 4 ;
                                            GET 3 ;
-                                           TRANSFER_TOKENS }
-                                         { DIG 2 ; UNIT ; DIG 2 ; CAR ; SWAP ; EXEC } ;
-                                       SOME } }
+                                           TRANSFER_TOKENS ;
+                                           SOME }
+                                         { DIG 4 ;
+                                           DROP ;
+                                           DUP ;
+                                           CDR ;
+                                           NONE (lambda unit operation) ;
+                                           PAIR ;
+                                           RIGHT (pair address unit mutez) ;
+                                           RIGHT (or (set address) nat) ;
+                                           LEFT (or (set address) (pair address unit mutez)) ;
+                                           DIG 4 ;
+                                           SWAP ;
+                                           DIG 2 ;
+                                           CAR ;
+                                           MAP { UNIT ; EXEC } } } }
                                  { IF_LEFT
-                                     { DUP 3 ;
-                                       DIG 3 ;
+                                     { DUP 4 ;
+                                       DIG 4 ;
                                        GET 5 ;
                                        DIG 2 ;
                                        ITER { PUSH bool False ; SWAP ; UPDATE } ;
                                        UPDATE 5 ;
+                                       DIG 3 ;
                                        NONE operation }
-                                     { DIG 2 ;
-                                       DUP 2 ;
+                                     { DIG 3 ;
+                                       DIG 4 ;
+                                       DUP 3 ;
                                        CAR ;
                                        CONTRACT unit ;
-                                       IF_NONE { DUP 6 ; FAILWITH } {} ;
-                                       DUP 3 ;
+                                       IF_NONE { DUP 9 ; FAILWITH } {} ;
+                                       DUP 4 ;
                                        GET 4 ;
-                                       DIG 3 ;
+                                       DIG 4 ;
                                        GET 3 ;
                                        TRANSFER_TOKENS ;
                                        SOME } } ;
-                               IF_NONE { SWAP } { SWAP ; DUG 2 ; CONS } ;
+                               IF_NONE
+                                 { DROP ; DUG 2 }
+                                 { DIG 2 ; DIG 4 ; DIG 3 ; CONS ; DIG 3 ; DIG 3 ; CONS } ;
+                               PAIR ;
                                PAIR } ;
+                        DIG 4 ;
+                        DROP ;
+                        UNPAIR ;
+                        UNPAIR ;
+                        NIL operation ;
+                        SWAP ;
+                        ITER { CONS } ;
+                        NIL (or (or (or (set address) nat)
+                                    (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
+                                (or (set address) (pair address unit mutez))) ;
+                        DIG 2 ;
+                        ITER { CONS } ;
+                        DIG 2 ;
                         DIG 3 ;
-                        DROP }
-                      { SWAP ; DIG 5 ; DROP 2 ; DIG 3 ; PAIR } ;
-                   UNPAIR ;
-                   DIG 2 ;
+                        DIG 2 ;
+                        UPDATE 8 ;
+                        DIG 2 }
+                      { DIG 5 ; DROP ; SWAP ; DIG 4 } ;
                    DIG 3 ;
+                   DUP 5 ;
                    PAIR ;
                    EMIT %resolve_proposal (pair nat address) ;
+                   DUP 4 ;
+                   DIG 4 ;
+                   GET 3 ;
+                   DIG 4 ;
+                   SOME ;
+                   DIG 5 ;
+                   UPDATE ;
+                   UPDATE 3 ;
+                   DUG 2 ;
                    CONS }
                  { UNPAIR ;
                    UNPAIR ;
@@ -500,62 +568,110 @@ code { PUSH string "Only the contract owners can perform this operation" ;
                    CAR ;
                    COMPARE ;
                    EQ ;
-                   IF { DIG 5 ;
+                   IF { NIL (or (or (or (set address) nat)
+                                    (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
+                                (or (set address) (pair address unit mutez))) ;
+                        DIG 6 ;
+                        PAIR ;
                         PAIR ;
                         DUP 2 ;
                         GET 8 ;
                         ITER { SWAP ;
                                UNPAIR ;
-                               DIG 2 ;
+                               UNPAIR ;
+                               DUP 4 ;
                                IF_LEFT
                                  { IF_LEFT
                                      { IF_LEFT
-                                         { DUP 3 ;
-                                           DIG 3 ;
+                                         { DUP 4 ;
+                                           DIG 4 ;
                                            GET 5 ;
                                            DIG 2 ;
                                            ITER { PUSH bool True ; SWAP ; UPDATE } ;
                                            UPDATE 5 }
-                                         { DIG 2 ; SWAP ; UPDATE 7 } ;
+                                         { DIG 3 ; SWAP ; UPDATE 7 } ;
+                                       DIG 3 ;
                                        NONE operation }
                                      { IF_LEFT
-                                         { DIG 2 ;
-                                           DUP 2 ;
+                                         { DIG 3 ;
+                                           DIG 4 ;
+                                           DUP 3 ;
                                            CAR ;
                                            CONTRACT unit ;
-                                           IF_NONE { DUP 8 ; FAILWITH } {} ;
-                                           DUP 3 ;
+                                           IF_NONE { DUP 10 ; FAILWITH } {} ;
+                                           DUP 4 ;
                                            GET 4 ;
-                                           DIG 3 ;
+                                           DIG 4 ;
                                            GET 3 ;
-                                           TRANSFER_TOKENS }
-                                         { DIG 2 ; UNIT ; DIG 2 ; CAR ; SWAP ; EXEC } ;
-                                       SOME } }
+                                           TRANSFER_TOKENS ;
+                                           SOME }
+                                         { DIG 4 ;
+                                           DROP ;
+                                           DUP ;
+                                           CDR ;
+                                           NONE (lambda unit operation) ;
+                                           PAIR ;
+                                           RIGHT (pair address unit mutez) ;
+                                           RIGHT (or (set address) nat) ;
+                                           LEFT (or (set address) (pair address unit mutez)) ;
+                                           DIG 4 ;
+                                           SWAP ;
+                                           DIG 2 ;
+                                           CAR ;
+                                           MAP { UNIT ; EXEC } } } }
                                  { IF_LEFT
-                                     { DUP 3 ;
-                                       DIG 3 ;
+                                     { DUP 4 ;
+                                       DIG 4 ;
                                        GET 5 ;
                                        DIG 2 ;
                                        ITER { PUSH bool False ; SWAP ; UPDATE } ;
                                        UPDATE 5 ;
+                                       DIG 3 ;
                                        NONE operation }
-                                     { DIG 2 ;
-                                       DUP 2 ;
+                                     { DIG 3 ;
+                                       DIG 4 ;
+                                       DUP 3 ;
                                        CAR ;
                                        CONTRACT unit ;
-                                       IF_NONE { DUP 8 ; FAILWITH } {} ;
-                                       DUP 3 ;
+                                       IF_NONE { DUP 10 ; FAILWITH } {} ;
+                                       DUP 4 ;
                                        GET 4 ;
-                                       DIG 3 ;
+                                       DIG 4 ;
                                        GET 3 ;
                                        TRANSFER_TOKENS ;
                                        SOME } } ;
-                               IF_NONE { SWAP } { SWAP ; DUG 2 ; CONS } ;
+                               IF_NONE
+                                 { DROP ; DUG 2 }
+                                 { DIG 2 ; DIG 4 ; DIG 3 ; CONS ; DIG 3 ; DIG 3 ; CONS } ;
+                               PAIR ;
                                PAIR } ;
                         DIG 5 ;
-                        DROP }
-                      { DIG 6 ; DROP ; DIG 5 ; PAIR } ;
-                   UNPAIR ;
+                        DROP ;
+                        UNPAIR ;
+                        UNPAIR ;
+                        NIL operation ;
+                        SWAP ;
+                        ITER { CONS } ;
+                        NIL (or (or (or (set address) nat)
+                                    (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
+                                (or (set address) (pair address unit mutez))) ;
+                        DIG 2 ;
+                        ITER { CONS } ;
+                        DIG 2 ;
+                        DIG 3 ;
+                        DIG 2 ;
+                        UPDATE 8 ;
+                        DIG 2 }
+                      { DIG 6 ; DROP ; SWAP ; DIG 5 } ;
+                   DUP 3 ;
+                   DIG 3 ;
+                   GET 3 ;
+                   DUP 4 ;
+                   SOME ;
+                   DUP 7 ;
+                   UPDATE ;
+                   UPDATE 3 ;
+                   SWAP ;
                    DIG 5 ;
                    DUP 5 ;
                    DUP 7 ;
@@ -576,7 +692,8 @@ code { PUSH string "Only the contract owners can perform this operation" ;
            DIG 4 ;
            DIG 5 ;
            DIG 6 ;
-           DROP 4 ;
+           DIG 7 ;
+           DROP 5 ;
            UNPAIR ;
            UNPAIR ;
            DUP 4 ;
@@ -702,7 +819,7 @@ view "proposals"
                (pair address timestamp)
                (option (pair address timestamp))
                (list (or (or (or (set address) nat)
-                             (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                             (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                          (or (set address) (pair address unit mutez))))) ;
        DIG 3 ;
        GET 3 ;
@@ -717,7 +834,7 @@ view "proposals"
                        (pair address timestamp)
                        (option (pair address timestamp))
                        (list (or (or (or (set address) nat)
-                                     (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                                     (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                                  (or (set address) (pair address unit mutez)))))) ;
        LOOP_LEFT
          { UNPAIR ;
@@ -743,7 +860,7 @@ view "proposals"
                                  (pair address timestamp)
                                  (option (pair address timestamp))
                                  (list (or (or (or (set address) nat)
-                                               (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                                               (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                                            (or (set address) (pair address unit mutez))))))
                         (map nat
                              (pair (or (or unit unit) unit)
@@ -751,7 +868,7 @@ view "proposals"
                                    (pair address timestamp)
                                    (option (pair address timestamp))
                                    (list (or (or (or (set address) nat)
-                                                 (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                                                 (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                                              (or (set address) (pair address unit mutez))))))) }
               { DUP 2 ;
                 DUP 2 ;
@@ -768,7 +885,7 @@ view "proposals"
                                 (pair address timestamp)
                                 (option (pair address timestamp))
                                 (list (or (or (or (set address) nat)
-                                              (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                                              (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                                           (or (set address) (pair address unit mutez)))))) } } ;
        LAMBDA
          (pair nat
@@ -777,7 +894,7 @@ view "proposals"
                (pair address timestamp)
                (option (pair address timestamp))
                (list (or (or (or (set address) nat)
-                             (or (pair address unit mutez) (pair (lambda unit operation) (option bytes))))
+                             (or (pair address unit mutez) (pair (option (lambda unit operation)) (option bytes))))
                          (or (set address) (pair address unit mutez)))))
          (pair (or (or unit unit) unit)
                (map address bool)

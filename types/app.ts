@@ -1,9 +1,6 @@
-type versionedStorage =
-  | { version: "0.0.6" }
-  | { version: "0.0.8" }
-  | { version: "unknown version" };
+import { version } from "./display";
 
-type contractStorage = versionedStorage & {
+type contractStorage = {version: version} & {
   [key: string]: any;
   balance: string;
   threshold: number;
