@@ -9,8 +9,11 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
+import { ParameterSchema } from "@taquito/michelson-encoder";
+import { encodePubKey } from "@taquito/utils";
 import { Parser } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
+import { map2Object } from "./apis";
 
 class Version006 extends Versioned {
   async submitTxProposals(
@@ -66,8 +69,8 @@ class Version006 extends Versioned {
     await op.transactionOperation();
     await op.confirmation(1);
   }
-  static  override getProposalsId(_contract: storage): string {
-   return  _contract.proposal_map.toString()
+  static override getProposalsId(_contract: storage): string {
+    return _contract.proposal_map.toString();
   }
   async signProposal(
     cc: Contract,
@@ -122,9 +125,42 @@ class Version006 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      let p = new Parser();
+      let meta = {};
+      let parsed = undefined;
+      try {
+        parsed = p.parseJSON(JSON.parse(content.execute_lambda!));
+      } catch {}
+      if (
+        content.execute_lambda &&
+        typeof parsed != "undefined" &&
+        Array.isArray(parsed) &&
+        parsed.length === 7
+      ) {
+        try {
+          let addr = encodePubKey(((parsed[1] as any)!.args![1] as any).bytes);
+          let typ = (parsed[2] as any).args;
+          let type = new ParameterSchema(typ![0]);
+          let payload = map2Object(type.Execute((parsed[5] as any)!.args[1]));
+          let amount = (parsed[4] as any).args[1].int;
+
+          let from_lambda = {
+            contract_address: addr,
+            mutez_amount: amount,
+            payload:
+              Object.keys(payload).length === 1 &&
+              typeof Object.values(payload)[0] == "symbol"
+                ? { [Object.keys(payload)[0]]: {} }
+                : payload,
+          };
+          meta = from_lambda;
+        } catch {}
+      }
       return {
         executeLambda: {
-          metadata: "no Metadata available",
+          metadata: Object.keys(meta).length
+            ? JSON.stringify(meta, null, 2)
+            : JSON.stringify({ error: "no metadata available" }, null, 2),
           content: "Unable to display",
         },
       };

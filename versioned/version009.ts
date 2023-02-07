@@ -9,8 +9,11 @@ import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
 import { Parser } from "@taquito/michel-codec";
+import { ParameterSchema } from "@taquito/michelson-encoder";
+import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { map2Object } from "./apis";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -130,10 +133,48 @@ class Version009 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      let p = new Parser();
+      let meta = {};
+      let parsed = undefined;
+      try {
+        parsed = p.parseJSON(JSON.parse(content.execute_lambda.lambda));
+      } catch {}
+      if (
+        content.execute_lambda.lambda &&
+        typeof parsed != "undefined" &&
+        Array.isArray(parsed) &&
+        parsed.length === 7
+      ) {
+        try {
+          let addr = encodePubKey(((parsed[1] as any)!.args![1] as any).bytes);
+          let typ = (parsed[2] as any).args;
+          let type = new ParameterSchema(typ![0]);
+          let payload = map2Object(type.Execute((parsed[5] as any)!.args[1]));
+          let amount = (parsed[4] as any).args[1].int;
+
+          let from_lambda = {
+            contract_address: addr,
+            mutez_amount: amount,
+            payload:
+              Object.keys(payload).length === 1 &&
+              typeof Object.values(payload)[0] == "symbol"
+                ? { [Object.keys(payload)[0]]: {} }
+                : payload,
+          };
+          meta = from_lambda;
+        } catch {}
+      }
+      let supplied;
+      try {
+        supplied = bytes2Char(content.execute_lambda.metadata!);
+      } catch {
+        supplied = JSON.stringify({ error: "Cant parse metadata" }, null, 2);
+      }
       return {
         executeLambda: {
-            metadata: !!content.execute_lambda?.metadata
-            ? bytes2Char(content.execute_lambda.metadata) : "No metadata",
+          metadata: Object.keys(meta).length
+            ? JSON.stringify(meta, null, 2)
+            : supplied,
           content: "Unable to display",
         },
       };
@@ -161,8 +202,8 @@ class Version009 extends Versioned {
     }
   }
   static override getProposalsId(_contract: c1): string {
-    return  _contract.proposals.toString()
-   }
+    return _contract.proposals.toString();
+  }
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
     const status: { [key: string]: status } = {

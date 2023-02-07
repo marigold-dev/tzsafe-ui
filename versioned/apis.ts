@@ -6,7 +6,7 @@ import Version008 from "./version008";
 
 import { BigNumber } from "bignumber.js";
 import Version009 from "./version009";
-
+import { MichelsonMap } from "@taquito/taquito";
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
 }
@@ -40,13 +40,38 @@ function toStorage(
 ): contractStorage {
   return dispatchUi[version].toContractState(c, balance);
 }
-function getProposalsId(
-  version: version,
-  c: any,
-): string {
+function getProposalsId(version: version, c: any): string {
   return dispatchUi[version].getProposalsId(c);
 }
 function toProposal(version: version, c: any): proposal {
   return dispatchUi[version].toProposal(c);
 }
-export { toStorage, signers, toProposal, VersionedApi, getProposalsId };
+function map2Object(x: any): any {
+  if (Array.isArray(x)) {
+    return x.map((x) => map2Object(x));
+  }
+  if (x instanceof MichelsonMap) {
+    return Object.fromEntries([...x.entries()]);
+  }
+  if (x instanceof BigNumber) {
+    return x.toString();
+  }
+  if (typeof x == "object" && !isNaN(Number(Object.keys(x)[0]))) {
+    return Object.entries(x).map(([_, v]) => map2Object(v));
+  }
+  if (typeof x == "object") {
+    return Object.fromEntries(
+      Object.entries(x).map(([k, v]) => [map2Object(k), map2Object(v)])
+    );
+  }
+
+  return x;
+}
+export {
+  toStorage,
+  signers,
+  toProposal,
+  VersionedApi,
+  getProposalsId,
+  map2Object,
+};
