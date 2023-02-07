@@ -18,7 +18,7 @@ abstract class Versioned {
     t: TezosToolkit,
     proposals: {
       transfers: {
-        type: "transfer" | "lambda";
+        type: "transfer" | "lambda" | "contract";
         values: { [key: string]: string };
         fields: {
           field: string;

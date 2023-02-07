@@ -18,7 +18,7 @@ class Version006 extends Versioned {
     t: TezosToolkit,
     proposals: {
       transfers: {
-        type: "transfer" | "lambda";
+        type: "transfer" | "lambda" | "contract";
         values: { [key: string]: string };
         fields: {
           field: string;
@@ -42,12 +42,20 @@ class Version006 extends Versioned {
                   parameter: {},
                 },
               };
-            case "lambda":
+            case "lambda": {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
               return {
                 execute_lambda: michelsonCode,
               };
+            }
+            case "contract": {
+              const p = new Parser();
+              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
+              return {
+                execute_lambda: michelsonCode,
+              };
+            }
             default:
               return {};
           }
