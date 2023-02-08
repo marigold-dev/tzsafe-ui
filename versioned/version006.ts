@@ -13,7 +13,7 @@ import { ParameterSchema } from "@taquito/michelson-encoder";
 import { encodePubKey } from "@taquito/utils";
 import { Parser } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
-import { map2Object } from "./apis";
+import { map2Object, matchLambda } from "./apis";
 
 class Version006 extends Versioned {
   async submitTxProposals(
@@ -125,43 +125,22 @@ class Version006 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
-      let p = new Parser();
-      let meta = {};
-      let parsed = undefined;
-      try {
-        parsed = p.parseJSON(JSON.parse(content.execute_lambda!));
-      } catch {}
-      if (
-        content.execute_lambda &&
-        typeof parsed != "undefined" &&
-        Array.isArray(parsed) &&
-        parsed.length === 7
-      ) {
-        try {
-          let addr = encodePubKey(((parsed[1] as any)!.args![1] as any).bytes);
-          let typ = (parsed[2] as any).args;
-          let type = new ParameterSchema(typ![0]);
-          let payload = map2Object(type.Execute((parsed[5] as any)!.args[1]));
-          let amount = (parsed[4] as any).args[1].int;
-
-          let from_lambda = {
-            contract_address: addr,
-            mutez_amount: amount,
-            payload:
-              Object.keys(payload).length === 1 &&
-              typeof Object.values(payload)[0] == "symbol"
-                ? { [Object.keys(payload)[0]]: {} }
-                : payload,
-          };
-          meta = from_lambda;
-        } catch {}
-      }
+      let meta = content.execute_lambda
+        ? matchLambda({}, JSON.parse(content.execute_lambda))
+        : null;
       return {
         executeLambda: {
-          metadata: Object.keys(meta).length
+          metadata: !!meta
             ? JSON.stringify(meta, null, 2)
-            : JSON.stringify({ error: "no metadata available" }, null, 2),
-          content: "Unable to display",
+            : JSON.stringify(
+                {
+                  status: "Failed to parse lambda",
+                  meta: { lambda: content.execute_lambda },
+                },
+                null,
+                2
+              ),
+          content: content.execute_lambda || "Lambda unavailable",
         },
       };
     } else if ("transfer" in content) {

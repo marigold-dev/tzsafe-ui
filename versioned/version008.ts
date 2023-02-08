@@ -16,7 +16,8 @@ import {
 } from "@taquito/michelson-encoder";
 import { BigNumber } from "bignumber.js";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
-import { map2Object } from "./apis";
+import { map2Object, matchLambda } from "./apis";
+import { connect } from "http2";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -139,49 +140,23 @@ class Version008 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
-      let p = new Parser();
-      let meta = {};
-      let parsed = undefined;
-      try {
-        parsed = p.parseJSON(JSON.parse(content.execute_lambda.lambda));
-      } catch {}
-      if (
-        content.execute_lambda.lambda &&
-        typeof parsed != "undefined" &&
-        Array.isArray(parsed) &&
-        parsed.length === 7
-      ) {
-        try {
-          let addr = encodePubKey(((parsed[1] as any)!.args![1] as any).bytes);
-          let typ = (parsed[2] as any).args;
-          let type = new ParameterSchema(typ![0]);
-          let payload = map2Object(type.Execute((parsed[5] as any)!.args[1]));
-          let amount = (parsed[4] as any).args[1].int;
-
-          let from_lambda = {
-            contract_address: addr,
-            mutez_amount: amount,
-            payload:
-              Object.keys(payload).length === 1 &&
-              typeof Object.values(payload)[0] == "symbol"
-                ? { [Object.keys(payload)[0]]: {} }
-                : payload,
-          };
-          meta = from_lambda;
-        } catch {}
-      }
-      let supplied;
-      try {
-        supplied = bytes2Char(content.execute_lambda.metadata!);
-      } catch {
-        supplied = JSON.stringify({ error: "Cant parse metadata" }, null, 2);
-      }
+      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
-          metadata: Object.keys(meta).length
+          metadata: !!meta
             ? JSON.stringify(meta, null, 2)
-            : supplied,
-          content: "Unable to display",
+            : JSON.stringify(
+                {
+                  status: "Cant parse lambda",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                  lambda: content.execute_lambda.lambda,
+                },
+                null,
+                2
+              ),
+          content: content.execute_lambda.lambda,
         },
       };
     } else if ("transfer" in content) {
