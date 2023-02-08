@@ -9,11 +9,11 @@ import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
 import { Parser } from "@taquito/michel-codec";
-import { ParameterSchema } from "@taquito/michelson-encoder";
+import { emitMicheline } from "@taquito/michel-codec";
 import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
-import { map2Object, matchLambda } from "./apis";
+import { matchLambda } from "./apis";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -144,7 +144,9 @@ class Version009 extends Versioned {
                       meta: content.execute_lambda.metadata
                         ? bytes2Char(content.execute_lambda.metadata)
                         : "No meta supplied",
-                      lambda: content.execute_lambda.lambda,
+                      lambda: emitMicheline(
+                        JSON.parse(content.execute_lambda.lambda)
+                      ),
                     }
                   : meta,
                 null,
@@ -160,7 +162,7 @@ class Version009 extends Versioned {
                 null,
                 2
               ),
-          content: content.execute_lambda.lambda,
+          content: JSON.parse(content.execute_lambda.lambda || ""),
         },
       };
     } else if ("transfer" in content) {

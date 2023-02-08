@@ -8,12 +8,7 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
-import { Parser } from "@taquito/michel-codec";
-import {
-  MichelsonMap,
-  ParameterSchema,
-  Schema,
-} from "@taquito/michelson-encoder";
+import { Parser, emitMicheline } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
 import { map2Object, matchLambda } from "./apis";
@@ -151,7 +146,9 @@ class Version008 extends Versioned {
                   meta: content.execute_lambda.metadata
                     ? bytes2Char(content.execute_lambda.metadata)
                     : "No meta supplied",
-                  lambda: content.execute_lambda.lambda,
+                  lambda: emitMicheline(
+                    JSON.parse(content.execute_lambda.lambda)
+                  ),
                 },
                 null,
                 2
