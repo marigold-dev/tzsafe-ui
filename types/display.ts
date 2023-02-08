@@ -4,13 +4,15 @@ type transfer = { transfer: { amount: BigNumber; destination: string } };
 type removeOwners = { removeOwners: string[] };
 type addOwners = { addOwners: string[] };
 type changeThreshold = { changeThreshold: number };
+type adjustExpirationPeriod = { adjustEffectivePeriod: number };
 type proposalContent =
   | changeThreshold
+  | adjustExpirationPeriod
   | addOwners
   | removeOwners
   | transfer
   | lambda;
-type status = "Proposing" | "Executed" | "Rejected";
+type status = "Proposing" | "Executed" | "Rejected" | "Expired";
 type proposal = {
   author: string;
   status: status;
@@ -18,7 +20,7 @@ type proposal = {
   signatures: { signer: string; result: boolean }[];
   content: proposalContent[];
 };
-type version = "0.0.6" | "0.0.8" | "0.0.9"| "unknown version";
+type version = "0.0.6" | "0.0.8" | "0.0.9" | "0.0.10" | "unknown version";
 export {
   type proposal,
   type changeThreshold,

@@ -3,6 +3,6 @@ type ownersForm =
       addOwners: string[];
     }
   | { removeOwners: string[] }
-  | { changeThreshold: number };
-
+  | { changeThreshold: number }
+  | { adjustEffectivePeriod: number };
 export { type ownersForm };

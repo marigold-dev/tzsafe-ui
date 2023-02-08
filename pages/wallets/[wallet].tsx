@@ -1,10 +1,8 @@
-import { BigMapAbstraction, MichelsonMap } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
-import { Parser, emitMicheline } from "@taquito/michel-codec";
 import { validateAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
-import { FC, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, FC } from "react";
 import Footer from "../../components/footer";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
@@ -28,6 +26,7 @@ import {
 } from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
 import { getProposals } from "../../context/proposals";
+import ProposalSignForm from "../../components/proposalSignForm";
 let emptyProps: [number, { og: any; ui: proposal }][] = [];
 const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   cond,
@@ -178,17 +177,23 @@ function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
   let alias = state.aliases[router];
-  let [openModal, setCloseModal] = useState(0);
+  let [openModal, setCloseModal] = useState<{
+    state: number;
+    proposal: [boolean | undefined, number];
+  }>({
+    state: 0,
+    proposal: [undefined, 0],
+  });
 
   let balance = new BigNumber(contract?.balance);
   balance = balance.div(10 ** 6, 10);
   return (
     <div className="relative h-full flex flex-col overflow-y-auto">
       <Meta title={router} />
-      <Modal opened={!!openModal}>
-        {!!openModal &&
+      <Modal opened={!!openModal.state}>
+        {!!openModal.state &&
           (() => {
-            switch (openModal) {
+            switch (openModal.state) {
               case 1:
                 return (
                   <TopUp
@@ -197,7 +202,7 @@ function Home() {
                         ...s,
                         contract: c,
                       }));
-                      setCloseModal(0);
+                      setCloseModal((s: any) => ({ ...s, state: 0 }));
                     }}
                     address={router}
                   />
@@ -206,7 +211,9 @@ function Home() {
                 return (
                   <TransferForm
                     contract={contract}
-                    closeModal={() => setCloseModal(0)}
+                    closeModal={() =>
+                      setCloseModal((s: any) => ({ ...s, state: 0 }))
+                    }
                     address={router}
                   />
                 );
@@ -214,8 +221,26 @@ function Home() {
                 return (
                   <SignersForm
                     contract={contract}
-                    closeModal={() => setCloseModal(0)}
+                    closeModal={() =>
+                      setCloseModal((s: any) => ({ ...s, state: 0 }))
+                    }
                     address={router}
+                  />
+                );
+              case 4:
+                return (
+                  <ProposalSignForm
+                    address={router}
+                    threshold={contract.threshold}
+                    version={contract.version}
+                    proposal={
+                      proposals.find((x) => x[0] === openModal.proposal[1])![1]
+                    }
+                    state={openModal.proposal[0]}
+                    id={openModal.proposal[1]}
+                    closeModal={() =>
+                      setCloseModal((s: any) => ({ ...s, state: 0 }))
+                    }
                   />
                 );
               default:
@@ -339,7 +364,7 @@ function Home() {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      setCloseModal(1);
+                      setCloseModal((s: any) => ({ ...s, state: 1 }));
                     }}
                     className={
                       " justify-self-end  w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
@@ -358,7 +383,7 @@ function Home() {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      setCloseModal(2);
+                      setCloseModal((s: any) => ({ ...s, state: 2 }));
                     }}
                     className={
                       " justify-self-end md:row-auto md:col-start-3 w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
@@ -377,7 +402,7 @@ function Home() {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      setCloseModal(3);
+                      setCloseModal((s: any) => ({ ...s, state: 3 }));
                     }}
                     className={
                       " justify-self-end md:row-auto md:col-start-3 w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
@@ -397,6 +422,10 @@ function Home() {
               <div className="px-4 py-6 sm:px-0">
                 <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
                   <Proposals
+                    setCloseModal={(
+                      proposal: number,
+                      arg: boolean | undefined
+                    ) => setCloseModal({ proposal: [arg, proposal], state: 4 })}
                     proposals={proposals}
                     contract={contract}
                     address={router}

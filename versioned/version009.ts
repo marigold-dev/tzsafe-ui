@@ -1,16 +1,20 @@
-import { BigMapAbstraction, Contract, TezosToolkit } from "@taquito/taquito";
+import {
+  BigMapAbstraction,
+  Contract,
+  TezosToolkit,
+  WalletContract,
+} from "@taquito/taquito";
 import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/008Proposal";
+} from "../types/009Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
 import { Parser } from "@taquito/michel-codec";
 import { emitMicheline } from "@taquito/michel-codec";
-import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
 import { matchLambda } from "./apis";
@@ -84,18 +88,30 @@ class Version009 extends Versioned {
     await op.confirmation(1);
   }
   async signProposal(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposal: number,
-    p: any,
-    result: boolean
+    result: boolean | undefined,
+    resolve: boolean
   ): Promise<void> {
     let proposals: { proposals: BigMapAbstraction } = await cc.storage();
     let prop: any = await proposals.proposals.get(BigNumber(proposal));
-    let params = cc.methods
-      .sign_and_resolve_proposal(BigNumber(proposal), prop.contents, result)
-      .toTransferParams();
-    let op = await t.wallet.transfer(params).send();
+    let batch = t.wallet.batch();
+    if (typeof result != "undefined") {
+      await batch.withContractCall(
+        cc.methods.sign_proposal_only(
+          BigNumber(proposal),
+          prop.contents,
+          result
+        )
+      );
+    }
+    if (resolve) {
+      await batch.withContractCall(
+        cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
+      );
+    }
+    let op = await batch.send();
     await op.confirmation(1);
   }
 
@@ -104,15 +120,18 @@ class Version009 extends Versioned {
     t: TezosToolkit,
     ops: ownersForm[]
   ) {
-    let content = ops.map((v) => {
-      if ("addOwners" in v) {
-        return { add_owners: v.addOwners };
-      } else if ("removeOwners" in v) {
-        return { remove_owners: v.removeOwners };
-      } else {
-        return { change_threshold: v.changeThreshold };
-      }
-    });
+    let content = ops
+      .map((v) => {
+        if ("addOwners" in v) {
+          return { add_owners: v.addOwners };
+        } else if ("removeOwners" in v) {
+          return { remove_owners: v.removeOwners };
+        } else if ("changeThreshold" in v) {
+          return { change_threshold: v.changeThreshold };
+        }
+      })
+      .filter((x) => !!x);
+
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
     await op.transactionOperation();
@@ -128,7 +147,7 @@ class Version009 extends Versioned {
       proposal_counter: c.proposal_counter.toString(),
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.0.8",
+      version: "0.0.9",
     };
   }
   private static mapContent(content: content): proposalContent {
