@@ -59,8 +59,8 @@ const SignersForm: FC<{
       name: state.aliases[x] || "",
     })),
     effectivePeriod:
-      props.contract.verstion === "0.0.10"
-        ? props.contract.effectivePeriod
+      props.contract.version === "0.0.10"
+        ? props.contract.effective_period
         : undefined,
     requiredSignatures: props.contract.threshold,
   };
@@ -323,10 +323,10 @@ const SignersForm: FC<{
               )}
             </FieldArray>
           </div>
-          <div className="flex flex-col w-full md:w-auto md:grow justify-center items-center ">
+          <div className="flex flex-col w-full md:grow ">
             <label className="text-white mr-4">Threshold: </label>
             <Field
-              className="w-14"
+              className="w-full text-center text-black"
               as="select"
               component="select"
               name="requiredSignatures"
@@ -352,12 +352,12 @@ const SignersForm: FC<{
             />
           </div>
           {typeof values.effectivePeriod != "undefined" && (
-            <div className="flex flex-col w-full md:w-auto md:grow justify-center items-center ">
+            <div className="flex flex-col w-full md:grow ">
               <label className="text-white mr-4">
                 EffectivePeriod(in seconds):{" "}
               </label>
               <Field
-                className="w-14"
+                className="w-full text-black"
                 as="select"
                 component="input"
                 name="effectivePeriod"
