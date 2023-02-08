@@ -1,4 +1,4 @@
-import { Contract, TezosToolkit } from "@taquito/taquito";
+import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { contractStorage } from "../types/app";
 import { BigNumber } from "bignumber.js";
 import { proposal } from "../types/display";
@@ -31,11 +31,11 @@ abstract class Versioned {
     }
   ): {};
   abstract signProposal(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposal: number,
-    p: any,
-    result: boolean
+    result: boolean | undefined,
+    resolve: boolean
   ): Promise<void>;
 
   abstract submitSettingsProposals(
@@ -60,6 +60,9 @@ abstract class Versioned {
       case "0.0.6":
         return c.signers;
       case "0.0.9":
+        return c.owners;
+      case "0.0.10":
+        return c.owners;
       case "0.0.8":
         return c.owners;
       default:
@@ -71,6 +74,9 @@ abstract class Versioned {
       case "0.0.6":
         return BigNumber(c.proposal_counter);
       case "0.0.9":
+        return BigNumber(c.proposal_counter);
+      case "0.0.10":
+        return BigNumber(c.proposal_counter);
       case "0.0.8":
         return BigNumber(c.proposal_counter);
       default:
@@ -116,6 +122,77 @@ abstract class Versioned {
           ],
         };
       case "0.0.9":
+        return {
+          values: {
+            metadata: "",
+            lambda: "",
+          },
+          fields: [
+            {
+              field: "metadata",
+              label: "Metadata to save",
+              path: ".metadata",
+              placeholder: "Write your metadata here",
+              validate: (x?: string) => {
+                return undefined;
+              },
+            },
+            {
+              field: "lambda",
+              label: "Lambda to execute",
+              kind: "textarea",
+              path: ".lambda",
+              placeholder: "Write your lambda here",
+              validate: (x?: string) => {
+                if (!x) {
+                  return;
+                }
+                const p = new Parser();
+                try {
+                  const _ = p.parseScript(x);
+                } catch {
+                  return "Bad lambda";
+                }
+              },
+            },
+          ],
+        };
+      case "0.0.10":
+        return {
+          values: {
+            metadata: "",
+            lambda: "",
+          },
+          fields: [
+            {
+              field: "metadata",
+              label: "Metadata to save",
+              path: ".metadata",
+              placeholder: "Write your metadata here",
+              validate: (x?: string) => {
+                return undefined;
+              },
+            },
+            {
+              field: "lambda",
+              label: "Lambda to execute",
+              kind: "textarea",
+              path: ".lambda",
+              placeholder: "Write your lambda here",
+              validate: (x?: string) => {
+                if (!x) {
+                  return;
+                }
+                const p = new Parser();
+                try {
+                  const _ = p.parseScript(x);
+                } catch {
+                  return "Bad lambda";
+                }
+              },
+            },
+          ],
+        };
       case "0.0.8":
         return {
           values: {
@@ -203,6 +280,73 @@ abstract class Versioned {
           ],
         };
       case "0.0.9":
+        return {
+          values: {
+            amount: "0",
+            to: "",
+          },
+          fields: [
+            {
+              field: "amount",
+              label: "Amount in Mutez",
+              path: ".amount",
+              placeholder: "0",
+              validate: (x: string) => {
+                const amount = Number.parseInt(x);
+                if (isNaN(amount) || amount <= 0) {
+                  return `invalid amount ${x}`;
+                }
+                return undefined;
+              },
+            },
+            {
+              field: "to",
+              label: "Transfer to:",
+              path: ".to",
+              kind: "input-complete",
+              placeholder: "destination address",
+              validate: (x: string) => {
+                return validateAddress(x) !== 3
+                  ? `invalid address ${x}`
+                  : undefined;
+              },
+            },
+          ],
+        };
+      case "0.0.10":
+        return {
+          values: {
+            amount: "0",
+            to: "",
+          },
+          fields: [
+            {
+              field: "amount",
+              label: "Amount in Mutez",
+              path: ".amount",
+              placeholder: "0",
+              validate: (x: string) => {
+                const amount = Number.parseInt(x);
+                if (isNaN(amount) || amount <= 0) {
+                  return `invalid amount ${x}`;
+                }
+                return undefined;
+              },
+            },
+            {
+              field: "to",
+              label: "Transfer to:",
+              path: ".to",
+              kind: "input-complete",
+              placeholder: "destination address",
+              validate: (x: string) => {
+                return validateAddress(x) !== 3
+                  ? `invalid address ${x}`
+                  : undefined;
+              },
+            },
+          ],
+        };
       case "0.0.8":
         return {
           values: {

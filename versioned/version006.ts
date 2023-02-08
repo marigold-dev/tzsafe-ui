@@ -3,6 +3,7 @@ import {
   TezosToolkit,
   BigMapAbstraction,
   MichelsonMap,
+  WalletContract,
 } from "@taquito/taquito";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
@@ -73,16 +74,24 @@ class Version006 extends Versioned {
     return _contract.proposal_map.toString();
   }
   async signProposal(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposal: number,
-    _p: any,
-    result: boolean
+    result: boolean | undefined,
+    resolve: boolean
   ): Promise<void> {
-    let params = cc.methods
-      .sign_and_execute_proposal(proposal, result)
-      .toTransferParams();
-    let op = await t.wallet.transfer(params).send();
+    let batch = t.wallet.batch();
+    if (typeof result != "undefined") {
+      await batch.withContractCall(
+        cc.methods.sign_proposal_only(BigNumber(proposal), result)
+      );
+    }
+    if (resolve) {
+      await batch.withContractCall(
+        cc.methods.resolve_proposal(BigNumber(proposal))
+      );
+    }
+    let op = await batch.send();
     await op.confirmation(1);
   }
 
@@ -91,15 +100,17 @@ class Version006 extends Versioned {
     t: TezosToolkit,
     ops: ownersForm[]
   ) {
-    let content = ops.map((v) => {
-      if ("addOwners" in v) {
-        return { add_signers: v.addOwners };
-      } else if ("removeOwners" in v) {
-        return { remove_signers: v.removeOwners };
-      } else {
-        return { adjust_threshold: v.changeThreshold };
-      }
-    });
+    let content = ops
+      .map((v) => {
+        if ("addOwners" in v) {
+          return { add_signers: v.addOwners };
+        } else if ("removeOwners" in v) {
+          return { remove_signers: v.removeOwners };
+        } else if ("changeThreshold" in v) {
+          return { adjust_threshold: v.changeThreshold };
+        }
+      })
+      .filter((x) => !!x);
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
     await op.transactionOperation();
