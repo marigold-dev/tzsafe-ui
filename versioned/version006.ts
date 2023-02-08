@@ -9,8 +9,11 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
+import { ParameterSchema } from "@taquito/michelson-encoder";
+import { encodePubKey } from "@taquito/utils";
 import { Parser } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
+import { map2Object, matchLambda } from "./apis";
 
 class Version006 extends Versioned {
   async submitTxProposals(
@@ -66,8 +69,8 @@ class Version006 extends Versioned {
     await op.transactionOperation();
     await op.confirmation(1);
   }
-  static  override getProposalsId(_contract: storage): string {
-   return  _contract.proposal_map.toString()
+  static override getProposalsId(_contract: storage): string {
+    return _contract.proposal_map.toString();
   }
   async signProposal(
     cc: Contract,
@@ -122,10 +125,22 @@ class Version006 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      let meta = content.execute_lambda
+        ? matchLambda({}, JSON.parse(content.execute_lambda))
+        : null;
       return {
         executeLambda: {
-          metadata: "no Metadata available",
-          content: "Unable to display",
+          metadata: !!meta
+            ? JSON.stringify(meta, null, 2)
+            : JSON.stringify(
+                {
+                  status: "Failed to parse lambda",
+                  meta: { lambda: content.execute_lambda },
+                },
+                null,
+                2
+              ),
+          content: content.execute_lambda || "Lambda unavailable",
         },
       };
     } else if ("transfer" in content) {

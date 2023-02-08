@@ -8,9 +8,11 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
-import { Parser } from "@taquito/michel-codec";
+import { Parser, emitMicheline } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { map2Object, matchLambda } from "./apis";
+import { connect } from "http2";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -81,8 +83,8 @@ class Version008 extends Versioned {
     await op.confirmation(1);
   }
   static override getProposalsId(_contract: c1): string {
-    return  _contract.proposals.toString()
-   }
+    return _contract.proposals.toString();
+  }
   async signProposal(
     cc: Contract,
     t: TezosToolkit,
@@ -133,12 +135,25 @@ class Version008 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
-          metadata: !!content.execute_lambda?.metadata
-            ? bytes2Char(content.execute_lambda.metadata)
-            : "No metadata",
-          content: "Unable to display",
+          metadata: !!meta
+            ? JSON.stringify(meta, null, 2)
+            : JSON.stringify(
+                {
+                  status: "Cant parse lambda",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                  lambda: emitMicheline(
+                    JSON.parse(content.execute_lambda.lambda)
+                  ),
+                },
+                null,
+                2
+              ),
+          content: content.execute_lambda.lambda,
         },
       };
     } else if ("transfer" in content) {

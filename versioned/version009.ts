@@ -9,8 +9,11 @@ import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
 import { Parser } from "@taquito/michel-codec";
+import { emitMicheline } from "@taquito/michel-codec";
+import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { matchLambda } from "./apis";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -130,11 +133,36 @@ class Version009 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
-            metadata: !!content.execute_lambda?.metadata
-            ? bytes2Char(content.execute_lambda.metadata) : "No metadata",
-          content: "Unable to display",
+          metadata: !!content.execute_lambda.lambda
+            ? JSON.stringify(
+                !!!meta
+                  ? {
+                      status: "Cant parse lambda",
+                      meta: content.execute_lambda.metadata
+                        ? bytes2Char(content.execute_lambda.metadata)
+                        : "No meta supplied",
+                      lambda: emitMicheline(
+                        JSON.parse(content.execute_lambda.lambda)
+                      ),
+                    }
+                  : meta,
+                null,
+                2
+              )
+            : JSON.stringify(
+                {
+                  status: "Executed; lambda unavailable",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                },
+                null,
+                2
+              ),
+          content: JSON.parse(content.execute_lambda.lambda || ""),
         },
       };
     } else if ("transfer" in content) {
@@ -161,8 +189,8 @@ class Version009 extends Versioned {
     }
   }
   static override getProposalsId(_contract: c1): string {
-    return  _contract.proposals.toString()
-   }
+    return _contract.proposals.toString();
+  }
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
     const status: { [key: string]: status } = {

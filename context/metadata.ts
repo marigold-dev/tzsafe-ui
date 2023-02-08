@@ -4,7 +4,6 @@ import {
   Wallet,
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
-import { hex2buf } from "@taquito/utils";
 import { version } from "../types/display";
 declare const ABSTRACTION_KEY: unique symbol;
 const dispatch: { [key: string]: version } = {
@@ -12,6 +11,7 @@ const dispatch: { [key: string]: version } = {
   "0.0.8": "0.0.8",
   "0.0.9": "0.0.9",
 };
+
 async function fetchVersion(
   metadata: ContractAbstraction<ContractProvider> & {
     tzip16(

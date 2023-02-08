@@ -671,7 +671,18 @@ function ExecuteForm(
             PUSH ${typ} ${param} ;
             TRANSFER_TOKENS 
           }`;
-            props.setField(lambda, JSON.stringify(res, null, 2));
+            props.setField(
+              lambda,
+              JSON.stringify(
+                {
+                  contract_addr: props.address,
+                  mutez_amount: props.amount,
+                  payload: res,
+                },
+                null,
+                2
+              )
+            );
             props.setLoading(false);
           } catch {
             props.setLoading(false);
