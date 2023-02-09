@@ -13,6 +13,7 @@ import React, { FC } from "react";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
+import { adaptiveTime } from "../../utils/adaptiveTime";
 import TextInputWithCompletion from "../textInputWithComplete";
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -78,7 +79,10 @@ function Aliases() {
                 ? `invalid address ${x.address}`
                 : "";
           }
-          if (!!x.name && (dedupName.has(x.name) || byName[x.name])) {
+          if (
+            !!x.name &&
+            (dedupName.has(x.name) || byName[x.name] !== x.address)
+          ) {
             err.name = "alias already exists";
           } else {
             dedupName.add(x.name);
@@ -228,6 +232,9 @@ function Aliases() {
                 return error;
               }}
             />
+            <p className="text-lg text-white">
+              {adaptiveTime(values.effectivePeriod.toString())}
+            </p>
             <ErrorMessage
               name={`effectivePeriod`}
               render={(x) => {

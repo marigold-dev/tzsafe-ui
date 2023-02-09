@@ -17,6 +17,7 @@ import { ownersForm } from "../versioned/forms";
 import { signers, VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 import contract from "../context/unitContract";
+import { adaptiveTime } from "../utils/adaptiveTime";
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
 ): boolean {
@@ -59,7 +60,7 @@ const SignersForm: FC<{
       name: state.aliases[x] || "",
     })),
     effectivePeriod:
-      props.contract.version === "0.0.10"
+      props.contract.version >= "0.0.10"
         ? props.contract.effective_period
         : undefined,
     requiredSignatures: props.contract.threshold,
@@ -363,6 +364,9 @@ const SignersForm: FC<{
                 name="effectivePeriod"
                 placeholder={props.contract.effectivePeriod}
               ></Field>
+              <p className="text-lg text-white">
+                {adaptiveTime(values.effectivePeriod.toString())}
+              </p>
               <ErrorMessage
                 name={`requiredSignatures`}
                 render={(x) => {

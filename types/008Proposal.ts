@@ -5,6 +5,7 @@ type content =
   | { transfer: { amount: BigNumber; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }
+  | { execute: string }
   | { change_threshold: number };
 
 type proposal = {
@@ -13,7 +14,6 @@ type proposal = {
   executed: boolean;
   state: { rejected: Symbol } | { executed: Symbol } | { proposing: Symbol };
   proposer: { actor: string; timestamp: string };
-  timestamp: string;
 };
 
 type contractStorage = {

@@ -44,14 +44,14 @@ function Home() {
     })();
   }, [router, dispatch, state]);
   return (
-    <div className="relative h-full min-h-screen flex flex-col overflow-y-auto">
+    <div className="relative min-h-content flex flex-col">
       <Meta title={"Create wallet"} />
 
       <NavBar />
       <div className="bg-graybg shadow">
         <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
           <h1 className="text-white text-2xl font-extrabold">
-            Create multisig wallet (version 0.0.10)
+            Create multisig wallet (version 0.0.11)
           </h1>
         </div>
       </div>

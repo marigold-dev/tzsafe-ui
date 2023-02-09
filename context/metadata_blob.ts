@@ -4,7 +4,7 @@ import { buf2hex } from "@taquito/utils";
 let meta = {
   name: "multisig",
   description: "Marigold Multisig Contract",
-  version: "0.0.10",
+  version: "0.0.11",
   license: {
     name: "MIT",
   },

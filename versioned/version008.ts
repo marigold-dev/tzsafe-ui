@@ -17,6 +17,7 @@ import { Parser, emitMicheline } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
 import { map2Object, matchLambda } from "./apis";
+import ProposalSignForm from "../components/proposalSignForm";
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -193,9 +194,11 @@ class Version008 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
-    } else {
-      throw new Error("should not possible!");
+    } else if ("execute" in content) {
+      return { execute: content.execute };
     }
+    let never: never = content;
+    throw new Error("unknown proposal");
   }
 
   static override toProposal(proposal: any): proposal {
@@ -206,6 +209,7 @@ class Version008 extends Versioned {
       closed: "Rejected",
     };
     return {
+      timestamp: prop.proposer.timestamp,
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),

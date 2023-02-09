@@ -1,5 +1,6 @@
 import { BigNumber } from "bignumber.js";
 type lambda = { executeLambda: { metadata?: string; content?: string } };
+type execute = { execute: string };
 type transfer = { transfer: { amount: BigNumber; destination: string } };
 type removeOwners = { removeOwners: string[] };
 type addOwners = { addOwners: string[] };
@@ -11,16 +12,24 @@ type proposalContent =
   | addOwners
   | removeOwners
   | transfer
+  | execute
   | lambda;
 type status = "Proposing" | "Executed" | "Rejected" | "Expired";
 type proposal = {
   author: string;
   status: status;
+  timestamp: string;
   resolvedBy?: string;
   signatures: { signer: string; result: boolean }[];
   content: proposalContent[];
 };
-type version = "0.0.6" | "0.0.8" | "0.0.9" | "0.0.10" | "unknown version";
+type version =
+  | "0.0.6"
+  | "0.0.8"
+  | "0.0.9"
+  | "0.0.10"
+  | "0.0.11"
+  | "unknown version";
 export {
   type proposal,
   type changeThreshold,

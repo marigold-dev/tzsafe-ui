@@ -16,6 +16,7 @@ import {
   AppStateContext,
   AppDispatchContext,
 } from "../context/state";
+import Footer from "../components/footer";
 
 export default function App({ Component, pageProps }: AppProps) {
   let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -61,6 +62,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div id="modal" />
         <Component {...pageProps} />
+        <Footer />
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );

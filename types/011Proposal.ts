@@ -5,23 +5,29 @@ type content =
   | { transfer: { amount: BigNumber; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }
+  | { change_threshold: number }
   | { execute: string }
-  | { change_threshold: number };
+  | { adjust_effective_period: number };
 
 type proposal = {
   signatures: MichelsonMap<string, boolean>;
   contents: content[];
   executed: boolean;
-  state: { rejected: Symbol } | { executed: Symbol } | { proposing: Symbol };
+  state:
+    | { rejected: Symbol }
+    | { executed: Symbol }
+    | { proposing: Symbol }
+    | { expired: Symbol };
   proposer: { actor: string; timestamp: string };
 };
 
 type contractStorage = {
   proposal_counter: string;
   balance: string;
+  effective_period: number;
   proposals: string;
   owners: string[];
   threshold: BigNumber;
-  version: "0.0.9";
+  version: "0.0.11";
 };
 export { type content, type proposal, type contractStorage };
