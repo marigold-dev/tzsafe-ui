@@ -8,7 +8,7 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/009Proposal";
+} from "../types/011Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { ownersForm } from "./forms";
@@ -16,12 +16,12 @@ import { Versioned } from "./interface";
 import { Parser } from "@taquito/michel-codec";
 import { emitMicheline } from "@taquito/michel-codec";
 import { BigNumber } from "bignumber.js";
-import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { matchLambda } from "./apis";
 function convert(x: string): string {
   return char2Bytes(x);
 }
-class Version009 extends Versioned {
+class Version011 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -128,6 +128,8 @@ class Version009 extends Versioned {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
           return { change_threshold: v.changeThreshold };
+        } else {
+          return { adjust_effective_period: v.adjustEffectivePeriod };
         }
       })
       .filter((x) => !!x);
@@ -145,9 +147,10 @@ class Version009 extends Versioned {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
       proposal_counter: c.proposal_counter.toString(),
+      effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.0.9",
+      version: "0.0.11",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -181,7 +184,9 @@ class Version009 extends Versioned {
                 null,
                 2
               ),
-          content: JSON.parse(content.execute_lambda.lambda || ""),
+          content: content.execute_lambda.lambda
+            ? emitMicheline(JSON.parse(content.execute_lambda.lambda || ""))
+            : "",
         },
       };
     } else if ("transfer" in content) {
@@ -203,6 +208,10 @@ class Version009 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
+    } else if ("adjust_effective_period" in content) {
+      return {
+        adjustEffectivePeriod: content.adjust_effective_period,
+      };
     } else if ("execute" in content) {
       return { execute: content.execute };
     }
@@ -218,6 +227,7 @@ class Version009 extends Versioned {
       proposing: "Proposing",
       executed: "Executed",
       closed: "Rejected",
+      expired: "Expired",
     };
     return {
       timestamp: prop.proposer.timestamp,
@@ -232,4 +242,4 @@ class Version009 extends Versioned {
   }
 }
 
-export default Version009;
+export default Version011;

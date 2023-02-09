@@ -173,9 +173,11 @@ class Version006 extends Versioned {
       return {
         changeThreshold: content.adjust_threshold,
       };
-    } else {
-      throw new Error("should not possible!");
+    } else if ("execute" in content) {
+      return { execute: content.execute };
     }
+    let never: never = content;
+    throw new Error("unknown proposal");
   }
 
   static override toProposal(proposal: any): proposal {
@@ -193,6 +195,7 @@ class Version006 extends Versioned {
       closed: "Rejected",
     };
     return {
+      timestamp: prop.timestamp,
       author: prop.proposer,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.content.map(this.mapContent),

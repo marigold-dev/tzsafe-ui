@@ -27,6 +27,7 @@ import {
 import { Versioned } from "../../versioned/interface";
 import { getProposals } from "../../context/proposals";
 import ProposalSignForm from "../../components/proposalSignForm";
+import { adaptiveTime } from "../../utils/adaptiveTime";
 let emptyProps: [number, { og: any; ui: proposal }][] = [];
 const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   cond,
@@ -188,7 +189,7 @@ function Home() {
   let balance = new BigNumber(contract?.balance);
   balance = balance.div(10 ** 6, 10);
   return (
-    <div className="relative h-full flex flex-col overflow-y-auto">
+    <div className="relative flex flex-col min-h-fit overflow-y-auto">
       <Meta title={router} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state &&
@@ -257,7 +258,7 @@ function Home() {
         </div>
       )}
       {!invalid && (
-        <div className="flex flex-col h-full grow overflow-y-auto">
+        <div className="flex flex-col h-full grow min-h-fit">
           <div className="bg-graybg shadow">
             <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8 grid grid-flow-row grid-cols-1 md:grid-flow-row md:grid-cols-3  gap-1 justify-start">
               {alias ? (
@@ -309,6 +310,16 @@ function Home() {
                     cond={!!contract?.threshold}
                     value={`${contract?.threshold}/${signers(contract).length}`}
                     text={"Threshold"}
+                  />
+                  <Spinner
+                    key={contract?.effective_period}
+                    cond={!!contract?.effective_period}
+                    value={
+                      contract?.effective_period
+                        ? adaptiveTime(contract?.effective_period)
+                        : "forever"
+                    }
+                    text={"Effective period"}
                   />
                 </div>
               ) : (
@@ -411,13 +422,13 @@ function Home() {
                     aria-expanded="false"
                     aria-haspopup="true"
                   >
-                    Change owners and threshold
+                    Change settings
                   </button>
                 </div>
               )}
             </div>
           </div>
-          <main className="bg-gray-100 h-full grow">
+          <main className="bg-gray-100 h-full grow min-h-fit">
             <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
               <div className="px-4 py-6 sm:px-0">
                 <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
@@ -436,7 +447,6 @@ function Home() {
           </main>
         </div>
       )}
-      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { FC, useContext, useState } from "react";
 import { AppStateContext, tezosState, contractStorage } from "../context/state";
 import { proposal, proposalContent, status } from "../types/display";
+import { adaptiveTime, countdown } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 function getClass(x: number, active: number): string {
@@ -166,6 +167,14 @@ const Card: FC<{
           {getState(prop.ui)}
         </p>
       </div>
+      {"effective_period" in contract && (
+        <div>
+          <p className="md:inline-block text-white font-bold">Expires in: </p>
+          <p className="md:inline-block text-white font-bold text-sm md:text-md">
+            {countdown(contract.effective_period, prop.ui.timestamp)}
+          </p>
+        </div>
+      )}
       <div>
         <p className="md:inline-block text-white font-bold">Proposed by: </p>
         <p className="md:inline-block text-white font-bold text-sm md:text-md">
@@ -285,6 +294,14 @@ function renderContent(
   if ("executeLambda" in x) {
     return `Execute Lambda(${x.executeLambda.metadata})`;
   }
+  if ("execute" in x) {
+    return `Execute (${x.execute})`;
+  }
+  if ("adjustEffectivePeriod" in x) {
+    return `Adjust effective period:  (${adaptiveTime(
+      x.adjustEffectivePeriod.toString()
+    )})`;
+  }
   if ("addOwners" in x) {
     return `Add [${x.addOwners.join(", ")}] to validators`;
   }
@@ -294,6 +311,7 @@ function renderContent(
   if ("changeThreshold" in x) {
     return `Change threshold from ${contract.threshold} to ${x.changeThreshold}`;
   }
+  let _: never = x;
   return "Not supported";
 }
 export default Proposals;

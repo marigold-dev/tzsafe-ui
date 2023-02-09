@@ -38,13 +38,26 @@ type form =
   | ({ type: "array"; fields: form[] } & named)
   | ({ type: "field"; fields: form } & named & withMap)
   | ({ type: "textarea" } & named & withMap)
-  | ({ type: "list"; fields: form } & named & withMap)
-  | ({ type: "map"; fields: form[] } & named);
+  | ({ type: "list"; fields: form } & named & withMap);
 
 function makeForm(
   item: TokenSchema,
   parent: string = "entrypoint"
 ): form & { init: any } {
+  let wrap = (item: form & { init: any }): form & { init: any } => {
+    if (parent === "entrypoint") {
+      return {
+        type: "field",
+        name: "default",
+        fields: { ...item, name: "default" },
+        init: item.init,
+        mapValue(item: any): any {
+          return { entrypoint: item };
+        },
+      };
+    }
+    return item;
+  };
   if ("or" == item?.__michelsonType) {
     let form = Object.entries(item.schema).map(([field, schema]) => {
       let f = makeForm(schema, field);
@@ -63,20 +76,20 @@ function makeForm(
       init: { kind: form[0].name, init: form[0].init },
     };
   } else if (item?.__michelsonType == "unit") {
-    return {
+    return wrap({
       name: parent,
       type: "constant",
       value: {},
       init: {},
-    };
+    });
   } else if (["tez", "mutez", "nat", "int"].includes(item?.__michelsonType)) {
-    return {
+    return wrap({
       name: parent,
       type: "input",
       placeholder: item.__michelsonType,
       init: 0,
       mapValue: (amount: string) => Number.parseInt(amount),
-    };
+    });
   } else if ("pair" == item?.__michelsonType) {
     let keys = Object.keys(item.schema);
     let isArray = !Number.isNaN(Number(keys[0]));
@@ -98,10 +111,10 @@ function makeForm(
           };
         }),
       };
-      return {
+      return wrap({
         ...res,
         init: Object.fromEntries(res.fields.map((x) => [x.name, x.init])),
-      } as form & { init: any };
+      } as form & { init: any });
     } else {
       let res = {
         type: "record",
@@ -119,24 +132,24 @@ function makeForm(
           };
         }),
       };
-      return {
+      return wrap({
         ...res,
         init: Object.fromEntries(res.fields.map((x) => [x.name, x.init])),
-      } as form & { init: any };
+      } as form & { init: any });
     }
   } else if (["list", "set"].includes(item?.__michelsonType)) {
-    return {
+    return wrap({
       type: "list",
       name: parent,
       init: [],
       fields: makeForm(item.schema as TokenSchema, parent),
       mapValue: (_: any) => _,
-    };
+    });
   } else if (
     "map" == item?.__michelsonType ||
     "big_map" == item?.__michelsonType
   ) {
-    return {
+    return wrap({
       type: "list",
       name: parent,
       init: [],
@@ -151,9 +164,9 @@ function makeForm(
       mapValue: (x: any[]) => {
         return x.reduce((acc, x) => ({ ...acc, ...x }), {});
       },
-    };
+    });
   } else if ("bool" === item?.__michelsonType) {
-    return {
+    return wrap({
       type: "select",
       name: parent,
       init: { kind: "true", init: true },
@@ -161,19 +174,19 @@ function makeForm(
         { type: "constant", value: true, name: "true" },
         { type: "constant", value: false, name: "false" },
       ],
-    };
+    });
   } else if ("bytes" === item?.__michelsonType) {
-    return {
+    return wrap({
       name: parent,
       placeholder: item.__michelsonType,
       type: "input",
       init: "",
       mapValue: (x: string) => char2Bytes(x),
-    };
+    });
   } else if ("option" === item?.__michelsonType) {
-    return makeForm(item.schema, parent);
+    return wrap(makeForm(item.schema, parent));
   } else if ("lambda" == item?.__michelsonType) {
-    return {
+    return wrap({
       name: parent,
       type: "textarea",
       init: "",
@@ -182,15 +195,15 @@ function makeForm(
         const michelsonCode = p.parseMichelineExpression(x);
         return michelsonCode;
       },
-    };
+    });
   } else {
-    return {
+    return wrap({
       name: parent,
       placeholder: item?.__michelsonType,
       type: "input",
       init: "",
       mapValue: (x: any) => x,
-    };
+    });
   }
 }
 function makeName(parents: any[], name: string): string {
@@ -409,9 +422,6 @@ function RenderItem({
       </div>
     );
   }
-  if ("map" == item?.type) {
-    return null;
-  }
   if ("textarea" == item?.type) {
     let fieldName =
       parent.length > 1 &&
@@ -497,41 +507,65 @@ function Basic({
         setFormState({ address: values.walletAddress, amount: values.amount });
       }}
     >
-      <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-1 w-full">
-        <div className="text-2xl font-medium self-center mb-2 text-white">
-          Enter amount and contract address below
-        </div>
-        <div className="flex flex-col w-full justify-center md:flex-col ">
-          <div className="flex flex-col w-full">
-            <div className="flex flex-col items-start mb-2 w-full">
-              <label className="font-medium text-white">amount</label>
-              <Field
-                name="amount"
-                className=" border-2 p-2 w-full text-black"
-                placeholder="0"
-              />
-            </div>
-            <ErrorMessage name="amount" render={renderError} />
+      {({ setFieldValue }) => (
+        <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-1 w-full">
+          <div className="text-2xl font-medium self-center mb-2 text-white">
+            Enter amount and contract address below
           </div>
-          <div className="flex flex-col w-full ">
-            <div className="flex flex-col items-start mb-2 w-full">
-              <label className="font-medium text-white">Contract address</label>
-              <Field
-                name="walletAddress"
-                className=" border-2 p-2 w-full text-black"
-                placeholder="contract address"
-              />
+          <div className="flex flex-col w-full justify-center md:flex-col ">
+            <div className="flex flex-col w-full">
+              <div className="flex flex-col items-start mb-2 w-full">
+                <label className="font-medium text-white">
+                  Amount in mutez:{" "}
+                </label>
+                <Field
+                  name="amount"
+                  className=" border-2 p-2 w-full text-black"
+                  placeholder="0"
+                  validate={(value: string) => {
+                    let error;
+                    if (isNaN(Number(value))) {
+                      error = `Amount should be a number, got: ${value}`;
+                    }
+                    let num = Number(value);
+                    if (num < 0) {
+                      error = `Amount should be a positive number, got: ${value}`;
+                    }
+                    return error;
+                  }}
+                />
+              </div>
+              <ErrorMessage name="amount" render={renderError} />
             </div>
-            <ErrorMessage name="walletAddress" render={renderError} />
+            <div className="flex flex-col w-full ">
+              <div className="flex flex-col items-start mb-2 w-full">
+                <label className="font-medium text-white">
+                  Contract address
+                </label>
+                <TextInputWithCompletion
+                  setTerms={({ payload, term: _ }) => {
+                    setFieldValue("walletAddress", payload);
+                  }}
+                  filter={(x) => validateContractAddress(x as string) === 3}
+                  byAddrToo={true}
+                  as="input"
+                  name={`walletAddress`}
+                  className=" border-2 p-2 w-full text-black"
+                  placeholder={"contract address"}
+                  rows={10}
+                />
+              </div>
+              <ErrorMessage name="walletAddress" render={renderError} />
+            </div>
           </div>
-        </div>
-        <button
-          className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
-          type="submit"
-        >
-          Continue
-        </button>
-      </Form>
+          <button
+            className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
+            type="submit"
+          >
+            Continue
+          </button>
+        </Form>
+      )}
     </Formik>
   );
 }
@@ -559,17 +593,19 @@ function ExecuteForm(
         try {
           setLoading(true);
           let c = await conn.contract.at(address);
-
           // this is needed
           let res = makeForm(c.parameterSchema.generateSchema());
 
           let initial = {
-            entrypoint: {
-              ...Object.fromEntries(
-                (res as any).fields.map((x: any) => [x.name, x.init])
-              ),
-              ...res.init,
-            },
+            entrypoint:
+              res.name === "default"
+                ? res
+                : {
+                    ...Object.fromEntries(
+                      (res as any).fields.map((x: any) => [x.name, x.init])
+                    ),
+                    ...res.init,
+                  },
           };
           props.setState({
             entrypoint: initial,
@@ -694,7 +730,7 @@ function ExecuteForm(
             <div className="text-2xl font-medium self-center mb-2 text-white">
               Add items below
             </div>
-            <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full md:h-fit-content md:max-h-96 overflow-y-auto">
+            <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full h-fit-content md:min-h-96 overflow-y-auto">
               {!!props.shape && (
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
@@ -935,10 +971,7 @@ function TransferForm(
           <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
-                <div
-                  className="min-w-full flex flex-col md:max-h-96 overflow-y-auto"
-                  id="top"
-                >
+                <div className="min-w-full flex flex-col h-fit " id="top">
                   <div className="flex flex-col md:flex-row">
                     <button
                       type="button"
@@ -1072,6 +1105,8 @@ function TransferForm(
                                         },
                                       });
                                     }}
+                                    filter={(_) => true}
+                                    byAddrToo={true}
                                     as="input"
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={

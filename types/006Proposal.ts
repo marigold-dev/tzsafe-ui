@@ -1,9 +1,10 @@
 import { BigNumber } from "bignumber.js";
 type content =
-  | { execute_lambda?: string }
+  | { execute_lambda: string | undefined }
   | { transfer: { amount: BigNumber; target: string; parameter: {} } }
   | { add_signers: string[] }
   | { remove_signers: string[] }
+  | { execute: string }
   | { adjust_threshold: number };
 
 type proposal = {

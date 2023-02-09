@@ -17,6 +17,7 @@ import {
 import { encodePubKey } from "@taquito/utils";
 import { ParameterSchema } from "@taquito/michelson-encoder";
 import Version010 from "./version010";
+import Version011 from "./version011";
 
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
@@ -28,6 +29,7 @@ const dispatch: {
   "0.0.8": (version, address) => new Version008(version, address),
   "0.0.9": (version, address) => new Version009(version, address),
   "0.0.10": (version, address) => new Version010(version, address),
+  "0.0.11": (version, address) => new Version011(version, address),
   "unknown version": () => {
     throw new Error("not implemented!");
   },
@@ -39,6 +41,7 @@ const dispatchUi: {
   "0.0.8": Version008,
   "0.0.9": Version009,
   "0.0.10": Version010,
+  "0.0.11": Version011,
   "unknown version": () => {
     throw new Error("not implemented!");
   },

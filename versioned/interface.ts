@@ -56,32 +56,37 @@ abstract class Versioned {
     if (typeof c == "undefined") {
       return [];
     }
-    switch (c.version) {
-      case "0.0.6":
-        return c.signers;
-      case "0.0.9":
-        return c.owners;
-      case "0.0.10":
-        return c.owners;
-      case "0.0.8":
-        return c.owners;
-      default:
-        return [];
+    if (c.version === "0.0.6") {
+      return c.signers;
+    } else if (
+      c.version === "0.0.8" ||
+      c.version === "0.0.9" ||
+      c.version === "0.0.10" ||
+      c.version === "0.0.11"
+    ) {
+      return c.owners;
     }
+    if (c.version === "unknown version") {
+      return [];
+    }
+    let _: never = c.version;
+    throw new Error("unknown version");
   }
   static proposalCounter(c: contractStorage): BigNumber {
-    switch (c.version) {
-      case "0.0.6":
-        return BigNumber(c.proposal_counter);
-      case "0.0.9":
-        return BigNumber(c.proposal_counter);
-      case "0.0.10":
-        return BigNumber(c.proposal_counter);
-      case "0.0.8":
-        return BigNumber(c.proposal_counter);
-      default:
-        return BigNumber(0);
+    if (
+      c.version === "0.0.6" ||
+      c.version === "0.0.8" ||
+      c.version === "0.0.9" ||
+      c.version === "0.0.10" ||
+      c.version === "0.0.11"
+    ) {
+      return c.owners;
     }
+    if (c.version === "unknown version") {
+      return BigNumber(0);
+    }
+    let _: never = c.version;
+    throw new Error("unknown version");
   }
   static lambdaForm(c: contractStorage): {
     values: { [key: string]: string };
@@ -94,145 +99,81 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    switch (c.version) {
-      case "0.0.6":
-        return {
-          values: {
-            lambda: "",
+    if (c.version === "0.0.6") {
+      return {
+        values: {
+          lambda: "",
+        },
+        fields: [
+          {
+            field: "lambda",
+            label: "Lambda to execute",
+            kind: "textarea",
+            path: ".lambda",
+            placeholder: "Write your lambda here",
+            validate: (x?: string) => {
+              if (!x) {
+                return;
+              }
+              const p = new Parser();
+              try {
+                const _ = p.parseScript(x);
+              } catch {
+                return "Bad lambda";
+              }
+            },
           },
-          fields: [
-            {
-              field: "lambda",
-              label: "Lambda to execute",
-              kind: "textarea",
-              path: ".lambda",
-              placeholder: "Write your lambda here",
-              validate: (x?: string) => {
-                if (!x) {
-                  return;
-                }
-                const p = new Parser();
-                try {
-                  const _ = p.parseScript(x);
-                } catch {
-                  return "Bad lambda";
-                }
-              },
+        ],
+      };
+    } else if (
+      c.version === "0.0.8" ||
+      c.version === "0.0.9" ||
+      c.version === "0.0.10" ||
+      c.version === "0.0.11"
+    ) {
+      return {
+        values: {
+          metadata: "",
+          lambda: "",
+        },
+        fields: [
+          {
+            field: "metadata",
+            label: "Metadata to save",
+            path: ".metadata",
+            placeholder: "Write your metadata here",
+            validate: (x?: string) => {
+              return undefined;
             },
-          ],
-        };
-      case "0.0.9":
-        return {
-          values: {
-            metadata: "",
-            lambda: "",
           },
-          fields: [
-            {
-              field: "metadata",
-              label: "Metadata to save",
-              path: ".metadata",
-              placeholder: "Write your metadata here",
-              validate: (x?: string) => {
-                return undefined;
-              },
+          {
+            field: "lambda",
+            label: "Lambda to execute",
+            kind: "textarea",
+            path: ".lambda",
+            placeholder: "Write your lambda here",
+            validate: (x?: string) => {
+              if (!x) {
+                return;
+              }
+              const p = new Parser();
+              try {
+                const _ = p.parseScript(x);
+              } catch {
+                return "Bad lambda";
+              }
             },
-            {
-              field: "lambda",
-              label: "Lambda to execute",
-              kind: "textarea",
-              path: ".lambda",
-              placeholder: "Write your lambda here",
-              validate: (x?: string) => {
-                if (!x) {
-                  return;
-                }
-                const p = new Parser();
-                try {
-                  const _ = p.parseScript(x);
-                } catch {
-                  return "Bad lambda";
-                }
-              },
-            },
-          ],
-        };
-      case "0.0.10":
-        return {
-          values: {
-            metadata: "",
-            lambda: "",
           },
-          fields: [
-            {
-              field: "metadata",
-              label: "Metadata to save",
-              path: ".metadata",
-              placeholder: "Write your metadata here",
-              validate: (x?: string) => {
-                return undefined;
-              },
-            },
-            {
-              field: "lambda",
-              label: "Lambda to execute",
-              kind: "textarea",
-              path: ".lambda",
-              placeholder: "Write your lambda here",
-              validate: (x?: string) => {
-                if (!x) {
-                  return;
-                }
-                const p = new Parser();
-                try {
-                  const _ = p.parseScript(x);
-                } catch {
-                  return "Bad lambda";
-                }
-              },
-            },
-          ],
-        };
-      case "0.0.8":
-        return {
-          values: {
-            metadata: "",
-            lambda: "",
-          },
-          fields: [
-            {
-              field: "metadata",
-              label: "Metadata to save",
-              path: ".metadata",
-              placeholder: "Write your metadata here",
-              validate: (x?: string) => {
-                return undefined;
-              },
-            },
-            {
-              field: "lambda",
-              label: "Lambda to execute",
-              kind: "textarea",
-              path: ".lambda",
-              placeholder: "Write your lambda here",
-              validate: (x?: string) => {
-                if (!x) {
-                  return;
-                }
-                const p = new Parser();
-                try {
-                  const _ = p.parseScript(x);
-                } catch {
-                  return "Bad lambda";
-                }
-              },
-            },
-          ],
-        };
-      default:
-        return { fields: [], values: {} };
+        ],
+      };
     }
+    if (c.version === "unknown version") {
+      return { fields: [], values: {} };
+    }
+    let _: never = c.version;
+    throw new Error("invalid version");
   }
+
   static transferForm(c: contractStorage): {
     values: { [key: string]: string };
     fields: {
@@ -244,146 +185,85 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    switch (c.version) {
-      case "0.0.6":
-        return {
-          values: {
-            amount: "0",
-            to: "",
+    if (c.version === "0.0.6") {
+      return {
+        values: {
+          amount: "0",
+          to: "",
+        },
+        fields: [
+          {
+            field: "amount",
+            label: "Amount in Mutez",
+            path: ".amount",
+            placeholder: "0",
+            validate: (x: string) => {
+              const amount = Number.parseInt(x);
+              if (isNaN(amount) || amount <= 0) {
+                return `invalid amount ${x}`;
+              }
+              return undefined;
+            },
           },
-          fields: [
-            {
-              field: "amount",
-              label: "Amount in Mutez",
-              path: ".amount",
-              placeholder: "0",
-              validate: (x: string) => {
-                const amount = Number.parseInt(x);
-                if (isNaN(amount) || amount <= 0) {
-                  return `invalid amount ${x}`;
-                }
-                return undefined;
-              },
+          {
+            field: "to",
+            label: "Transfer to:",
+            path: ".to",
+            kind: "input-complete",
+            placeholder: "destination address",
+            validate: (x: string) => {
+              return validateAddress(x) !== 3
+                ? `invalid address ${x}`
+                : undefined;
             },
-            {
-              field: "to",
-              label: "Transfer to:",
-              path: ".to",
-              kind: "input-complete",
-              placeholder: "destination address",
-              validate: (x: string) => {
-                return validateAddress(x) !== 3
-                  ? `invalid address ${x}`
-                  : undefined;
-              },
-            },
-          ],
-        };
-      case "0.0.9":
-        return {
-          values: {
-            amount: "0",
-            to: "",
           },
-          fields: [
-            {
-              field: "amount",
-              label: "Amount in Mutez",
-              path: ".amount",
-              placeholder: "0",
-              validate: (x: string) => {
-                const amount = Number.parseInt(x);
-                if (isNaN(amount) || amount <= 0) {
-                  return `invalid amount ${x}`;
-                }
-                return undefined;
-              },
+        ],
+      };
+    } else if (
+      c.version === "0.0.8" ||
+      c.version === "0.0.9" ||
+      c.version === "0.0.10" ||
+      c.version === "0.0.11"
+    ) {
+      return {
+        values: {
+          amount: "0",
+          to: "",
+        },
+        fields: [
+          {
+            field: "amount",
+            label: "Amount in Mutez",
+            path: ".amount",
+            placeholder: "0",
+            validate: (x: string) => {
+              const amount = Number.parseInt(x);
+              if (isNaN(amount) || amount <= 0) {
+                return `invalid amount ${x}`;
+              }
+              return undefined;
             },
-            {
-              field: "to",
-              label: "Transfer to:",
-              path: ".to",
-              kind: "input-complete",
-              placeholder: "destination address",
-              validate: (x: string) => {
-                return validateAddress(x) !== 3
-                  ? `invalid address ${x}`
-                  : undefined;
-              },
-            },
-          ],
-        };
-      case "0.0.10":
-        return {
-          values: {
-            amount: "0",
-            to: "",
           },
-          fields: [
-            {
-              field: "amount",
-              label: "Amount in Mutez",
-              path: ".amount",
-              placeholder: "0",
-              validate: (x: string) => {
-                const amount = Number.parseInt(x);
-                if (isNaN(amount) || amount <= 0) {
-                  return `invalid amount ${x}`;
-                }
-                return undefined;
-              },
+          {
+            field: "to",
+            label: "Transfer to:",
+            path: ".to",
+            kind: "input-complete",
+            placeholder: "destination address",
+            validate: (x: string) => {
+              return validateAddress(x) !== 3
+                ? `invalid address ${x}`
+                : undefined;
             },
-            {
-              field: "to",
-              label: "Transfer to:",
-              path: ".to",
-              kind: "input-complete",
-              placeholder: "destination address",
-              validate: (x: string) => {
-                return validateAddress(x) !== 3
-                  ? `invalid address ${x}`
-                  : undefined;
-              },
-            },
-          ],
-        };
-      case "0.0.8":
-        return {
-          values: {
-            amount: "0",
-            to: "",
           },
-          fields: [
-            {
-              field: "amount",
-              label: "Amount in Mutez",
-              path: ".amount",
-              placeholder: "0",
-              validate: (x: string) => {
-                const amount = Number.parseInt(x);
-                if (isNaN(amount) || amount <= 0) {
-                  return `invalid amount ${x}`;
-                }
-                return undefined;
-              },
-            },
-            {
-              field: "to",
-              label: "Transfer to:",
-              path: ".to",
-              kind: "input-complete",
-              placeholder: "destination address",
-              validate: (x: string) => {
-                return validateAddress(x) !== 3
-                  ? `invalid address ${x}`
-                  : undefined;
-              },
-            },
-          ],
-        };
-      default:
-        return { fields: [], values: {} };
+        ],
+      };
     }
+    if (c.version === "unknown version") {
+      return { fields: [], values: {} };
+    }
+    let _: never = c.version;
+    throw new Error("unknown version");
   }
 }
 

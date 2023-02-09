@@ -6,15 +6,19 @@ type content =
   | { add_owners: string[] }
   | { remove_owners: string[] }
   | { change_threshold: number }
+  | { execute: string }
   | { adjust_effective_period: number };
 
 type proposal = {
   signatures: MichelsonMap<string, boolean>;
   contents: content[];
   executed: boolean;
-  state: { rejected: Symbol } | { executed: Symbol } | { proposing: Symbol };
+  state:
+    | { rejected: Symbol }
+    | { executed: Symbol }
+    | { proposing: Symbol }
+    | { expired: Symbol };
   proposer: { actor: string; timestamp: string };
-  timestamp: string;
 };
 
 type contractStorage = {

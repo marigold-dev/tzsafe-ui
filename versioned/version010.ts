@@ -206,9 +206,15 @@ class Version010 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
-    } else {
-      throw new Error("should not possible!");
+    } else if ("adjust_effective_period" in content) {
+      return {
+        adjustEffectivePeriod: content.adjust_effective_period,
+      };
+    } else if ("execute" in content) {
+      return { execute: content.execute };
     }
+    let never: never = content;
+    throw new Error("unknown proposal");
   }
   static override getProposalsId(_contract: c1): string {
     return _contract.proposals.toString();
@@ -219,8 +225,10 @@ class Version010 extends Versioned {
       proposing: "Proposing",
       executed: "Executed",
       closed: "Rejected",
+      expired: "Expired",
     };
     return {
+      timestamp: prop.proposer.timestamp,
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
