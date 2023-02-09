@@ -507,54 +507,65 @@ function Basic({
         setFormState({ address: values.walletAddress, amount: values.amount });
       }}
     >
-      <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-1 w-full">
-        <div className="text-2xl font-medium self-center mb-2 text-white">
-          Enter amount and contract address below
-        </div>
-        <div className="flex flex-col w-full justify-center md:flex-col ">
-          <div className="flex flex-col w-full">
-            <div className="flex flex-col items-start mb-2 w-full">
-              <label className="font-medium text-white">
-                Amount in mutez:{" "}
-              </label>
-              <Field
-                name="amount"
-                className=" border-2 p-2 w-full text-black"
-                placeholder="0"
-                validate={(value: string) => {
-                  let error;
-                  if (isNaN(Number(value))) {
-                    error = `Amount should be a number, got: ${value}`;
-                  }
-                  let num = Number(value);
-                  if (num < 0) {
-                    error = `Amount should be a positive number, got: ${value}`;
-                  }
-                  return error;
-                }}
-              />
-            </div>
-            <ErrorMessage name="amount" render={renderError} />
+      {({ setFieldValue }) => (
+        <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-1 w-full">
+          <div className="text-2xl font-medium self-center mb-2 text-white">
+            Enter amount and contract address below
           </div>
-          <div className="flex flex-col w-full ">
-            <div className="flex flex-col items-start mb-2 w-full">
-              <label className="font-medium text-white">Contract address</label>
-              <Field
-                name="walletAddress"
-                className=" border-2 p-2 w-full text-black"
-                placeholder="contract address"
-              />
+          <div className="flex flex-col w-full justify-center md:flex-col ">
+            <div className="flex flex-col w-full">
+              <div className="flex flex-col items-start mb-2 w-full">
+                <label className="font-medium text-white">
+                  Amount in mutez:{" "}
+                </label>
+                <Field
+                  name="amount"
+                  className=" border-2 p-2 w-full text-black"
+                  placeholder="0"
+                  validate={(value: string) => {
+                    let error;
+                    if (isNaN(Number(value))) {
+                      error = `Amount should be a number, got: ${value}`;
+                    }
+                    let num = Number(value);
+                    if (num < 0) {
+                      error = `Amount should be a positive number, got: ${value}`;
+                    }
+                    return error;
+                  }}
+                />
+              </div>
+              <ErrorMessage name="amount" render={renderError} />
             </div>
-            <ErrorMessage name="walletAddress" render={renderError} />
+            <div className="flex flex-col w-full ">
+              <div className="flex flex-col items-start mb-2 w-full">
+                <label className="font-medium text-white">
+                  Contract address
+                </label>
+                <TextInputWithCompletion
+                  setTerms={({ payload, term: _ }) => {
+                    setFieldValue("walletAddress", payload);
+                  }}
+                  filter={(x) => validateContractAddress(x as string) === 3}
+                  byAddrToo={true}
+                  as="input"
+                  name={`walletAddress`}
+                  className=" border-2 p-2 w-full text-black"
+                  placeholder={"contract address"}
+                  rows={10}
+                />
+              </div>
+              <ErrorMessage name="walletAddress" render={renderError} />
+            </div>
           </div>
-        </div>
-        <button
-          className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
-          type="submit"
-        >
-          Continue
-        </button>
-      </Form>
+          <button
+            className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
+            type="submit"
+          >
+            Continue
+          </button>
+        </Form>
+      )}
     </Formik>
   );
 }
@@ -719,7 +730,7 @@ function ExecuteForm(
             <div className="text-2xl font-medium self-center mb-2 text-white">
               Add items below
             </div>
-            <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full md:h-fit-content md:max-h-96 overflow-y-auto">
+            <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full h-fit-content md:min-h-96 overflow-y-auto">
               {!!props.shape && (
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
@@ -960,10 +971,7 @@ function TransferForm(
           <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
-                <div
-                  className="min-w-full flex flex-col md:max-h-96 overflow-y-auto"
-                  id="top"
-                >
+                <div className="min-w-full flex flex-col h-fit " id="top">
                   <div className="flex flex-col md:flex-row">
                     <button
                       type="button"
@@ -1097,6 +1105,8 @@ function TransferForm(
                                         },
                                       });
                                     }}
+                                    filter={(_) => true}
+                                    byAddrToo={true}
                                     as="input"
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={

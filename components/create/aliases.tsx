@@ -124,6 +124,8 @@ function Aliases() {
                           <div className="grid grid-rows-3 grid-flow-col grid-cols-1">
                             <label className="text-white">Owner Name</label>
                             <TextInputWithCompletion
+                              byAddrToo={false}
+                              filter={() => true}
                               setTerms={({ payload, term }) => {
                                 replace(index, {
                                   ...validator,
