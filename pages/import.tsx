@@ -49,7 +49,7 @@ function Home() {
   }, [state, dispatch, router]);
 
   return (
-    <div className="relative min-h-content flex flex-col">
+    <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Import wallet"} />
       <NavBar />
       <div className="bg-graybg shadow">

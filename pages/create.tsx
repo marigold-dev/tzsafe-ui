@@ -44,7 +44,7 @@ function Home() {
     })();
   }, [router, dispatch, state]);
   return (
-    <div className="relative min-h-content flex flex-col">
+    <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Create wallet"} />
 
       <NavBar />

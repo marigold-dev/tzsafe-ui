@@ -48,7 +48,7 @@ function makeForm(
     if (parent === "entrypoint") {
       return {
         type: "field",
-        name: "default",
+        name: "entrypoint",
         fields: { ...item, name: "default" },
         init: item.init,
         mapValue(item: any): any {
@@ -197,13 +197,14 @@ function makeForm(
       },
     });
   } else {
-    return wrap({
+    let res = wrap({
       name: parent,
       placeholder: item?.__michelsonType,
       type: "input",
       init: "",
       mapValue: (x: any) => x,
     });
+    return res;
   }
 }
 function makeName(parents: any[], name: string): string {
@@ -280,9 +281,12 @@ function RenderItem({
   }
   if ("constant" == item?.type) {
     let fieldName =
-      parent.length && parent[parent.length - 1] === item.name
-        ? parent.join(".")
-        : makeName(parent, item.name);
+      parent.length > 1 &&
+      parent[parent.length - 1] === parent[parent.length - 2]
+        ? parent.slice(0, -1).concat([item.name]).join(".")
+        : parent[parent.length - 1] !== item.name
+        ? makeName(parent, item.name)
+        : parent.join(".");
     if (typeof getFieldProps(fieldName).value == "undefined") {
       setTimeout(() => {
         setFieldValue(fieldName, item.value);
@@ -595,17 +599,16 @@ function ExecuteForm(
           let c = await conn.contract.at(address);
           // this is needed
           let res = makeForm(c.parameterSchema.generateSchema());
-
           let initial = {
             entrypoint:
-              res.name === "default"
-                ? res
-                : {
+              res.name !== "entrypoint"
+                ? {
                     ...Object.fromEntries(
                       (res as any).fields.map((x: any) => [x.name, x.init])
                     ),
                     ...res.init,
-                  },
+                  }
+                : { default: (res as any).fields.init },
           };
           props.setState({
             entrypoint: initial,
@@ -613,13 +616,13 @@ function ExecuteForm(
             schema: c,
           });
           setLoading(false);
-        } catch {
+        } catch (e) {
+          console.log(e);
           setLoading(false);
         }
       })();
     }
   }, [address, loading, props.shape]);
-
   return (
     <div className="text-white w-full">
       <Formik
@@ -642,7 +645,7 @@ function ExecuteForm(
                   : merge(field!, v[v.kind]);
               }
               if (x.type === "constant") {
-                return v;
+                return typeof v === "object" && x.name in v ? v[x.name] : v;
               }
               if (x.type === "array") {
                 if (x.name === "map") {
@@ -652,10 +655,23 @@ function ExecuteForm(
                   };
                 }
                 let res = Object.fromEntries(
-                  Object.entries(v).map(([k, v]: any) => [
-                    k,
-                    merge(x.fields.find((y) => y.name === k)!, v),
-                  ])
+                  Object.entries(v)
+                    .filter(([k, v]) => x.fields.some((x) => x.name == k))
+                    .map(([k, v]: any) => {
+                      let f = x.fields.find((y) => y.name === k)!;
+                      let unwrap =
+                        f.type === "field" && f.fields.type !== "select";
+
+                      return [
+                        k,
+                        merge(
+                          f,
+                          typeof v === "object" && unwrap && f.name in v
+                            ? v[f.name]
+                            : v
+                        ),
+                      ];
+                    })
                 );
                 if ("mapValue" in x) {
                   return (x as any).mapValue(res);
@@ -664,10 +680,23 @@ function ExecuteForm(
               }
               if (x.type === "record") {
                 let res = Object.fromEntries(
-                  Object.entries(v).map(([k, v]: any) => [
-                    k,
-                    merge(x.fields.find((y) => y.name === k)!, v),
-                  ])
+                  Object.entries(v)
+                    .filter(([k, v]) => x.fields.some((x) => x.name == k))
+                    .map(([k, v]: any) => {
+                      let f = x.fields.find((y) => y.name === k)!;
+                      let unwrap =
+                        f.type === "field" && f.fields.type !== "select";
+
+                      return [
+                        k,
+                        merge(
+                          f,
+                          typeof v === "object" && unwrap && f.name in v
+                            ? v[f.name]
+                            : v
+                        ),
+                      ];
+                    })
                 );
                 if ("mapValue" in x) {
                   return (x as any).mapValue(res);
@@ -675,17 +704,26 @@ function ExecuteForm(
                 return res;
               }
               if (x.type === "list") {
-                let li = v.map((y: any) => merge(x.fields, y));
+                let li = !!v ? v.map((y: any) => merge(x.fields, y)) : [];
                 return x.mapValue(li);
               }
               if (x.type === "field") {
-                return merge(x.fields, v);
+                let res = merge(
+                  x.fields,
+                  typeof v == "object"
+                    ? x.fields.name in v || x.name in v
+                      ? v[x.fields.name] || v
+                      : v[x.name] || v
+                    : v
+                );
+                return x.fields.name === x.name ? res : x.mapValue(res);
               }
               if (x.type === "input" || x.type == "textarea") {
                 return x.mapValue(v);
               }
             }
             let res = merge(props.shape.form, values.entrypoint);
+            res = "entrypoint" in res ? res.entrypoint : res;
             let p = new Parser();
             let param = emitMicheline(
               p.parseJSON(props.shape.schema.parameterSchema.EncodeObject(res))
@@ -720,7 +758,8 @@ function ExecuteForm(
               )
             );
             props.setLoading(false);
-          } catch {
+          } catch (e) {
+            console.log(e);
             props.setLoading(false);
           }
         }}

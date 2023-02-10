@@ -8,7 +8,7 @@ function Home() {
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
   return (
-    <div className="relative  min-h-content flex flex-col">
+    <div className="relative  min-h-content flex flex-col grow">
       <Meta title={"Wallets"} />
       <NavBar />
       <div className="bg-graybg shadow">
@@ -18,7 +18,7 @@ function Home() {
           </h1>
         </div>
       </div>
-      <main className="bg-gray-100 h-full grow">
+      <main className="bg-gray-100 h-full grow min-h-fit">
         <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
             <div className="md:h-96 min-h-fit border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:auto-rows-max grid p-2 overflow-y-auto">

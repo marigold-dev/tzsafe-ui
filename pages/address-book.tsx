@@ -51,7 +51,7 @@ function Home() {
     validatorsError: "",
   };
   return (
-    <div className="relative min-h-content flex flex-col">
+    <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Address book"} />
       <NavBar />
       <div className="bg-graybg shadow">
