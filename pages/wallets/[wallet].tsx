@@ -189,7 +189,7 @@ function Home() {
   let balance = new BigNumber(contract?.balance);
   balance = balance.div(10 ** 6, 10);
   return (
-    <div className="relative flex flex-col min-h-fit overflow-y-auto">
+    <div className="relative flex flex-col min-h-fit overflow-y-auto grow">
       <Meta title={router} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state &&
