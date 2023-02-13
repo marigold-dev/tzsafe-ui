@@ -53,7 +53,6 @@ function Home() {
   return (
     <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Address book"} />
-      <NavBar />
       <div className="bg-graybg shadow">
         <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
           <h1 className="text-white text-2xl font-extrabold">Address book</h1>
@@ -215,8 +214,8 @@ function Home() {
                                         type="button"
                                         className={
                                           (errors.validators &&
-                                          errors.validators[index] &&
-                                          get(errors.validators[index])
+                                            errors.validators[index] &&
+                                            get(errors.validators[index])
                                             ? "my-auto"
                                             : "") +
                                           " bg-primary font-medium text-white p-1.5 md:self-center self-center justify-self-center block md:mx-auto mx-none "

@@ -26,7 +26,7 @@ const NavBar = (_: React.PropsWithChildren) => {
     dispatch!({ type: "logout" });
   };
   return (
-    <div className="sticky top-0 w-full">
+    <div className="h-fit w-full">
       <nav className="border-b-4 border-gray">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -44,6 +44,8 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <div className="ml-10 flex items-baseline space-x-4">
                   <RenderContracts />
                   <LinkComponent path="/address-book" text={"Address book"} />
+                  <LinkComponent path="/create" text={"Create a new wallet"} />
+                  <LinkComponent path="/import" text={"Import existing wallet"} />
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" --> */}
                 </div>
               </div>
@@ -173,12 +175,13 @@ const NavBar = (_: React.PropsWithChildren) => {
 
         <div className="md:hidden" id="mobile-menu">
           <div
-            className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden ${
-              menuOpen ? "block" : "hidden"
-            }`}
+            className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden ${menuOpen ? "block" : "hidden"
+              }`}
           >
             <RenderContracts />
             <LinkComponent path="/address-book" text={"Address book"} />
+            <LinkComponent path="/create" text={"Create a new wallet"} />
+            <LinkComponent path="/import" text={"Import existing wallet"} />
           </div>
           {state?.address == null ? (
             <div className="flex items-center justify-end mx-2 pb-2">

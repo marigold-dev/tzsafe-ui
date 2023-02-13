@@ -1,6 +1,7 @@
+import { timeStamp } from "console";
 import { FC, useContext, useState } from "react";
 import { AppStateContext, tezosState, contractStorage } from "../context/state";
-import { proposal, proposalContent, status } from "../types/display";
+import { mutezTransfer, proposal, proposalContent, status } from "../types/display";
 import { adaptiveTime, countdown } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
@@ -13,8 +14,9 @@ const Proposals: FC<{
   proposals: [number, { og: any; ui: proposal }][];
   address: string;
   contract: contractStorage;
+  transfers: mutezTransfer[],
   setCloseModal: (_: number, arg: boolean | undefined) => void;
-}> = ({ proposals, address, contract, setCloseModal }) => {
+}> = ({ proposals, address, contract, setCloseModal, transfers }) => {
   let [currentTab, setCurrentTab] = useState(0);
   let state = useContext(AppStateContext)!;
 
@@ -64,11 +66,11 @@ const Proposals: FC<{
           </li>
         </ul>
       </div>
-      <div className="h-96 md:h-96 overflow-y-auto">
+      <div className="h-full">
         <ul
           className={
             (currentTab === 0 ? " " : " hidden") +
-            ` p-1  rounded-lg :bg-gray-800 grid gap-2 `
+            ` p-1  rounded-lg :bg-gray-800 grid-cols-1 break-words grid gap-2 `
           }
           id="profile"
           role="tabpanel"
@@ -107,7 +109,7 @@ const Proposals: FC<{
         <ul
           className={
             (currentTab === 1 ? " " : " hidden") +
-            ` p-1  rounded-lg  grid gap-2`
+            ` p-1  rounded-lg  grid grid-cols-1 break-words gap-2`
           }
           id="profile"
           role="tabpanel"
@@ -119,10 +121,11 @@ const Proposals: FC<{
               ...proposals.filter(
                 ([_, proposal]) => !("Proposing" === proposal.ui.status)
               ),
-            ]
-              .sort((a, b) => b[0] - a[0])
+            ].concat(transfers.map(x => ([-1, { ui: { timestamp: x.timestamp }, ...x }]) as any))
+              .sort((a, b) => Number(Date.parse(b[1].ui.timestamp).toString(10)) - Number(Date.parse(a[1].ui.timestamp).toString(10)))
               .map((x) => {
-                return (
+                return x[0] == -1 ? <Transfer address={address}
+                  key={(x[1] as any).timestamp as any} prop={x[1] as any} /> : (
                   <Card
                     contract={contract}
                     id={x[0]}
@@ -138,6 +141,51 @@ const Proposals: FC<{
     </div>
   );
 };
+const Transfer: FC<{
+  prop: mutezTransfer;
+  address: string;
+}> = ({ prop, address }) => {
+  let state = useContext(AppStateContext)!;
+  return (
+    <li className="border-2 border-white p-2">
+      <div>
+        <p className="md:inline-block text-white font-bold">Transaction: received Mutez </p>
+      </div>
+      <div>
+        <p className="md:inline-block text-white font-bold">Sender: </p>
+        <p className="md:inline-block text-white font-bold text-sm md:text-md">
+          {state.aliases[prop.sender.address] || prop.sender.address}
+        </p>
+      </div>
+      {
+        prop.initiator && <div>
+          <p className="md:inline-block text-white font-bold">Initiator: </p>
+          <p className="md:inline-block text-white font-bold text-sm md:text-md">
+            {state.aliases[prop.initiator.address] || prop.initiator.address}
+          </p>
+        </div>
+      }
+      <div>
+        <p className="md:inline-block text-white font-bold">Target: </p>
+        <p className="md:inline-block text-white font-bold text-sm md:text-md">
+          {state.aliases[address] || address}
+        </p>
+      </div>
+      <div>
+        <p className="md:inline-block text-white font-bold">Amount(Mutez):  </p>
+        <p className="md:inline-block text-white font-bold text-sm md:text-md">
+          {prop.amount}
+        </p>
+      </div>
+      <div>
+        <p className="md:inline-block text-white font-bold">Timestamp: </p>
+        <p className="md:inline-block text-white font-bold text-sm md:text-md">
+          {prop.timestamp}
+        </p>
+      </div>
+    </li>
+  );
+};
 function getState(t: proposal): status {
   return t.status;
 }
@@ -148,7 +196,7 @@ const Card: FC<{
   signable: boolean;
   contract: contractStorage;
   setCloseModal?: (arg: boolean | undefined) => void;
-}> = ({ contract, prop, address, id, signable, setCloseModal = () => {} }) => {
+}> = ({ contract, prop, address, id, signable, setCloseModal = () => { } }) => {
   let state = useContext(AppStateContext)!;
   let [loading, setLoading] = useState(false);
   function resolvable(
@@ -235,7 +283,7 @@ const Card: FC<{
             )}
           {state.address &&
             signers(contract).includes(state.address) &&
-            resolvable(prop.ui.signatures) && (
+            resolvable(prop.ui.signatures) && "Executed" !== prop.ui.status && (
               <button
                 type="button"
                 className={
@@ -287,9 +335,8 @@ function renderContent(
   contract: contractStorage
 ): string {
   if ("transfer" in x) {
-    return `${x.transfer.amount} mutez to ${
-      state.aliases[x.transfer.destination] || x.transfer.destination
-    }`;
+    return `${x.transfer.amount} mutez to ${state.aliases[x.transfer.destination] || x.transfer.destination
+      }`;
   }
   if ("executeLambda" in x) {
     return `Execute Lambda(${x.executeLambda.metadata})`;

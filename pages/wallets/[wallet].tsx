@@ -17,15 +17,14 @@ import {
   AppStateContext,
   contractStorage,
 } from "../../context/state";
-import { proposal, version } from "../../types/display";
+import { mutezTransfer, proposal, version } from "../../types/display";
 import {
   signers,
   toProposal,
   toStorage,
   getProposalsId,
 } from "../../versioned/apis";
-import { Versioned } from "../../versioned/interface";
-import { getProposals } from "../../context/proposals";
+import { getProposals, getTransfers } from "../../context/proposals";
 import ProposalSignForm from "../../components/proposalSignForm";
 import { adaptiveTime } from "../../utils/adaptiveTime";
 let emptyProps: [number, { og: any; ui: proposal }][] = [];
@@ -63,15 +62,16 @@ const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
     </div>
   );
 };
-function Home() {
+function Wallet(props: { address: string }) {
+  let router = props.address
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
   let [invalid, setInvalid] = useState(false);
-  let router = usePathname()?.split("/")![2]!;
   let [contract, setContract] = useState<contractStorage>(
     state.contracts[router]
   );
   let [proposals, setProposals] = useState(emptyProps);
+  let [transfers, setTransfers] = useState([] as mutezTransfer[]);
 
   useEffect(() => {
     if (router && validateAddress(router) === 3) {
@@ -86,22 +86,23 @@ function Home() {
         const updatedContract = toStorage(version, cc, balance);
         state.contracts[router]
           ? dispatch({
-              type: "updateContract",
-              payload: {
-                address: router,
-                contract: updatedContract,
-              },
-            })
+            type: "updateContract",
+            payload: {
+              address: router,
+              contract: updatedContract,
+            },
+          })
           : null;
         let bigmap: { key: string; value: any }[] = await getProposals(
           getProposalsId(version, cc)
         );
-
+        let transfers = await getTransfers(router)
         let proposals: [number, any][] = bigmap.map(({ key, value }) => [
           Number.parseInt(key),
           { ui: toProposal(version, value), og: value },
         ]);
         setContract(updatedContract);
+        setTransfers(transfers)
         setProposals(proposals);
       })();
     }
@@ -124,12 +125,14 @@ function Home() {
       let bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );
+      let transfers = await getTransfers(router)
 
       let proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
         { ui: toProposal(version, value), og: value },
       ]);
       setContract(updatedContract);
+      setTransfers(transfers);
       setProposals(proposals);
     }
     let sub: any;
@@ -249,7 +252,6 @@ function Home() {
             }
           })()}
       </Modal>
-      <NavBar />
       {invalid && (
         <div className="bg-graybg shadow p-2 w-full mx-auto flex justify-center items-center">
           <p className="mx-auto font-bold text-xl text-gray-800">
@@ -311,16 +313,17 @@ function Home() {
                     value={`${contract?.threshold}/${signers(contract).length}`}
                     text={"Threshold"}
                   />
-                  <Spinner
-                    key={contract?.effective_period}
-                    cond={!!contract?.effective_period}
-                    value={
-                      contract?.effective_period
-                        ? adaptiveTime(contract?.effective_period)
-                        : "forever"
-                    }
-                    text={"Effective period"}
-                  />
+                  {contract?.effective_period &&
+                    < Spinner
+                      key={contract?.effective_period}
+                      cond={!!contract?.effective_period}
+                      value={
+                        contract?.effective_period
+                          ? adaptiveTime(contract?.effective_period)
+                          : "forever"
+                      }
+                      text={"Effective period"}
+                    />}
                 </div>
               ) : (
                 <div className="md:col-span-3">
@@ -367,7 +370,19 @@ function Home() {
                     value={`${contract?.threshold}/${signers(contract).length}`}
                     text={"Threshold"}
                   />
+                  {contract?.effective_period &&
+                    < Spinner
+                      key={contract?.effective_period}
+                      cond={!!contract?.effective_period}
+                      value={
+                        contract?.effective_period
+                          ? adaptiveTime(contract?.effective_period)
+                          : "forever"
+                      }
+                      text={"Effective period"}
+                    />}
                 </div>
+
               )}
               {state.address && (
                 <div>
@@ -429,14 +444,15 @@ function Home() {
             </div>
           </div>
           <main className="bg-gray-100 h-full grow min-h-fit">
-            <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-              <div className="px-4 py-6 sm:px-0">
-                <div className="md:h-auto md:min-h-64  border-4 border-dashed border-white md:grid-cols-2 md:grid-rows-1 grid p-2">
+            <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8 h-full min-h-full">
+              <div className="px-4 py-6 sm:px-0 h-full min-h-full">
+                <div className="h-fit min-h-fit  border-4 border-dashed border-white grid-cols-1 md:grid-cols-2 md:grid-rows-1 grid p-2">
                   <Proposals
                     setCloseModal={(
                       proposal: number,
                       arg: boolean | undefined
                     ) => setCloseModal({ proposal: [arg, proposal], state: 4 })}
+                    transfers={transfers}
                     proposals={proposals}
                     contract={contract}
                     address={router}
@@ -450,5 +466,13 @@ function Home() {
     </div>
   );
 }
+function Home() {
+  let pathname = usePathname()
+  let router = (() => {
+    try { return pathname?.split("/")![2]! } catch (e) { return undefined }
+  })();
 
+  return <Wallet address={router!} />
+}
 export default Home;
+export { Wallet }

@@ -14,6 +14,20 @@ type proposalContent =
   | transfer
   | execute
   | lambda;
+type mutezTransfer = {
+  timestamp: string;
+  amount: number; //mutez
+  target: {
+    address: string;
+  };
+  parameter: object;
+  initiator: {
+    address: string;
+  };
+  sender: {
+    address: string;
+  };
+};
 type status = "Proposing" | "Executed" | "Rejected" | "Expired";
 type proposal = {
   author: string;
@@ -39,5 +53,6 @@ export {
   type removeOwners,
   type proposalContent,
   type version,
+  type mutezTransfer,
   type status,
 };

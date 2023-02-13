@@ -6,6 +6,7 @@ import { RPC } from "./config";
 import { Tzip16Module } from "@taquito/tzip16";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
+import { stringify } from "querystring";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -15,6 +16,7 @@ type tezosState = {
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  favouriteContract: string | null;
   aliasTrie: Trie<string>;
 };
 type storage = {
@@ -41,6 +43,7 @@ let emptyState = () => {
     address: null,
     accountInfo: null,
     connection,
+    favouriteContract: null,
     aliasTrie: new Trie<string>(),
   };
 };
@@ -67,6 +70,7 @@ type action =
       payload: { address: string; contract: contractStorage };
     }
   | { type: "removeContract"; address: string }
+  | { type: "setFavourite"; address: string }
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
@@ -81,15 +85,22 @@ function reducer(state: tezosState, action: action): tezosState {
     case "addContract": {
       let al = action.payload.aliases;
       let aliases = { ...state.aliases, ...al };
+      let fav = !!state.favouriteContract
+        ? state.favouriteContract
+        : action.payload.address;
       let contracts = {
         ...state.contracts,
         [action.payload.address]: action.payload.contract,
       };
-      localStorage.setItem("app_state", JSON.stringify({ contracts, aliases }));
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({ contracts, aliases, favouriteContract: fav })
+      );
       return {
         ...state,
         contracts: contracts,
         aliases: aliases,
+        favouriteContract: fav,
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
@@ -100,7 +111,11 @@ function reducer(state: tezosState, action: action): tezosState {
       let aliases = { ...state.aliases, ...al };
       localStorage.setItem(
         "app_state",
-        JSON.stringify({ contracts: state.contracts, aliases })
+        JSON.stringify({
+          contracts: state.contracts,
+          aliases,
+          favouriteContract: state.favouriteContract,
+        })
       );
       return {
         ...state,
@@ -116,7 +131,11 @@ function reducer(state: tezosState, action: action): tezosState {
       if (state.contracts[action.payload.address]) {
         localStorage.setItem(
           "app_state",
-          JSON.stringify({ contracts, aliases: state.aliases })
+          JSON.stringify({
+            contracts,
+            aliases: state.aliases,
+            favouriteContract: state.favouriteContract,
+          })
         );
       }
       return {
@@ -152,15 +171,40 @@ function reducer(state: tezosState, action: action): tezosState {
     }
     case "removeContract": {
       let { [action.address]: _, ...contracts } = state.contracts;
+      let fav =
+        (state.favouriteContract || "") === action.address
+          ? Object.keys(state.contracts).at(0) || null
+          : state.favouriteContract;
       if (state.contracts[action.address]) {
         localStorage.setItem(
           "app_state",
-          JSON.stringify({ contracts, aliases: state.aliases })
+          JSON.stringify({
+            contracts,
+            aliases: state.aliases,
+            favouriteContract: fav,
+          })
         );
       }
+
       return {
         ...state,
         contracts: contracts,
+        favouriteContract: fav,
+      };
+    }
+    case "setFavourite": {
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({
+          contracts: state.contracts,
+          aliases: state.aliases,
+          favouriteContract: action.address,
+        })
+      );
+
+      return {
+        ...state,
+        favouriteContract: action.address,
       };
     }
     default: {

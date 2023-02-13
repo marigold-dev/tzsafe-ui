@@ -47,7 +47,6 @@ function Home() {
     <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Create wallet"} />
 
-      <NavBar />
       <div className="bg-graybg shadow">
         <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
           <h1 className="text-white text-2xl font-extrabold">
@@ -78,7 +77,6 @@ function Home() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 }
