@@ -10,7 +10,7 @@ function Home() {
   return (
     <div className="relative min-h-content flex flex-col grow">
       <Meta title={"Welcome"} />
-      {state.favouriteContract ? <Wallet address={state.favouriteContract} /> : (
+      {state.favouriteContract && state.contracts[state.favouriteContract] ? <Wallet address={state.favouriteContract} /> : (
         <div>
           <div className="bg-blue shadow">
             <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
