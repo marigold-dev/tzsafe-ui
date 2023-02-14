@@ -1,7 +1,7 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import { validateAddress } from "@taquito/utils";
+import { validateContractAddress } from "@taquito/utils";
 import { AppStateContext } from "../../context/state";
 import { useSearchParams } from "next/navigation";
 import { signers, toStorage } from "../../versioned/apis";
@@ -37,7 +37,7 @@ function Basic() {
       initialValues={initialState}
       validate={async (values) => {
         let errors: any = {};
-        if (validateAddress(values.walletAddress) !== 3) {
+        if (validateContractAddress(values.walletAddress) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
         }
         let exists = await (async () => {
@@ -55,9 +55,8 @@ function Basic() {
           errors.walletName = `Contract already imported ${values.walletAddress}`;
         }
         if (byName[values.walletName]) {
-          errors.walletName = `Contract name already taken: ${
-            byName[values.walletName]
-          }`;
+          errors.walletName = `Contract name already taken: ${byName[values.walletName]
+            }`;
         }
         return errors;
       }}

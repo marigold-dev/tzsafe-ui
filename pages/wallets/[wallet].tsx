@@ -1,12 +1,10 @@
 import { tzip16 } from "@taquito/tzip16";
-import { validateAddress } from "@taquito/utils";
+import { validateContractAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState, FC } from "react";
-import Footer from "../../components/footer";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
-import NavBar from "../../components/navbar";
 import Proposals from "../../components/proposals";
 import SignersForm from "../../components/signersForm";
 import TopUp from "../../components/topUpForm";
@@ -74,7 +72,7 @@ function Wallet(props: { address: string }) {
   let [transfers, setTransfers] = useState([] as mutezTransfer[]);
 
   useEffect(() => {
-    if (router && validateAddress(router) === 3) {
+    if (router && validateContractAddress(router) === 3) {
       (async () => {
         let c = await state.connection.contract.at(router, tzip16);
         let balance = await state.connection.tz.getBalance(router);
@@ -106,7 +104,7 @@ function Wallet(props: { address: string }) {
         setProposals(proposals);
       })();
     }
-    if (router && validateAddress(router) != 3) {
+    if (router && validateContractAddress(router) != 3) {
       setInvalid(true);
     }
 
@@ -137,7 +135,7 @@ function Wallet(props: { address: string }) {
     }
     let sub: any;
     (async () => {
-      if (router && validateAddress(router) === 3) {
+      if (router && validateContractAddress(router) === 3) {
         try {
           sub = state.connection.stream.subscribeEvent({
             address: router,
