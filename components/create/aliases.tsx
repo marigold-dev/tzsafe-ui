@@ -119,7 +119,7 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
+                          className=" md:p-none flex min-w-full flex-col items-start justify-start space-x-4 border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
@@ -135,7 +135,7 @@ function Aliases() {
                                 });
                               }}
                               name={`validators.${index}.name`}
-                              className="md:text-md border-2 p-2 text-sm"
+                              className="md:text-md p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -152,7 +152,7 @@ function Aliases() {
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full border-2 p-2 text-sm"
+                              className="md:text-md w-full p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />

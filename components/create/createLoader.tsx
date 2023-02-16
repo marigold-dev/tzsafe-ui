@@ -68,7 +68,7 @@ function Success() {
       <div role="status">
         <svg
           aria-hidden="true"
-          className="text-gray-200 dark:text-gray-600 mr-2 h-8 w-8 animate-spin fill-red-600"
+          className="mr-2 h-8 w-8 animate-spin fill-red-600 text-zinc-200 dark:text-zinc-600"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +93,7 @@ function Success() {
       </p>
       <Link
         href={`/wallets/${address.address}`}
-        className="text-md  border-gray-800 hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 bg-primary py-2 px-2 text-center font-bold  text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
+        className="text-md  hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 border-gray-800 bg-primary py-2 px-2 text-center font-bold text-white  hover:border-gray-800 hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
       >
         Go to the wallet
       </Link>

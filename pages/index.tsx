@@ -21,7 +21,7 @@ function Home() {
               </h1>
             </div>
           </div>
-          <main className="bg-gray-100 h-full grow">
+          <main className="h-full grow">
             <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
               <div className="px-4 py-6 sm:px-0">
                 <div className="grid min-h-fit grid-rows-2 gap-2 border-4 border-dashed border-white p-2 md:h-96 md:grid-cols-1 md:grid-rows-1">

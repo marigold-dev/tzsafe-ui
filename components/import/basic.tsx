@@ -92,13 +92,13 @@ function Basic() {
         <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter imported wallet name and address below
         </div>
-        <div className="flex w-full flex-col justify-center md:flex-row">
+        <div className="flex w-full flex-col justify-center space-x-4 md:flex-row">
           <div className="flex w-1/2 flex-col">
             <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet name</label>
               <Field
                 name="walletName"
-                className=" w-full border-2 p-2"
+                className=" w-full p-2"
                 placeholder="example-wallet"
               />
             </div>
@@ -109,7 +109,7 @@ function Basic() {
               <label className="font-medium text-white">Wallet address</label>
               <Field
                 name="walletAddress"
-                className=" w-full border-2 p-2"
+                className=" w-full p-2"
                 placeholder="your wallet address"
               />
             </div>

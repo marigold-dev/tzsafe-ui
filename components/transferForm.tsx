@@ -348,7 +348,7 @@ function RenderItem({
                   <button
                     type="button"
                     className={
-                      " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                      " mx-none hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:border-gray-800  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                     }
                     onClick={e => {
                       e.preventDefault();
@@ -360,7 +360,7 @@ function RenderItem({
                 )}
                 <button
                   type="button"
-                  className="mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                  className="mx-none hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:border-gray-800  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                   onClick={e => {
                     e.preventDefault();
                     let field =
@@ -777,7 +777,7 @@ function ExecuteForm(
             </div>
             <div className="flex flex-row justify-around md:w-1/3">
               <button
-                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                 onClick={e => {
                   e.preventDefault();
                   props.reset();
@@ -787,7 +787,7 @@ function ExecuteForm(
               </button>
               {
                 <button
-                  className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                  className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                   type="submit"
                 >
                   Confirm
@@ -920,7 +920,7 @@ function TransferForm(
               props.closeModal();
             }}
             type="button"
-            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
+            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1015,7 +1015,7 @@ function TransferForm(
                   <div className="flex flex-col md:flex-row">
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className=" hover:border-offset-2 hover:border-offset-gray-800 my-2  mx-auto block self-center justify-self-center border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1028,7 +1028,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className=" hover:border-offset-2 hover:border-offset-gray-800 my-2  mx-auto block self-center justify-self-center border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1041,7 +1041,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className=" hover:border-offset-2 hover:border-offset-gray-800 my-2  mx-auto block self-center justify-self-center border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1082,7 +1082,7 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                                " mx-none hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:border-gray-800  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                               }
                               onClick={e => {
                                 e.preventDefault();
@@ -1179,7 +1179,7 @@ function TransferForm(
                               (errors.transfers && errors.transfers[index]
                                 ? "my-auto"
                                 : "") +
-                              " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                              " mx-none hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:border-gray-800  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                             }
                             onClick={e => {
                               e.preventDefault();
@@ -1197,7 +1197,7 @@ function TransferForm(
           </div>
           <div className="flex flex-row justify-around md:w-1/3">
             <button
-              className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+              className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
               onClick={e => {
                 e.preventDefault();
                 props.closeModal();
@@ -1207,7 +1207,7 @@ function TransferForm(
             </button>
             {values.transfers.length > 0 && (
               <button
-                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium  text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                 type="submit"
               >
                 Submit

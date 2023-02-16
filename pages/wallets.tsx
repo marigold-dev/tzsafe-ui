@@ -17,7 +17,7 @@ function Home() {
           </h1>
         </div>
       </div>
-      <main className="bg-gray-100 h-full min-h-fit grow">
+      <main className="h-full min-h-fit grow">
         <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="h-full min-h-full px-4 py-6 sm:px-0">
             <div className="grid-rows-auto md:grid-cols-auto grid h-full min-h-full overflow-y-auto border-4 border-dashed border-white p-2 md:auto-rows-max">
@@ -26,7 +26,7 @@ function Home() {
                   return (
                     <Link
                       key={address}
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 flex flex-col justify-between border-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none  focus:bg-red-500  md:flex-row"
+                      className=" hover:border-offset-2 hover:border-offset-zinc-800 my-2 flex flex-col justify-between border-2 bg-primary p-2 font-medium text-white hover:border-zinc-800 hover:bg-red-500 hover:outline-none  focus:bg-red-500  md:flex-row"
                       href={`/wallets/${address}`}
                     >
                       {state.aliases[address] ? (
@@ -70,7 +70,7 @@ function Home() {
                                 (state.favouriteContract === address
                                   ? "fill-yellow-400"
                                   : "fill-none") +
-                                " hover:border-offset-2 hover:border-offset-gray-800  hover:fill-yellow-500"
+                                " hover:border-offset-2 hover:border-offset-zinc-800  hover:fill-yellow-500"
                               }
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -79,7 +79,7 @@ function Home() {
                           </svg>
                         </button>
                         <button
-                          className="text-s hover:border-gray-800  hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-dark p-2 font-medium text-white hover:bg-neutral-800  hover:outline-none  md:text-xl"
+                          className="text-s hover:border-offset-2  hover:border-offset-zinc-800 my-2 border-2 bg-dark p-2 font-medium text-white hover:border-zinc-800 hover:bg-neutral-800  hover:outline-none  md:text-xl"
                           onClick={e => {
                             e.preventDefault();
                             dispatch!({

@@ -62,7 +62,7 @@ const TextInputWithCompletion: FC<
                 }}
               >
                 {x.term}
-                <p className="text-sm text-gray">{x.payload}</p>
+                <p className="text-gray text-sm">{x.payload}</p>
               </button>
             );
           })}
