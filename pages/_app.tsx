@@ -61,10 +61,14 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
-        <div id="modal" />
-        <NavBar />
-        <Component {...pageProps} />
-        <Footer />
+        <div className="relative min-h-screen">
+          <div id="modal" />
+          <NavBar />
+          <div className="pt-20 pb-28">
+            <Component {...pageProps} />
+            <Footer />
+          </div>
+        </div>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );
