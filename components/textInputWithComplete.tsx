@@ -3,7 +3,7 @@ import React, { FC, useContext } from "react";
 import { AppStateContext } from "../context/state";
 import { Trie } from "../utils/radixTrie";
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const TextInputWithCompletion: FC<
   FieldHookConfig<string> & {
@@ -12,7 +12,7 @@ const TextInputWithCompletion: FC<
     byAddrToo?: boolean;
     filter: (x: any) => boolean;
   }
-> = (props) => {
+> = props => {
   const [field, _, helpers] = useField(props);
   const state = useContext(AppStateContext)!;
   // Show inline feedback if EITHER
@@ -38,7 +38,7 @@ const TextInputWithCompletion: FC<
       compl.map((x: any) => ({ term: x.payload, payload: x.term }))
     );
   }
-  completions = completions.filter((x) => props.filter(x.payload));
+  completions = completions.filter(x => props.filter(x.payload));
   return (
     <div className="w-full">
       <input
@@ -49,20 +49,20 @@ const TextInputWithCompletion: FC<
         onBlur={handleBLur}
       />
       {shouldShow && completions.length > 0 && (
-        <div className="text-xs absolute xz-20 bg-white w-full border-2 h-36 grid gap-2 grid-flow-row row-auto grid-cols-1 break-words overflow-y-auto">
-          {completions.map((x) => {
+        <div className="xz-20 absolute row-auto grid h-36 w-full grid-flow-row grid-cols-1 gap-2 overflow-y-auto break-words border-2 bg-white text-xs">
+          {completions.map(x => {
             return (
               <button
-                className="block z-50 text-md p-2 bg-white hover:bg-slate-300 w-full text-left text-black"
+                className="text-md z-50 block w-full bg-white p-2 text-left text-black hover:bg-slate-300"
                 key={x.term}
                 type="button"
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault();
                   props.setTerms(x);
                 }}
               >
                 {x.term}
-                <p className="text-gray text-sm">{x.payload}</p>
+                <p className="text-sm text-gray">{x.payload}</p>
               </button>
             );
           })}

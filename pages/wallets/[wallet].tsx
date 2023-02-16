@@ -5,26 +5,27 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState, FC } from "react";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
+import ProposalSignForm from "../../components/proposalSignForm";
 import Proposals from "../../components/proposals";
 import SignersForm from "../../components/signersForm";
 import TopUp from "../../components/topUpForm";
 import TransferForm from "../../components/transferForm";
 import fetchVersion from "../../context/metadata";
+import { getProposals, getTransfers } from "../../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../../context/state";
 import { mutezTransfer, proposal, version } from "../../types/display";
+import { adaptiveTime } from "../../utils/adaptiveTime";
 import {
   signers,
   toProposal,
   toStorage,
   getProposalsId,
 } from "../../versioned/apis";
-import { getProposals, getTransfers } from "../../context/proposals";
-import ProposalSignForm from "../../components/proposalSignForm";
-import { adaptiveTime } from "../../utils/adaptiveTime";
+
 let emptyProps: [number, { og: any; ui: proposal }][] = [];
 const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   cond,
@@ -32,16 +33,16 @@ const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   text,
 }) => {
   return cond ? (
-    <p className="text-white text-l md:text-xl font-bold">
+    <p className="text-l font-bold text-white md:text-xl">
       {text}: {value}
     </p>
   ) : (
     <div className="flex flex-row">
-      <span className="text-white text-l md:text-xl font-bold">{text}: </span>
+      <span className="text-l font-bold text-white md:text-xl">{text}: </span>
       <div role="status" className="ml-4">
         <svg
           aria-hidden="true"
-          className="mr-2 w-6 h-6 text-gray-200 animate-spin dark:text-gray-600 fill-red-600"
+          className="text-gray-200 dark:text-gray-600 mr-2 h-6 w-6 animate-spin fill-red-600"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +62,7 @@ const Spinner: FC<{ cond: boolean; value: string; text: string }> = ({
   );
 };
 function Wallet(props: { address: string }) {
-  let router = props.address
+  let router = props.address;
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
   let [invalid, setInvalid] = useState(false);
@@ -84,23 +85,23 @@ function Wallet(props: { address: string }) {
         const updatedContract = toStorage(version, cc, balance);
         state.contracts[router]
           ? dispatch({
-            type: "updateContract",
-            payload: {
-              address: router,
-              contract: updatedContract,
-            },
-          })
+              type: "updateContract",
+              payload: {
+                address: router,
+                contract: updatedContract,
+              },
+            })
           : null;
         let bigmap: { key: string; value: any }[] = await getProposals(
           getProposalsId(version, cc)
         );
-        let transfers = await getTransfers(router)
+        let transfers = await getTransfers(router);
         let proposals: [number, any][] = bigmap.map(({ key, value }) => [
           Number.parseInt(key),
           { ui: toProposal(version, value), og: value },
         ]);
         setContract(updatedContract);
-        setTransfers(transfers)
+        setTransfers(transfers);
         setProposals(proposals);
       })();
     }
@@ -123,7 +124,7 @@ function Wallet(props: { address: string }) {
       let bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );
-      let transfers = await getTransfers(router)
+      let transfers = await getTransfers(router);
 
       let proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
@@ -190,7 +191,7 @@ function Wallet(props: { address: string }) {
   let balance = new BigNumber(contract?.balance);
   balance = balance.div(10 ** 6, 10);
   return (
-    <div className="relative flex flex-col min-h-fit overflow-y-auto grow">
+    <div className="relative flex min-h-fit grow flex-col overflow-y-auto">
       <Meta title={router} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state &&
@@ -236,7 +237,7 @@ function Wallet(props: { address: string }) {
                     threshold={contract.threshold}
                     version={contract.version}
                     proposal={
-                      proposals.find((x) => x[0] === openModal.proposal[1])![1]
+                      proposals.find(x => x[0] === openModal.proposal[1])![1]
                     }
                     state={openModal.proposal[0]}
                     id={openModal.proposal[1]}
@@ -251,28 +252,28 @@ function Wallet(props: { address: string }) {
           })()}
       </Modal>
       {invalid && (
-        <div className="bg-graybg shadow p-2 w-full mx-auto flex justify-center items-center">
-          <p className="mx-auto font-bold text-xl text-gray-800">
+        <div className="mx-auto flex w-full items-center justify-center bg-graybg p-2 shadow">
+          <p className="text-gray-800 mx-auto text-xl font-bold">
             Invalid contract address: {router}
           </p>
         </div>
       )}
       {!invalid && (
-        <div className="flex flex-col h-full grow min-h-fit">
+        <div className="flex h-full min-h-fit grow flex-col">
           <div className="bg-graybg shadow">
-            <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8 grid grid-flow-row grid-cols-1 md:grid-flow-row md:grid-cols-3  gap-1 justify-start">
+            <div className="mx-auto grid max-w-7xl grid-flow-row grid-cols-1 justify-start gap-1 py-6 px-4 sm:px-6 md:grid-flow-row  md:grid-cols-3 lg:px-8">
               {alias ? (
                 <div className="md:col-span-3">
-                  <h1 className="text-white text-xl md:text-3xl font-bold md:col-span-3">
+                  <h1 className="text-xl font-bold text-white md:col-span-3 md:text-3xl">
                     {alias}
                   </h1>
-                  <div className="flex flex-row md:col-span-3 items-center">
-                    <p className="text-white text-l md:text-xl font-bold">
+                  <div className="flex flex-row items-center md:col-span-3">
+                    <p className="text-l font-bold text-white md:text-xl">
                       {router.slice(0, 6) + "..." + router.slice(-6)}
                     </p>
                     <button
                       type="button"
-                      className="ml-6  md:bg-primary p-1 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 border-2 border-white"
+                      className="text-gray-200  focus:ring-offset-gray-800 ml-6 border-2 border-white p-1 hover:text-white focus:ring-white focus:ring-offset-2 md:bg-primary"
                       onClick={() => {
                         navigator.clipboard.writeText(router);
                       }}
@@ -284,7 +285,7 @@ function Wallet(props: { address: string }) {
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
                         stroke="currentColor"
-                        className="fill-white w-6 h-6"
+                        className="h-6 w-6 fill-white"
                       >
                         <path
                           strokeLinecap="round"
@@ -311,8 +312,8 @@ function Wallet(props: { address: string }) {
                     value={`${contract?.threshold}/${signers(contract).length}`}
                     text={"Threshold"}
                   />
-                  {contract?.effective_period &&
-                    < Spinner
+                  {contract?.effective_period && (
+                    <Spinner
                       key={contract?.effective_period}
                       cond={!!contract?.effective_period}
                       value={
@@ -321,16 +322,17 @@ function Wallet(props: { address: string }) {
                           : "forever"
                       }
                       text={"Effective period"}
-                    />}
+                    />
+                  )}
                 </div>
               ) : (
                 <div className="md:col-span-3">
-                  <h1 className="text-white text-l md:text-3xl font-bold md:col-span-3">
+                  <h1 className="text-l font-bold text-white md:col-span-3 md:text-3xl">
                     {router}
                   </h1>
                   <button
                     type="button"
-                    className="ml-2 rounded-md md:bg-primary p-1 text-gray-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    className="text-gray-200 focus:ring-offset-gray-800 ml-2 rounded-md p-1 hover:text-white focus:ring-white focus:ring-offset-2 md:bg-primary"
                     onClick={() => {
                       navigator.clipboard.writeText(router);
                     }}
@@ -342,7 +344,7 @@ function Wallet(props: { address: string }) {
                       viewBox="0 0 24 24"
                       strokeWidth={1.5}
                       stroke="currentColor"
-                      className="fill-white w-6 h-6"
+                      className="h-6 w-6 fill-white"
                     >
                       <path
                         strokeLinecap="round"
@@ -368,8 +370,8 @@ function Wallet(props: { address: string }) {
                     value={`${contract?.threshold}/${signers(contract).length}`}
                     text={"Threshold"}
                   />
-                  {contract?.effective_period &&
-                    < Spinner
+                  {contract?.effective_period && (
+                    <Spinner
                       key={contract?.effective_period}
                       cond={!!contract?.effective_period}
                       value={
@@ -378,20 +380,20 @@ function Wallet(props: { address: string }) {
                           : "forever"
                       }
                       text={"Effective period"}
-                    />}
+                    />
+                  )}
                 </div>
-
               )}
               {state.address && (
                 <div>
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       setCloseModal((s: any) => ({ ...s, state: 1 }));
                     }}
                     className={
-                      " justify-self-end  w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                      " text-md  border-gray-800 hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 bg-primary py-2 px-2 text-center font-bold  text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -405,12 +407,12 @@ function Wallet(props: { address: string }) {
                 <div className="">
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       setCloseModal((s: any) => ({ ...s, state: 2 }));
                     }}
                     className={
-                      " justify-self-end md:row-auto md:col-start-3 w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                      " text-md border-gray-800 hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500  hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1  md:px-2  md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -424,12 +426,12 @@ function Wallet(props: { address: string }) {
                 <div className="">
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       setCloseModal((s: any) => ({ ...s, state: 3 }));
                     }}
                     className={
-                      " justify-self-end md:row-auto md:col-start-3 w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                      " text-md border-gray-800 hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500  hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1  md:px-2  md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -441,10 +443,10 @@ function Wallet(props: { address: string }) {
               )}
             </div>
           </div>
-          <main className="bg-gray-100 h-full grow min-h-fit">
-            <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8 h-full min-h-full">
-              <div className="px-4 py-6 sm:px-0 h-full min-h-full">
-                <div className="h-fit min-h-fit  border-4 border-dashed border-white grid-cols-1 md:grid-cols-2 md:grid-rows-1 grid p-2">
+          <main className="bg-gray-100 h-full min-h-fit grow">
+            <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
+              <div className="h-full min-h-full px-4 py-6 sm:px-0">
+                <div className="grid h-fit  min-h-fit grid-cols-1 border-4 border-dashed border-white p-2 md:grid-cols-2 md:grid-rows-1">
                   <Proposals
                     setCloseModal={(
                       proposal: number,
@@ -465,12 +467,16 @@ function Wallet(props: { address: string }) {
   );
 }
 function Home() {
-  let pathname = usePathname()
+  let pathname = usePathname();
   let router = (() => {
-    try { return pathname?.split("/")![2]! } catch (e) { return undefined }
+    try {
+      return pathname?.split("/")![2]!;
+    } catch (e) {
+      return undefined;
+    }
   })();
 
-  return <Wallet address={router!} />
+  return <Wallet address={router!} />;
 }
 export default Home;
-export { Wallet }
+export { Wallet };

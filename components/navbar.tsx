@@ -37,7 +37,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                   className="text-xl font-bold tracking-wider text-white"
                 >
                   <span>MULTISIG</span>
-                  <span className="text-xs ml-4">BETA</span>
+                  <span className="ml-4 text-xs">BETA</span>
                 </Link>
               </div>
               <div className="hidden md:block">
@@ -45,7 +45,10 @@ const NavBar = (_: React.PropsWithChildren) => {
                   <RenderContracts />
                   <LinkComponent path="/address-book" text={"Address book"} />
                   <LinkComponent path="/create" text={"Create a new wallet"} />
-                  <LinkComponent path="/import" text={"Import existing wallet"} />
+                  <LinkComponent
+                    path="/import"
+                    text={"Import existing wallet"}
+                  />
                   {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" --> */}
                 </div>
               </div>
@@ -55,7 +58,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <button
                   onClick={() => console.log("todo")}
                   type="button"
-                  className="hidden rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  className="bg-gray-800 text-gray-400 focus:ring-offset-gray-800 hidden rounded-full p-1 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
                 >
                   <span className="sr-only">View notifications</span>
                   {/*<!-- Heroicon name: outline/bell --> */}
@@ -81,40 +84,40 @@ const NavBar = (_: React.PropsWithChildren) => {
                     <LoginButton />
                   </div>
                 ) : (
-                  <div className="relative ml-3 group ">
+                  <div className="group relative ml-3 ">
                     <div className="flex items-end">
                       <button
                         type="button"
-                        className=" max-w-xs items-center  py-1 px-2 bg-gray-800 text-sm focus:outline-none focus:border-2 focus:border-white focus:border-offset-2 focus:border-offset-gray-800"
+                        className=" bg-gray-800 focus:border-offset-2  focus:border-offset-gray-800 max-w-xs items-center py-1 px-2 text-sm focus:border-2 focus:border-white focus:outline-none"
                         id="user-menu-button"
                         aria-expanded="false"
                         aria-haspopup="true"
                       >
                         <span className="sr-only">Open user menu</span>
                         <div className="flex flex-col items-center">
-                          <span className="block font-md font-bold text-center text-white">
+                          <span className="font-md block text-center font-bold text-white">
                             {state?.address.slice(0, 3) +
                               "..." +
                               state?.address.slice(33)}
                           </span>
-                          <span className="block font-xs text-white">
+                          <span className="font-xs block text-white">
                             Ghostnet
                           </span>
                         </div>
                       </button>
                     </div>
                     <div
-                      className={`absolute right-0 z-10 mt-2 w-48 origin-top-right  bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5  hidden group-focus-within:block  group-focus-within:outline-none `}
+                      className={`absolute right-0 z-10 mt-2 hidden w-48  origin-top-right bg-white py-1 shadow-lg ring-1 ring-black  ring-opacity-5 group-focus-within:block  group-focus-within:outline-none `}
                       role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
                     >
                       <button
-                        onClick={(e) => {
+                        onClick={e => {
                           e.preventDefault();
                           disconnectWallet();
                         }}
-                        className="block px-4 py-2 text-md text-dark"
+                        className="text-md block px-4 py-2 text-dark"
                         role="menuitem"
                         id="user-menu-item-2"
                       >
@@ -132,7 +135,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                   onClick={() => {
                     menuOpen ? setMenuOpen(false) : setMenuOpen(true);
                   }}
-                  className="inline-flex items-center text-white justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none"
+                  className="bg-gray-800 text-gray-400 hover:bg-gray-700 inline-flex items-center justify-center rounded-md p-2 text-white hover:text-white focus:outline-none"
                   aria-controls="mobile-menu"
                   aria-expanded="false"
                 >
@@ -175,8 +178,9 @@ const NavBar = (_: React.PropsWithChildren) => {
 
         <div className="md:hidden" id="mobile-menu">
           <div
-            className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden ${menuOpen ? "block" : "hidden"
-              }`}
+            className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden ${
+              menuOpen ? "block" : "hidden"
+            }`}
           >
             <RenderContracts />
             <LinkComponent path="/address-book" text={"Address book"} />
@@ -184,7 +188,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             <LinkComponent path="/import" text={"Import existing wallet"} />
           </div>
           {state?.address == null ? (
-            <div className="flex items-center justify-end mx-2 pb-2">
+            <div className="mx-2 flex items-center justify-end pb-2">
               <LoginButton />
             </div>
           ) : (
@@ -196,7 +200,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 }
               >
                 <div className="flex-shrink-0">
-                  <div className="relative items-center bg-red-500 h-14 w-14 rounded-full font-xs font-bold text-center"></div>
+                  <div className="font-xs relative h-14 w-14 items-center rounded-full bg-red-500 text-center font-bold"></div>
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium leading-none text-white">
@@ -212,7 +216,7 @@ const NavBar = (_: React.PropsWithChildren) => {
               <button
                 onClick={() => console.log("todo")}
                 type="button"
-                className="hidden ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                className="bg-gray-800 focus:ring-offset-gray-800 ml-auto hidden flex-shrink-0 rounded-full p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
               >
                 <span className="sr-only">View notifications</span>
                 <svg
@@ -239,11 +243,11 @@ const NavBar = (_: React.PropsWithChildren) => {
             className={`mt-3 space-y-1 px-2 ${loginOpen ? "block" : "hidden"}`}
           >
             <button
-              onClick={async (e) => {
+              onClick={async e => {
                 e.preventDefault();
                 await disconnectWallet();
               }}
-              className="block rounded-md px-3 py-2 text-base font-medium  hover:bg-gray-700 hover:text-white text-white"
+              className="hover:bg-gray-700 block rounded-md px-3 py-2 text-base  font-medium text-white hover:text-white"
             >
               Sign out
             </button>

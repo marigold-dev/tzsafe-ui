@@ -1,12 +1,3 @@
-import { contractStorage } from "../types/app";
-import { version, proposal } from "../types/display";
-import { Versioned } from "./interface";
-import Version006 from "./version006";
-import Version008 from "./version008";
-
-import { BigNumber } from "bignumber.js";
-import Version009 from "./version009";
-import { MichelsonMap } from "@taquito/taquito";
 import {
   Expr,
   Prim,
@@ -14,8 +5,16 @@ import {
   IntLiteral,
   Parser,
 } from "@taquito/michel-codec";
-import { encodePubKey } from "@taquito/utils";
 import { ParameterSchema } from "@taquito/michelson-encoder";
+import { MichelsonMap } from "@taquito/taquito";
+import { encodePubKey } from "@taquito/utils";
+import { BigNumber } from "bignumber.js";
+import { contractStorage } from "../types/app";
+import { version, proposal } from "../types/display";
+import { Versioned } from "./interface";
+import Version006 from "./version006";
+import Version008 from "./version008";
+import Version009 from "./version009";
 import Version010 from "./version010";
 import Version011 from "./version011";
 
@@ -64,7 +63,7 @@ function toProposal(version: version, c: any): proposal {
 }
 function map2Object(x: any): any {
   if (Array.isArray(x)) {
-    return x.map((x) => map2Object(x));
+    return x.map(x => map2Object(x));
   }
   if (
     typeof x === "object" &&
@@ -93,7 +92,7 @@ function map2Object(x: any): any {
 let lambdaTable: {
   [key: string]: <acc, t extends Expr>(acc: acc, item: t) => acc;
 } = {
-  "0.DROP": (acc) => acc,
+  "0.DROP": acc => acc,
   "1.PUSH": (acc, item) => {
     let expr = cast<Prim>(item).args![1];
     let addr = cast<BytesLiteral>(expr).bytes;
@@ -109,7 +108,7 @@ let lambdaTable: {
       typ: new ParameterSchema(expr),
     };
   },
-  "3.IF_NONE": (acc) => acc,
+  "3.IF_NONE": acc => acc,
   "4.PUSH": (acc, item) => {
     let expr = cast<Prim>(item).args![1];
     let amount = cast<IntLiteral>(expr).int;

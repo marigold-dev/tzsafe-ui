@@ -1,12 +1,13 @@
+import { tzip16 } from "@taquito/tzip16";
+import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
-import contract from "../../context/unitContract";
-import Link from "next/link";
-import { tzip16 } from "@taquito/tzip16";
 import fetchVersion from "../../context/metadata";
 import metadata_blob from "../../context/metadata_blob";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
+import contract from "../../context/unitContract";
 import { toStorage } from "../../versioned/apis";
+
 function Success() {
   const { formState } = useContext(FormContext)!;
   let state = useContext(AppStateContext);
@@ -24,7 +25,7 @@ function Success() {
               storage: {
                 proposal_counter: 0,
                 proposals: [],
-                owners: formState!.validators.map((x) => x.address),
+                owners: formState!.validators.map(x => x.address),
                 threshold: formState!.requiredSignatures,
                 effective_period: formState!.effectivePeriod,
                 ...metadata_blob,
@@ -47,7 +48,7 @@ function Success() {
             type: "addContract",
             payload: {
               aliases: Object.fromEntries([
-                ...formState!.validators!.map((x) => [x.address, x.name]),
+                ...formState!.validators!.map(x => [x.address, x.name]),
                 [result1?.address!, formState?.walletName || ""],
               ]),
               contract: toStorage(version, c, balance!),
@@ -67,7 +68,7 @@ function Success() {
       <div role="status">
         <svg
           aria-hidden="true"
-          className="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-red-600"
+          className="text-gray-200 dark:text-gray-600 mr-2 h-8 w-8 animate-spin fill-red-600"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -86,19 +87,19 @@ function Success() {
     );
   }
   return address.status === 1 ? (
-    <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-col">
-      <p className="text-sm md:text-xl my-auto text-white font-bold">
+    <div className="my-auto flex flex-col text-sm font-bold text-white md:text-xl">
+      <p className="my-auto text-sm font-bold text-white md:text-xl">
         {`Wallet successfully created! ${address.address}`}
       </p>
       <Link
         href={`/wallets/${address.address}`}
-        className="justify-self-end  w-full text-center row-span-1 max-w-full text-md md:text-xl items-center py-2 px-2 md:py-1 md:px-2 font-bold text-white border-gray-800 bg-primary  hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+        className="text-md  border-gray-800 hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 bg-primary py-2 px-2 text-center font-bold  text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
       >
         Go to the wallet
       </Link>
     </div>
   ) : (
-    <div className="text-xl my-auto text-white font-bold">{`Failed to originate a wallet`}</div>
+    <div className="my-auto text-xl font-bold text-white">{`Failed to originate a wallet`}</div>
   );
 }
 

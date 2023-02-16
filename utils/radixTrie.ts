@@ -24,7 +24,7 @@ class Trie<P> {
   }
   static fromAliases(param: [string, string][]): Trie<string> {
     let t = new Trie<string>();
-    param.forEach((x) => t.addTerm(x[1], x[0]));
+    param.forEach(x => t.addTerm(x[1], x[0]));
     return t;
   }
   public addTerm(term: string, payload: P): void {
@@ -35,7 +35,7 @@ class Trie<P> {
     nodeList: Node<P>[],
     termFrequencyCount: number
   ): void {
-    nodeList.forEach((node) =>
+    nodeList.forEach(node =>
       termFrequencyCount > node.termFrequencyCountChildMax
         ? (node.termFrequencyCountChildMax = termFrequencyCount)
         : null

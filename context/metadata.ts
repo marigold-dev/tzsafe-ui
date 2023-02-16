@@ -5,6 +5,7 @@ import {
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
 import { version } from "../types/display";
+
 declare const ABSTRACTION_KEY: unique symbol;
 const dispatch: { [key: string]: version } = {
   "0.0.6": "0.0.6",

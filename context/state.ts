@@ -1,12 +1,12 @@
 import { AccountInfo } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
-import { Context, createContext, Dispatch } from "react";
-import { RPC } from "./config";
 import { Tzip16Module } from "@taquito/tzip16";
+import { stringify } from "querystring";
+import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { stringify } from "querystring";
+import { RPC } from "./config";
 
 type tezosState = {
   connection: TezosToolkit;

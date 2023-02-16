@@ -12,6 +12,7 @@ import Footer from "../components/footer";
 import Meta from "../components/meta";
 import NavBar from "../components/navbar";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+
 const renderError = (message: string) => {
   return <p className="italic text-red-600">{message}</p>;
 };
@@ -51,21 +52,21 @@ function Home() {
     validatorsError: "",
   };
   return (
-    <div className="relative min-h-content flex flex-col grow">
+    <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Address book"} />
       <div className="bg-graybg shadow">
-        <div className="mx-auto  max-w-7xl py-6 px-4 sm:px-6 lg:px-8 flex justify-start">
-          <h1 className="text-white text-2xl font-extrabold">Address book</h1>
+        <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-extrabold text-white">Address book</h1>
         </div>
       </div>
       <main className="bg-gray-100 h-full grow">
-        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8 min-h-full h-full">
-          <div className="px-4 py-6 sm:px-0 min-h-full h-full">
-            <div className="h-96 min-h-full border-4 border-dashed border-white grid-rows-auto md:grid-cols-auto md:auto-rows-max grid p-2 overflow-y-auto">
+        <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
+          <div className="h-full min-h-full px-4 py-6 sm:px-0">
+            <div className="grid-rows-auto md:grid-cols-auto grid h-96 min-h-full overflow-y-auto border-4 border-dashed border-white p-2 md:auto-rows-max">
               <Formik
                 enableReinitialize={true}
                 initialValues={initialProps}
-                validate={(values) => {
+                validate={values => {
                   const errors: {
                     validators: { address: string; name: string }[];
                     validatorsError?: string;
@@ -73,7 +74,7 @@ function Home() {
                   if (values.validators.length < 1) {
                     errors.validatorsError = "Should be at least one owner";
                   }
-                  let result = values.validators.map((x) => {
+                  let result = values.validators.map(x => {
                     let err = { address: "", name: "" };
                     if (!x.address) {
                       err.address = "Please provide an address";
@@ -103,7 +104,7 @@ function Home() {
                     return err;
                   });
                   if (
-                    result.every((x) => x.address === "" && x.name === "") &&
+                    result.every(x => x.address === "" && x.name === "") &&
                     typeof errors.validatorsError == "undefined"
                   ) {
                     return;
@@ -111,7 +112,7 @@ function Home() {
                   errors.validators = result;
                   return errors;
                 }}
-                onSubmit={(values) => {
+                onSubmit={values => {
                   dispatch!({
                     type: "updateAliaces",
                     payload: values.validators,
@@ -125,19 +126,19 @@ function Home() {
                   setTouched,
                   handleReset,
                 }) => (
-                  <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-                    <div className="text-2xl font-medium self-center mb-2 text-white">
+                  <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+                    <div className="mb-2 self-center text-2xl font-medium text-white">
                       Modify saved Names & Addresses below
                     </div>
-                    <div className="w-full grid gap-2 grid-rows-2 grid-flow-row md:grid-flow-col md:grid-cols-2 md:grid-rows-1 md:justify-around">
+                    <div className="grid w-full grid-flow-row grid-rows-2 gap-2 md:grid-flow-col md:grid-cols-2 md:grid-rows-1 md:justify-around">
                       <button
-                        className="bg-primary font-medium text-white my-2 p-2 w-full "
+                        className="my-2 w-full bg-primary p-2 font-medium text-white "
                         onClick={handleReset}
                       >
                         Reset
                       </button>
                       <button
-                        className="bg-primary font-medium text-white my-2 p-2 w-full"
+                        className="my-2 w-full bg-primary p-2 font-medium text-white"
                         type="submit"
                       >
                         Save
@@ -147,15 +148,15 @@ function Home() {
                       name={`validatorsError`}
                       render={renderError}
                     />
-                    <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
+                    <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
                       <FieldArray name="validators">
                         {({ remove, unshift }) => (
                           <div>
                             {" "}
                             <button
                               type="button"
-                              className=" bg-primary font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto w-full"
-                              onClick={(e) => {
+                              className=" my-2 mx-auto block w-full self-center justify-self-center bg-primary p-2 font-medium text-white"
+                              onClick={e => {
                                 e.preventDefault();
                                 unshift({
                                   name: "",
@@ -171,16 +172,16 @@ function Home() {
                                 values.validators.map((validator, index) => {
                                   return (
                                     <div
-                                      className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
+                                      className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
                                       key={index}
                                     >
-                                      <div className="grid grid-rows-3 grid-flow-col grid-cols-1 w-full">
+                                      <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">
                                         <label className="text-white">
                                           Name
                                         </label>
                                         <Field
                                           name={`validators.${index}.name`}
-                                          className="border-2 p-2 text-sm md:text-md"
+                                          className="md:text-md border-2 p-2 text-sm"
                                           placeholder={validator.name || "Name"}
                                         />
                                         <ErrorMessage
@@ -188,7 +189,7 @@ function Home() {
                                           render={renderError}
                                         />
                                       </div>
-                                      <div className="grid grid-rows-3 grid-flow-col grid-cols-1 md:grow w-full">
+                                      <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:grow">
                                         <label
                                           className="text-white"
                                           htmlFor={`validators.${index}.address`}
@@ -197,7 +198,7 @@ function Home() {
                                         </label>
                                         <Field
                                           name={`validators.${index}.address`}
-                                          className="w-full border-2 p-2 text-sm md:text-md"
+                                          className="md:text-md w-full border-2 p-2 text-sm"
                                           placeholder={
                                             validator.address || "Address"
                                           }
@@ -205,7 +206,7 @@ function Home() {
                                         />
                                         <ErrorMessage
                                           name={`validators.${index}.address`}
-                                          render={(x) => {
+                                          render={x => {
                                             return renderError(x);
                                           }}
                                         />
@@ -214,13 +215,13 @@ function Home() {
                                         type="button"
                                         className={
                                           (errors.validators &&
-                                            errors.validators[index] &&
-                                            get(errors.validators[index])
+                                          errors.validators[index] &&
+                                          get(errors.validators[index])
                                             ? "my-auto"
                                             : "") +
-                                          " bg-primary font-medium text-white p-1.5 md:self-center self-center justify-self-center block md:mx-auto mx-none "
+                                          " mx-none block self-center justify-self-center bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
                                         }
-                                        onClick={async (e) => {
+                                        onClick={async e => {
                                           e.preventDefault();
                                           setTouched(
                                             { validatorsError: true },
