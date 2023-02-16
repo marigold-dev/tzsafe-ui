@@ -1,3 +1,6 @@
+import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { TokenSchema } from "@taquito/michelson-encoder";
+import { char2Bytes, validateContractAddress } from "@taquito/utils";
 import {
   ErrorMessage,
   Field,
@@ -14,16 +17,14 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import ReactDOM from "react-dom";
+import FormContext from "../context/formContext";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
 import TextInputWithCompletion from "./textInputWithComplete";
-import { emitMicheline, Parser } from "@taquito/michel-codec";
-import { TokenSchema } from "@taquito/michelson-encoder";
-import { char2Bytes, validateContractAddress } from "@taquito/utils";
-import FormContext from "../context/formContext";
-import ReactDOM from "react-dom";
+
 function capitalizeFirstLetter(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -113,7 +114,7 @@ function makeForm(
       };
       return wrap({
         ...res,
-        init: Object.fromEntries(res.fields.map((x) => [x.name, x.init])),
+        init: Object.fromEntries(res.fields.map(x => [x.name, x.init])),
       } as form & { init: any });
     } else {
       let res = {
@@ -134,7 +135,7 @@ function makeForm(
       };
       return wrap({
         ...res,
-        init: Object.fromEntries(res.fields.map((x) => [x.name, x.init])),
+        init: Object.fromEntries(res.fields.map(x => [x.name, x.init])),
       } as form & { init: any });
     }
   } else if (["list", "set"].includes(item?.__michelsonType)) {
@@ -232,7 +233,7 @@ function RenderItem({
   const { values, setFieldValue, getFieldProps } = useFormikContext<any>();
   if ("select" == item?.type) {
     return (
-      <div className="flex flex-col w-full border-2 border-white p-2">
+      <div className="flex w-full flex-col border-2 border-white p-2">
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name))
@@ -261,11 +262,11 @@ function RenderItem({
                   .concat([
                     getFieldProps(makeName(parent, item.name) + ".kind").value,
                   ])
-                  .filter((x) => x !== undefined)
+                  .filter(x => x !== undefined)
               : [...parent, item.name]
           }
           item={
-            item.fields.find((x) => {
+            item.fields.find(x => {
               return getFieldName(
                 !parent.length
                   ? [item.name, "kind"]
@@ -313,7 +314,7 @@ function RenderItem({
       <FieldArray name={fieldName}>
         {({ push, pop }) => {
           return (
-            <div className="w-full grid gap-2 grid-flow-row grid-cols-1">
+            <div className="grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
                 <p className="text-white">{item.name}</p>
               ) : (
@@ -330,7 +331,7 @@ function RenderItem({
                     return (
                       <div
                         key={idx}
-                        className="w-full grid gap-2 grid-flow-row grid-cols-1"
+                        className="grid w-full grid-flow-row grid-cols-1 gap-2"
                       >
                         <RenderItem
                           parent={[...parent, item.name]}
@@ -347,9 +348,9 @@ function RenderItem({
                   <button
                     type="button"
                     className={
-                      " bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                      " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                     }
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault();
                       pop();
                     }}
@@ -359,8 +360,8 @@ function RenderItem({
                 )}
                 <button
                   type="button"
-                  className="bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                  onClick={(e) => {
+                  className="mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                  onClick={e => {
                     e.preventDefault();
                     let field =
                       item.fields.type === "select"
@@ -387,7 +388,7 @@ function RenderItem({
         ? makeName(parent, item.name)
         : parent.join(".");
     return (
-      <div className="w-full grid gap-2 grid-flow-row grid-cols-1">
+      <div className="grid w-full grid-flow-row grid-cols-1 gap-2">
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name)) ? item.placeholder : item.name
@@ -396,7 +397,7 @@ function RenderItem({
         <Field
           as="input"
           className={
-            "relative border-2 text-black p-2 text-sm md:text-md min-h-fit h-fit w-full"
+            "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm text-black"
           }
           placeholder={item.placeholder}
           rows={10}
@@ -407,8 +408,8 @@ function RenderItem({
   }
   if ("record" == item?.type) {
     return (
-      <div className="grid grid-flow-row gap-4 items-start mb-2 w-full border-2 border-white">
-        {item.fields.map((x) => (
+      <div className="mb-2 grid w-full grid-flow-row items-start gap-4 border-2 border-white">
+        {item.fields.map(x => (
           <RenderItem key={x.name} parent={[...parent, item.name]} item={x} />
         ))}
       </div>
@@ -417,8 +418,8 @@ function RenderItem({
 
   if ("array" == item?.type) {
     return (
-      <div className="grid grid-flow-row gap-4 items-start mb-2 w-full border-2 border-white">
-        {item.fields.map((x) => {
+      <div className="mb-2 grid w-full grid-flow-row items-start gap-4 border-2 border-white">
+        {item.fields.map(x => {
           return (
             <RenderItem key={x.name} parent={[...parent, item.name]} item={x} />
           );
@@ -437,13 +438,13 @@ function RenderItem({
     return (
       <div
         className={
-          "relative flex flex-col w-full md:grow justify-start  md:w-full "
+          "relative flex w-full flex-col justify-start md:w-full  md:grow "
         }
       >
         <label className="text-white">{item.name}</label>
         <Field
           className={
-            "relative border-2 p-2 text-sm md:text-md min-h-fit h-fit w-full text-black"
+            "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm text-black"
           }
           placeholder={"Enter lambda here"}
           rows={10}
@@ -485,7 +486,7 @@ function Basic({
   return (
     <Formik
       initialValues={initialState}
-      validate={async (values) => {
+      validate={async values => {
         let errors: any = {};
         if (validateContractAddress(values.walletAddress) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
@@ -507,24 +508,24 @@ function Basic({
 
         return errors;
       }}
-      onSubmit={async (values) => {
+      onSubmit={async values => {
         setFormState({ address: values.walletAddress, amount: values.amount });
       }}
     >
       {({ setFieldValue }) => (
-        <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-1 w-full">
-          <div className="text-2xl font-medium self-center mb-2 text-white">
+        <Form className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
+          <div className="mb-2 self-center text-2xl font-medium text-white">
             Enter amount and contract address below
           </div>
-          <div className="flex flex-col w-full justify-center md:flex-col ">
-            <div className="flex flex-col w-full">
-              <div className="flex flex-col items-start mb-2 w-full">
+          <div className="flex w-full flex-col justify-center md:flex-col ">
+            <div className="flex w-full flex-col">
+              <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
                   Amount in mutez:{" "}
                 </label>
                 <Field
                   name="amount"
-                  className=" border-2 p-2 w-full text-black"
+                  className=" w-full border-2 p-2 text-black"
                   placeholder="0"
                   validate={(value: string) => {
                     let error;
@@ -541,8 +542,8 @@ function Basic({
               </div>
               <ErrorMessage name="amount" render={renderError} />
             </div>
-            <div className="flex flex-col w-full ">
-              <div className="flex flex-col items-start mb-2 w-full">
+            <div className="flex w-full flex-col ">
+              <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
                   Contract address
                 </label>
@@ -550,11 +551,11 @@ function Basic({
                   setTerms={({ payload, term: _ }) => {
                     setFieldValue("walletAddress", payload);
                   }}
-                  filter={(x) => validateContractAddress(x as string) === 3}
+                  filter={x => validateContractAddress(x as string) === 3}
                   byAddrToo={true}
                   as="input"
                   name={`walletAddress`}
-                  className=" border-2 p-2 w-full text-black"
+                  className=" w-full border-2 p-2 text-black"
                   placeholder={"contract address"}
                   rows={10}
                 />
@@ -563,7 +564,7 @@ function Basic({
             </div>
           </div>
           <button
-            className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
+            className="my-2 bg-primary p-2 font-medium text-white  hover:outline-none "
             type="submit"
           >
             Continue
@@ -624,16 +625,16 @@ function ExecuteForm(
     }
   }, [address, loading, props.shape]);
   return (
-    <div className="text-white w-full">
+    <div className="w-full text-white">
       <Formik
         enableReinitialize
         initialValues={props.shape?.entrypoint}
-        onSubmit={async (values) => {
+        onSubmit={async values => {
           props.setLoading(true);
           try {
             function merge(x: form, v: any): any {
               if (x.type === "select") {
-                let field = x.fields.find((x) => x.name == v.kind);
+                let field = x.fields.find(x => x.name == v.kind);
                 if (
                   field?.type == "constant" &&
                   field?.name != v[v.kind].toString()
@@ -650,15 +651,15 @@ function ExecuteForm(
               if (x.type === "array") {
                 if (x.name === "map") {
                   return {
-                    [merge(x.fields.find((y) => y.name === "key")!, v.key)]:
-                      merge(x.fields.find((y) => y.name === "value")!, v.value),
+                    [merge(x.fields.find(y => y.name === "key")!, v.key)]:
+                      merge(x.fields.find(y => y.name === "value")!, v.value),
                   };
                 }
                 let res = Object.fromEntries(
                   Object.entries(v)
-                    .filter(([k, v]) => x.fields.some((x) => x.name == k))
+                    .filter(([k, v]) => x.fields.some(x => x.name == k))
                     .map(([k, v]: any) => {
-                      let f = x.fields.find((y) => y.name === k)!;
+                      let f = x.fields.find(y => y.name === k)!;
                       let unwrap =
                         f.type === "field" && f.fields.type !== "select";
 
@@ -681,9 +682,9 @@ function ExecuteForm(
               if (x.type === "record") {
                 let res = Object.fromEntries(
                   Object.entries(v)
-                    .filter(([k, v]) => x.fields.some((x) => x.name == k))
+                    .filter(([k, v]) => x.fields.some(x => x.name == k))
                     .map(([k, v]: any) => {
-                      let f = x.fields.find((y) => y.name === k)!;
+                      let f = x.fields.find(y => y.name === k)!;
                       let unwrap =
                         f.type === "field" && f.fields.type !== "select";
 
@@ -765,19 +766,19 @@ function ExecuteForm(
         }}
       >
         {({ resetForm }) => (
-          <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2 border-2 border-white">
-            <div className="text-2xl font-medium self-center mb-2 text-white">
+          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center border-2 border-white">
+            <div className="mb-2 self-center text-2xl font-medium text-white">
               Add items below
             </div>
-            <div className="grid grid-flow-row gap-4 p-2 items-start mb-2 w-full h-fit-content md:min-h-96 overflow-y-auto">
+            <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto p-2">
               {!!props.shape && (
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
             </div>
-            <div className="flex flex-row md:w-1/3 justify-around">
+            <div className="flex flex-row justify-around md:w-1/3">
               <button
-                className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                onClick={(e) => {
+                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                onClick={e => {
                   e.preventDefault();
                   props.reset();
                 }}
@@ -786,7 +787,7 @@ function ExecuteForm(
               </button>
               {
                 <button
-                  className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                  className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                   type="submit"
                 >
                   Confirm
@@ -826,15 +827,15 @@ function ExecuteContractForm(
   }, []);
   if (loading) {
     return (
-      <div className=" w-full border-2 mb-2 border-white p-2 flex align-middle items-center justify-center">
+      <div className=" mb-2 flex w-full items-center justify-center border-2 border-white p-2 align-middle">
         <ContractLoader loading={loading}></ContractLoader>
       </div>
     );
   }
   if (done) {
     return (
-      <div className=" w-full text-white border-2 mb-2 border-white p-2">
-        <p className="text-white text-lg">Execute contract</p>
+      <div className=" mb-2 w-full border-2 border-white p-2 text-white">
+        <p className="text-lg text-white">Execute contract</p>
         <p>Metadata: {props.getFieldProps()}</p>
       </div>
     );
@@ -842,19 +843,19 @@ function ExecuteContractForm(
   if (!state.address) {
     return (
       <div className=" w-full text-white">
-        <p className="text-white text-lg">Execute contract:</p>
-        <Basic setFormState={(x) => setState({ ...x, shape: {} })} />
+        <p className="text-lg text-white">Execute contract:</p>
+        <Basic setFormState={x => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
     return (
       <div className=" w-full text-white">
-        <p className="text-white text-lg">Execute contract:</p>
+        <p className="text-lg text-white">Execute contract:</p>
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
           shape={state.shape}
-          setState={(shape) => {
+          setState={shape => {
             setStater({ shape: shape });
           }}
           reset={() => setState({ address: "", amount: 0, shape: {} })}
@@ -887,11 +888,11 @@ function TransferForm(
   }
   if (!loading && typeof result != "undefined") {
     return (
-      <div className="flex justify-between items-center w-full md:h-12">
+      <div className="flex w-full items-center justify-between md:h-12">
         <ContractLoader loading={loading}>
-          <div className="text-sm md:text-xl my-auto text-white font-bold">
+          <div className="my-auto text-sm font-bold text-white md:text-xl">
             {result ? (
-              <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-row">
+              <div className="my-auto flex flex-row text-sm font-bold text-white md:text-xl">
                 <span>Created proposal successfully</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -899,7 +900,7 @@ function TransferForm(
                   viewBox="0 0 24 24"
                   strokeWidth="1.5"
                   stroke="currentColor"
-                  className="w-6 h-6 ml-4"
+                  className="ml-4 h-6 w-6"
                 >
                   <path
                     strokeLinecap="round"
@@ -909,7 +910,7 @@ function TransferForm(
                 </svg>
               </div>
             ) : (
-              <span className="text-sm md:text-xl my-auto text-white font-bold">
+              <span className="my-auto text-sm font-bold text-white md:text-xl">
                 Failed to create proposal
               </span>
             )}
@@ -919,7 +920,7 @@ function TransferForm(
               props.closeModal();
             }}
             type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -927,7 +928,7 @@ function TransferForm(
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="fill-white w-6 h-6"
+              className="h-6 w-6 fill-white"
             >
               <path
                 strokeLinecap="round"
@@ -963,7 +964,7 @@ function TransferForm(
   return (
     <Formik
       initialValues={initialProps}
-      validate={(values) => {
+      validate={values => {
         const errors: {
           transfers: { values: { [key: string]: string } }[];
         } = {
@@ -971,7 +972,7 @@ function TransferForm(
         };
         values.transfers.forEach((element, idx) => {
           Object.entries(element.values).forEach(([labl, value]) => {
-            let field = element.fields.find((x) => x.field === labl);
+            let field = element.fields.find(x => x.field === labl);
             let validate =
               field?.placeholder !== value ? field?.validate(value) : undefined;
             if (validate) {
@@ -984,7 +985,7 @@ function TransferForm(
         });
         return errors.transfers.length === 0 ? undefined : errors;
       }}
-      onSubmit={async (values) => {
+      onSubmit={async values => {
         setLoading(true);
         try {
           let cc = await state.connection.contract.at(props.address);
@@ -1003,19 +1004,19 @@ function TransferForm(
       }}
     >
       {({ values, errors, setFieldValue, getFieldProps }) => (
-        <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-          <div className="text-2xl font-medium self-center mb-2 text-white">
+        <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+          <div className="mb-2 self-center text-2xl font-medium text-white">
             Add transactions below
           </div>
-          <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
+          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
-                <div className="min-w-full flex flex-col h-fit " id="top">
+                <div className="flex h-fit min-w-full flex-col " id="top">
                   <div className="flex flex-col md:flex-row">
                     <button
                       type="button"
-                      className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                      onClick={(e) => {
+                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      onClick={e => {
                         e.preventDefault();
                         push({
                           type: "transfer",
@@ -1027,8 +1028,8 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                      onClick={(e) => {
+                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      onClick={e => {
                         e.preventDefault();
                         push({
                           type: "lambda",
@@ -1040,8 +1041,8 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" bg-primary hover:bg-red-500 focus:bg-red-500  font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-                      onClick={(e) => {
+                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      onClick={e => {
                         e.preventDefault();
                         push({
                           type: "contract",
@@ -1081,9 +1082,9 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                " bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                                " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                               }
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.preventDefault();
                                 remove(index);
                               }}
@@ -1095,7 +1096,7 @@ function TransferForm(
                         );
                       }
                       const withTextArea = transfer.fields.find(
-                        (x) => x?.kind === "textarea"
+                        x => x?.kind === "textarea"
                       )
                         ? " flex-col md:flex-col"
                         : "";
@@ -1103,21 +1104,19 @@ function TransferForm(
                         <div
                           className={
                             withTextArea +
-                            " border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col  justify-around items-start min-w-full  min-h-fit h-fit"
+                            " md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around border-4 border-dashed  border-white p-2 md:flex-row  md:rounded-none md:border-none"
                           }
                           key={index}
                         >
                           {transfer.fields.map((value, idx, arr) => {
                             const withTextArea = transfer.fields.find(
-                              (x) => x?.kind === "textarea"
+                              x => x?.kind === "textarea"
                             )
                               ? " w-full md:w-full "
                               : "";
                             let width =
                               arr.length === 1 &&
-                              !transfer.fields.find(
-                                (x) => x?.kind === "textarea"
-                              )
+                              !transfer.fields.find(x => x?.kind === "textarea")
                                 ? " w-3/4 "
                                 : "";
                             let classn =
@@ -1144,12 +1143,12 @@ function TransferForm(
                                         },
                                       });
                                     }}
-                                    filter={(_) => true}
+                                    filter={_ => true}
                                     byAddrToo={true}
                                     as="input"
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={
-                                      "relative border-2 p-2 text-sm md:text-md min-h-fit h-fit w-full" +
+                                      "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm" +
                                       withTextArea
                                     }
                                     placeholder={value.placeholder}
@@ -1160,7 +1159,7 @@ function TransferForm(
                                     component={value.kind}
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={
-                                      "relative border-2 p-2 text-sm md:text-md min-h-fit h-fit" +
+                                      "md:text-md relative h-fit min-h-fit border-2 p-2 text-sm" +
                                       withTextArea
                                     }
                                     placeholder={value.placeholder}
@@ -1180,9 +1179,9 @@ function TransferForm(
                               (errors.transfers && errors.transfers[index]
                                 ? "my-auto"
                                 : "") +
-                              " bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                              " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
                             }
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault();
                               remove(index);
                             }}
@@ -1196,10 +1195,10 @@ function TransferForm(
               )}
             </FieldArray>
           </div>
-          <div className="flex flex-row md:w-1/3 justify-around">
+          <div className="flex flex-row justify-around md:w-1/3">
             <button
-              className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-              onClick={(e) => {
+              className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+              onClick={e => {
                 e.preventDefault();
                 props.closeModal();
               }}
@@ -1208,7 +1207,7 @@ function TransferForm(
             </button>
             {values.transfers.length > 0 && (
               <button
-                className=" bg-primary hover:bg-red-500 focus:bg-red-500 font-medium text-white my-2 p-2  hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
                 type="submit"
               >
                 Submit

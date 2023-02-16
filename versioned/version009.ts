@@ -1,9 +1,13 @@
+import { Parser } from "@taquito/michel-codec";
+import { emitMicheline } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
   Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
+import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { BigNumber } from "bignumber.js";
 import {
   content,
   proposal as p1,
@@ -11,13 +15,10 @@ import {
 } from "../types/009Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
-import { Parser } from "@taquito/michel-codec";
-import { emitMicheline } from "@taquito/michel-codec";
-import { BigNumber } from "bignumber.js";
-import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
-import { matchLambda } from "./apis";
+
 function convert(x: string): string {
   return char2Bytes(x);
 }
@@ -41,7 +42,7 @@ class Version009 extends Versioned {
   ): Promise<void> {
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map((x) => {
+        proposals.transfers.map(x => {
           switch (x.type) {
             case "transfer":
               return {
@@ -121,7 +122,7 @@ class Version009 extends Versioned {
     ops: ownersForm[]
   ) {
     let content = ops
-      .map((v) => {
+      .map(v => {
         if ("addOwners" in v) {
           return { add_owners: v.addOwners };
         } else if ("removeOwners" in v) {
@@ -130,7 +131,7 @@ class Version009 extends Versioned {
           return { change_threshold: v.changeThreshold };
         }
       })
-      .filter((x) => !!x);
+      .filter(x => !!x);
 
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();

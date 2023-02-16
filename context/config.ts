@@ -1,1 +1,1 @@
-export const RPC = "https://ghostnet.tezos.marigold.dev/"
+export const RPC = "https://ghostnet.tezos.marigold.dev/";

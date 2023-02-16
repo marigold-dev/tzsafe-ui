@@ -13,11 +13,12 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { ownersForm } from "../versioned/forms";
-import { signers, VersionedApi } from "../versioned/apis";
-import ContractLoader from "./contractLoader";
 import contract from "../context/unitContract";
 import { adaptiveTime } from "../utils/adaptiveTime";
+import { signers, VersionedApi } from "../versioned/apis";
+import { ownersForm } from "../versioned/forms";
+import ContractLoader from "./contractLoader";
+
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
 ): boolean {
@@ -36,7 +37,7 @@ const SignersForm: FC<{
   closeModal: () => void;
   address: string;
   contract: contractStorage;
-}> = (props) => {
+}> = props => {
   const state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
 
@@ -55,7 +56,7 @@ const SignersForm: FC<{
     effectivePeriod: number | undefined;
     validatorsError?: string;
   } = {
-    validators: signers(props.contract).map((x) => ({
+    validators: signers(props.contract).map(x => ({
       address: x,
       name: state.aliases[x] || "",
     })),
@@ -72,12 +73,12 @@ const SignersForm: FC<{
   ) {
     let cc = await state.connection.contract.at(props.address);
     let initialSigners = new Set(signers(props.contract));
-    let input = new Set(txs.map((x) => x.address));
+    let input = new Set(txs.map(x => x.address));
     let removed = new Set(
-      [...initialSigners.values()].filter((x) => !input.has(x))
+      [...initialSigners.values()].filter(x => !input.has(x))
     );
     let added = new Set(
-      [...input.values()].filter((x) => !initialSigners.has(x))
+      [...input.values()].filter(x => !initialSigners.has(x))
     );
     let ops: ownersForm[] = [];
     if (
@@ -103,10 +104,10 @@ const SignersForm: FC<{
   }
   if (!loading && typeof result != "undefined") {
     return (
-      <div className="flex justify-between items-center w-full md:h-12">
+      <div className="flex w-full items-center justify-between md:h-12">
         <ContractLoader loading={loading}>
           {result ? (
-            <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-row">
+            <div className="my-auto flex flex-row text-sm font-bold text-white md:text-xl">
               <span>Created proposal successfully</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +115,7 @@ const SignersForm: FC<{
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
                 stroke="currentColor"
-                className="w-6 h-6 ml-4"
+                className="ml-4 h-6 w-6"
               >
                 <path
                   strokeLinecap="round"
@@ -124,7 +125,7 @@ const SignersForm: FC<{
               </svg>
             </div>
           ) : (
-            <span className="text-sm md:text-xl my-auto text-white font-bold">
+            <span className="my-auto text-sm font-bold text-white md:text-xl">
               Failed to create proposal
             </span>
           )}
@@ -133,7 +134,7 @@ const SignersForm: FC<{
               props.closeModal();
             }}
             type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -141,7 +142,7 @@ const SignersForm: FC<{
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-6 h-6 fill-white"
+              className="h-6 w-6 fill-white"
             >
               <path
                 strokeLinecap="round"
@@ -158,7 +159,7 @@ const SignersForm: FC<{
     <Formik
       enableReinitialize={true}
       initialValues={initialProps}
-      validate={(values) => {
+      validate={values => {
         const errors: {
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
@@ -169,7 +170,7 @@ const SignersForm: FC<{
         if (values.validators.length < 1) {
           errors.validatorsError = "Should be at least one owner";
         }
-        let result = values.validators.map((x) => {
+        let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
             err.address = "already exists";
@@ -192,7 +193,7 @@ const SignersForm: FC<{
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
         if (
-          result.every((x) => x.address === "" && x.name === "") &&
+          result.every(x => x.address === "" && x.name === "") &&
           !errors.requiredSignatures &&
           !errors.validatorsError
         ) {
@@ -201,7 +202,7 @@ const SignersForm: FC<{
 
         return errors;
       }}
-      onSubmit={async (values) => {
+      onSubmit={async values => {
         setLoading(true);
         try {
           await changeSettings(
@@ -229,12 +230,12 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => (
-        <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center h-full">
-          <div className="text-2xl font-medium self-center mb-2 text-white">
+        <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
+          <div className="mb-2 self-center text-2xl font-medium text-white">
             Change wallet participants below
           </div>
           <ErrorMessage name={`validatorsError`} render={renderError} />
-          <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
+          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {({ remove, push }) => (
                 <div className="min-w-full">
@@ -242,14 +243,14 @@ const SignersForm: FC<{
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
+                          className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="flex flex-col">
                             <label className="text-white">Owner Name</label>
                             <Field
                               name={`validators.${index}.name`}
-                              className="border-2 p-2 text-sm md:text-md"
+                              className="md:text-md border-2 p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -257,7 +258,7 @@ const SignersForm: FC<{
                               render={renderError}
                             />
                           </div>
-                          <div className="relative flex flex-col w-full md:w-auto md:grow justify-start">
+                          <div className="relative flex w-full flex-col justify-start md:w-auto md:grow">
                             <label
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
@@ -266,13 +267,13 @@ const SignersForm: FC<{
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="w-full border-2 p-2 text-sm md:text-md"
+                              className="md:text-md w-full border-2 p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
                             <ErrorMessage
                               name={`validators.${index}.address`}
-                              render={(x) => {
+                              render={x => {
                                 return renderError(x);
                               }}
                             />
@@ -285,9 +286,9 @@ const SignersForm: FC<{
                               get(errors.validators[index])
                                 ? "my-auto"
                                 : "") +
-                              " bg-primary font-medium text-white p-1.5 md:self-end self-center justify-self-end block md:mx-auto mx-none "
+                              " mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white md:mx-auto md:self-end "
                             }
-                            onClick={(e) => {
+                            onClick={e => {
                               e.preventDefault();
                               remove(index);
                               setTouched({ validatorsError: true }, true);
@@ -312,8 +313,8 @@ const SignersForm: FC<{
                     })}
                   <button
                     type="button"
-                    className=" bg-primary font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto "
-                    onClick={(e) => {
+                    className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white "
+                    onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
                     }}
@@ -324,8 +325,8 @@ const SignersForm: FC<{
               )}
             </FieldArray>
           </div>
-          <div className="flex flex-col w-full md:grow ">
-            <label className="text-white mr-4">Threshold: </label>
+          <div className="flex w-full flex-col md:grow ">
+            <label className="mr-4 text-white">Threshold: </label>
             <Field
               className="w-full text-center text-black"
               as="select"
@@ -337,7 +338,7 @@ const SignersForm: FC<{
                 ...Array(
                   Math.max(values.requiredSignatures, values.validators.length)
                 ).keys(),
-              ].map((idx) => (
+              ].map(idx => (
                 <option
                   key={idx + values.validators.length}
                   label={`${idx + 1}/${values.validators.length}`}
@@ -347,14 +348,14 @@ const SignersForm: FC<{
             </Field>
             <ErrorMessage
               name={`requiredSignatures`}
-              render={(x) => {
+              render={x => {
                 return renderError(x);
               }}
             />
           </div>
           {typeof values.effectivePeriod != "undefined" && (
-            <div className="flex flex-col w-full md:grow ">
-              <label className="text-white mr-4">
+            <div className="flex w-full flex-col md:grow ">
+              <label className="mr-4 text-white">
                 EffectivePeriod(in seconds):{" "}
               </label>
               <Field
@@ -369,16 +370,16 @@ const SignersForm: FC<{
               </p>
               <ErrorMessage
                 name={`requiredSignatures`}
-                render={(x) => {
+                render={x => {
                   return renderError(x);
                 }}
               />
             </div>
           )}
-          <div className="flex justify-between w-2/3 md:w-1/3">
+          <div className="flex w-2/3 justify-between md:w-1/3">
             <button
-              className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-              onClick={(e) => {
+              className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+              onClick={e => {
                 e.preventDefault();
                 props.closeModal();
               }}
@@ -386,7 +387,7 @@ const SignersForm: FC<{
               Cancel
             </button>
             <button
-              className="bg-primary font-medium text-white my-2 p-2 "
+              className="my-2 bg-primary p-2 font-medium text-white "
               type="submit"
             >
               Continue

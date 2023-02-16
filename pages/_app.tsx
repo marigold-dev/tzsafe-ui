@@ -1,12 +1,13 @@
-import "../styles/globals.css";
-import type { AppProps } from "next/app";
 import {
   NetworkType,
   BeaconEvent,
   defaultEventCallbacks,
 } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
+import type { AppProps } from "next/app";
 import { useReducer, useEffect } from "react";
+import Footer from "../components/footer";
+import NavBar from "../components/navbar";
 import {
   tezosState,
   action,
@@ -16,8 +17,7 @@ import {
   AppStateContext,
   AppDispatchContext,
 } from "../context/state";
-import Footer from "../components/footer";
-import NavBar from "../components/navbar";
+import "../styles/globals.css";
 
 export default function App({ Component, pageProps }: AppProps) {
   let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(

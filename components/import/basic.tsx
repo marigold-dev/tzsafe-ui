@@ -1,12 +1,13 @@
+import { tzip16 } from "@taquito/tzip16";
+import { validateContractAddress } from "@taquito/utils";
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import { validateContractAddress } from "@taquito/utils";
-import { AppStateContext } from "../../context/state";
-import { useSearchParams } from "next/navigation";
-import { signers, toStorage } from "../../versioned/apis";
 import fetchVersion from "../../context/metadata";
-import { tzip16 } from "@taquito/tzip16";
+import { AppStateContext } from "../../context/state";
+import { signers, toStorage } from "../../versioned/apis";
+
 function Basic() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
@@ -25,7 +26,7 @@ function Basic() {
 
   useEffect(() => {
     if (!initialState.walletAddress && !!params.get("address")) {
-      set((initial) => ({
+      set(initial => ({
         ...initial,
         walletAddress: params.get("address") || "",
       }));
@@ -35,7 +36,7 @@ function Basic() {
     <Formik
       enableReinitialize={true}
       initialValues={initialState}
-      validate={async (values) => {
+      validate={async values => {
         let errors: any = {};
         if (validateContractAddress(values.walletAddress) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
@@ -55,12 +56,13 @@ function Basic() {
           errors.walletName = `Contract already imported ${values.walletAddress}`;
         }
         if (byName[values.walletName]) {
-          errors.walletName = `Contract name already taken: ${byName[values.walletName]
-            }`;
+          errors.walletName = `Contract name already taken: ${
+            byName[values.walletName]
+          }`;
         }
         return errors;
       }}
-      onSubmit={async (values) => {
+      onSubmit={async values => {
         const contract = await state.connection.contract.at(
           values.walletAddress,
           tzip16
@@ -86,28 +88,28 @@ function Basic() {
         setActiveStepIndex(activeStepIndex + 1);
       }}
     >
-      <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-2 w-full">
-        <div className="text-2xl font-medium self-center mb-2 text-white">
+      <Form className="align-self-center col-span-2 flex w-full flex-col items-center justify-center justify-self-center">
+        <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter imported wallet name and address below
         </div>
-        <div className="flex flex-col w-full justify-center md:flex-row">
-          <div className="flex flex-col w-1/2">
-            <div className="flex flex-col items-start mb-2 w-full">
+        <div className="flex w-full flex-col justify-center md:flex-row">
+          <div className="flex w-1/2 flex-col">
+            <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet name</label>
               <Field
                 name="walletName"
-                className=" border-2 p-2 w-full"
+                className=" w-full border-2 p-2"
                 placeholder="example-wallet"
               />
             </div>
             <ErrorMessage name="walletName" render={renderError} />
           </div>
-          <div className="flex flex-col w-1/2 ">
-            <div className="flex flex-col items-start mb-2 w-full">
+          <div className="flex w-1/2 flex-col ">
+            <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet address</label>
               <Field
                 name="walletAddress"
-                className=" border-2 p-2 w-full"
+                className=" w-full border-2 p-2"
                 placeholder="your wallet address"
               />
             </div>
@@ -115,7 +117,7 @@ function Basic() {
           </div>
         </div>
         <button
-          className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
+          className="my-2 bg-primary p-2 font-medium text-white  hover:outline-none "
           type="submit"
         >
           Continue

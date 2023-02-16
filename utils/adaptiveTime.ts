@@ -1,4 +1,5 @@
 import { DateTime, Duration } from "luxon";
+
 function conv(duration: Duration): Duration {
   if (duration.years) {
     duration = Duration.fromObject({ years: duration.years });

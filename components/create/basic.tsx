@@ -20,7 +20,7 @@ function Basic() {
       initialValues={{
         walletName: "example-wallet",
       }}
-      validate={(values) => {
+      validate={values => {
         let errors: any = {};
         if (byName[values.walletName]) {
           errors.walletName = `Contract name already taken by ${
@@ -29,27 +29,27 @@ function Basic() {
         }
         return errors;
       }}
-      onSubmit={(values) => {
+      onSubmit={values => {
         const data = { ...formState, requiredSignatures: 1, ...values };
         setFormState(data as any);
         setActiveStepIndex(activeStepIndex + 1);
       }}
     >
-      <Form className="flex flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-        <div className="text-2xl font-medium self-center mb-2 text-white">
+      <Form className="align-self-center col-span-2 flex flex-col items-center justify-center justify-self-center">
+        <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter you wallet name below
         </div>
-        <div className="flex flex-col items-start mb-2">
+        <div className="mb-2 flex flex-col items-start">
           <label className="font-medium text-white">Wallet name</label>
           <Field
             name="walletName"
-            className=" border-2 p-2 w-full"
+            className=" w-full border-2 p-2"
             placeholder="example-wallet"
           />
         </div>
         <ErrorMessage name="walletName" render={renderError} />
         <button
-          className="bg-primary font-medium text-white my-2 p-2  hover:outline-none "
+          className="my-2 bg-primary p-2 font-medium text-white  hover:outline-none "
           type="submit"
         >
           Continue

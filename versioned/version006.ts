@@ -1,3 +1,5 @@
+import { Parser } from "@taquito/michel-codec";
+import { ParameterSchema } from "@taquito/michelson-encoder";
 import {
   Contract,
   TezosToolkit,
@@ -5,16 +7,14 @@ import {
   MichelsonMap,
   WalletContract,
 } from "@taquito/taquito";
+import { encodePubKey } from "@taquito/utils";
+import { BigNumber } from "bignumber.js";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { map2Object, matchLambda } from "./apis";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
-import { ParameterSchema } from "@taquito/michelson-encoder";
-import { encodePubKey } from "@taquito/utils";
-import { Parser } from "@taquito/michel-codec";
-import { BigNumber } from "bignumber.js";
-import { map2Object, matchLambda } from "./apis";
 
 class Version006 extends Versioned {
   async submitTxProposals(
@@ -36,7 +36,7 @@ class Version006 extends Versioned {
   ): Promise<void> {
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map((x) => {
+        proposals.transfers.map(x => {
           switch (x.type) {
             case "transfer":
               return {
@@ -101,7 +101,7 @@ class Version006 extends Versioned {
     ops: ownersForm[]
   ) {
     let content = ops
-      .map((v) => {
+      .map(v => {
         if ("addOwners" in v) {
           return { add_signers: v.addOwners };
         } else if ("removeOwners" in v) {
@@ -110,7 +110,7 @@ class Version006 extends Versioned {
           return { adjust_threshold: v.changeThreshold };
         }
       })
-      .filter((x) => !!x);
+      .filter(x => !!x);
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
     await op.transactionOperation();

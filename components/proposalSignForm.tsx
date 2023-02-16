@@ -1,9 +1,9 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import ContractLoader from "./contractLoader";
-import { VersionedApi } from "../versioned/apis";
 import { version, proposal } from "../types/display";
+import { VersionedApi } from "../versioned/apis";
+import ContractLoader from "./contractLoader";
 
 function ProposalSignForm({
   address,
@@ -52,10 +52,10 @@ function ProposalSignForm({
   }
   if (!loading && typeof result != "undefined") {
     return (
-      <div className="flex justify-between items-center w-full md:h-12">
+      <div className="flex w-full items-center justify-between md:h-12">
         <ContractLoader loading={loading}>
           {result ? (
-            <div className="text-sm md:text-xl my-auto text-white font-bold flex flex-row">
+            <div className="my-auto flex flex-row text-sm font-bold text-white md:text-xl">
               <span>Operation successful</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -63,7 +63,7 @@ function ProposalSignForm({
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
                 stroke="currentColor"
-                className="w-6 h-6 ml-4"
+                className="ml-4 h-6 w-6"
               >
                 <path
                   strokeLinecap="round"
@@ -73,7 +73,7 @@ function ProposalSignForm({
               </svg>
             </div>
           ) : (
-            <span className="text-sm md:text-xl my-auto text-white font-bold">
+            <span className="my-auto text-sm font-bold text-white md:text-xl">
               Failed to sign
             </span>
           )}
@@ -82,7 +82,7 @@ function ProposalSignForm({
               closeModal();
             }}
             type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 md:px-2 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +90,7 @@ function ProposalSignForm({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="fill-white w-6 h-6"
+              className="h-6 w-6 fill-white"
             >
               <path
                 strokeLinecap="round"
@@ -108,7 +108,7 @@ function ProposalSignForm({
       initialValues={{
         flag: typeof modalState === "undefined" ? true : false,
       }}
-      onSubmit={async (values) => {
+      onSubmit={async values => {
         setLoading(true);
         try {
           await sign(id, proposal.og, modalState, values.flag);
@@ -123,18 +123,18 @@ function ProposalSignForm({
         }, 1500);
       }}
     >
-      <Form className="flex flex-col justify-center items-center  col-span-2 h-full max-w-full">
-        <div className="text-2xl font-medium  mb-2 text-white self-start">
+      <Form className="col-span-2 flex h-full max-w-full  flex-col items-center justify-center">
+        <div className="mb-2 self-start  text-2xl font-medium text-white">
           Review and confirm the Action below:
         </div>
-        <div className="flex flex-col md:flex-col items-start mb-2 w-full max-w-full ">
-          <p className="font-medium text-white text-lg">
+        <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
+          <p className="text-lg font-medium text-white">
             Raw proposal contents:
           </p>
-          <code className=" overflow-y-auto  h-96 font-medium text-white border-2 border-white mb-2 mt-2 p-2 max-w-full break-words">
+          <code className=" mb-2  mt-2 h-96 max-w-full overflow-y-auto break-words border-2 border-white p-2 font-medium text-white">
             {JSON.stringify(proposal.og, null, 2)}
           </code>
-          <p className="font-medium text-white text-lg">
+          <p className="text-lg font-medium text-white">
             Action:{" "}
             {typeof modalState === "boolean"
               ? modalState
@@ -147,7 +147,7 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="flex flex-col md:flex-row items-center justify-between mb-2 w-full ">
+                <div className="mb-2 flex w-full flex-col items-center justify-between md:flex-row ">
                   <label className="font-medium text-white">
                     Try to resolve immediately?:
                   </label>
@@ -162,10 +162,10 @@ function ProposalSignForm({
                 </div>
               ))}
         <ErrorMessage name="flag" render={renderError} />
-        <div className="flex justify-between w-2/3 md:w-1/3">
+        <div className="flex w-2/3 justify-between md:w-1/3">
           <button
-            className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
-            onClick={(e) => {
+            className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+            onClick={e => {
               e.preventDefault();
               closeModal();
             }}
@@ -173,7 +173,7 @@ function ProposalSignForm({
             Cancel
           </button>
           <button
-            className=" bg-primary font-medium text-white my-2 p-2 hover:bg-red-500 focus:bg-red-500 hover:outline-none border-2 hover:border-gray-800  hover:border-offset-2  hover:border-offset-gray-800"
+            className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
             type="submit"
           >
             Confirm

@@ -15,6 +15,7 @@ import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
 import { adaptiveTime } from "../../utils/adaptiveTime";
 import TextInputWithCompletion from "../textInputWithComplete";
+
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
 ): boolean {
@@ -58,7 +59,7 @@ function Aliases() {
   return (
     <Formik
       initialValues={initialProps}
-      validate={(values) => {
+      validate={values => {
         const errors: {
           validators: { address: string; name: string }[];
           validatorsError?: string;
@@ -68,7 +69,7 @@ function Aliases() {
         if (values.validators.length < 1) {
           errors.validatorsError = "Should be at least one owner";
         }
-        let result = values.validators.map((x) => {
+        let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
             err.address = "already exists";
@@ -90,7 +91,7 @@ function Aliases() {
           return err;
         });
         if (
-          result.every((x) => x.address === "" && x.name === "") &&
+          result.every(x => x.address === "" && x.name === "") &&
           typeof errors.validatorsError == "undefined"
         ) {
           return;
@@ -98,19 +99,19 @@ function Aliases() {
         errors.validators = result;
         return errors;
       }}
-      onSubmit={(values) => {
+      onSubmit={values => {
         const data = { ...formState, ...values };
-        setFormState((_) => data);
+        setFormState(_ => data);
         setActiveStepIndex(activeStepIndex + 1);
       }}
     >
       {({ values, errors, validateForm, setTouched }) => (
-        <Form className="w-full flex grow flex-col justify-center items-center align-self-center justify-self-center col-span-2">
-          <div className="text-2xl font-medium self-center mb-2 text-white">
+        <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+          <div className="mb-2 self-center text-2xl font-medium text-white">
             Add wallet participants below
           </div>
           <ErrorMessage name={`validatorsError`} render={renderError} />
-          <div className="grid grid-flow-row gap-4 items-start mb-2 w-full">
+          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {({ remove, push, replace }) => (
                 <div className="min-w-full">
@@ -118,10 +119,10 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className=" border-4 border-dashed border-white md:rounded-none md:border-none md:p-none p-2 flex md:flex-row flex-col justify-start items-start min-w-full"
+                          className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
-                          <div className="grid grid-rows-3 grid-flow-col grid-cols-1">
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
                             <label className="text-white">Owner Name</label>
                             <TextInputWithCompletion
                               byAddrToo={false}
@@ -134,7 +135,7 @@ function Aliases() {
                                 });
                               }}
                               name={`validators.${index}.name`}
-                              className="border-2 p-2 text-sm md:text-md"
+                              className="md:text-md border-2 p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -142,7 +143,7 @@ function Aliases() {
                               render={renderError}
                             />
                           </div>
-                          <div className="grid grid-rows-3 grid-flow-col grid-cols-1 md:grow">
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3 md:grow">
                             <label
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
@@ -151,13 +152,13 @@ function Aliases() {
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="w-full border-2 p-2 text-sm md:text-md"
+                              className="md:text-md w-full border-2 p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
                             <ErrorMessage
                               name={`validators.${index}.address`}
-                              render={(x) => {
+                              render={x => {
                                 return renderError(x);
                               }}
                             />
@@ -170,9 +171,9 @@ function Aliases() {
                               get(errors.validators[index])
                                 ? "my-auto"
                                 : "") +
-                              " bg-primary font-medium text-white p-1.5 md:self-center self-center justify-self-center block md:mx-auto mx-none "
+                              " mx-none block self-center justify-self-center bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
                             }
-                            onClick={async (e) => {
+                            onClick={async e => {
                               e.preventDefault();
                               setTouched({ validatorsError: true }, true);
                               validateForm();
@@ -186,8 +187,8 @@ function Aliases() {
                     })}
                   <button
                     type="button"
-                    className=" bg-primary font-medium text-white my-2 p-2 self-center justify-self-center block mx-auto "
-                    onClick={(e) => {
+                    className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white "
+                    onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
                     }}
@@ -198,12 +199,12 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex grow flex-col w-full p-2">
-            <label className="text-white mr-4">Threshold: </label>
+          <div className="flex w-full grow flex-col p-2">
+            <label className="mr-4 text-white">Threshold: </label>
             <Field
               component="select"
               name="requiredSignatures"
-              className="w-1/4 text-black text-center"
+              className="w-1/4 text-center text-black"
               values={values.requiredSignatures}
             >
               {values.validators.map((_, idx) => (
@@ -217,13 +218,13 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          <div className="flex grow flex-col w-full p-2">
-            <label className="text-white mr-4">
+          <div className="flex w-full grow flex-col p-2">
+            <label className="mr-4 text-white">
               EffectivePeriod(in seconds):
             </label>
             <Field
               component="input"
-              className="text-black pl-4"
+              className="pl-4 text-black"
               name="effectivePeriod"
               values={values.requiredSignatures}
               validate={(value: string) => {
@@ -239,13 +240,13 @@ function Aliases() {
             </p>
             <ErrorMessage
               name={`effectivePeriod`}
-              render={(x) => {
+              render={x => {
                 return renderError(x);
               }}
             />
           </div>
           <button
-            className="bg-primary font-medium text-white my-2 p-2 "
+            className="my-2 bg-primary p-2 font-medium text-white "
             type="submit"
           >
             Continue

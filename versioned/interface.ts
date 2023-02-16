@@ -1,10 +1,10 @@
+import { Parser } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
-import { contractStorage } from "../types/app";
+import { validateAddress } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
 import { ownersForm } from "./forms";
-import { validateAddress } from "@taquito/utils";
-import { Parser } from "@taquito/michel-codec";
 
 abstract class Versioned {
   readonly version: string;
