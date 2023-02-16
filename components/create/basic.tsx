@@ -1,4 +1,5 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
@@ -37,9 +38,9 @@ function Basic() {
     >
       <Form className="align-self-center col-span-2 flex flex-col items-center justify-center justify-self-center">
         <div className="mb-2 self-center text-2xl font-medium text-white">
-          Enter you wallet name below
+          Enter your wallet name below
         </div>
-        <div className="mb-2 flex flex-col items-start">
+        <div className="mt-4 flex flex-col items-start">
           <label className="font-medium text-white">Wallet name</label>
           <Field
             name="walletName"
@@ -48,12 +49,21 @@ function Basic() {
           />
         </div>
         <ErrorMessage name="walletName" render={renderError} />
-        <button
-          className="my-2 bg-primary p-2 font-medium text-white  hover:outline-none "
-          type="submit"
-        >
-          Continue
-        </button>
+        <div className="mt-8 flex space-x-6">
+          <Link
+            type="button"
+            href="/"
+            className="my-2 border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+          >
+            Cancel
+          </Link>
+          <button
+            className="my-2 bg-primary p-2 font-medium text-white hover:outline-none "
+            type="submit"
+          >
+            Continue
+          </button>
+        </div>
       </Form>
     </Formik>
   );

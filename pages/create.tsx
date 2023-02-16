@@ -45,20 +45,15 @@ function Home() {
     })();
   }, [router, dispatch, state]);
   return (
-    <div className="min-h-content relative flex grow flex-col">
+    <div className="h-full grow">
       <Meta title={"Create wallet"} />
-
-      <div className="bg-graybg shadow">
-        <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">
-            Create multisig wallet (version 0.0.11)
-          </h1>
-        </div>
-      </div>
-      <main className="grow">
-        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="md:min-h-96 grid min-h-fit grid-rows-2 border-4 border-dashed border-white p-2 md:grid-cols-2 md:grid-rows-1">
+      <h1 className="mx-auto mt-12 max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
+        Create multisig wallet
+      </h1>
+      <main className="mt-8 grow">
+        <div className="mx-auto max-w-7xl py-0 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-0">
+            <div className="md:min-h-96 grid min-h-fit grid-rows-2 p-2 md:grid-cols-2 md:grid-rows-1">
               <div className="col-span-2 row-span-2 flex flex-col items-center justify-items-center">
                 <FormContext.Provider
                   value={{
