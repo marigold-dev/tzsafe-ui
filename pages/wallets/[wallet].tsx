@@ -273,7 +273,7 @@ function Wallet(props: { address: string }) {
                     </p>
                     <button
                       type="button"
-                      className="ml-6  border-2 border-white p-1 text-zinc-200 hover:text-white focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:bg-primary"
+                      className="ml-6 p-1 text-zinc-200 hover:text-white md:bg-primary"
                       onClick={() => {
                         navigator.clipboard.writeText(router);
                       }}
@@ -385,7 +385,7 @@ function Wallet(props: { address: string }) {
                 </div>
               )}
               {state.address && (
-                <div>
+                <div className="pr-2">
                   <button
                     type="button"
                     onClick={e => {
@@ -393,7 +393,7 @@ function Wallet(props: { address: string }) {
                       setCloseModal((s: any) => ({ ...s, state: 1 }));
                     }}
                     className={
-                      " text-md  hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 border-gray-800 bg-primary py-2 px-2 text-center font-bold text-white  hover:border-gray-800 hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
+                      "text-md row-span-1 w-full max-w-full items-center justify-self-end bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1 md:px-2 md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -404,7 +404,7 @@ function Wallet(props: { address: string }) {
                 </div>
               )}
               {state.address && signers(contract).includes(state?.address) && (
-                <div className="">
+                <div className="px-2">
                   <button
                     type="button"
                     onClick={e => {
@@ -412,7 +412,7 @@ function Wallet(props: { address: string }) {
                       setCloseModal((s: any) => ({ ...s, state: 2 }));
                     }}
                     className={
-                      " text-md hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 border-gray-800 bg-primary py-2 px-2 text-center font-bold text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1  md:px-2  md:text-xl"
+                      "text-md row-span-1 w-full max-w-full items-center justify-self-end bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1 md:px-2 md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -423,7 +423,7 @@ function Wallet(props: { address: string }) {
                 </div>
               )}
               {state.address && signers(contract).includes(state?.address) && (
-                <div className="">
+                <div className="pl-2">
                   <button
                     type="button"
                     onClick={e => {
@@ -431,7 +431,7 @@ function Wallet(props: { address: string }) {
                       setCloseModal((s: any) => ({ ...s, state: 3 }));
                     }}
                     className={
-                      " text-md hover:border-offset-2 hover:border-offset-gray-800 row-span-1 w-full max-w-full items-center justify-self-end border-2 border-gray-800 bg-primary py-2 px-2 text-center font-bold text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1  md:px-2  md:text-xl"
+                      "text-md row-span-1 w-full max-w-full items-center justify-self-end bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:col-start-3 md:row-auto md:py-1 md:px-2 md:text-xl"
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -446,7 +446,7 @@ function Wallet(props: { address: string }) {
           <main className="h-full min-h-fit grow">
             <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
               <div className="h-full min-h-full px-4 py-6 sm:px-0">
-                <div className="grid h-fit  min-h-fit grid-cols-1 border-4 border-dashed border-white p-2 md:grid-cols-2 md:grid-rows-1">
+                <div className="grid h-fit  min-h-fit grid-cols-1  p-2 md:grid-cols-2 md:grid-rows-1">
                   <Proposals
                     setCloseModal={(
                       proposal: number,

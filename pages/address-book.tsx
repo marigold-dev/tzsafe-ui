@@ -60,7 +60,7 @@ function Home() {
       <main className="h-full grow">
         <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="h-full min-h-full px-4 py-6 sm:px-0">
-            <div className="grid-rows-auto md:grid-cols-auto grid h-96 min-h-full overflow-y-auto border-4 border-dashed border-white p-2 md:auto-rows-max">
+            <div className="grid-rows-auto md:grid-cols-auto grid h-96 min-h-full overflow-y-auto  p-2 md:auto-rows-max">
               <Formik
                 enableReinitialize={true}
                 initialValues={initialProps}
@@ -170,7 +170,7 @@ function Home() {
                                 values.validators.map((validator, index) => {
                                   return (
                                     <div
-                                      className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
+                                      className=" md:p-none flex min-w-full flex-col items-start justify-start  p-2 md:flex-row md:rounded-none md:border-none"
                                       key={index}
                                     >
                                       <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">

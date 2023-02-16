@@ -151,11 +151,7 @@ function ProposalSignForm({
                   <label className="font-medium text-white">
                     Try to resolve immediately?:
                   </label>
-                  <Field
-                    name="flag"
-                    as="select"
-                    className="rounded-md border-2 p-2"
-                  >
+                  <Field name="flag" as="select" className="rounded-md p-2">
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                   </Field>
@@ -164,7 +160,7 @@ function ProposalSignForm({
         <ErrorMessage name="flag" render={renderError} />
         <div className="flex w-2/3 justify-between md:w-1/3">
           <button
-            className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+            className="hover:border-offset-2 hover:border-offset-gray-800 my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             onClick={e => {
               e.preventDefault();
               closeModal();
@@ -173,7 +169,7 @@ function ProposalSignForm({
             Cancel
           </button>
           <button
-            className=" hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:border-gray-800 hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+            className="hover:border-offset-2 hover:border-offset-gray-800 my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
             Confirm
