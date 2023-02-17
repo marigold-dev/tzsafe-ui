@@ -6,6 +6,7 @@ import {
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
 import { useReducer, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
 import {
@@ -64,10 +65,11 @@ export default function App({ Component, pageProps }: AppProps) {
         <div className="relative min-h-screen">
           <div id="modal" />
           <NavBar />
-          <div className="pt-20 pb-28">
+          <div className="flex pt-20 pb-28">
+            <Sidebar />
             <Component {...pageProps} />
-            <Footer />
           </div>
+          <Footer />
         </div>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>

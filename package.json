@@ -15,6 +15,9 @@
   },
   "dependencies": {
     "@airgap/beacon-sdk": "^3.3.0",
+    "@radix-ui/react-icons": "^1.1.1",
+    "@radix-ui/react-select": "^1.2.0",
+    "@radix-ui/react-tooltip": "^1.0.3",
     "@taquito/beacon-wallet": "^15.0.0",
     "@taquito/taquito": "^15.0.0",
     "@taquito/tzip16": "^15.0.0",

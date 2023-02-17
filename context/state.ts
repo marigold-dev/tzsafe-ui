@@ -2,7 +2,6 @@ import { AccountInfo } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import { Tzip16Module } from "@taquito/tzip16";
-import { stringify } from "querystring";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
@@ -13,6 +12,7 @@ type tezosState = {
   beaconWallet: BeaconWallet | null;
   address: string | null;
   balance: string | null;
+  currentContract: string | null;
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
@@ -41,6 +41,7 @@ let emptyState = () => {
     aliases: {},
     balance: null,
     address: null,
+    currentContract: null,
     accountInfo: null,
     connection,
     favouriteContract: null,
@@ -68,6 +69,10 @@ type action =
   | {
       type: "updateContract";
       payload: { address: string; contract: contractStorage };
+    }
+  | {
+      type: "setCurrentContract";
+      payload: string;
     }
   | { type: "removeContract"; address: string }
   | { type: "setFavourite"; address: string }
@@ -143,6 +148,11 @@ function reducer(state: tezosState, action: action): tezosState {
         contracts: contracts,
       };
     }
+    case "setCurrentContract":
+      return {
+        ...state,
+        currentContract: action.payload,
+      };
     case "init": {
       return {
         ...action.payload,
