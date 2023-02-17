@@ -134,7 +134,7 @@ const SignersForm: FC<{
               props.closeModal();
             }}
             type="button"
-            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
+            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -243,14 +243,14 @@ const SignersForm: FC<{
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className=" md:p-none flex min-w-full flex-col items-start justify-start border-4 border-dashed border-white p-2 md:flex-row md:rounded-none md:border-none"
+                          className=" md:p-none flex min-w-full flex-col items-start justify-start p-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="flex flex-col">
                             <label className="text-white">Owner Name</label>
                             <Field
                               name={`validators.${index}.name`}
-                              className="md:text-md border-2 p-2 text-sm"
+                              className="md:text-md p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -267,7 +267,7 @@ const SignersForm: FC<{
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full border-2 p-2 text-sm"
+                              className="md:text-md w-full p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
@@ -378,7 +378,7 @@ const SignersForm: FC<{
           )}
           <div className="flex w-2/3 justify-between md:w-1/3">
             <button
-              className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+              className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
               onClick={e => {
                 e.preventDefault();
                 props.closeModal();

@@ -7,7 +7,6 @@ import {
   FieldArray,
   Form,
   Formik,
-  prepareDataForValidation,
   useFormikContext,
 } from "formik";
 import React, {
@@ -18,7 +17,6 @@ import React, {
   useState,
 } from "react";
 import ReactDOM from "react-dom";
-import FormContext from "../context/formContext";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
@@ -348,7 +346,7 @@ function RenderItem({
                   <button
                     type="button"
                     className={
-                      " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                      "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                     }
                     onClick={e => {
                       e.preventDefault();
@@ -360,7 +358,7 @@ function RenderItem({
                 )}
                 <button
                   type="button"
-                  className="mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                  className="mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                   onClick={e => {
                     e.preventDefault();
                     let field =
@@ -397,7 +395,7 @@ function RenderItem({
         <Field
           as="input"
           className={
-            "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm text-black"
+            "md:text-md relative h-fit min-h-fit w-full p-2 text-sm text-black"
           }
           placeholder={item.placeholder}
           rows={10}
@@ -444,7 +442,7 @@ function RenderItem({
         <label className="text-white">{item.name}</label>
         <Field
           className={
-            "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm text-black"
+            "md:text-md relative h-fit min-h-fit w-full p-2 text-sm text-black"
           }
           placeholder={"Enter lambda here"}
           rows={10}
@@ -518,14 +516,14 @@ function Basic({
             Enter amount and contract address below
           </div>
           <div className="flex w-full flex-col justify-center md:flex-col ">
-            <div className="flex w-full flex-col">
+            <div className="flex w-full flex-col pr-2">
               <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
                   Amount in mutez:{" "}
                 </label>
                 <Field
                   name="amount"
-                  className=" w-full border-2 p-2 text-black"
+                  className=" w-full p-2 text-black"
                   placeholder="0"
                   validate={(value: string) => {
                     let error;
@@ -555,7 +553,7 @@ function Basic({
                   byAddrToo={true}
                   as="input"
                   name={`walletAddress`}
-                  className=" w-full border-2 p-2 text-black"
+                  className=" w-full p-2 text-black"
                   placeholder={"contract address"}
                   rows={10}
                 />
@@ -777,7 +775,7 @@ function ExecuteForm(
             </div>
             <div className="flex flex-row justify-around md:w-1/3">
               <button
-                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                className=" my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 onClick={e => {
                   e.preventDefault();
                   props.reset();
@@ -787,7 +785,7 @@ function ExecuteForm(
               </button>
               {
                 <button
-                  className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                  className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                   type="submit"
                 >
                   Confirm
@@ -920,7 +918,7 @@ function TransferForm(
               props.closeModal();
             }}
             type="button"
-            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
+            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1015,7 +1013,7 @@ function TransferForm(
                   <div className="flex flex-col md:flex-row">
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1028,7 +1026,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1041,7 +1039,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800  my-2 mx-auto block self-center justify-self-center border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                      className="my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1082,7 +1080,7 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                                "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                               }
                               onClick={e => {
                                 e.preventDefault();
@@ -1104,7 +1102,7 @@ function TransferForm(
                         <div
                           className={
                             withTextArea +
-                            " md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around border-4 border-dashed  border-white p-2 md:flex-row  md:rounded-none md:border-none"
+                            "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-x-4 p-2 md:flex-row  md:rounded-none md:border-none"
                           }
                           key={index}
                         >
@@ -1148,7 +1146,7 @@ function TransferForm(
                                     as="input"
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={
-                                      "md:text-md relative h-fit min-h-fit w-full border-2 p-2 text-sm" +
+                                      "md:text-md relative h-fit min-h-fit w-full p-2 text-sm" +
                                       withTextArea
                                     }
                                     placeholder={value.placeholder}
@@ -1159,7 +1157,7 @@ function TransferForm(
                                     component={value.kind}
                                     name={`transfers.${index}.values.${value.field}`}
                                     className={
-                                      "md:text-md relative h-fit min-h-fit border-2 p-2 text-sm" +
+                                      "md:text-md relative h-fit min-h-fit p-2 text-sm" +
                                       withTextArea
                                     }
                                     placeholder={value.placeholder}
@@ -1179,7 +1177,7 @@ function TransferForm(
                               (errors.transfers && errors.transfers[index]
                                 ? "my-auto"
                                 : "") +
-                              " mx-none hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 block self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white  hover:bg-red-500 hover:outline-none focus:bg-red-500  md:mx-auto  md:self-end"
+                              "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                             }
                             onClick={e => {
                               e.preventDefault();
@@ -1197,7 +1195,7 @@ function TransferForm(
           </div>
           <div className="flex flex-row justify-around md:w-1/3">
             <button
-              className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+              className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
               onClick={e => {
                 e.preventDefault();
                 props.closeModal();
@@ -1207,7 +1205,7 @@ function TransferForm(
             </button>
             {values.transfers.length > 0 && (
               <button
-                className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2  font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+                className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 type="submit"
               >
                 Submit

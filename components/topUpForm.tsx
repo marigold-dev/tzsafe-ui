@@ -63,7 +63,7 @@ function TopUp(props: {
               props.closeModal(state.contracts[props.address]);
             }}
             type="button"
-            className=" focus:ring-offset-gray-800 absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 md:px-2"
+            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -132,16 +132,12 @@ function TopUp(props: {
           <label className="font-medium text-white">
             Amount of xtz to transfer
           </label>
-          <Field
-            name="amount"
-            className="rounded-md border-2 p-2"
-            placeholder="0"
-          />
+          <Field name="amount" className="rounded-md p-2" placeholder="0" />
         </div>
         <ErrorMessage name="amount" render={renderError} />
         <div className="flex w-2/3 justify-between md:w-1/3">
           <button
-            className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+            className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             onClick={e => {
               e.preventDefault();
               props.closeModal(state.contracts[props.address]);
@@ -150,7 +146,7 @@ function TopUp(props: {
             Cancel
           </button>
           <button
-            className=" hover:border-gray-800 hover:border-offset-2 hover:border-offset-gray-800 my-2 border-2 bg-primary p-2 font-medium text-white hover:bg-red-500  hover:outline-none  focus:bg-red-500"
+            className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
             Top up

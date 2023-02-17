@@ -26,7 +26,7 @@ const NavBar = (_: React.PropsWithChildren) => {
     dispatch!({ type: "logout" });
   };
   return (
-    <nav className="fixed top-0 left-0 right-0 z-10 flex h-20 w-full items-center border-b-4 border-gray bg-graybg">
+    <nav className="fixed top-0 left-0 right-0 z-10 flex h-20 w-full items-center border-b-4 border-zinc-500 bg-graybg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
@@ -45,7 +45,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <LinkComponent path="/address-book" text={"Address book"} />
                 <LinkComponent path="/create" text={"Create a new wallet"} />
                 <LinkComponent path="/import" text={"Import existing wallet"} />
-                {/* <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" --> */}
+                {/* <!-- Current: "bg-zinc-900 text-white", Default: "text-zinc-300 hover:bg-zinc-700 hover:text-white" --> */}
               </div>
             </div>
           </div>
@@ -54,7 +54,7 @@ const NavBar = (_: React.PropsWithChildren) => {
               <button
                 onClick={() => console.log("todo")}
                 type="button"
-                className="bg-gray-800 text-gray-400 focus:ring-offset-gray-800 hidden rounded-full p-1 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+                className="hidden rounded-full bg-zinc-800 p-1 text-zinc-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-800"
               >
                 <span className="sr-only">View notifications</span>
                 {/*<!-- Heroicon name: outline/bell --> */}
@@ -84,7 +84,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                   <div className="flex items-end">
                     <button
                       type="button"
-                      className=" bg-gray-800 focus:border-offset-2  focus:border-offset-gray-800 max-w-xs items-center py-1 px-2 text-sm focus:border-2 focus:border-white focus:outline-none"
+                      className=" focus:border-offset-2 focus:border-offset-zinc-800  max-w-xs items-center bg-zinc-800 py-1 px-2 text-sm focus:border-2 focus:border-white focus:outline-none"
                       id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
@@ -131,7 +131,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 onClick={() => {
                   menuOpen ? setMenuOpen(false) : setMenuOpen(true);
                 }}
-                className="bg-gray-800 text-gray-400 hover:bg-gray-700 inline-flex items-center justify-center rounded-md p-2 text-white hover:text-white focus:outline-none"
+                className="inline-flex items-center justify-center rounded-md bg-zinc-800 p-2 text-zinc-400 text-white hover:bg-zinc-700 hover:text-white focus:outline-none"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
               >
@@ -212,7 +212,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             <button
               onClick={() => console.log("todo")}
               type="button"
-              className="bg-gray-800 focus:ring-offset-gray-800 ml-auto hidden flex-shrink-0 rounded-full p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2"
+              className="ml-auto hidden flex-shrink-0 rounded-full bg-zinc-800 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-800"
             >
               <span className="sr-only">View notifications</span>
               <svg
@@ -243,7 +243,7 @@ const NavBar = (_: React.PropsWithChildren) => {
               e.preventDefault();
               await disconnectWallet();
             }}
-            className="hover:bg-gray-700 block rounded-md px-3 py-2 text-base  font-medium text-white hover:text-white"
+            className="block rounded-md px-3 py-2 text-base font-medium  text-white hover:bg-zinc-700 hover:text-white"
           >
             Sign out
           </button>

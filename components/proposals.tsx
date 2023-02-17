@@ -1,4 +1,3 @@
-import { timeStamp } from "console";
 import { FC, useContext, useState } from "react";
 import { AppStateContext, tezosState, contractStorage } from "../context/state";
 import {
@@ -8,13 +7,13 @@ import {
   status,
 } from "../types/display";
 import { adaptiveTime, countdown } from "../utils/adaptiveTime";
-import { signers, VersionedApi } from "../versioned/apis";
+import { signers } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 
 function getClass(x: number, active: number): string {
   return x == active
     ? "inline-block p-4 w-full md:w-full text-left md:text-center break-normal rounded-t-lg border-b-2  text-md md:text-2xl uppercase border-primary text-white"
-    : "inline-block p-4 w-full md:w-full text-left md:text-center text-md md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-gray-600 hover:border-primary text-white ";
+    : "inline-block p-4 w-full md:w-full text-left md:text-center text-md md:text-2xl uppercase rounded-t-lg border-b-2 border-gray-100 hover:text-zinc-600 hover:border-primary text-white ";
 }
 const Proposals: FC<{
   proposals: [number, { og: any; ui: proposal }][];
@@ -29,7 +28,7 @@ const Proposals: FC<{
   return (
     <div className="col-span-1 md:col-span-2">
       <h3 className="text-3xl font-bold text-white">Proposals</h3>
-      <div className="border-gray-100 mb-4 border-b ">
+      <div className="mb-4 border-b border-gray-100 ">
         <ul
           className="-mb-px grid grid-flow-col text-center text-sm font-medium"
           id="myTab"
@@ -76,7 +75,7 @@ const Proposals: FC<{
         <ul
           className={
             (currentTab === 0 ? " " : " hidden") +
-            ` :bg-gray-800  grid grid-cols-1 gap-2 break-words rounded-lg p-1 `
+            `grid grid-cols-1 gap-2 break-words rounded-lg p-1 `
           }
           id="profile"
           role="tabpanel"
@@ -292,7 +291,7 @@ const Card: FC<{
               <button
                 type="button"
                 className={
-                  "mx-none hover:border-gray-100  hover:border-offset-2 hover:border-offset-gray-100 mx-auto block w-full self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto  md:w-1/3  md:self-end"
+                  "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto  md:w-1/3  md:self-end"
                 }
                 onClick={async e => {
                   e.preventDefault();
@@ -309,7 +308,7 @@ const Card: FC<{
               <button
                 type="button"
                 className={
-                  "mx-none hover:border-gray-100  hover:border-offset-2 hover:border-offset-gray-100 mx-auto block w-full self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto  md:w-1/3  md:self-end"
+                  "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
                 }
                 onClick={async e => {
                   e.preventDefault();
@@ -325,7 +324,7 @@ const Card: FC<{
               <button
                 type="button"
                 className={
-                  "mx-none hover:border-gray-100  hover:border-offset-2 hover:border-offset-gray-100 mx-auto block w-full self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto  md:w-1/3  md:self-end"
+                  "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto  md:w-1/3  md:self-end"
                 }
                 onClick={async e => {
                   e.preventDefault();
@@ -340,7 +339,7 @@ const Card: FC<{
             !resolvable(prop.ui.signatures) &&
             !signable &&
             "Proposing" === prop.ui.status && (
-              <p className="mx-none mx-auto  block w-full self-center justify-self-end border-2 bg-primary p-1.5 font-medium text-white md:mx-auto md:w-1/3 md:self-end">
+              <p className="mx-none mx-auto  block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white md:mx-auto md:w-1/3 md:self-end">
                 Waiting for signatures of other owners
               </p>
             )}

@@ -9,7 +9,7 @@ const ContractLoader: FC<{
       <div role="status" className="mx-auto">
         <svg
           aria-hidden="true"
-          className="text-gray-200 dark:text-gray-600 mr-2 h-8 w-8 animate-spin fill-red-500"
+          className="mr-2 h-8 w-8 animate-spin fill-red-500 text-zinc-200 dark:text-zinc-600"
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
