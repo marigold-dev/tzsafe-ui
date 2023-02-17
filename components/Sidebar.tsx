@@ -173,7 +173,7 @@ const Sidebar = () => {
         <Link href="/" className={linkClass(path === "")}>
           Settings
         </Link>
-        <Link href="/" className={linkClass(path === "")}>
+        <Link href="/history" className={linkClass(path === "/history")}>
           History
         </Link>
       </div>

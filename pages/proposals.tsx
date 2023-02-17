@@ -1,7 +1,8 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import ProposalCard from "../components/ProposalCard";
+import Spinner from "../components/Spinner";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
@@ -21,12 +22,12 @@ const Proposals = () => {
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
 
+  let [isLoading, setIsLoading] = useState(true);
   let [invalid, setInvalid] = useState(false);
   let [contract, setContract] = useState<contractStorage>(
     state.contracts[state.currentContract ?? ""]
   );
   let [proposals, setProposals] = useState(emptyProps);
-  let [transfers, setTransfers] = useState([] as mutezTransfer[]);
   let [openModal, setCloseModal] = useState<{
     state: number;
     proposal: [boolean | undefined, number];
@@ -68,18 +69,26 @@ const Proposals = () => {
       let bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );
-      let transfers = await getTransfers(state.currentContract);
       let proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
         { ui: toProposal(version, value), og: value },
       ]);
       setContract(updatedContract);
-      setTransfers(transfers);
       setProposals(proposals);
+      setIsLoading(false);
     })();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentContract]);
+
+  const filteredProposals = useMemo(
+    () => [
+      ...proposals.filter(
+        ([_, proposal]) => "Proposing" === proposal.ui.status
+      ),
+    ],
+    [proposals]
+  );
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -104,29 +113,43 @@ const Proposals = () => {
       </div>
       <main className="h-full min-h-fit grow">
         <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
-          {[
-            ...proposals.filter(
-              ([_, proposal]) => "Proposing" === proposal.ui.status
-            ),
-          ]
-            .sort((a, b) => b[0] - a[0])
-            .map(x => (
-              <ProposalCard
-                contract={contract}
-                id={x[0]}
-                setCloseModal={(arg: boolean | undefined) =>
-                  setCloseModal({ proposal: [arg, x[0]], state: 4 })
-                }
-                key={JSON.stringify(x[1])}
-                prop={x[1]}
-                address={state.currentContract ?? ""}
-                signable={
-                  !!state.address &&
-                  !!!x[1].ui.signatures.find(x => x.signer == state.address) &&
-                  true
-                }
-              />
-            ))}
+          {invalid ? (
+            <div className="mx-auto flex w-full items-center justify-center bg-graybg p-2 shadow">
+              <p className="mx-auto text-xl font-bold text-gray-800">
+                Invalid contract address: {state.currentContract}
+              </p>
+            </div>
+          ) : isLoading ? (
+            <div className="mt-8 flex justify-center">
+              <Spinner />
+            </div>
+          ) : filteredProposals.length === 0 ? (
+            <h2 className="text-center text-xl text-zinc-600">
+              There's currently no proposal
+            </h2>
+          ) : (
+            filteredProposals
+              .sort((a, b) => b[0] - a[0])
+              .map(x => (
+                <ProposalCard
+                  contract={contract}
+                  id={x[0]}
+                  setCloseModal={(arg: boolean | undefined) =>
+                    setCloseModal({ proposal: [arg, x[0]], state: 4 })
+                  }
+                  key={JSON.stringify(x[1])}
+                  prop={x[1]}
+                  address={state.currentContract ?? ""}
+                  signable={
+                    !!state.address &&
+                    !!!x[1].ui.signatures.find(
+                      x => x.signer == state.address
+                    ) &&
+                    true
+                  }
+                />
+              ))
+          )}
         </div>
       </main>
     </div>

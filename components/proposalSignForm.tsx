@@ -23,7 +23,6 @@ function ProposalSignForm({
   closeModal: () => void;
 }) {
   const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
   let [loading, setLoading] = useState(false);
   let [result, setResult] = useState<undefined | boolean>(undefined);
   const renderError = (message: string) => (
@@ -36,6 +35,7 @@ function ProposalSignForm({
     resolve: true | false
   ) {
     let cc = await state.connection.wallet.at(address);
+    console.log(cc);
     let versioned = VersionedApi(version, address);
 
     await versioned.signProposal(
@@ -114,7 +114,8 @@ function ProposalSignForm({
           await sign(id, proposal.og, modalState, values.flag);
           setResult(true);
           setLoading(false);
-        } catch {
+        } catch (e) {
+          console.log("Sign error: ", e);
           setResult(false);
         }
         setLoading(false);
