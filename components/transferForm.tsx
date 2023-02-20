@@ -1195,7 +1195,7 @@ function TransferForm(
           </div>
           <div className="flex flex-row justify-around md:w-1/3">
             <button
-              className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
               onClick={e => {
                 e.preventDefault();
                 props.closeModal();
@@ -1205,7 +1205,7 @@ function TransferForm(
             </button>
             {values.transfers.length > 0 && (
               <button
-                className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 type="submit"
               >
                 Submit

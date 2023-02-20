@@ -250,12 +250,12 @@ function Aliases() {
             <Link
               type="button"
               href="/"
-              className="my-2 border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
             >
               Cancel
             </Link>
             <button
-              className="my-2 bg-primary p-2 font-medium text-white hover:outline-none "
+              className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
               type="submit"
             >
               Continue

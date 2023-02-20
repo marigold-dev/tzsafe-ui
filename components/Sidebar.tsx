@@ -4,16 +4,33 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
+import { tzip16 } from "@taquito/tzip16";
+import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import fetchVersion from "../context/metadata";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../context/state";
+import { mutezTransfer, proposal, version } from "../types/display";
+import {
+  signers,
+  toProposal,
+  toStorage,
+  getProposalsId,
+} from "../versioned/apis";
 import Copy from "./Copy";
+import Spinner from "./Spinner";
 
 type selectItemProps = {
-  name: string;
-  address: string;
-  balance: number;
+  name: string | undefined;
+  address: string | undefined;
+  balance: string | undefined;
+  threshold: string;
+  version: string | undefined;
   disableCopy?: boolean;
 };
 
@@ -24,21 +41,38 @@ const SelectedItem = ({
   name,
   address,
   balance,
+  version,
+  threshold,
   disableCopy = false,
-}: selectItemProps) => (
-  <div className="w-4/5 overflow-hidden text-left">
-    <p className="text-xl text-white">{name}</p>
-    <Copy value={address} disabled={disableCopy}>
-      <span className="mt-1 text-sm text-zinc-400" data-name="copy">
-        {address.substring(0, 5)}...{address.substring(address.length - 5)}
-      </span>
-    </Copy>
-    <div className="mt-2 flex items-center justify-between">
-      <p className="text-lg">{balance}tz</p>
-      <p className="text-xs text-zinc-500">V0.0.0</p>
+}: selectItemProps) => {
+  const formattedBalance = useMemo(() => {
+    return new BigNumber(balance ?? 0).div(10 ** 6, 10).precision(5);
+  }, [balance]);
+
+  return (
+    <div className="w-4/5 overflow-hidden text-left">
+      <div className="flex items-center justify-between">
+        <p className="text-xl text-white">{name}</p>
+        <p>{threshold}</p>
+      </div>
+      <Copy value={address ?? ""} disabled={disableCopy}>
+        <span className="mt-1 text-sm text-zinc-400" data-name="copy">
+          {!address ? (
+            <Spinner />
+          ) : (
+            `${address.substring(0, 5)}...${address.substring(
+              address.length - 5
+            )}`
+          )}
+        </span>
+      </Copy>
+      <div className="mt-2 flex items-center justify-between">
+        <p className="text-lg">{formattedBalance.toString()}xtz</p>
+        <p className="text-xs text-zinc-500">V{version ?? "0.0.0"}</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const FixedTrigger = (props: any) => {
   const { children, onClick, onPointerDown, ...rest } = props;
@@ -78,7 +112,7 @@ const Sidebar = () => {
   useEffect(() => {
     const entries = Object.entries(state.contracts);
 
-    if (entries.length === 0) return;
+    if (entries.length === 0 || !!state.currentContract) return;
 
     dispatch({
       type: "setCurrentContract",
@@ -86,7 +120,42 @@ const Sidebar = () => {
     });
   }, [state.contracts]);
 
+  useEffect(() => {
+    if (!state.currentContract) return;
+
+    (async () => {
+      if (!state.currentContract) return;
+
+      let c = await state.connection.contract.at(state.currentContract, tzip16);
+      let balance = await state.connection.tz.getBalance(state.currentContract);
+
+      let cc = await c.storage();
+      let version = await (state.contracts[state.currentContract]
+        ? Promise.resolve<version>(
+            state.contracts[state.currentContract].version
+          )
+        : fetchVersion(c));
+
+      const updatedContract = toStorage(version, cc, balance);
+
+      state.contracts[state.currentContract]
+        ? dispatch({
+            type: "updateContract",
+            payload: {
+              address: state.currentContract,
+              contract: updatedContract,
+            },
+          })
+        : null;
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentContract]);
+
   if (!isClient) return null;
+
+  const currentContract = state.currentContract ?? "";
+
+  console.log(currentContract);
 
   return (
     <aside className="h-screen w-72 bg-zinc-700 px-4 py-8">
@@ -97,14 +166,22 @@ const Sidebar = () => {
             payload,
           });
         }}
-        value={state.currentContract ?? ""}
+        value={currentContract}
       >
         <Select.Trigger asChild aria-label="Wallets">
           <FixedTrigger>
             <SelectedItem
-              name={state.aliases[state.currentContract ?? ""]}
-              address={state.currentContract ?? ""}
-              balance={1000}
+              name={state.aliases[currentContract]}
+              address={currentContract}
+              balance={state.contracts[currentContract]?.balance}
+              threshold={
+                !!state.contracts[currentContract]
+                  ? `${state.contracts[currentContract].threshold}/${
+                      signers(state.contracts[currentContract]).length
+                    }`
+                  : "0/0"
+              }
+              version={state.contracts[currentContract]?.version}
             />
             <Select.Icon className="ml-2">
               <ChevronDownIcon />
@@ -140,18 +217,6 @@ const Sidebar = () => {
                   </Select.Item>
                 )
               )}
-              {/* <SelectItem
-                name="Jules 2"
-                address="TZndqoinqfoifdoijqsdfijoez"
-                balance={1000}
-                disableCopy={true}
-              />
-              <SelectItem
-                name="Jules 3"
-                address="TZndqoinqfoifdoijqsdfijoez"
-                balance={1000}
-                disableCopy={true}
-              /> */}
             </Select.Group>
           </Select.Viewport>
           <Select.ScrollDownButton className="flex items-center justify-center text-zinc-300">
@@ -167,7 +232,7 @@ const Sidebar = () => {
         <Link href="/" className={linkClass(path === "")}>
           Create a proposal
         </Link>
-        <Link href="/" className={linkClass(path === "")}>
+        <Link href="/top-up" className={linkClass(path === "/top-up")}>
           Top up wallet
         </Link>
         <Link href="/" className={linkClass(path === "")}>

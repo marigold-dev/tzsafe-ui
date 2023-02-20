@@ -24,7 +24,7 @@ const Transfer: FC<{
 }> = ({ prop, address }) => {
   let state = useContext(AppStateContext)!;
   return (
-    <li className="border-2 border-white p-2">
+    <div className="rounded bg-zinc-800 px-6 py-4">
       <div>
         <p className="font-bold text-white md:inline-block">
           Transaction: received Mutez{" "}
@@ -62,7 +62,7 @@ const Transfer: FC<{
           {prop.timestamp}
         </p>
       </div>
-    </li>
+    </div>
   );
 };
 
@@ -179,36 +179,39 @@ const History = () => {
               History is empty
             </h2>
           ) : (
-            filteredProposals.length > 0 &&
-            filteredProposals
-              .concat(
-                transfers.map(
-                  x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
-                )
-              )
-              .sort(
-                (a, b) =>
-                  Number(Date.parse(b[1].ui.timestamp).toString(10)) -
-                  Number(Date.parse(a[1].ui.timestamp).toString(10))
-              )
-              .map(x => {
-                return x[0] == -1 ? (
-                  <Transfer
-                    address={state.currentContract ?? ""}
-                    key={(x[1] as any).timestamp as any}
-                    prop={x[1] as any}
-                  />
-                ) : (
-                  <ProposalCard
-                    contract={contract}
-                    id={x[0]}
-                    key={x[0]}
-                    prop={x[1]}
-                    address={state.currentContract ?? ""}
-                    signable={false}
-                  />
-                );
-              })
+            filteredProposals.length > 0 && (
+              <div className="space-y-6">
+                {filteredProposals
+                  .concat(
+                    transfers.map(
+                      x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
+                    )
+                  )
+                  .sort(
+                    (a, b) =>
+                      Number(Date.parse(b[1].ui.timestamp).toString(10)) -
+                      Number(Date.parse(a[1].ui.timestamp).toString(10))
+                  )
+                  .map(x => {
+                    return x[0] == -1 ? (
+                      <Transfer
+                        address={state.currentContract ?? ""}
+                        key={(x[1] as any).timestamp as any}
+                        prop={x[1] as any}
+                      />
+                    ) : (
+                      <ProposalCard
+                        contract={contract}
+                        id={x[0]}
+                        key={x[0]}
+                        prop={x[1]}
+                        address={state.currentContract ?? ""}
+                        signable={false}
+                      />
+                    );
+                  })}
+              </div>
+            )
           )}
         </div>
       </main>

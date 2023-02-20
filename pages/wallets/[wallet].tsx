@@ -111,6 +111,7 @@ function Wallet(props: { address: string }) {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
+
   useEffect(() => {
     async function updateProposals() {
       let c = await state.connection.contract.at(router, tzip16);
