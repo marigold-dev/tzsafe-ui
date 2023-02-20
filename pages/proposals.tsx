@@ -19,22 +19,19 @@ import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
 const Proposals = () => {
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  const state = useContext(AppStateContext)!;
 
-  let [isLoading, setIsLoading] = useState(true);
-  let [invalid, setInvalid] = useState(false);
-  let [contract, setContract] = useState<contractStorage>(
-    state.contracts[state.currentContract ?? ""]
-  );
-  let [proposals, setProposals] = useState(emptyProps);
-  let [openModal, setCloseModal] = useState<{
+  const [isLoading, setIsLoading] = useState(true);
+  const [invalid, setInvalid] = useState(false);
+  const [proposals, setProposals] = useState(emptyProps);
+  const [openModal, setCloseModal] = useState<{
     state: number;
     proposal: [boolean | undefined, number];
   }>({
     state: 0,
     proposal: [undefined, 0],
   });
+  const [refresher, setRefresher] = useState(0);
 
   useEffect(() => {
     if (!state.currentContract) return;
@@ -44,11 +41,12 @@ const Proposals = () => {
       return;
     }
 
+    setIsLoading(true);
+
     (async () => {
       if (!state.currentContract) return;
 
       let c = await state.connection.contract.at(state.currentContract, tzip16);
-      let balance = await state.connection.tz.getBalance(state.currentContract);
 
       let cc = await c.storage();
       let version = await (state.contracts[state.currentContract]
@@ -56,30 +54,21 @@ const Proposals = () => {
             state.contracts[state.currentContract].version
           )
         : fetchVersion(c));
-      const updatedContract = toStorage(version, cc, balance);
-      state.contracts[state.currentContract]
-        ? dispatch({
-            type: "updateContract",
-            payload: {
-              address: state.currentContract,
-              contract: updatedContract,
-            },
-          })
-        : null;
+
       let bigmap: { key: string; value: any }[] = await getProposals(
-        getProposalsId(version, cc)
+        getProposalsId(state.contracts[state.currentContract].version, cc)
       );
       let proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
         { ui: toProposal(version, value), og: value },
       ]);
-      setContract(updatedContract);
+
       setProposals(proposals);
       setIsLoading(false);
     })();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract]);
+  }, [state.currentContract, refresher]);
 
   const filteredProposals = useMemo(
     () => [
@@ -90,19 +79,21 @@ const Proposals = () => {
     [proposals]
   );
 
+  const currentContract = state.currentContract ?? "";
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Wallets"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm
-            address={state.currentContract ?? ""}
-            threshold={contract.threshold}
-            version={contract.version}
+            address={currentContract}
+            threshold={state.contracts[currentContract]?.threshold}
+            version={state.contracts[currentContract]?.version}
             proposal={proposals.find(x => x[0] === openModal.proposal[1])![1]}
             state={openModal.proposal[0]}
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
+            onSuccess={() => setRefresher(v => v + 1)}
           />
         )}
       </Modal>
@@ -128,27 +119,29 @@ const Proposals = () => {
               There's currently no proposal
             </h2>
           ) : (
-            filteredProposals
-              .sort((a, b) => b[0] - a[0])
-              .map(x => (
-                <ProposalCard
-                  contract={contract}
-                  id={x[0]}
-                  setCloseModal={(arg: boolean | undefined) =>
-                    setCloseModal({ proposal: [arg, x[0]], state: 4 })
-                  }
-                  key={JSON.stringify(x[1])}
-                  prop={x[1]}
-                  address={state.currentContract ?? ""}
-                  signable={
-                    !!state.address &&
-                    !!!x[1].ui.signatures.find(
-                      x => x.signer == state.address
-                    ) &&
-                    true
-                  }
-                />
-              ))
+            <div className="space-y-6">
+              {filteredProposals
+                .sort((a, b) => b[0] - a[0])
+                .map(x => (
+                  <ProposalCard
+                    contract={state.contracts[currentContract]}
+                    id={x[0]}
+                    setCloseModal={(arg: boolean | undefined) =>
+                      setCloseModal({ proposal: [arg, x[0]], state: 4 })
+                    }
+                    key={JSON.stringify(x[1])}
+                    prop={x[1]}
+                    address={state.currentContract ?? ""}
+                    signable={
+                      !!state.address &&
+                      !!!x[1].ui.signatures.find(
+                        x => x.signer == state.address
+                      ) &&
+                      true
+                    }
+                  />
+                ))}
+            </div>
           )}
         </div>
       </main>

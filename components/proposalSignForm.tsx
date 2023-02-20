@@ -13,6 +13,7 @@ function ProposalSignForm({
   state: modalState,
   closeModal,
   threshold,
+  onSuccess,
 }: {
   address: string;
   proposal: { og: any; ui: proposal };
@@ -21,6 +22,7 @@ function ProposalSignForm({
   id: number;
   state: boolean | undefined;
   closeModal: () => void;
+  onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
   let [loading, setLoading] = useState(false);
@@ -112,6 +114,7 @@ function ProposalSignForm({
         setLoading(true);
         try {
           await sign(id, proposal.og, modalState, values.flag);
+          onSuccess?.();
           setResult(true);
           setLoading(false);
         } catch (e) {
