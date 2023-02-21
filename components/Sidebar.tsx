@@ -155,10 +155,8 @@ const Sidebar = () => {
 
   const currentContract = state.currentContract ?? "";
 
-  console.log(currentContract);
-
   return (
-    <aside className="h-screen w-72 bg-zinc-700 px-4 py-8">
+    <aside className="fixed left-0 bottom-0 top-20 w-72 bg-zinc-700 px-4 py-8">
       <Select.Root
         onValueChange={payload => {
           dispatch({
@@ -229,13 +227,16 @@ const Sidebar = () => {
         <Link href="/proposals" className={linkClass(path === "/proposals")}>
           Proposals
         </Link>
-        <Link href="/" className={linkClass(path === "")}>
+        <Link
+          href="/create-proposal"
+          className={linkClass(path === "/create-proposal")}
+        >
           Create a proposal
         </Link>
         <Link href="/top-up" className={linkClass(path === "/top-up")}>
           Top up wallet
         </Link>
-        <Link href="/" className={linkClass(path === "")}>
+        <Link href="/settings" className={linkClass(path === "/settings")}>
           Settings
         </Link>
         <Link href="/history" className={linkClass(path === "/history")}>

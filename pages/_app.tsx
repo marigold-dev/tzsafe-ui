@@ -65,8 +65,8 @@ export default function App({ Component, pageProps }: AppProps) {
         <div className="relative min-h-screen">
           <div id="modal" />
           <NavBar />
-          <div className="flex pt-20 pb-28">
-            <Sidebar />
+          <Sidebar />
+          <div className="pt-20 pb-28 pl-72">
             <Component {...pageProps} />
           </div>
           <Footer />

@@ -243,7 +243,7 @@ const SignersForm: FC<{
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className=" md:p-none flex min-w-full flex-col items-start justify-start p-2 md:flex-row md:rounded-none md:border-none"
+                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="flex flex-col">
@@ -325,10 +325,10 @@ const SignersForm: FC<{
               )}
             </FieldArray>
           </div>
-          <div className="flex w-full flex-col md:grow ">
+          <div className="flex w-full flex-col md:grow">
             <label className="mr-4 text-white">Threshold: </label>
             <Field
-              className="w-full text-center text-black"
+              className="mt-2 w-full text-center text-black"
               as="select"
               component="select"
               name="requiredSignatures"
@@ -354,12 +354,12 @@ const SignersForm: FC<{
             />
           </div>
           {typeof values.effectivePeriod != "undefined" && (
-            <div className="flex w-full flex-col md:grow ">
+            <div className="mt-4 flex w-full flex-col md:grow">
               <label className="mr-4 text-white">
-                EffectivePeriod(in seconds):{" "}
+                Proposal duration (in seconds):{" "}
               </label>
               <Field
-                className="w-full text-black"
+                className="mt-2 w-full text-black"
                 as="select"
                 component="input"
                 name="effectivePeriod"

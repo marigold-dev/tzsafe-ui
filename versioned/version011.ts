@@ -84,8 +84,11 @@ class Version011 extends Versioned {
         })
       )
       .toTransferParams();
+
     let op = await t.wallet.transfer(params).send();
+
     await op.transactionOperation();
+
     await op.confirmation(1);
   }
   async signProposal(

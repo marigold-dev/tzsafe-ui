@@ -7,14 +7,10 @@ import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
 import fetchVersion from "../context/metadata";
-import { getProposals, getTransfers } from "../context/proposals";
-import {
-  AppDispatchContext,
-  AppStateContext,
-  contractStorage,
-} from "../context/state";
-import { mutezTransfer, proposal, version } from "../types/display";
-import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
+import { getProposals } from "../context/proposals";
+import { AppStateContext } from "../context/state";
+import { proposal, version } from "../types/display";
+import { getProposalsId, toProposal } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 

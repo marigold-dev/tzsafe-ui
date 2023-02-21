@@ -37,7 +37,6 @@ function ProposalSignForm({
     resolve: true | false
   ) {
     let cc = await state.connection.wallet.at(address);
-    console.log(cc.methods.sign);
     let versioned = VersionedApi(version, address);
 
     await versioned.signProposal(
