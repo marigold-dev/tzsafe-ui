@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
@@ -17,13 +18,16 @@ const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
   let [loginOpen, setLoginOpen] = useState(false);
 
+  const router = useRouter();
   const state = useContext(AppStateContext);
   const dispatch = useContext(AppDispatchContext);
+
   const disconnectWallet = async (): Promise<void> => {
     if (state?.beaconWallet) {
       await state.beaconWallet.clearActiveAccount();
     }
     dispatch!({ type: "logout" });
+    router.replace("/");
   };
   return (
     <nav className="fixed top-0 left-0 right-0 z-10 flex h-20 w-full items-center border-b-4 border-zinc-500 bg-graybg">

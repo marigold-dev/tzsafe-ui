@@ -59,13 +59,17 @@ export default function App({ Component, pageProps }: AppProps) {
       }
     })();
   }, [state, dispatch]);
+
+  console.log(state);
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
           <NavBar />
-          <Sidebar />
+          {!!state.address && Object.entries(state.contracts).length > 0 && (
+            <Sidebar />
+          )}
           <div className="pt-20 pb-28 pl-72">
             <Component {...pageProps} />
           </div>

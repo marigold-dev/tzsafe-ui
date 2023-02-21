@@ -69,7 +69,7 @@ const Card: FC<{
           {getState(prop.ui)}
         </p>
       </div>
-      {"effective_period" in contract && (
+      {"effective_period" in (contract ?? {}) && (
         <div>
           <p className="font-bold text-white md:inline-block">Expires in: </p>
           <p className="md:text-md text-sm font-bold text-white md:inline-block">
