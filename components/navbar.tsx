@@ -45,7 +45,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <RenderContracts />
+                {/* <RenderContracts /> */}
                 <LinkComponent path="/address-book" text={"Address book"} />
                 <LinkComponent path="/create" text={"Create a new wallet"} />
                 <LinkComponent path="/import" text={"Import existing wallet"} />
