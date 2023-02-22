@@ -376,16 +376,7 @@ const SignersForm: FC<{
               />
             </div>
           )}
-          <div className="flex w-2/3 justify-between md:w-1/3">
-            <button
-              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
-              onClick={e => {
-                e.preventDefault();
-                props.closeModal();
-              }}
-            >
-              Cancel
-            </button>
+          <div className="flex w-full justify-center">
             <button
               className="my-2 rounded bg-primary p-2 font-medium text-white "
               type="submit"

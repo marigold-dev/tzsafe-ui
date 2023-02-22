@@ -29,6 +29,7 @@ const NavBar = (_: React.PropsWithChildren) => {
     dispatch!({ type: "logout" });
     router.replace("/");
   };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-10 flex h-20 w-full items-center border-b-4 border-zinc-500 bg-graybg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
