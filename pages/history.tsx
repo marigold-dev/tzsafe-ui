@@ -163,7 +163,7 @@ const History = () => {
         </div>
       </div>
       <main className="h-full min-h-fit grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto h-full min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
           {invalid ? (
             <div className="mx-auto flex w-full items-center justify-center bg-graybg p-2 shadow">
               <p className="mx-auto text-xl font-bold text-gray-800">

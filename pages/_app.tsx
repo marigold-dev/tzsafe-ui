@@ -3,9 +3,11 @@ import {
   BeaconEvent,
   defaultEventCallbacks,
 } from "@airgap/beacon-sdk";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
-import { useReducer, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useReducer, useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
@@ -19,12 +21,18 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
+import Proposals from "./proposals";
 
 export default function App({ Component, pageProps }: AppProps) {
   let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
     reducer,
     emptyState()
   );
+
+  const [hasSidebar, setHasSidebar] = useState(false);
+
+  const path = usePathname();
+
   useEffect(() => {
     (async () => {
       if (state!.beaconWallet === null) {
@@ -60,7 +68,6 @@ export default function App({ Component, pageProps }: AppProps) {
     })();
   }, [state, dispatch]);
 
-  console.log(state);
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
@@ -68,10 +75,23 @@ export default function App({ Component, pageProps }: AppProps) {
           <div id="modal" />
           <NavBar />
           {!!state.address && Object.entries(state.contracts).length > 0 && (
-            <Sidebar />
+            <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
           )}
-          <div className="pt-20 pb-28 pl-72">
-            <Component {...pageProps} />
+          <div className="pt-20 pb-28 md:pl-72">
+            <button
+              className="ml-4 mt-4 flex items-center space-x-2 text-zinc-500 md:hidden"
+              onClick={() => {
+                setHasSidebar(true);
+              }}
+            >
+              <span className="text-xs">Open sidebar</span>
+              <ArrowRightIcon className="h-4 w-4" />
+            </button>
+            {path === "/" && !!state.address && !!state.currentContract ? (
+              <Proposals />
+            ) : (
+              <Component {...pageProps} />
+            )}
           </div>
           <Footer />
         </div>
