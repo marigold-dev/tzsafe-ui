@@ -7,6 +7,7 @@ import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
@@ -32,6 +33,30 @@ export default function App({ Component, pageProps }: AppProps) {
   const [hasSidebar, setHasSidebar] = useState(false);
 
   const path = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!path) return;
+
+    if (
+      ![
+        "/settings",
+        "/proposals",
+        "/history",
+        "/top-up",
+        "/create-proposal",
+      ].includes(path)
+    )
+      return;
+
+    if (!state.address) {
+      router.replace("/");
+    }
+
+    if (Object.values(state.contracts).length > 0) return;
+
+    router.replace("/");
+  }, [path, state]);
 
   useEffect(() => {
     (async () => {
