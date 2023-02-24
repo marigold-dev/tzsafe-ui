@@ -1,18 +1,32 @@
 import { useContext } from "react";
 import Meta from "../components/meta";
 import SignersForm from "../components/signersForm";
-import TransferForm from "../components/transferForm";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
 
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Create Proposal"} />
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-start py-6 px-4 sm:px-6 md:flex-row md:justify-between lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Settings</h1>
+
+          <button
+            className="self-end rounded bg-primary p-2 text-white hover:bg-red-500"
+            onClick={() => {
+              if (!state.currentContract) return;
+
+              dispatch!({
+                type: "removeContract",
+                address: state.currentContract,
+              });
+            }}
+          >
+            Delete wallet
+          </button>
         </div>
       </div>
       <main className="h-full min-h-fit grow">

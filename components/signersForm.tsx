@@ -243,14 +243,14 @@ const SignersForm: FC<{
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
+                          className="md:p-none flex min-w-full flex-col items-start justify-start space-y-2 p-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
                           key={index}
                         >
-                          <div className="flex flex-col">
+                          <div className="flex w-full flex-col md:w-auto">
                             <label className="text-white">Owner Name</label>
                             <Field
                               name={`validators.${index}.name`}
-                              className="md:text-md p-2 text-sm"
+                              className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -267,7 +267,7 @@ const SignersForm: FC<{
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full p-2 text-sm"
+                              className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
@@ -286,7 +286,7 @@ const SignersForm: FC<{
                               get(errors.validators[index])
                                 ? "my-auto"
                                 : "") +
-                              " mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white md:mx-auto md:self-end "
+                              "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-end "
                             }
                             onClick={e => {
                               e.preventDefault();
@@ -313,7 +313,7 @@ const SignersForm: FC<{
                     })}
                   <button
                     type="button"
-                    className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white "
+                    className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
@@ -328,7 +328,7 @@ const SignersForm: FC<{
           <div className="flex w-full flex-col md:grow">
             <label className="mr-4 text-white">Threshold: </label>
             <Field
-              className="mt-2 w-full text-center text-black"
+              className="mt-2 w-full rounded py-1 text-center text-black"
               as="select"
               component="select"
               name="requiredSignatures"
@@ -359,7 +359,7 @@ const SignersForm: FC<{
                 Proposal duration (in seconds):{" "}
               </label>
               <Field
-                className="mt-2 w-full text-black"
+                className="mt-2 w-full rounded p-2 text-black"
                 as="select"
                 component="input"
                 name="effectivePeriod"
@@ -381,7 +381,7 @@ const SignersForm: FC<{
               className="my-2 rounded bg-primary p-2 font-medium text-white "
               type="submit"
             >
-              Continue
+              Save changes
             </button>
           </div>
         </Form>
