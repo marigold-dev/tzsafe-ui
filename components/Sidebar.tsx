@@ -50,7 +50,7 @@ const SelectedItem = ({
       <Copy value={address ?? ""} disabled={disableCopy}>
         <span className="mt-1 text-sm text-zinc-400" data-name="copy">
           {!address ? (
-            <Spinner />
+            <span>...</span>
           ) : (
             `${address.substring(0, 5)}...${address.substring(
               address.length - 5

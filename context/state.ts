@@ -200,6 +200,7 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts: contracts,
         favouriteContract: fav,
+        currentContract: null,
       };
     }
     case "setFavourite": {
