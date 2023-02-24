@@ -164,7 +164,11 @@ const History = () => {
       </div>
       <main className="h-full min-h-fit grow">
         <div className="mx-auto h-full min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
-          {invalid ? (
+          {!state.currentContract ? (
+            <h2 className="text-center text-xl text-zinc-600">
+              Please select a wallet in the sidebar
+            </h2>
+          ) : invalid ? (
             <div className="mx-auto flex w-full items-center justify-center bg-graybg p-2 shadow">
               <p className="mx-auto text-xl font-bold text-gray-800">
                 Invalid contract address: {state.currentContract}
