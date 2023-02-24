@@ -77,7 +77,11 @@ export default function App({ Component, pageProps }: AppProps) {
           {!!state.address && Object.entries(state.contracts).length > 0 && (
             <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
           )}
-          <div className="pt-20 pb-28 md:pl-72">
+          <div
+            className={`pt-20 pb-28 ${
+              path === "/" && !state.address ? "" : "md:pl-72"
+            }`}
+          >
             <button
               className="ml-4 mt-4 flex items-center space-x-2 text-zinc-500 md:hidden"
               onClick={() => {
@@ -93,7 +97,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <Component {...pageProps} />
             )}
           </div>
-          <Footer />
+          <Footer shouldRemovePadding={path === "/" && !state.address} />
         </div>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
