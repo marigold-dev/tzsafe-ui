@@ -1,12 +1,18 @@
 import { AccountInfo } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
-import { Tzip16Module } from "@taquito/tzip16";
+import {
+  Handler,
+  IpfsHttpHandler,
+  MetadataProvider,
+  TezosStorageHandler,
+  Tzip16Module,
+} from "@taquito/tzip16";
 import { stringify } from "querystring";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { RPC } from "./config";
+import { IPFS_NODE, RPC } from "./config";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -26,14 +32,19 @@ type storage = {
 
 let emptyState = () => {
   let connection = new TezosToolkit(RPC);
+  const customHandler = new Map<string, Handler>([
+    ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
+    ["tezos-storage", new TezosStorageHandler()],
+  ]);
+
+  const customMetadataProvider = new MetadataProvider(customHandler);
+  connection.addExtension(new Tzip16Module(customMetadataProvider));
   connection.setStreamProvider(
     connection.getFactory(PollingSubscribeProvider)({
       shouldObservableSubscriptionRetry: true,
       pollingIntervalMilliseconds: 500,
     })
   );
-
-  connection.addExtension(new Tzip16Module());
 
   return {
     beaconWallet: null,
