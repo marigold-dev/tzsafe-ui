@@ -104,7 +104,10 @@ export default function App({ Component, pageProps }: AppProps) {
           )}
           <div
             className={`pt-20 pb-28 ${
-              path === "/" && !state.address ? "" : "md:pl-72"
+              path === "/" &&
+              (!state.address || Object.entries(state.contracts).length === 0)
+                ? ""
+                : "md:pl-72"
             }`}
           >
             <button
@@ -122,7 +125,12 @@ export default function App({ Component, pageProps }: AppProps) {
               <Component {...pageProps} />
             )}
           </div>
-          <Footer shouldRemovePadding={path === "/" && !state.address} />
+          <Footer
+            shouldRemovePadding={
+              path === "/" &&
+              (!state.address || Object.entries(state.contracts).length === 0)
+            }
+          />
         </div>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
