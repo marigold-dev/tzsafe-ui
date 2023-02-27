@@ -31,59 +31,7 @@ function TopUp(props: {
   if (loading && typeof result == "undefined") {
     return <ContractLoader loading={loading}></ContractLoader>;
   }
-  if (!loading && typeof result != "undefined") {
-    return (
-      <div className="flex w-full items-center justify-between md:h-12">
-        <ContractLoader loading={loading}>
-          {result ? (
-            <div className="my-auto flex flex-row text-sm font-bold text-white md:text-xl">
-              <span>Transfer successful</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="ml-4 h-6 w-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4.5 12.75l6 6 9-13.5"
-                />
-              </svg>
-            </div>
-          ) : (
-            <span className="my-auto text-sm font-bold text-white md:text-xl">
-              Failed to transfer xtz
-            </span>
-          )}
-          <button
-            onClick={() => {
-              props.closeModal(state.contracts[props.address]);
-            }}
-            type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </ContractLoader>
-      </div>
-    );
-  }
+
   return (
     <Formik
       initialValues={{
@@ -124,29 +72,50 @@ function TopUp(props: {
         }, 1500);
       }}
     >
-      <Form className="col-span-2 flex h-full flex-col  items-center justify-center">
-        <div className="mb-2 self-start  text-2xl font-medium text-white">
-          Enter the amount you want to transfer below:
-        </div>
-        <div className="mb-2 flex w-full flex-col items-center justify-between md:flex-row ">
+      <Form className="col-span-2 mt-8 flex flex-col items-center justify-center">
+        {!loading && typeof result != "undefined" && (
+          <div className="mb-8 flex w-full items-center justify-between md:h-12">
+            <ContractLoader loading={loading}>
+              {result ? (
+                <div className="my-auto flex flex-row text-sm font-bold text-white md:text-xl">
+                  <span>Transfer successful</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="ml-4 h-6 w-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
+                  </svg>
+                </div>
+              ) : (
+                <span className="my-auto text-sm font-bold text-white md:text-xl">
+                  Failed to transfer xtz
+                </span>
+              )}
+            </ContractLoader>
+          </div>
+        )}
+        <div className="mb-2 flex w-full flex-col items-center justify-between">
           <label className="font-medium text-white">
             Amount of xtz to transfer
           </label>
-          <Field name="amount" className="rounded-md p-2" placeholder="0" />
+          <Field
+            name="amount"
+            className="mt-2 rounded-md p-2"
+            placeholder="0"
+          />
         </div>
         <ErrorMessage name="amount" render={renderError} />
-        <div className="flex w-2/3 justify-between md:w-1/3">
+        <div className="mt-4 flex w-full justify-center">
           <button
-            className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-            onClick={e => {
-              e.preventDefault();
-              props.closeModal(state.contracts[props.address]);
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+            className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
             Top up

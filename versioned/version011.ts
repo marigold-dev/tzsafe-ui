@@ -84,8 +84,11 @@ class Version011 extends Versioned {
         })
       )
       .toTransferParams();
+
     let op = await t.wallet.transfer(params).send();
+
     await op.transactionOperation();
+
     await op.confirmation(1);
   }
   async signProposal(
@@ -100,11 +103,7 @@ class Version011 extends Versioned {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(
-          BigNumber(proposal),
-          prop.contents,
-          result
-        )
+        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {

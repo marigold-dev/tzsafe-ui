@@ -29,7 +29,7 @@ const ContractLoader: FC<{
   }
 
   return (
-    <div className="mx-auto my-auto flex h-full w-full items-center justify-around">
+    <div className="mx-auto my-auto flex h-full w-full items-center justify-around space-x-4 md:space-x-0">
       {" "}
       {props.children}
     </div>

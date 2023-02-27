@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
@@ -17,14 +18,18 @@ const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
   let [loginOpen, setLoginOpen] = useState(false);
 
+  const router = useRouter();
   const state = useContext(AppStateContext);
   const dispatch = useContext(AppDispatchContext);
+
   const disconnectWallet = async (): Promise<void> => {
     if (state?.beaconWallet) {
       await state.beaconWallet.clearActiveAccount();
     }
     dispatch!({ type: "logout" });
+    router.replace("/");
   };
+
   return (
     <nav
       className={`${
@@ -45,7 +50,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <RenderContracts />
+                {/* <RenderContracts /> */}
                 <LinkComponent path="/address-book" text={"Address book"} />
                 <LinkComponent path="/create" text={"Create a new wallet"} />
                 <LinkComponent path="/import" text={"Import existing wallet"} />

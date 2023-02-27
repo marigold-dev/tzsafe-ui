@@ -13,6 +13,7 @@ function ProposalSignForm({
   state: modalState,
   closeModal,
   threshold,
+  onSuccess,
 }: {
   address: string;
   proposal: { og: any; ui: proposal };
@@ -21,9 +22,9 @@ function ProposalSignForm({
   id: number;
   state: boolean | undefined;
   closeModal: () => void;
+  onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
   let [loading, setLoading] = useState(false);
   let [result, setResult] = useState<undefined | boolean>(undefined);
   const renderError = (message: string) => (
@@ -112,9 +113,11 @@ function ProposalSignForm({
         setLoading(true);
         try {
           await sign(id, proposal.og, modalState, values.flag);
+          onSuccess?.();
           setResult(true);
           setLoading(false);
-        } catch {
+        } catch (e) {
+          console.log("Sign error: ", e);
           setResult(false);
         }
         setLoading(false);
@@ -160,7 +163,7 @@ function ProposalSignForm({
         <ErrorMessage name="flag" render={renderError} />
         <div className="flex w-2/3 justify-between md:w-1/3">
           <button
-            className="hover:border-offset-2 hover:border-offset-gray-800 my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+            className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
             onClick={e => {
               e.preventDefault();
               closeModal();
@@ -169,7 +172,7 @@ function ProposalSignForm({
             Cancel
           </button>
           <button
-            className="hover:border-offset-2 hover:border-offset-gray-800 my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+            className="hover:border-offset-2 hover:border-offset-gray-800 my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
             Confirm

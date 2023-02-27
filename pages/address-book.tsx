@@ -52,7 +52,7 @@ function Home() {
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Address book"} />
-      <div className="bg-graybg shadow">
+      <div>
         <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Address book</h1>
         </div>
@@ -130,13 +130,13 @@ function Home() {
                     </div>
                     <div className="grid w-full grid-flow-row grid-rows-2 gap-2 md:grid-flow-col md:grid-cols-2 md:grid-rows-1 md:justify-around">
                       <button
-                        className="my-2 w-full bg-primary p-2 font-medium text-white "
+                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
                         onClick={handleReset}
                       >
                         Reset
                       </button>
                       <button
-                        className="my-2 w-full bg-primary p-2 font-medium text-white"
+                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
                         type="submit"
                       >
                         Save
@@ -153,7 +153,7 @@ function Home() {
                             {" "}
                             <button
                               type="button"
-                              className=" my-2 mx-auto block w-full self-center justify-self-center bg-primary p-2 font-medium text-white"
+                              className="my-2 mx-auto block w-full self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
                               onClick={e => {
                                 e.preventDefault();
                                 unshift({
@@ -170,7 +170,7 @@ function Home() {
                                 values.validators.map((validator, index) => {
                                   return (
                                     <div
-                                      className=" md:p-none flex min-w-full flex-col items-start justify-start  p-2 md:flex-row md:rounded-none md:border-none"
+                                      className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
                                       key={index}
                                     >
                                       <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">
@@ -179,7 +179,7 @@ function Home() {
                                         </label>
                                         <Field
                                           name={`validators.${index}.name`}
-                                          className="md:text-md p-2 text-sm"
+                                          className="md:text-md rounded p-2 text-sm"
                                           placeholder={validator.name || "Name"}
                                         />
                                         <ErrorMessage
@@ -196,7 +196,7 @@ function Home() {
                                         </label>
                                         <Field
                                           name={`validators.${index}.address`}
-                                          className="md:text-md w-full p-2 text-sm"
+                                          className="md:text-md w-full rounded p-2 text-sm"
                                           placeholder={
                                             validator.address || "Address"
                                           }
@@ -217,7 +217,7 @@ function Home() {
                                           get(errors.validators[index])
                                             ? "my-auto"
                                             : "") +
-                                          " mx-none block self-center justify-self-center bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
+                                          "mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 md:mx-auto md:self-center "
                                         }
                                         onClick={async e => {
                                           e.preventDefault();

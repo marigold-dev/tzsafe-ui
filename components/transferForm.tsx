@@ -9,13 +9,7 @@ import {
   Formik,
   useFormikContext,
 } from "formik";
-import React, {
-  SetStateAction,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
@@ -346,7 +340,7 @@ function RenderItem({
                   <button
                     type="button"
                     className={
-                      "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                      "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                     }
                     onClick={e => {
                       e.preventDefault();
@@ -512,11 +506,8 @@ function Basic({
     >
       {({ setFieldValue }) => (
         <Form className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-          <div className="mb-2 self-center text-2xl font-medium text-white">
-            Enter amount and contract address below
-          </div>
           <div className="flex w-full flex-col justify-center md:flex-col ">
-            <div className="flex w-full flex-col pr-2">
+            <div className="flex w-full flex-col pr-2 md:pr-0">
               <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
                   Amount in mutez:{" "}
@@ -562,7 +553,7 @@ function Basic({
             </div>
           </div>
           <button
-            className="my-2 bg-primary p-2 font-medium text-white  hover:outline-none "
+            className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
             type="submit"
           >
             Continue
@@ -833,7 +824,7 @@ function ExecuteContractForm(
   if (done) {
     return (
       <div className=" mb-2 w-full border-2 border-white p-2 text-white">
-        <p className="text-lg text-white">Execute contract</p>
+        <p className="mt-4 text-lg text-white">Execute contract</p>
         <p>Metadata: {props.getFieldProps()}</p>
       </div>
     );
@@ -841,14 +832,14 @@ function ExecuteContractForm(
   if (!state.address) {
     return (
       <div className=" w-full text-white">
-        <p className="text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute contract:</p>
         <Basic setFormState={x => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
     return (
       <div className=" w-full text-white">
-        <p className="text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute contract:</p>
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -918,7 +909,7 @@ function TransferForm(
               props.closeModal();
             }}
             type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
+            className="absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -1003,17 +994,14 @@ function TransferForm(
     >
       {({ values, errors, setFieldValue, getFieldProps }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-          <div className="mb-2 self-center text-2xl font-medium text-white">
-            Add transactions below
-          </div>
           <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
                 <div className="flex h-fit min-w-full flex-col " id="top">
-                  <div className="flex flex-col md:flex-row">
+                  <div className="mb-8 flex flex-col md:flex-row">
                     <button
                       type="button"
-                      className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1026,7 +1014,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1039,7 +1027,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className="my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -1055,7 +1043,7 @@ function TransferForm(
                     values.transfers.map((transfer, index) => {
                       if (transfer.type === "contract") {
                         return ReactDOM.createPortal(
-                          <div>
+                          <div className="flex flex-col md:flex-row">
                             <ExecuteContractForm
                               key={index}
                               getFieldProps={() =>
@@ -1080,7 +1068,7 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                                "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                               }
                               onClick={e => {
                                 e.preventDefault();
@@ -1098,95 +1086,106 @@ function TransferForm(
                       )
                         ? " flex-col md:flex-col"
                         : "";
+
                       return (
-                        <div
-                          className={
-                            withTextArea +
-                            "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-x-4 p-2 md:flex-row  md:rounded-none md:border-none"
-                          }
-                          key={index}
-                        >
-                          {transfer.fields.map((value, idx, arr) => {
-                            const withTextArea = transfer.fields.find(
-                              x => x?.kind === "textarea"
-                            )
-                              ? " w-full md:w-full "
-                              : "";
-                            let width =
-                              arr.length === 1 &&
-                              !transfer.fields.find(x => x?.kind === "textarea")
-                                ? " w-3/4 "
-                                : "";
-                            let classn =
-                              (idx + 1) % 2 === 0
-                                ? "relative flex flex-col w-full md:grow justify-start"
-                                : "flex flex-col";
-                            return (
-                              <div
-                                className={classn + width + withTextArea}
-                                key={idx}
-                              >
-                                <label className="text-white">
-                                  {value.label}
-                                </label>
-                                {!!value.kind &&
-                                value.kind === "input-complete" ? (
-                                  <TextInputWithCompletion
-                                    setTerms={({ payload, term: _ }) => {
-                                      replace(index, {
-                                        ...values.transfers[index],
-                                        values: {
-                                          ...values.transfers[index].values,
-                                          to: payload,
-                                        },
-                                      });
-                                    }}
-                                    filter={_ => true}
-                                    byAddrToo={true}
-                                    as="input"
-                                    name={`transfers.${index}.values.${value.field}`}
-                                    className={
-                                      "md:text-md relative h-fit min-h-fit w-full p-2 text-sm" +
-                                      withTextArea
-                                    }
-                                    placeholder={value.placeholder}
-                                    rows={10}
-                                  />
-                                ) : (
-                                  <Field
-                                    component={value.kind}
-                                    name={`transfers.${index}.values.${value.field}`}
-                                    className={
-                                      "md:text-md relative h-fit min-h-fit p-2 text-sm" +
-                                      withTextArea
-                                    }
-                                    placeholder={value.placeholder}
-                                    rows={10}
-                                  />
-                                )}
-                                <ErrorMessage
-                                  name={`transfers.${index}.values.${value.field}`}
-                                  render={renderError}
-                                />
-                              </div>
-                            );
-                          })}
-                          <button
-                            type="button"
+                        <>
+                          <p className="text-lg text-white">
+                            {!transfer.fields.find(v => v.kind === "textarea")
+                              ? "Make transfer"
+                              : "Execute lambda"}
+                            :
+                          </p>
+                          <div
                             className={
-                              (errors.transfers && errors.transfers[index]
-                                ? "my-auto"
-                                : "") +
-                              "mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                              withTextArea +
+                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-x-4 md:flex-row  md:rounded-none md:border-none"
                             }
-                            onClick={e => {
-                              e.preventDefault();
-                              remove(index);
-                            }}
+                            key={index}
                           >
-                            Remove
-                          </button>
-                        </div>
+                            {transfer.fields.map((value, idx, arr) => {
+                              const withTextArea = transfer.fields.find(
+                                x => x?.kind === "textarea"
+                              )
+                                ? " w-full md:w-full "
+                                : "";
+                              let width =
+                                arr.length === 1 &&
+                                !transfer.fields.find(
+                                  x => x?.kind === "textarea"
+                                )
+                                  ? " w-3/4 "
+                                  : "";
+                              let classn =
+                                (idx + 1) % 2 === 0
+                                  ? "relative flex flex-col w-full md:grow justify-start"
+                                  : "flex flex-col";
+                              return (
+                                <div
+                                  className={classn + width + withTextArea}
+                                  key={idx}
+                                >
+                                  <label className="text-white">
+                                    {value.label}
+                                  </label>
+                                  {!!value.kind &&
+                                  value.kind === "input-complete" ? (
+                                    <TextInputWithCompletion
+                                      setTerms={({ payload, term: _ }) => {
+                                        replace(index, {
+                                          ...values.transfers[index],
+                                          values: {
+                                            ...values.transfers[index].values,
+                                            to: payload,
+                                          },
+                                        });
+                                      }}
+                                      filter={_ => true}
+                                      byAddrToo={true}
+                                      as="input"
+                                      name={`transfers.${index}.values.${value.field}`}
+                                      className={
+                                        "md:text-md relative h-fit min-h-fit w-full p-2 text-sm" +
+                                        withTextArea
+                                      }
+                                      placeholder={value.placeholder}
+                                      rows={10}
+                                    />
+                                  ) : (
+                                    <Field
+                                      component={value.kind}
+                                      name={`transfers.${index}.values.${value.field}`}
+                                      className={
+                                        "md:text-md relative h-fit min-h-fit p-2 text-sm" +
+                                        withTextArea
+                                      }
+                                      placeholder={value.placeholder}
+                                      rows={10}
+                                    />
+                                  )}
+                                  <ErrorMessage
+                                    name={`transfers.${index}.values.${value.field}`}
+                                    render={renderError}
+                                  />
+                                </div>
+                              );
+                            })}
+                            <button
+                              type="button"
+                              className={
+                                (errors.transfers && errors.transfers[index]
+                                  ? "my-auto"
+                                  : "") +
+                                "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                              }
+                              onClick={e => {
+                                e.preventDefault();
+                                remove(index);
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </>
                       );
                     })}
                 </div>
@@ -1194,18 +1193,9 @@ function TransferForm(
             </FieldArray>
           </div>
           <div className="flex flex-row justify-around md:w-1/3">
-            <button
-              className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-              onClick={e => {
-                e.preventDefault();
-                props.closeModal();
-              }}
-            >
-              Cancel
-            </button>
             {values.transfers.length > 0 && (
               <button
-                className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 type="submit"
               >
                 Submit

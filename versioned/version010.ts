@@ -100,11 +100,7 @@ class Version010 extends Versioned {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(
-          BigNumber(proposal),
-          prop.contents,
-          result
-        )
+        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {

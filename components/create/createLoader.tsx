@@ -98,7 +98,10 @@ function Success() {
         Address: {address.address}
       </p>
       <Link
-        href={`/wallets/${address.address}`}
+        href={`/proposals`}
+        onClick={() => {
+          dispatch!({ type: "setCurrentContract", payload: address.address });
+        }}
         className="text-md hover:border-offset-2 hover:border-offset-gray-800 row-span-1 mt-8 w-full max-w-full items-center justify-self-end bg-primary py-2 px-2 text-center font-bold text-white hover:border-gray-800 hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1  md:px-2  md:text-xl"
       >
         Go to the wallet
