@@ -2,7 +2,7 @@ import { mutezTransfer } from "../types/display";
 
 async function getProposals(bigmap: string) {
   let result = await fetch(
-    `https://api.ghostnet.tzkt.io/v1/bigmaps/${bigmap}/keys`
+    `${process.env.NEXT_PUBLIC_API_URL}/v1/bigmaps/${bigmap}/keys`
   );
   let json = await result.json();
   return json;
@@ -10,7 +10,7 @@ async function getProposals(bigmap: string) {
 async function getTransfers(address: string): Promise<mutezTransfer[]> {
   try {
     let res = await fetch(
-      `https://api.ghostnet.tzkt.io/v1/operations/transactions?target=${address}&status=applied&amount.gt=0`
+      `${process.env.NEXT_PUBLIC_API_URL}/v1/operations/transactions?target=${address}&status=applied&amount.gt=0`
     );
     return await res.json();
   } catch (e) {

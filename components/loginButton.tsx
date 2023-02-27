@@ -1,5 +1,5 @@
-import { NetworkType } from "@airgap/beacon-sdk";
 import { useContext } from "react";
+import { PREFERED_NETWORK } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
 const LoginButton = () => {
@@ -10,8 +10,8 @@ const LoginButton = () => {
     try {
       await state?.beaconWallet!.requestPermissions({
         network: {
-          type: NetworkType.GHOSTNET,
-          rpcUrl: "https://ghostnet.tezos.marigold.dev/",
+          type: PREFERED_NETWORK,
+          rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
         },
       });
       const userAddress: string = await state?.beaconWallet!.getPKH()!;
