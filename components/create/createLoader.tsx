@@ -3,7 +3,7 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fetchVersion from "../../context/metadata";
-import metadata_blob from "../../context/metadata_blob";
+import metadata_blob, { fromIpfs } from "../../context/metadata_blob";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import contract from "../../context/unitContract";
 import { toStorage } from "../../versioned/apis";
@@ -19,6 +19,7 @@ function Success() {
     (async () => {
       if (loading && address.status == 0) {
         try {
+          let metablob = await fromIpfs();
           let deploy = await state?.connection.wallet
             .originate({
               code: contract,
@@ -28,7 +29,7 @@ function Success() {
                 owners: formState!.validators.map(x => x.address),
                 threshold: formState!.requiredSignatures,
                 effective_period: formState!.effectivePeriod,
-                ...metadata_blob,
+                ...metablob,
               },
             })
             .send();

@@ -31,8 +31,12 @@ const NavBar = (_: React.PropsWithChildren) => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-10 flex h-20 w-full items-center border-b-4 border-zinc-500 bg-graybg">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <nav
+      className={`${
+        menuOpen ? "h-auto" : "h-20"
+      } fixed top-0 left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
+    >
+      <div className="mx-auto w-full px-4 sm:px-6 md:max-w-7xl lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -177,19 +181,15 @@ const NavBar = (_: React.PropsWithChildren) => {
         </div>
       </div>
 
-      <div className="md:hidden" id="mobile-menu">
-        <div
-          className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden ${
-            menuOpen ? "block" : "hidden"
-          }`}
-        >
+      <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
+        <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
           <RenderContracts />
           <LinkComponent path="/address-book" text={"Address book"} />
           <LinkComponent path="/create" text={"Create a new wallet"} />
           <LinkComponent path="/import" text={"Import existing wallet"} />
         </div>
         {state?.address == null ? (
-          <div className="mx-2 flex items-center justify-end pb-2">
+          <div className="mx-2 flex items-center justify-center pb-2">
             <LoginButton />
           </div>
         ) : (
