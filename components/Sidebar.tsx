@@ -9,13 +9,18 @@ import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
-import Spinner from "./Spinner";
 
 type selectItemProps = {
   name: string | undefined;
@@ -66,11 +71,12 @@ const SelectedItem = ({
   );
 };
 
-const FixedTrigger = (props: any) => {
+const FixedTrigger = forwardRef((props: any, ref: any) => {
   const { children, onClick, onPointerDown, ...rest } = props;
 
   return (
     <button
+      ref={ref}
       {...rest}
       className="radix-state-delayed-open:bg-zinc-50 radix-state-instant-open:bg-zinc-50 radix-state-on:bg-zinc-900 radix-state-open:bg-zinc-900 group inline-flex w-full select-none items-center justify-between rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-900 focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75"
       onClick={e => {
@@ -87,7 +93,7 @@ const FixedTrigger = (props: any) => {
       {children}
     </button>
   );
-};
+});
 
 const Sidebar = ({
   isOpen,
