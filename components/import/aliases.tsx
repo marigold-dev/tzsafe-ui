@@ -66,9 +66,11 @@ function Aliases() {
                 ? `invalid address ${x.address}`
                 : "";
           }
+
           if (
             !!x.name &&
-            (dedupName.has(x.name) || byName[x.name] !== x.address)
+            (dedupName.has(x.name) ||
+              (!!byName[x.name] && byName[x.name] !== x.address))
           ) {
             err.name = "alias already exists";
           } else {
