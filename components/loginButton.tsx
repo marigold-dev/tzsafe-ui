@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { PREFERED_NETWORK } from "../context/config";
+import { PREFERED_NETWORK, RPC_URL } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
 const LoginButton = () => {
@@ -11,7 +11,7 @@ const LoginButton = () => {
       await state?.beaconWallet!.requestPermissions({
         network: {
           type: PREFERED_NETWORK,
-          rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
+          rpcUrl: RPC_URL,
         },
       });
       const userAddress: string = await state?.beaconWallet!.getPKH()!;

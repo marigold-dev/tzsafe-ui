@@ -24,9 +24,9 @@ RUN npm run build
 
 RUN \
   if [ $ENV = "prod" ]; then \
-    echo "NEXT_PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.ghostnet.tzkt.io" >> .env.local \
+    echo "NEXT_PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.ghostnet.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=mainnet" >> .env.local \
   else \
-    echo "NEXT_PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.tzkt.io" >> .env.local \
+    echo "NEXT_PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=ghostnet" >> .env.local \
   fi
 
 EXPOSE 80
