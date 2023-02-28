@@ -120,11 +120,14 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
+                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
-                            <label className="text-white">Owner Name</label>
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-2">
+                            <label className="text-white">
+                              {index === 0 ? "Owner Name" : ""}
+                            </label>
+
                             <TextInputWithCompletion
                               byAddrToo={false}
                               filter={() => true}
@@ -149,8 +152,9 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              Owner Address
+                              {index === 0 ? "Owner Address" : ""}
                             </label>
+
                             <Field
                               name={`validators.${index}.address`}
                               className="md:text-md w-full rounded p-2 text-sm"
@@ -164,31 +168,34 @@ function Aliases() {
                               }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            className={
-                              (errors.validators &&
-                              errors.validators[index] &&
-                              get(errors.validators[index])
-                                ? "my-auto"
-                                : "") +
-                              " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
-                            }
-                            onClick={async e => {
-                              e.preventDefault();
-                              setTouched({ validatorsError: true }, true);
-                              validateForm();
-                              remove(index);
-                            }}
-                          >
-                            Remove
-                          </button>
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
+                            <span></span>
+                            <button
+                              type="button"
+                              className={
+                                (errors.validators &&
+                                errors.validators[index] &&
+                                get(errors.validators[index])
+                                  ? "my-auto"
+                                  : "") +
+                                " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
+                              }
+                              onClick={async e => {
+                                e.preventDefault();
+                                setTouched({ validatorsError: true }, true);
+                                validateForm();
+                                remove(index);
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
                   <button
                     type="button"
-                    className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
+                    className="mx-auto mt-4 block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });

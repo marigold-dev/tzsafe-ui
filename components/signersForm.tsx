@@ -238,16 +238,18 @@ const SignersForm: FC<{
           <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {({ remove, push }) => (
-                <div className="min-w-full">
+                <div className="min-w-full space-y-6">
                   {values.validators.length > 0 &&
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-y-2 p-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
+                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="flex w-full flex-col md:w-auto">
-                            <label className="text-white">Owner Name</label>
+                            <label className="text-white">
+                              {index === 0 ? "Owner Name" : ""}
+                            </label>
                             <Field
                               name={`validators.${index}.name`}
                               className="md:text-md rounded p-2 text-sm"
@@ -263,7 +265,7 @@ const SignersForm: FC<{
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              Owner Address
+                              {index === 0 ? "Owner Address" : ""}
                             </label>
                             <Field
                               name={`validators.${index}.address`}

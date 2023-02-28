@@ -95,7 +95,7 @@ function Aliases() {
           <div className="mb-2 self-center text-2xl font-medium text-white">
             Optionally add names of wallet participants below:{" "}
           </div>
-          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
+          <div className="mb-2 mt-4 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {() => (
                 <div className="min-w-full">
@@ -103,11 +103,13 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4  p-2 md:flex-row md:rounded-none md:border-none"
+                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none"
                           key={index}
                         >
                           <div className="flex flex-col">
-                            <label className="text-white">Owner Name</label>
+                            <label className="text-white">
+                              {index === 0 ? "Owner Name" : ""}
+                            </label>
                             <Field
                               name={`validators.${index}.name`}
                               className="md:text-md rounded p-2 text-sm"
@@ -123,7 +125,7 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              Owner Address
+                              {index === 0 ? "Owner Address" : ""}
                             </label>
                             <Field
                               disabled
@@ -146,7 +148,7 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex grow items-center">
+          <div className="mt-4 flex grow items-center">
             <label className="mr-4 text-white">Threshold: </label>
             <Field
               disabled
