@@ -1,15 +1,13 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-import Footer from "../components/footer";
 import Step from "../components/import/importStep";
 import Meta from "../components/meta";
-import NavBar from "../components/navbar";
 import Stepper from "../components/stepper";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
-function Home() {
+function Import() {
   let router = useRouter();
   let params = useSearchParams();
   const [formState, setFormState] = useState<any>({
@@ -49,19 +47,15 @@ function Home() {
   }, [state, dispatch, router]);
 
   return (
-    <div className="min-h-content relative flex grow flex-col">
+    <div className="h-full grow">
       <Meta title={"Import wallet"} />
-      <div className="bg-graybg shadow">
-        <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">
-            Import multisig wallet
-          </h1>
-        </div>
-      </div>
-      <main className="grow">
-        <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="md:min-h-96 grid min-h-fit grid-rows-2  p-2 md:grid-cols-2 md:grid-rows-1">
+      <h1 className="mx-auto mt-12 max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
+        Import multisig wallet
+      </h1>
+      <main className="mt-8 grow">
+        <div className="mx-auto max-w-7xl py-0 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-0">
+            <div className="md:min-h-96 grid min-h-fit grid-rows-2 p-2 md:grid-cols-2 md:grid-rows-1">
               <div className="col-span-2 row-span-2 flex flex-col items-center justify-items-center">
                 <FormContext.Provider
                   value={{
@@ -85,4 +79,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Import;

@@ -196,12 +196,18 @@ function reducer(state: tezosState, action: action): tezosState {
         (state.favouriteContract || "") === action.address
           ? Object.keys(state.contracts).at(0) || null
           : state.favouriteContract;
+
+      const newAliases = { ...state.aliases };
+      delete newAliases[action.address];
+
       if (state.contracts[action.address]) {
+        delete state.aliases[action.address];
+
         localStorage.setItem(
           "app_state",
           JSON.stringify({
             contracts,
-            aliases: state.aliases,
+            aliases: newAliases,
             favouriteContract: fav,
           })
         );
@@ -212,6 +218,7 @@ function reducer(state: tezosState, action: action): tezosState {
         contracts: contracts,
         favouriteContract: fav,
         currentContract: null,
+        aliases: newAliases,
       };
     }
     case "setFavourite": {

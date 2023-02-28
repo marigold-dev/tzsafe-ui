@@ -104,8 +104,7 @@ export default function App({ Component, pageProps }: AppProps) {
           )}
           <div
             className={`pt-20 pb-28 ${
-              path === "/" &&
-              (!state.address || Object.entries(state.contracts).length === 0)
+              !state.address || Object.entries(state.contracts).length === 0
                 ? ""
                 : "md:pl-72"
             }`}
@@ -127,8 +126,7 @@ export default function App({ Component, pageProps }: AppProps) {
           </div>
           <Footer
             shouldRemovePadding={
-              path === "/" &&
-              (!state.address || Object.entries(state.contracts).length === 0)
+              !state.address || Object.entries(state.contracts).length === 0
             }
           />
         </div>

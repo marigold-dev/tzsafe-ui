@@ -2,14 +2,12 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import Step from "../components/create/createStep";
-import Footer from "../components/footer";
 import Meta from "../components/meta";
-import NavBar from "../components/navbar";
 import Stepper from "../components/stepper";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
-function Home() {
+function Create() {
   const [formState, setFormState] = useState<any>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [formStatus, setFormStatus] = useState("");
@@ -77,4 +75,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Create;

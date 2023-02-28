@@ -7,6 +7,7 @@ import {
   Formik,
   FormikErrors,
 } from "formik";
+import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
@@ -107,7 +108,7 @@ function Aliases() {
                             <label className="text-white">Owner Name</label>
                             <Field
                               name={`validators.${index}.name`}
-                              className="md:text-md p-2 text-sm"
+                              className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -124,7 +125,7 @@ function Aliases() {
                             </label>
                             <Field
                               disabled
-                              name={`validators.${index}.address`}
+                              name={`rounded validators.${index}.address`}
                               className="md:text-md w-full p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
@@ -143,13 +144,14 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex grow">
+          <div className="flex grow items-center">
             <label className="mr-4 text-white">Threshold: </label>
             <Field
               disabled
               component="select"
               name="requiredSignatures"
               values={values.requiredSignatures}
+              className="rounded p-2"
             >
               {values.validators.map((_, idx) => (
                 <option
@@ -162,12 +164,21 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          <button
-            className="my-2 bg-primary p-2 font-medium text-white "
-            type="submit"
-          >
-            Continue
-          </button>
+          <div className="mt-8 flex space-x-6">
+            <Link
+              type="button"
+              href="/"
+              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+            >
+              Cancel
+            </Link>
+            <button
+              className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
+              type="submit"
+            >
+              Continue
+            </button>
+          </div>
         </Form>
       )}
     </Formik>
