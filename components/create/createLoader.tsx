@@ -3,7 +3,7 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fetchVersion from "../../context/metadata";
-import metadata_blob, { fromIpfs } from "../../context/metadata_blob";
+import { fromIpfs } from "../../context/metadata_blob";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import contract from "../../context/unitContract";
 import { toStorage } from "../../versioned/apis";
