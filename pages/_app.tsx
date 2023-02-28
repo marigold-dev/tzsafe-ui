@@ -1,13 +1,5 @@
-<<<<<<< HEAD
-import {
-  NetworkType,
-  BeaconEvent,
-  defaultEventCallbacks,
-} from "@airgap/beacon-sdk";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
-=======
 import { BeaconEvent, defaultEventCallbacks } from "@airgap/beacon-sdk";
->>>>>>> db1afb6 (feat(Docker): Added conditionnal config urls)
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
