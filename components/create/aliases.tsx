@@ -136,7 +136,7 @@ function Aliases() {
                                 });
                               }}
                               name={`validators.${index}.name`}
-                              className="md:text-md p-2 text-sm"
+                              className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -153,7 +153,7 @@ function Aliases() {
                             </label>
                             <Field
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full p-2 text-sm"
+                              className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
@@ -172,7 +172,7 @@ function Aliases() {
                               get(errors.validators[index])
                                 ? "my-auto"
                                 : "") +
-                              " mx-none block self-center justify-self-center bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
+                              " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
                             }
                             onClick={async e => {
                               e.preventDefault();
@@ -188,7 +188,7 @@ function Aliases() {
                     })}
                   <button
                     type="button"
-                    className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white "
+                    className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
@@ -205,7 +205,7 @@ function Aliases() {
             <Field
               component="select"
               name="requiredSignatures"
-              className="w-1/4 text-center text-black"
+              className="mt-1 w-1/4 rounded p-1 text-center text-black"
               values={values.requiredSignatures}
             >
               {values.validators.map((_, idx) => (
@@ -225,7 +225,7 @@ function Aliases() {
             </label>
             <Field
               component="input"
-              className="pl-4 text-black"
+              className="mt-1 rounded p-2 text-black"
               name="effectivePeriod"
               values={values.requiredSignatures}
               validate={(value: string) => {
