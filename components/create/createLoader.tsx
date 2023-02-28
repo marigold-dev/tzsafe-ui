@@ -63,7 +63,7 @@ function Success() {
         }
       }
     })();
-  }, [formState, state, address, loading, dispatch]);
+  }, []);
 
   if (loading) {
     return (

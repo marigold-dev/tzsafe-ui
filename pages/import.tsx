@@ -49,7 +49,7 @@ function Import() {
   return (
     <div className="h-full grow">
       <Meta title={"Import wallet"} />
-      <h1 className="mx-auto mt-12 max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
+      <h1 className="mx-auto max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
         Import multisig wallet
       </h1>
       <main className="mt-8 grow">
