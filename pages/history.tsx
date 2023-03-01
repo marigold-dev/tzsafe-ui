@@ -1,3 +1,8 @@
+import {
+  AngleIcon,
+  ArrowDownIcon,
+  TriangleDownIcon,
+} from "@radix-ui/react-icons";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { FC, useContext, useEffect, useMemo, useState } from "react";
@@ -67,17 +72,21 @@ const Transfer: FC<{
 };
 
 const History = () => {
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
 
-  let [isLoading, setIsLoading] = useState(true);
-  let [invalid, setInvalid] = useState(false);
-  let [contract, setContract] = useState<contractStorage>(
+  const [openedPreview, setOpenPreview] = useState<{ [k: number]: boolean }>(
+    {}
+  );
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [invalid, setInvalid] = useState(false);
+  const [contract, setContract] = useState<contractStorage>(
     state.contracts[state.currentContract ?? ""]
   );
-  let [proposals, setProposals] = useState(emptyProps);
-  let [transfers, setTransfers] = useState([] as mutezTransfer[]);
-  let [openModal, setCloseModal] = useState<{
+  const [proposals, setProposals] = useState(emptyProps);
+  const [transfers, setTransfers] = useState([] as mutezTransfer[]);
+  const [openModal, setCloseModal] = useState<{
     state: number;
     proposal: [boolean | undefined, number];
   }>({
@@ -133,13 +142,24 @@ const History = () => {
   }, [state.currentContract]);
 
   const filteredProposals = useMemo(
-    () => [
-      ...proposals.filter(
-        ([_, proposal]) => !("Proposing" === proposal.ui.status)
+    () =>
+      [
+        ...proposals.filter(
+          ([_, proposal]) => !("Proposing" === proposal.ui.status)
+        ),
+      ].concat(
+        transfers
+          .map(x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any)
+          .sort(
+            (a, b) =>
+              Number(Date.parse(b[1].ui.timestamp).toString(10)) -
+              Number(Date.parse(a[1].ui.timestamp).toString(10))
+          )
       ),
-    ],
-    [proposals]
+    [proposals, transfers]
   );
+
+  console.log("HERE:", filteredProposals);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -164,7 +184,61 @@ const History = () => {
       </div>
       <main className="h-full min-h-fit grow">
         <div className="mx-auto h-full min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
-          {!state.currentContract ? (
+          <div
+            className={`${
+              !!openedPreview[0] ? "h-auto" : "h-16"
+            } w-full overflow-hidden rounded bg-zinc-800 text-white`}
+          >
+            <button
+              className="flex h-16 w-full items-center justify-between border-b border-zinc-900 px-6 py-4"
+              onClick={() => {
+                setOpenPreview(v => ({ ...v, [0]: !(v[0] ?? false) }));
+              }}
+            >
+              <span className="font-bold">Status</span>
+              <span className="font-light text-zinc-300">
+                10 mutez to tz1in...S4XB3wH
+              </span>
+              <span>
+                {new Date().toLocaleDateString()} -{" "}
+                {`${new Date().getHours()}:${new Date().getMinutes()}`}
+              </span>
+
+              <TriangleDownIcon
+                className={`${!!openedPreview[0] ? "rotate-180" : ""} h-8 w-8`}
+              />
+            </button>
+            <div className="px-6 py-4">
+              <span className="text-2xl">Activity</span>
+              <div className="mt-4 space-y-4">
+                <div className="flex justify-between">
+                  <span className="font-light">
+                    {new Date().toLocaleDateString()} -{" "}
+                    {new Date().toLocaleTimeString()}
+                  </span>
+                  <span className="font-light">HelloSir</span>
+                  <span className="font-bold">Created</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-light">
+                    {new Date().toLocaleDateString()} -{" "}
+                    {new Date().toLocaleTimeString()}
+                  </span>
+                  <span className="font-light">HelloSir</span>
+                  <span className="font-bold">Created</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-light">
+                    {new Date().toLocaleDateString()} -{" "}
+                    {new Date().toLocaleTimeString()}
+                  </span>
+                  <span className="font-light">HelloSir</span>
+                  <span className="font-bold">Created</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
             </h2>
@@ -185,38 +259,27 @@ const History = () => {
           ) : (
             filteredProposals.length > 0 && (
               <div className="space-y-6">
-                {filteredProposals
-                  .concat(
-                    transfers.map(
-                      x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
-                    )
-                  )
-                  .sort(
-                    (a, b) =>
-                      Number(Date.parse(b[1].ui.timestamp).toString(10)) -
-                      Number(Date.parse(a[1].ui.timestamp).toString(10))
-                  )
-                  .map(x => {
-                    return x[0] == -1 ? (
-                      <Transfer
-                        address={state.currentContract ?? ""}
-                        key={(x[1] as any).timestamp as any}
-                        prop={x[1] as any}
-                      />
-                    ) : (
-                      <ProposalCard
-                        contract={contract}
-                        id={x[0]}
-                        key={x[0]}
-                        prop={x[1]}
-                        address={state.currentContract ?? ""}
-                        signable={false}
-                      />
-                    );
-                  })}
+                {filteredProposals.map(x => {
+                  return x[0] == -1 ? (
+                    <Transfer
+                      address={state.currentContract ?? ""}
+                      key={(x[1] as any).timestamp as any}
+                      prop={x[1] as any}
+                    />
+                  ) : (
+                    <ProposalCard
+                      contract={contract}
+                      id={x[0]}
+                      key={x[0]}
+                      prop={x[1]}
+                      address={state.currentContract ?? ""}
+                      signable={false}
+                    />
+                  );
+                })}
               </div>
             )
-          )}
+          )} */}
         </div>
       </main>
     </div>
