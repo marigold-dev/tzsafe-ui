@@ -7,6 +7,7 @@ import {
   Formik,
   FormikErrors,
 } from "formik";
+import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
@@ -44,6 +45,7 @@ function Aliases() {
     validators: formState?.validators!,
     requiredSignatures: formState?.requiredSignatures!,
   };
+
   return (
     <Formik
       initialValues={initialProps}
@@ -65,9 +67,11 @@ function Aliases() {
                 ? `invalid address ${x.address}`
                 : "";
           }
+
           if (
             !!x.name &&
-            (dedupName.has(x.name) || byName[x.name] !== x.address)
+            (dedupName.has(x.name) ||
+              (!!byName[x.name] && byName[x.name] !== x.address))
           ) {
             err.name = "alias already exists";
           } else {
@@ -92,7 +96,7 @@ function Aliases() {
           <div className="mb-2 self-center text-2xl font-medium text-white">
             Optionally add names of wallet participants below:{" "}
           </div>
-          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
+          <div className="mb-2 mt-4 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {() => (
                 <div className="min-w-full">
@@ -100,14 +104,16 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4  p-2 md:flex-row md:rounded-none md:border-none"
+                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="flex flex-col">
-                            <label className="text-white">Owner Name</label>
+                            <label className="text-white">
+                              {index === 0 ? "Owner Name" : ""}
+                            </label>
                             <Field
                               name={`validators.${index}.name`}
-                              className="md:text-md p-2 text-sm"
+                              className="md:text-md mt-2 rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -120,12 +126,12 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              Owner Address
+                              {index === 0 ? "Owner Address" : ""}
                             </label>
                             <Field
                               disabled
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full p-2 text-sm"
+                              className="md:text-md mt-2 w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
@@ -143,13 +149,14 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex grow">
+          <div className="mt-4 flex grow items-center">
             <label className="mr-4 text-white">Threshold: </label>
             <Field
               disabled
               component="select"
               name="requiredSignatures"
               values={values.requiredSignatures}
+              className="rounded p-2"
             >
               {values.validators.map((_, idx) => (
                 <option
@@ -162,12 +169,33 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          <button
-            className="my-2 bg-primary p-2 font-medium text-white "
-            type="submit"
-          >
-            Continue
-          </button>
+          <div className="mt-4 flex grow items-center">
+            <label className="mr-4 text-white">
+              Proposal duration (in seconds):
+            </label>
+            <Field
+              disabled
+              component="input"
+              name="effectivePeriod"
+              value={formState?.effectivePeriod ?? "Unknown"}
+              className="rounded p-2"
+            />
+          </div>
+          <div className="mt-8 flex space-x-6">
+            <Link
+              type="button"
+              href="/"
+              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+            >
+              Cancel
+            </Link>
+            <button
+              className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
+              type="submit"
+            >
+              Continue
+            </button>
+          </div>
         </Form>
       )}
     </Formik>

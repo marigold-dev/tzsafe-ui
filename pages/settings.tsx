@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import Meta from "../components/meta";
 import SignersForm from "../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../context/state";
@@ -6,6 +6,17 @@ import { AppDispatchContext, AppStateContext } from "../context/state";
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+  const [canDelete, setCanDelete] = useState(true);
+
+  useEffect(() => {
+    if (canDelete) return;
+
+    const timeoutId = setTimeout(() => {
+      setCanDelete(true);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [canDelete]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -15,10 +26,13 @@ const Settings = () => {
           <h1 className="text-2xl font-extrabold text-white">Settings</h1>
 
           <button
-            className="self-end rounded bg-primary p-2 text-white hover:bg-red-500"
+            className={`${
+              canDelete ? "" : "pointer-events-none opacity-50"
+            } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
               if (!state.currentContract) return;
 
+              setCanDelete(false);
               dispatch!({
                 type: "removeContract",
                 address: state.currentContract,

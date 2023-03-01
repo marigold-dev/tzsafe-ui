@@ -6,22 +6,23 @@ import Success from "./importLoader";
 
 function CreateStep() {
   const { activeStepIndex } = useContext(FormContext)!;
-  let stepContent = null;
-  switch (activeStepIndex) {
-    case 0:
-      stepContent = <Basic />;
-      break;
-    case 1:
-      stepContent = <Aliases />;
-      break;
-    case 2:
-      stepContent = <Success />;
-      break;
-    default:
-      break;
-  }
 
-  return stepContent;
+  return (
+    <div className="mt-8 w-full">
+      {(() => {
+        switch (activeStepIndex) {
+          case 0:
+            return <Basic />;
+          case 1:
+            return <Aliases />;
+          case 2:
+            return <Success />;
+          default:
+            return null;
+        }
+      })()}
+    </div>
+  );
 }
 
 export default CreateStep;
