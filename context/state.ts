@@ -11,7 +11,7 @@ import {
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { IPFS_NODE, RPC } from "./config";
+import { IPFS_NODE, RPC_URL } from "./config";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -31,7 +31,7 @@ type storage = {
 };
 
 let emptyState = () => {
-  let connection = new TezosToolkit(RPC);
+  const connection = new TezosToolkit(RPC_URL);
   const customHandler = new Map<string, Handler>([
     ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
     ["tezos-storage", new TezosStorageHandler()],

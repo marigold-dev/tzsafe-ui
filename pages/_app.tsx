@@ -1,8 +1,4 @@
-import {
-  NetworkType,
-  BeaconEvent,
-  defaultEventCallbacks,
-} from "@airgap/beacon-sdk";
+import { BeaconEvent, defaultEventCallbacks } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
@@ -12,6 +8,7 @@ import { useReducer, useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
+import { PREFERED_NETWORK } from "../context/config";
 import {
   tezosState,
   action,
@@ -65,7 +62,7 @@ export default function App({ Component, pageProps }: AppProps) {
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
           name: "Multisig wallet",
-          preferredNetwork: NetworkType.GHOSTNET,
+          preferredNetwork: PREFERED_NETWORK,
           disableDefaultEvents: false,
           eventHandlers: {
             [BeaconEvent.PAIR_INIT]: {

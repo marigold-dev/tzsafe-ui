@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
+import { PREFERED_NETWORK } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
 import LoginButton from "./loginButton";
@@ -106,7 +107,9 @@ const NavBar = (_: React.PropsWithChildren) => {
                             state?.address.slice(33)}
                         </span>
                         <span className="font-xs block text-white">
-                          Ghostnet
+                          {PREFERED_NETWORK === "mainnet"
+                            ? "Mainnet"
+                            : "Ghostnet"}
                         </span>
                       </div>
                     </button>
@@ -210,7 +213,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                     state?.address.slice(33)}
                 </div>
                 <div className="text-sm font-medium leading-none text-white">
-                  GhostNet
+                  {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}
                 </div>
               </div>
             </div>

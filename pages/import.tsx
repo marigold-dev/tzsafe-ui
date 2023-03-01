@@ -1,11 +1,9 @@
-import { NetworkType } from "@airgap/beacon-sdk";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
-import Footer from "../components/footer";
 import Step from "../components/import/importStep";
 import Meta from "../components/meta";
-import NavBar from "../components/navbar";
 import Stepper from "../components/stepper";
+import { PREFERED_NETWORK } from "../context/config";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
@@ -25,7 +23,7 @@ function Home() {
       try {
         await state?.beaconWallet!.requestPermissions({
           network: {
-            type: NetworkType.GHOSTNET,
+            type: PREFERED_NETWORK,
           },
         });
         const userAddress: string = await state?.beaconWallet!.getPKH()!;
