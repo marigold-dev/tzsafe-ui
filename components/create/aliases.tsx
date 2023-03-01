@@ -120,10 +120,12 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none"
+                          className={`${
+                            index > 0 ? "-mt-8" : ""
+                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
                           key={index}
                         >
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-2">
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
                             <label className="text-white">
                               {index === 0 ? "Owner Name" : ""}
                             </label>

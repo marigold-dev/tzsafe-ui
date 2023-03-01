@@ -288,7 +288,9 @@ const SignersForm: FC<{
                               get(errors.validators[index])
                                 ? "my-auto"
                                 : "") +
-                              "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-end "
+                              `mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto ${
+                                index === 0 ? "md:self-end" : "md:self-start"
+                              }`
                             }
                             onClick={e => {
                               e.preventDefault();
