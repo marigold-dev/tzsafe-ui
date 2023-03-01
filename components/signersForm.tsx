@@ -13,7 +13,6 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import contract from "../context/unitContract";
 import { adaptiveTime } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
