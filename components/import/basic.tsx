@@ -84,11 +84,13 @@ function Basic() {
           address: x,
           name: state.aliases[x] || "",
         }));
+
         const data = {
           ...formState,
           ...values,
           validators,
           requiredSignatures: storage.threshold.toNumber(),
+          effectivePeriod: storage.effective_period.toNumber(),
         };
         setFormState(data as any);
         setActiveStepIndex(activeStepIndex + 1);

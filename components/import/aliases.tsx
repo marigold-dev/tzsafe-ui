@@ -45,6 +45,7 @@ function Aliases() {
     validators: formState?.validators!,
     requiredSignatures: formState?.requiredSignatures!,
   };
+
   return (
     <Formik
       initialValues={initialProps}
@@ -167,6 +168,18 @@ function Aliases() {
                 </option>
               ))}
             </Field>
+          </div>
+          <div className="mt-4 flex grow items-center">
+            <label className="mr-4 text-white">
+              Proposal duration (in seconds):
+            </label>
+            <Field
+              disabled
+              component="input"
+              name="effectivePeriod"
+              value={formState?.effectivePeriod ?? "Unknown"}
+              className="rounded p-2"
+            />
           </div>
           <div className="mt-8 flex space-x-6">
             <Link
