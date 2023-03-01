@@ -8,13 +8,35 @@ const Footer = ({
       } lg:text-left`}
     >
       <div className="flex flex-col p-4 text-center text-white">
-        <span className=" text-white">
-          © {new Date().getFullYear()} Copyright{" "}
-        </span>
-        <a className=" text-white" href="https://www.marigold.dev/">
-          Marigold
+        <div>
+          <span className=" text-white">
+            © {new Date().getFullYear()} Copyright{" "}
+          </span>
+          <a
+            className=" text-white"
+            href="https://www.marigold.dev/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Marigold
+          </a>
+        </div>
+
+        <a
+          className=" text-white"
+          href="https://www.marigold.dev/contact"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Contact
         </a>
-        <a className=" text-white" href="https://tzkt.io/">
+
+        <a
+          className=" text-white"
+          href="https://tzkt.io/"
+          target="_blank"
+          rel="noreferrer"
+        >
           Powered by TzKT API
         </a>
       </div>

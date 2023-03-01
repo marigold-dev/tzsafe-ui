@@ -37,7 +37,7 @@ const NavBar = (_: React.PropsWithChildren) => {
         menuOpen ? "h-auto" : "h-20"
       } fixed top-0 left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
-      <div className="mx-auto w-full px-4 sm:px-6 md:max-w-7xl lg:px-8">
+      <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -45,7 +45,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 href={"/"}
                 className="text-xl font-bold tracking-wider text-white"
               >
-                <span>MULTISIG</span>
+                <span>TZSAFE</span>
                 <span className="ml-4 text-xs">BETA</span>
               </Link>
             </div>
