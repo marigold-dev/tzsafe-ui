@@ -7,14 +7,27 @@ const Footer = ({
         shouldRemovePadding ? "" : "md:left-72"
       } lg:text-left`}
     >
-      <div className="flex flex-col p-4 text-center text-white">
-        <span className=" text-white">
-          © {new Date().getFullYear()} Copyright{" "}
-        </span>
-        <a className=" text-white" href="https://www.marigold.dev/">
-          Marigold
-        </a>
-        <a className=" text-white" href="https://tzkt.io/">
+      <div className="flex flex-col items-center justify-center space-y-2 p-4 text-center text-white">
+        <div className="space-x-6">
+          <a
+            href="https://www.marigold.dev/"
+            target="_blank"
+            rel="noreferrer"
+            className="text-zinc-400"
+          >
+            <span>©{new Date().getFullYear()} Copyright </span>
+            Marigold
+          </a>
+
+          <a
+            href="https://www.marigold.dev/contact"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Contact
+          </a>
+        </div>
+        <a href="https://tzkt.io/" target="_blank" rel="noreferrer">
           Powered by TzKT API
         </a>
       </div>
