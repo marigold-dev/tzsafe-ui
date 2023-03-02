@@ -45,9 +45,9 @@ function Create() {
 
   return (
     <div className="h-full grow">
-      <Meta title={"Create wallet"} />
+      <Meta title={"New wallet"} />
       <h1 className="mx-auto max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
-        Create multisig wallet
+        New wallet
       </h1>
       <main className="mt-8 grow">
         <div className="mx-auto max-w-7xl py-0 sm:px-6 lg:px-8">

@@ -8,12 +8,10 @@ const CreateProposal = () => {
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Create Proposal"} />
+      <Meta title={"New Proposal"} />
       <div>
         <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">
-            Create a proposal
-          </h1>
+          <h1 className="text-2xl font-extrabold text-white">New proposal</h1>
         </div>
       </div>
       <main className="h-full min-h-fit grow">

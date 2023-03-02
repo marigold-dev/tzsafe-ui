@@ -277,7 +277,7 @@ const Sidebar = ({
               fill="currentColor"
             />
           </svg>
-          <span>Create a proposal</span>
+          <span>New proposal</span>
         </Link>
         <Link
           href="/top-up"
@@ -416,7 +416,7 @@ const Sidebar = ({
               fill="currentColor"
             />
           </svg>
-          <span>Top up wallet</span>
+          <span>Fund wallet</span>
         </Link>
         <Link
           href="/settings"
