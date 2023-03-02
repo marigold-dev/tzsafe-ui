@@ -118,7 +118,7 @@ function TopUp(props: {
             className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
-            Top up
+            Fund
           </button>
         </div>
       </Form>

@@ -44,7 +44,7 @@ function Home() {
                 <div className="grid min-h-max grid-rows-5 rounded bg-graybg p-4">
                   <div className="row-span-6">
                     <h2 className="text-xl font-extrabold text-white md:text-2xl">
-                      Import existing multisig
+                      Import wallet
                     </h2>
                     <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
                       Already have a Multisig wallet or want to access it from a

@@ -39,7 +39,7 @@ const Settings = () => {
               });
             }}
           >
-            Delete wallet
+            {canDelete ? `Delete wallet` : `Deleting wallet`}
           </button>
         </div>
       </div>
