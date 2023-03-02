@@ -120,11 +120,16 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
+                          className={`${
+                            index > 0 ? "-mt-8" : ""
+                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
-                            <label className="text-white">Owner Name</label>
+                            <label className="text-white">
+                              {index === 0 ? "Owner Name" : ""}
+                            </label>
+
                             <TextInputWithCompletion
                               byAddrToo={false}
                               filter={() => true}
@@ -136,7 +141,7 @@ function Aliases() {
                                 });
                               }}
                               name={`validators.${index}.name`}
-                              className="md:text-md p-2 text-sm"
+                              className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -149,11 +154,12 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              Owner Address
+                              {index === 0 ? "Owner Address" : ""}
                             </label>
+
                             <Field
                               name={`validators.${index}.address`}
-                              className="md:text-md w-full p-2 text-sm"
+                              className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
                               default={validator.address}
                             />
@@ -164,31 +170,34 @@ function Aliases() {
                               }}
                             />
                           </div>
-                          <button
-                            type="button"
-                            className={
-                              (errors.validators &&
-                              errors.validators[index] &&
-                              get(errors.validators[index])
-                                ? "my-auto"
-                                : "") +
-                              " mx-none block self-center justify-self-center bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
-                            }
-                            onClick={async e => {
-                              e.preventDefault();
-                              setTouched({ validatorsError: true }, true);
-                              validateForm();
-                              remove(index);
-                            }}
-                          >
-                            Remove
-                          </button>
+                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
+                            <span></span>
+                            <button
+                              type="button"
+                              className={
+                                (errors.validators &&
+                                errors.validators[index] &&
+                                get(errors.validators[index])
+                                  ? "my-auto"
+                                  : "") +
+                                " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
+                              }
+                              onClick={async e => {
+                                e.preventDefault();
+                                setTouched({ validatorsError: true }, true);
+                                validateForm();
+                                remove(index);
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
                   <button
                     type="button"
-                    className=" my-2 mx-auto block self-center justify-self-center bg-primary p-2 font-medium text-white "
+                    className="mx-auto mt-4 block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
@@ -205,7 +214,7 @@ function Aliases() {
             <Field
               component="select"
               name="requiredSignatures"
-              className="w-1/4 text-center text-black"
+              className="mt-1 w-1/4 rounded p-1 text-center text-black"
               values={values.requiredSignatures}
             >
               {values.validators.map((_, idx) => (
@@ -225,7 +234,7 @@ function Aliases() {
             </label>
             <Field
               component="input"
-              className="pl-4 text-black"
+              className="mt-1 rounded p-2 text-black"
               name="effectivePeriod"
               values={values.requiredSignatures}
               validate={(value: string) => {

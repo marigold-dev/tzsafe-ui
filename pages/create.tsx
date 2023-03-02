@@ -7,7 +7,7 @@ import { PREFERED_NETWORK } from "../context/config";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
-function Home() {
+function Create() {
   const [formState, setFormState] = useState<any>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [formStatus, setFormStatus] = useState("");
@@ -42,10 +42,11 @@ function Home() {
       }
     })();
   }, [router, dispatch, state]);
+
   return (
     <div className="h-full grow">
       <Meta title={"Create wallet"} />
-      <h1 className="mx-auto mt-12 max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
+      <h1 className="mx-auto max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
         Create multisig wallet
       </h1>
       <main className="mt-8 grow">
@@ -75,4 +76,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Create;
