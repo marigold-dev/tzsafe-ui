@@ -34,7 +34,7 @@ type selectItemProps = {
 const linkClass = (isActive: boolean) =>
   `${
     isActive ? "text-zinc-100" : "text-zinc-400"
-  } hover:text-zinc-100 flex items-center space-x-2`;
+  } hover:text-zinc-100 flex items-center space-x-3`;
 
 const SelectedItem = ({
   name,
