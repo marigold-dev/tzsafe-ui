@@ -186,7 +186,7 @@ const NavBar = (_: React.PropsWithChildren) => {
 
       <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
         <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
-          <RenderContracts />
+          {/* <RenderContracts /> */}
           <LinkComponent path="/address-book" text={"Address book"} />
           <LinkComponent path="/new-wallet" text={"New wallet"} />
           <LinkComponent path="/import-wallet" text={"Import wallet"} />
