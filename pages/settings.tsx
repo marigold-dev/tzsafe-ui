@@ -20,7 +20,7 @@ const Settings = () => {
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Create Proposal"} />
+      <Meta title={"Settings"} />
       <div>
         <div className="mx-auto flex max-w-7xl flex-col justify-start py-6 px-4 sm:px-6 md:flex-row md:justify-between lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Settings</h1>

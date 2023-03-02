@@ -40,8 +40,8 @@ export default function App({ Component, pageProps }: AppProps) {
         "/settings",
         "/proposals",
         "/history",
-        "/top-up",
-        "/create-proposal",
+        "/fund-wallet",
+        "/new-proposal",
       ].includes(path)
     )
       return;

@@ -261,8 +261,8 @@ const Sidebar = ({
           <span>Proposals</span>
         </Link>
         <Link
-          href="/create-proposal"
-          className={linkClass(path === "/create-proposal")}
+          href="/new-proposal"
+          className={linkClass(path === "/new-proposal")}
           onClick={onClose}
         >
           <svg
@@ -280,8 +280,8 @@ const Sidebar = ({
           <span>New proposal</span>
         </Link>
         <Link
-          href="/top-up"
-          className={linkClass(path === "/top-up")}
+          href="/fund-wallet"
+          className={linkClass(path === "/fund-wallet")}
           onClick={onClose}
         >
           <svg
