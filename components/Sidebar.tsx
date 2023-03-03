@@ -73,7 +73,7 @@ const SelectedItem = ({
   );
 };
 
-const FixedTrigger = forwardRef((props: any, ref: any) => {
+const FixedTrigger = forwardRef<any, any>((props: any, ref: any) => {
   const { children, onClick, onPointerDown, ...rest } = props;
 
   return (
@@ -96,6 +96,7 @@ const FixedTrigger = forwardRef((props: any, ref: any) => {
     </button>
   );
 });
+FixedTrigger.displayName = "FixedTrigger";
 
 const Sidebar = ({
   isOpen,

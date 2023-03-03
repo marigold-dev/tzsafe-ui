@@ -116,7 +116,7 @@ const Proposals = () => {
             </div>
           ) : filteredProposals.length === 0 ? (
             <h2 className="text-center text-xl text-zinc-600">
-              There's currently no proposal
+              {"There's currently no proposal"}
             </h2>
           ) : (
             <div className="space-y-6">
