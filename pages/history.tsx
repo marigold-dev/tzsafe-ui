@@ -125,7 +125,7 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       <div key={i} className="grid grid-cols-3 gap-4">
         <span className="w-full justify-self-start">Transfer</span>
         <span className="w-full justify-self-center">
-          {content.transfer.amount}
+          {content.transfer.amount} mutez
         </span>
         <span className="w-full justify-self-end text-right">
           To: <Alias address={content.transfer.destination} />
@@ -140,20 +140,41 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       </div>
     );
   } else if ("executeLambda" in content) {
-    const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
-
-    return (
-      <div key={i} className="grid grid-cols-3 gap-4">
-        <span className="w-full justify-self-start">Execute lambda</span>
-        <span className="w-full justify-self-center">{metadata.status}</span>
-        <span
-          className="w-full justify-self-end truncate text-right"
-          title={metadata.meta}
-        >
-          {metadata.meta}
-        </span>
-      </div>
+    const metadata = JSON.parse(
+      content.executeLambda.metadata ?? '{"meta": "No meta supplied"}'
     );
+
+    if (!metadata.meta.includes("contract_addr")) {
+      return (
+        <div key={i} className="grid grid-cols-2 gap-4">
+          <span className="w-full justify-self-start">Execute lambda</span>
+          <span
+            className="w-full justify-self-end truncate text-right"
+            title={metadata.meta}
+          >
+            Metadata: {metadata.meta}
+          </span>
+        </div>
+      );
+    } else {
+      const contractData = JSON.parse(metadata.meta);
+      console.log(contractData);
+      const [endpoint, arg] = Object.entries(contractData.payload)[0];
+      return (
+        <div key={i} className="grid grid-cols-4 gap-4">
+          <span className="w-full justify-self-start">Execute contract</span>
+          <span className="w-full">
+            Address: <Alias address={contractData.contract_addr} />
+          </span>
+          <span className="w-full" title={contractData.meta}>
+            {contractData.mutez_amount} mutez
+          </span>
+          <span className="w-full justify-self-end truncate text-right">
+            Endpoint: {endpoint} - Args: {JSON.stringify(arg)}
+          </span>
+        </div>
+      );
+    }
   }
 };
 
@@ -237,13 +258,17 @@ const HistoryCard = ({
           <div className="mt-4 space-y-2 font-light">
             {content
               .filter(v => {
-                if ("executeLambda" in v) {
-                  return !v.executeLambda.metadata?.includes(
-                    "lambda unavailable"
-                  );
-                } else {
-                  return true;
-                }
+                return true;
+                // if ("executeLambda" in v) {
+                //   console.log(
+                //     v.executeLambda.metadata?.includes("lambda unavailable")
+                //   );
+                //   return !v.executeLambda.metadata?.includes(
+                //     "lambda unavailable"
+                //   );
+                // } else {
+                //   return true;
+                // }
               })
               .map(renderProposalContent)}
           </div>

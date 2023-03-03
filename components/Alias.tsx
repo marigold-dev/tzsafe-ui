@@ -13,11 +13,8 @@ const Alias = ({
   const toDisplay = useMemo(
     () =>
       state.aliases[address] ??
-      `${address.substring(0, 5)}...${address.substring(
-        address.length - 5,
-        5
-      )}`,
-    [state]
+      `${address.substring(0, 5)}...${address.substring(address.length - 5)}`,
+    [state, address]
   );
 
   return <span className={className}>{toDisplay}</span>;
