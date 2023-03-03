@@ -988,7 +988,7 @@ function TransferForm(
         }
         setLoading(false);
         setTimeout(() => {
-          props.closeModal();
+          setResult(undefined);
         }, 1500);
       }}
     >

@@ -97,8 +97,8 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       <div key={i} className="flex justify-between">
         <span>{`Add signer${content.addOwners.length > 1 ? "s" : ""}`}</span>
         <ul>
-          {content.addOwners.map(address => (
-            <li>
+          {content.addOwners.map((address, i) => (
+            <li key={i}>
               <Alias address={address} />
             </li>
           ))}
@@ -112,8 +112,8 @@ const renderProposalContent = (content: proposalContent, i: number) => {
           content.removeOwners.length > 1 ? "s" : ""
         }`}</span>
         <ul>
-          {content.removeOwners.map(address => (
-            <li>
+          {content.removeOwners.map((address, i) => (
+            <li key={i}>
               <Alias address={address} />
             </li>
           ))}
@@ -235,7 +235,17 @@ const HistoryCard = ({
         <section>
           <span className="text-xl font-bold">Content</span>
           <div className="mt-4 space-y-2 font-light">
-            {content.map(renderProposalContent)}
+            {content
+              .filter(v => {
+                if ("executeLambda" in v) {
+                  return !v.executeLambda.metadata?.includes(
+                    "lambda unavailable"
+                  );
+                } else {
+                  return true;
+                }
+              })
+              .map(renderProposalContent)}
           </div>
         </section>
         <section>
@@ -253,12 +263,10 @@ const HistoryCard = ({
                 Proposed
               </span>
             </div>
-            {activities.map(({ signer, hasApproved }) => (
-              <div className="grid grid-cols-3">
+            {activities.map(({ signer, hasApproved }, i) => (
+              <div key={i} className="grid grid-cols-3">
                 <span className="w-full justify-self-start font-light text-zinc-500">
                   -
-                  {/* {date.toLocaleDateString()} -{" "}
-                {`${date.getHours()}:${date.getMinutes()}`} */}
                 </span>
                 <span className="w-full justify-self-center">
                   <Alias address={signer} />
