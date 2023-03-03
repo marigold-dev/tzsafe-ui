@@ -30,7 +30,7 @@ function Home() {
                   </div>
                   <Link
                     type="button"
-                    href={{ pathname: "/create" }}
+                    href={{ pathname: "/new-wallet" }}
                     className={
                       "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:py-1.5 md:px-1 md:text-2xl "
                     }
@@ -53,7 +53,7 @@ function Home() {
                   </div>
                   <Link
                     type="button"
-                    href={{ pathname: "/import" }}
+                    href={{ pathname: "/import-wallet" }}
                     className={
                       "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1.5 md:px-1 md:text-2xl "
                     }

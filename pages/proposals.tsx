@@ -78,7 +78,7 @@ const Proposals = () => {
   const currentContract = state.currentContract ?? "";
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Wallets"} />
+      <Meta title={"Proposals"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm

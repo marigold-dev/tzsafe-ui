@@ -53,8 +53,8 @@ const NavBar = (_: React.PropsWithChildren) => {
               <div className="ml-10 flex items-baseline space-x-4">
                 {/* <RenderContracts /> */}
                 <LinkComponent path="/address-book" text={"Address book"} />
-                <LinkComponent path="/create" text={"New wallet"} />
-                <LinkComponent path="/import" text={"Import wallet"} />
+                <LinkComponent path="/new-wallet" text={"New wallet"} />
+                <LinkComponent path="/import-wallet" text={"Import wallet"} />
                 {/* <!-- Current: "bg-zinc-900 text-white", Default: "text-zinc-300 hover:bg-zinc-700 hover:text-white" --> */}
               </div>
             </div>
@@ -186,10 +186,10 @@ const NavBar = (_: React.PropsWithChildren) => {
 
       <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
         <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
-          <RenderContracts />
+          {/* <RenderContracts /> */}
           <LinkComponent path="/address-book" text={"Address book"} />
-          <LinkComponent path="/create" text={"New wallet"} />
-          <LinkComponent path="/import" text={"Import wallet"} />
+          <LinkComponent path="/new-wallet" text={"New wallet"} />
+          <LinkComponent path="/import-wallet" text={"Import wallet"} />
         </div>
         {state?.address == null ? (
           <div className="mx-2 flex items-center justify-center pb-2">
