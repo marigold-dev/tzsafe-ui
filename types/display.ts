@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 
 type lambda = { executeLambda: { metadata?: string; content?: string } };
 type execute = { execute: string };
-type transfer = { transfer: { amount: BigNumber; destination: string } };
+type transfer = { transfer: { amount: number; destination: string } };
 type removeOwners = { removeOwners: string[] };
 type addOwners = { addOwners: string[] };
 type changeThreshold = { changeThreshold: number };

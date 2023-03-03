@@ -19,7 +19,12 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { mutezTransfer, proposal, version } from "../types/display";
+import {
+  mutezTransfer,
+  proposal,
+  proposalContent,
+  version,
+} from "../types/display";
 import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
@@ -72,6 +77,104 @@ const Transfer: FC<{
   );
 };
 
+const renderProposalContent = (content: proposalContent, i: number) => {
+  if ("changeThreshold" in content) {
+    return (
+      <div key={i} className="flex justify-between">
+        <span>Update threshold</span>
+        <span>{content.changeThreshold}</span>
+      </div>
+    );
+  } else if ("adjustEffectivePeriod" in content) {
+    return (
+      <div key={i} className="flex justify-between">
+        <span>Update proposal duration</span>
+        <span>{content.adjustEffectivePeriod}</span>
+      </div>
+    );
+  } else if ("addOwners" in content) {
+    return (
+      <div key={i} className="flex justify-between">
+        <span>{`Add signer${content.addOwners.length > 1 ? "s" : ""}`}</span>
+        <ul>
+          {content.addOwners.map(address => (
+            <li>
+              <Alias address={address} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  } else if ("removeOwners" in content) {
+    return (
+      <div key={i} className="flex justify-between">
+        <span>{`Remove signer${
+          content.removeOwners.length > 1 ? "s" : ""
+        }`}</span>
+        <ul>
+          {content.removeOwners.map(address => (
+            <li>
+              <Alias address={address} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  } else if ("transfer" in content) {
+    return (
+      <div key={i} className="grid grid-cols-3 gap-4">
+        <span className="w-full justify-self-start">Transfer</span>
+        <span className="w-full justify-self-center">
+          {content.transfer.amount}
+        </span>
+        <span className="w-full justify-self-end text-right">
+          To: <Alias address={content.transfer.destination} />
+        </span>
+      </div>
+    );
+  } else if ("execute" in content) {
+    return (
+      <div key={i} className="flex justify-between">
+        <span>Execute</span>
+        <span>{content.execute}</span>
+      </div>
+    );
+  } else if ("executeLambda" in content) {
+    const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
+
+    return (
+      <div key={i} className="grid grid-cols-3 gap-4">
+        <span className="w-full justify-self-start">Execute lambda</span>
+        <span className="w-full justify-self-center">{metadata.status}</span>
+        <span
+          className="w-full justify-self-end truncate text-right"
+          title={metadata.meta}
+        >
+          {metadata.meta}
+        </span>
+      </div>
+    );
+  }
+};
+
+const labelOfProposalContent = (content: proposalContent) => {
+  if ("changeThreshold" in content) {
+    return "Update threshold";
+  } else if ("adjustEffectivePeriod" in content) {
+    return "Update proposal duration";
+  } else if ("addOwners" in content) {
+    return `Add signer${content.addOwners.length > 1 ? "s" : ""}`;
+  } else if ("removeOwners" in content) {
+    return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
+  } else if ("transfer" in content) {
+    return `Transfer ${content.transfer.amount} mutez`;
+  } else if ("execute" in content) {
+    return "Execute";
+  } else if ("executeLambda" in content) {
+    return "Execute lambda";
+  }
+};
+
 type HistoryCardProps = {
   id: number;
   isOpen: boolean;
@@ -79,6 +182,7 @@ type HistoryCardProps = {
   status: string;
   date: Date;
   activities: { signer: string; hasApproved: boolean }[];
+  content: proposalContent[];
   proposer: { actor: string; timestamp: string };
   resolver: { actor: string; timestamp: string } | undefined;
 };
@@ -92,6 +196,7 @@ const HistoryCard = ({
   activities,
   proposer,
   resolver,
+  content,
 }: HistoryCardProps) => {
   const proposalDate = new Date(proposer.timestamp);
   const resolveDate = new Date(resolver?.timestamp ?? 0);
@@ -107,10 +212,13 @@ const HistoryCard = ({
       >
         <span className="justify-self-start font-bold">
           <span className="mr-4 font-light text-zinc-500">#{id}</span>
-          {status ?? "Pending"}
+          {status ?? "Rejected"}
         </span>
-        <span className="justify-self-start font-light text-zinc-300">
-          10 mutez to tz1in...S4XB3wH
+        <span
+          className="truncate font-light text-zinc-300"
+          title={content.map(labelOfProposalContent).join(", ")}
+        >
+          {content.map(labelOfProposalContent).join(", ")}
         </span>
         <span className="justify-self-end">
           {date.toLocaleDateString()} -{" "}
@@ -123,47 +231,59 @@ const HistoryCard = ({
           />
         </div>
       </button>
-      <div className="px-6 py-4">
-        <span className="text-xl font-light">Activity</span>
-        <div className="mt-4 space-y-4">
-          <div className="grid grid-cols-3">
-            <span className="justify-self-start font-light">
-              {proposalDate.toLocaleDateString()} -{" "}
-              {`${proposalDate.getHours()}:${proposalDate.getMinutes()}`}
-            </span>
-            <span className="justify-self-center font-bold">
-              <Alias address={proposer.actor} />
-            </span>
-            <span className="justify-self-end font-bold">Proposed</span>
+      <div className="space-y-4 px-6 py-4">
+        <section>
+          <span className="text-xl font-bold">Content</span>
+          <div className="mt-4 space-y-2 font-light">
+            {content.map(renderProposalContent)}
           </div>
-          {activities.map(({ signer, hasApproved }) => (
+        </section>
+        <section>
+          <span className="text-xl font-bold">Activity</span>
+          <div className="mt-4 space-y-2 font-light">
             <div className="grid grid-cols-3">
-              <span className="justify-self-start font-light text-zinc-500">
-                -
-                {/* {date.toLocaleDateString()} -{" "}
+              <span className="w-full justify-self-start font-light">
+                {proposalDate.toLocaleDateString()} -{" "}
+                {`${proposalDate.getHours()}:${proposalDate.getMinutes()}`}
+              </span>
+              <span className="w-full justify-self-center">
+                <Alias address={proposer.actor} />
+              </span>
+              <span className="w-full justify-self-end text-right">
+                Proposed
+              </span>
+            </div>
+            {activities.map(({ signer, hasApproved }) => (
+              <div className="grid grid-cols-3">
+                <span className="w-full justify-self-start font-light text-zinc-500">
+                  -
+                  {/* {date.toLocaleDateString()} -{" "}
                 {`${date.getHours()}:${date.getMinutes()}`} */}
-              </span>
-              <span className="justify-self-center font-bold">
-                <Alias address={signer} />
-              </span>
-              <span className="justify-self-end font-bold">
-                {hasApproved ? "Approved" : "Rejected"}
-              </span>
-            </div>
-          ))}
-          {!!resolver && (
-            <div className="grid grid-cols-3">
-              <span className="justify-self-start font-light">
-                {resolveDate.toLocaleDateString()} -{" "}
-                {`${resolveDate.getHours()}:${resolveDate.getMinutes()}`}
-              </span>
-              <span className="justify-self-center font-bold">
-                <Alias address={resolver.actor} />
-              </span>
-              <span className="justify-self-end font-bold">Resolved</span>
-            </div>
-          )}
-        </div>
+                </span>
+                <span className="w-full justify-self-center">
+                  <Alias address={signer} />
+                </span>
+                <span className="w-full justify-self-end text-right">
+                  {hasApproved ? "Approved" : "Rejected"}
+                </span>
+              </div>
+            ))}
+            {!!resolver && (
+              <div className="grid grid-cols-3">
+                <span className="w-full justify-self-start font-light">
+                  {resolveDate.toLocaleDateString()} -{" "}
+                  {`${resolveDate.getHours()}:${resolveDate.getMinutes()}`}
+                </span>
+                <span className="w-full justify-self-center">
+                  <Alias address={resolver.actor} />
+                </span>
+                <span className="w-full justify-self-end text-right">
+                  Resolved
+                </span>
+              </div>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -304,7 +424,7 @@ const History = () => {
           ) : (
             filteredProposals.length > 0 && (
               <div className="space-y-6">
-                {filteredProposals.map(x => {
+                {filteredProposals.map((x, i) => {
                   return x[0] == -1 ? (
                     <Transfer
                       address={state.currentContract ?? ""}
@@ -315,9 +435,9 @@ const History = () => {
                     <HistoryCard
                       id={x[0]}
                       key={x[0]}
-                      isOpen={!!openedPreview[0]}
+                      isOpen={!!openedPreview[i]}
                       onClick={() => {
-                        setOpenPreview(v => ({ ...v, [0]: !(v[0] ?? false) }));
+                        setOpenPreview(v => ({ ...v, [i]: !(v[i] ?? false) }));
                       }}
                       status={x[1].ui.status}
                       date={new Date(x[1].ui.timestamp)}
@@ -327,6 +447,7 @@ const History = () => {
                           signer,
                         })
                       )}
+                      content={x[1].ui.content}
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.proposer}
                     />
