@@ -103,8 +103,11 @@ let lambdaTable: {
   },
   "2.CONTRACT": (acc, item) => {
     let expr = cast<Prim>(item).args![0];
+    let rest = cast<Prim>(item).annots
+      ? { ...acc, entrypoint: (cast<Prim>(item).annots as any)[0] }
+      : acc;
     return {
-      ...acc,
+      ...rest,
       typ: new ParameterSchema(expr),
     };
   },

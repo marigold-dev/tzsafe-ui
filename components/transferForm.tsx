@@ -151,7 +151,7 @@ function makeForm(
         type: "array",
         fields: [
           makeForm(item.schema.key, "key"),
-          makeForm(item.schema.key, "value"),
+          makeForm(item.schema.value, "value"),
         ],
       },
       mapValue: (x: any[]) => {
@@ -394,7 +394,16 @@ function RenderItem({
           placeholder={item.placeholder}
           rows={10}
           name={fieldName}
+          validate={(value: string) => {
+            let error;
+            if (item.placeholder === "int" && isNaN(Number(value))) {
+              error = `Should be a number, got: ${value}`;
+            }
+            return error;
+          }}
+          defaultValue={"init" in item ? item.init : item.placeholder}
         />
+        <ErrorMessage name={fieldName} render={renderError} />
       </div>
     );
   }
@@ -617,7 +626,49 @@ function ExecuteForm(
     <div className="w-full text-white">
       <Formik
         enableReinitialize
-        initialValues={props.shape?.entrypoint}
+        initialValues={
+          props.shape?.form && typeof props.shape.form.init == "object"
+            ? {
+                entrypoint: {
+                  [typeof props.shape.form.init === "object" &&
+                  "kind" in props.shape.form.init
+                    ? props.shape.form.init.kind
+                    : "default"]:
+                    typeof props.shape.form.init === "object" &&
+                    "init" in props.shape.form.init
+                      ? props.shape.form.init.init
+                      : props.shape.form.init,
+                  kind:
+                    typeof props.shape.form.init === "object" &&
+                    "kind" in props.shape.form.init
+                      ? props.shape.form.init.kind
+                      : "default",
+                },
+              }
+            : ({
+                entrypoint: {
+                  default: props.shape.form?.init || "",
+                  kind: "default",
+                },
+              } as any)
+        }
+        validate={values => {
+          let errors;
+          if (
+            values.entrypoint?.kind &&
+            values.entrypoint?.kind in values.entrypoint &&
+            typeof values.entrypoint[values.entrypoint?.kind] == "undefined"
+          ) {
+            return { entrypoint: { kind: "Please enter a value" } };
+          }
+          if (
+            values.entrypoint?.kind &&
+            !(values.entrypoint?.kind in values.entrypoint)
+          ) {
+            return { entrypoint: { kind: "Please enter a value" } };
+          }
+          return errors;
+        }}
         onSubmit={async values => {
           props.setLoading(true);
           try {
@@ -695,7 +746,14 @@ function ExecuteForm(
               }
               if (x.type === "list") {
                 let li = !!v ? v.map((y: any) => merge(x.fields, y)) : [];
-                return x.mapValue(li);
+
+                return x.mapValue(
+                  li.map((x: any) =>
+                    typeof x === "object" && "entrypoint" in x
+                      ? x.entrypoint
+                      : x
+                  )
+                );
               }
               if (x.type === "field") {
                 let res = merge(
@@ -714,26 +772,98 @@ function ExecuteForm(
             }
             let res = merge(props.shape.form, values.entrypoint);
             res = "entrypoint" in res ? res.entrypoint : res;
+            const unwrap = (x: object | any): any => {
+              if (
+                typeof x === "object" &&
+                values.entrypoint!.kind in x &&
+                typeof x[values.entrypoint!.kind] === "object" &&
+                values.entrypoint!.kind in x[values.entrypoint!.kind]
+              ) {
+                return unwrap(x[values.entrypoint!.kind]);
+              }
+              return x;
+            };
+            res = unwrap(res);
             let p = new Parser();
-            let param = emitMicheline(
-              p.parseJSON(props.shape.schema.parameterSchema.EncodeObject(res))
-            );
-            let typ = emitMicheline(
-              props.shape.schema.script.code[0].args[0] as any,
-              {
+            let param;
+            let typ;
+            const allEqual = (arr: string[]) => arr.every(v => v === arr[0]);
+            if (typeof res === "object" && "default" in res) {
+              param = emitMicheline(
+                props.shape.schema.methods[values.entrypoint!.kind](
+                  res.default
+                ).toTransferParams().parameter.value
+              );
+              let typer = props.shape.schema.parameterSchema
+                .isMultipleEntryPoint
+                ? props.shape.schema.entrypoints.entrypoints[
+                    values.entrypoint!.kind
+                  ]
+                : props.shape.schema.parameterSchema.root.val;
+              typ = emitMicheline(p.parseJSON(typer), {
                 indent: "",
                 newline: "",
-              }
-            );
+              });
+            } else if (
+              typeof res === "object" &&
+              Object.values(props.shape.schema.entrypoints.entrypoints).length >
+                1 &&
+              allEqual(
+                Object.values(props.shape.schema.entrypoints.entrypoints).map(
+                  x => emitMicheline(p.parseJSON(x as object))
+                )
+              )
+            ) {
+              param = emitMicheline(
+                props.shape.schema.methods[values.entrypoint!.kind](
+                  typeof res === "object" && values!.entrypoint!.kind in res
+                    ? res[values!.entrypoint!.kind]
+                    : res
+                ).toTransferParams().parameter.value
+              );
+              let typer = props.shape.schema.parameterSchema
+                .isMultipleEntryPoint
+                ? props.shape.schema.entrypoints.entrypoints[
+                    values.entrypoint!.kind
+                  ]
+                : props.shape.schema.parameterSchema.root.val;
+              typ = emitMicheline(p.parseJSON(typer), {
+                indent: "",
+                newline: "",
+              });
+            } else {
+              let typer = props.shape.schema.parameterSchema
+                .isMultipleEntryPoint
+                ? props.shape.schema.entrypoints.entrypoints[
+                    values.entrypoint!.kind
+                  ]
+                : props.shape.schema.parameterSchema.root.val;
+              typ = emitMicheline(p.parseJSON(typer), {
+                indent: "",
+                newline: "",
+              });
+
+              param = emitMicheline(
+                props.shape.schema.methods[values.entrypoint!.kind](
+                  typeof res === "object" && values!.entrypoint!.kind in res
+                    ? res[values!.entrypoint!.kind]
+                    : res
+                ).toTransferParams().parameter.value
+              );
+            }
+            let entry =
+              values.entrypoint!.kind !== "default"
+                ? `%${values.entrypoint!.kind}`
+                : "";
             let lambda = `
-          { 
-            DROP ;                                        
-            PUSH address "${props.address}";
-            CONTRACT ${typ};
-            IF_NONE { PUSH string "failure" ; FAILWITH } {} ;                            
-            PUSH mutez ${props.amount} ;                                
-            PUSH ${typ} ${param} ;
-            TRANSFER_TOKENS 
+            {
+              DROP;
+      PUSH address "${props.address}";
+      CONTRACT ${entry} ${typ};
+      IF_NONE {PUSH string "failure" ; FAILWITH } { } ;
+      PUSH mutez ${props.amount} ;
+      PUSH ${typ} ${param} ;
+      TRANSFER_TOKENS 
           }`;
             props.setField(
               lambda,
@@ -741,7 +871,7 @@ function ExecuteForm(
                 {
                   contract_addr: props.address,
                   mutez_amount: props.amount,
-                  payload: res,
+                  payload: param,
                 },
                 null,
                 2
@@ -764,6 +894,7 @@ function ExecuteForm(
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
             </div>
+            <ErrorMessage name="entrypoint.kind" render={renderError} />
             <div className="flex flex-row justify-around md:w-1/3">
               <button
                 className=" my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
@@ -774,14 +905,12 @@ function ExecuteForm(
               >
                 Reset
               </button>
-              {
-                <button
-                  className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                  type="submit"
-                >
-                  Confirm
-                </button>
-              }
+              <button
+                className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                type="submit"
+              >
+                Confirm
+              </button>
             </div>
           </Form>
         )}
@@ -859,6 +988,9 @@ function ExecuteContractForm(
     );
   }
 }
+function renderError(message: string) {
+  return <p className="italic text-red-600">{message}</p>;
+}
 function TransferForm(
   props: React.PropsWithoutRef<{
     address: string;
@@ -930,9 +1062,7 @@ function TransferForm(
       </div>
     );
   }
-  const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
-  };
+
   const initialProps: {
     transfers: {
       type: "lambda" | "transfer" | "contract";
