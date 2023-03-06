@@ -136,7 +136,8 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       data = {
         ...data,
         label: "Execute lambda",
-        metadata: metadata.meta,
+        metadata:
+          metadata.meta === "No meta supplied" ? undefined : metadata.meta,
       };
     } else {
       const contractData = JSON.parse(metadata.meta);
@@ -474,8 +475,6 @@ const History = () => {
     [proposals, transfers]
   );
 
-  console.log("HERE:", filteredProposals);
-
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"History"} />
@@ -522,12 +521,42 @@ const History = () => {
               <div className="space-y-6">
                 {filteredProposals.map((x, i) => {
                   return x[0] == -1 ? (
-                    <Transfer
-                      address={state.currentContract ?? ""}
-                      key={(x[1] as any).timestamp as any}
-                      prop={x[1] as any}
-                    />
+                    <div className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4">
+                      <span className="justify-self-start font-bold">
+                        Received mutez
+                      </span>
+                      <span
+                        className="font-light text-zinc-300"
+                        style={{
+                          minWidth: "7rem",
+                        }}
+                      >
+                        From: <Alias address={(x[1] as any).sender.address} />
+                      </span>
+                      <span
+                        className="font-light text-zinc-300"
+                        style={{
+                          minWidth: "7rem",
+                        }}
+                      >
+                        Amount: {(x[1] as any).amount} mutez
+                      </span>
+                      <span className="hidden justify-self-end lg:block">
+                        {new Date((x[1] as any).timestamp).toLocaleDateString()}{" "}
+                        -{" "}
+                        {`${new Date(
+                          (x[1] as any).timestamp
+                        ).getHours()}:${new Date(
+                          (x[1] as any).timestamp
+                        ).getMinutes()}`}
+                      </span>
+                    </div>
                   ) : (
+                    // <Transfer
+                    //   address={state.currentContract ?? ""}
+                    //   key={(x[1] as any).timestamp as any}
+                    //   prop={x[1] as any}
+                    // />
                     <HistoryCard
                       id={x[0]}
                       key={x[0]}
