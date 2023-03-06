@@ -3,6 +3,7 @@ import {
   ArrowDownIcon,
   TriangleDownIcon,
 } from "@radix-ui/react-icons";
+import { Label } from "@radix-ui/react-select";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { FC, useContext, useEffect, useMemo, useState } from "react";
@@ -77,105 +78,130 @@ const Transfer: FC<{
   );
 };
 
+type data = {
+  label: undefined | string;
+  metadata: undefined | string;
+  amount: undefined | string;
+  addresses: undefined | string[];
+  entrypoints: undefined | string;
+  params: undefined | string;
+};
+
 const renderProposalContent = (content: proposalContent, i: number) => {
+  let data: data = {
+    label: undefined,
+    metadata: undefined,
+    amount: undefined,
+    addresses: undefined,
+    entrypoints: undefined,
+    params: undefined,
+  };
+
   if ("changeThreshold" in content) {
-    return (
-      <div key={i} className="flex justify-between">
-        <span>Update threshold</span>
-        <span>{content.changeThreshold}</span>
-      </div>
-    );
+    data = {
+      ...data,
+      label: "Update threshold",
+      metadata: content.changeThreshold.toString(),
+    };
   } else if ("adjustEffectivePeriod" in content) {
-    return (
-      <div key={i} className="flex justify-between">
-        <span>Update proposal duration</span>
-        <span>{content.adjustEffectivePeriod}</span>
-      </div>
-    );
+    data = {
+      ...data,
+      label: "Update proposal duration",
+      metadata: content.adjustEffectivePeriod.toString(),
+    };
   } else if ("addOwners" in content) {
-    return (
-      <div key={i} className="flex justify-between">
-        <span>{`Add signer${content.addOwners.length > 1 ? "s" : ""}`}</span>
-        <ul>
-          {content.addOwners.map((address, i) => (
-            <li key={i}>
-              <Alias address={address} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+    data = {
+      ...data,
+      label: `Add signer${content.addOwners.length > 1 ? "s" : ""}`,
+      addresses: content.addOwners,
+    };
   } else if ("removeOwners" in content) {
-    return (
-      <div key={i} className="flex justify-between">
-        <span>{`Remove signer${
-          content.removeOwners.length > 1 ? "s" : ""
-        }`}</span>
-        <ul>
-          {content.removeOwners.map((address, i) => (
-            <li key={i}>
-              <Alias address={address} />
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
+    data = {
+      ...data,
+      label: `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`,
+      addresses: content.removeOwners,
+    };
   } else if ("transfer" in content) {
-    return (
-      <div key={i} className="grid grid-cols-3 gap-4">
-        <span className="w-full justify-self-start">Transfer</span>
-        <span className="w-full justify-self-center">
-          {content.transfer.amount} mutez
-        </span>
-        <span className="w-full justify-self-end text-right">
-          To: <Alias address={content.transfer.destination} />
-        </span>
-      </div>
-    );
+    data = {
+      ...data,
+      label: "Transfer",
+      addresses: [content.transfer.destination],
+      amount: content.transfer.amount.toString(),
+    };
   } else if ("execute" in content) {
-    return (
-      <div key={i} className="flex justify-between">
-        <span>Execute</span>
-        <span>{content.execute}</span>
-      </div>
-    );
+    data = {
+      ...data,
+      label: "Execute",
+      metadata: content.execute,
+    };
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(
       content.executeLambda.metadata ?? '{"meta": "No meta supplied"}'
     );
 
     if (!metadata.meta.includes("contract_addr")) {
-      return (
-        <div key={i} className="grid grid-cols-2 gap-4">
-          <span className="w-full justify-self-start">Execute lambda</span>
-          <span
-            className="w-full justify-self-end truncate text-right"
-            title={metadata.meta}
-          >
-            Metadata: {metadata.meta}
-          </span>
-        </div>
-      );
+      data = {
+        ...data,
+        label: "Execute lambda",
+        metadata: metadata.meta,
+      };
     } else {
       const contractData = JSON.parse(metadata.meta);
-      console.log(contractData);
       const [endpoint, arg] = Object.entries(contractData.payload)[0];
-      return (
-        <div key={i} className="grid grid-cols-4 gap-4">
-          <span className="w-full justify-self-start">Execute contract</span>
-          <span className="w-full">
-            Address: <Alias address={contractData.contract_addr} />
-          </span>
-          <span className="w-full" title={contractData.meta}>
-            {contractData.mutez_amount} mutez
-          </span>
-          <span className="w-full justify-self-end truncate text-right">
-            Endpoint: {endpoint} - Args: {JSON.stringify(arg)}
-          </span>
-        </div>
-      );
+
+      data = {
+        label: "Execute contract",
+        metadata: contractData.meta,
+        amount: contractData.mutez_amount,
+        addresses: [contractData.contract_addr],
+        entrypoints: endpoint,
+        params: JSON.stringify(arg),
+      };
     }
   }
+
+  return (
+    <div key={i} className="grid grid-cols-6 gap-4">
+      <span className={!data.label ? "text-zinc-500" : ""}>
+        {data.label ?? "-"}
+      </span>
+      <span className={!data.metadata ? "text-zinc-500" : ""}>
+        {data.metadata ?? "-"}
+      </span>
+      <span
+        className={`${!data.amount ? "text-zinc-500" : ""} justify-self-center`}
+      >
+        {!data.amount ? "-" : `${data.amount} mutez`}
+      </span>
+      {!data.addresses ? (
+        <span className="justify-self-center text-zinc-500">-</span>
+      ) : data.addresses.length === 1 ? (
+        <span className="justify-self-center">
+          <Alias address={data.addresses[0]} />
+        </span>
+      ) : (
+        <ul className="justify-self-center">
+          {data.addresses.map((address, i) => (
+            <li key={i}>
+              <Alias address={address} />
+            </li>
+          ))}
+        </ul>
+      )}
+      <span
+        className={`${
+          !data.entrypoints ? "text-zinc-500" : ""
+        } justify-self-end`}
+      >
+        {data.entrypoints ?? "-"}
+      </span>
+      <span
+        className={`${!data.params ? "text-zinc-500" : ""} justify-self-end`}
+      >
+        {data.params ?? "-"}
+      </span>
+    </div>
+  );
 };
 
 const labelOfProposalContent = (content: proposalContent) => {
@@ -255,7 +281,15 @@ const HistoryCard = ({
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
-          <div className="mt-4 space-y-2 font-light">
+          <div className="mt-4 grid w-full grid-cols-6 gap-4 text-zinc-500">
+            <span>Function</span>
+            <span>Metadata</span>
+            <span className="justify-self-center">Amount</span>
+            <span className="justify-self-center">Address</span>
+            <span className="justify-self-end">Entrypoint</span>
+            <span className="justify-self-end">Parameters</span>
+          </div>
+          <div className="mt-2 space-y-2 font-light">
             {content
               .filter(v => {
                 return true;
@@ -275,44 +309,45 @@ const HistoryCard = ({
         </section>
         <section>
           <span className="text-xl font-bold">Activity</span>
-          <div className="mt-4 space-y-2 font-light">
+          <div className="mt-4 grid grid grid-cols-3 text-zinc-500">
+            <span>Date</span>
+            <span className="justify-self-center">Proposer</span>
+            <span className="justify-self-end">Status</span>
+          </div>
+          <div className="mt-2 space-y-2 font-light">
             <div className="grid grid-cols-3">
-              <span className="w-full justify-self-start font-light">
+              <span className="w-full font-light">
                 {proposalDate.toLocaleDateString()} -{" "}
                 {`${proposalDate.getHours()}:${proposalDate.getMinutes()}`}
               </span>
-              <span className="w-full justify-self-center">
+              <span className="justify-self-center">
                 <Alias address={proposer.actor} />
               </span>
-              <span className="w-full justify-self-end text-right">
-                Proposed
-              </span>
+              <span className="justify-self-end">Proposed</span>
             </div>
             {activities.map(({ signer, hasApproved }, i) => (
               <div key={i} className="grid grid-cols-3">
                 <span className="w-full justify-self-start font-light text-zinc-500">
                   -
                 </span>
-                <span className="w-full justify-self-center">
+                <span className="justify-self-center">
                   <Alias address={signer} />
                 </span>
-                <span className="w-full justify-self-end text-right">
+                <span className="justify-self-end">
                   {hasApproved ? "Approved" : "Rejected"}
                 </span>
               </div>
             ))}
             {!!resolver && (
               <div className="grid grid-cols-3">
-                <span className="w-full justify-self-start font-light">
+                <span className="justify-self-start font-light">
                   {resolveDate.toLocaleDateString()} -{" "}
                   {`${resolveDate.getHours()}:${resolveDate.getMinutes()}`}
                 </span>
-                <span className="w-full justify-self-center">
+                <span className="justify-self-center">
                   <Alias address={resolver.actor} />
                 </span>
-                <span className="w-full justify-self-end text-right">
-                  Resolved
-                </span>
+                <span className="justify-self-end">Resolved</span>
               </div>
             )}
           </div>
