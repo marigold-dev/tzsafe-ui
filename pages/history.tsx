@@ -1,15 +1,10 @@
-import {
-  AngleIcon,
-  ArrowDownIcon,
-  TriangleDownIcon,
-} from "@radix-ui/react-icons";
-import { Label } from "@radix-ui/react-select";
+import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { FC, useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../components/Alias";
-import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
+import Tooltip from "../components/Tooltip";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
@@ -135,9 +130,7 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       metadata: content.execute,
     };
   } else if ("executeLambda" in content) {
-    const metadata = JSON.parse(
-      content.executeLambda.metadata ?? '{"meta": "No meta supplied"}'
-    );
+    const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
     if (!metadata.meta.includes("contract_addr")) {
       data = {
@@ -161,26 +154,49 @@ const renderProposalContent = (content: proposalContent, i: number) => {
   }
 
   return (
-    <div key={i} className="grid grid-cols-6 gap-4">
-      <span className={!data.label ? "text-zinc-500" : ""}>
+    <div
+      key={i}
+      className="after:content[''] relative grid grid-cols-3 gap-4 after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 lg:grid-cols-6 lg:after:hidden"
+    >
+      <span
+        className={`${!data.label ? "text-zinc-500" : ""} justify-self-start`}
+      >
+        <p className="text-zinc-500 lg:hidden">Function</p>
         {data.label ?? "-"}
       </span>
-      <span className={!data.metadata ? "text-zinc-500" : ""}>
+      <span
+        className={`${
+          !data.metadata ? "text-zinc-500" : ""
+        } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
+      >
+        <p className="flex text-zinc-500 lg:hidden">
+          Metadata
+          <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+            <InfoCircledIcon className="ml-2 h-4 w-4" />
+          </Tooltip>
+        </p>
         {data.metadata ?? "-"}
       </span>
       <span
-        className={`${!data.amount ? "text-zinc-500" : ""} justify-self-center`}
+        className={`${
+          !data.amount ? "text-zinc-500" : ""
+        } justify-self-end text-right lg:justify-self-center`}
       >
+        <p className="text-zinc-500 lg:hidden">Amount</p>
         {!data.amount ? "-" : `${data.amount} mutez`}
       </span>
       {!data.addresses ? (
-        <span className="justify-self-center text-zinc-500">-</span>
+        <span className="justify-self-start text-zinc-500 lg:justify-self-center">
+          <p className="text-zinc-500 lg:hidden">Address</p>-
+        </span>
       ) : data.addresses.length === 1 ? (
-        <span className="justify-self-center">
+        <span className="justify-self-start lg:justify-self-center">
+          <p className="text-zinc-500 lg:hidden">Address</p>
           <Alias address={data.addresses[0]} />
         </span>
       ) : (
-        <ul className="justify-self-center">
+        <ul className="justify-self-start lg:justify-self-center">
+          <li className="text-zinc-500 lg:hidden">Addresses:</li>
           {data.addresses.map((address, i) => (
             <li key={i}>
               <Alias address={address} />
@@ -191,13 +207,17 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       <span
         className={`${
           !data.entrypoints ? "text-zinc-500" : ""
-        } justify-self-end`}
+        } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
       >
+        <p className="text-zinc-500 lg:hidden">Entrypoint</p>
         {data.entrypoints ?? "-"}
       </span>
       <span
-        className={`${!data.params ? "text-zinc-500" : ""} justify-self-end`}
+        className={`${
+          !data.params ? "text-zinc-500" : ""
+        } justify-self-end text-right`}
       >
+        <p className="text-zinc-500 lg:hidden">Params</p>
         {data.params ?? "-"}
       </span>
     </div>
@@ -254,7 +274,7 @@ const HistoryCard = ({
       } w-full overflow-hidden rounded bg-zinc-800 text-white`}
     >
       <button
-        className="grid h-16 w-full grid-cols-4 items-center border-b border-zinc-900 px-6 py-4"
+        className="grid h-16 w-full grid-cols-3 items-center gap-8 border-b border-zinc-900 px-6 py-4 lg:grid-cols-4"
         onClick={onClick}
       >
         <span className="justify-self-start font-bold">
@@ -263,11 +283,14 @@ const HistoryCard = ({
         </span>
         <span
           className="truncate font-light text-zinc-300"
+          style={{
+            minWidth: "7rem",
+          }}
           title={content.map(labelOfProposalContent).join(", ")}
         >
           {content.map(labelOfProposalContent).join(", ")}
         </span>
-        <span className="justify-self-end">
+        <span className="hidden justify-self-end lg:block">
           {date.toLocaleDateString()} -{" "}
           {`${date.getHours()}:${date.getMinutes()}`}
         </span>
@@ -281,15 +304,20 @@ const HistoryCard = ({
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
-          <div className="mt-4 grid w-full grid-cols-6 gap-4 text-zinc-500">
+          <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
             <span>Function</span>
-            <span>Metadata</span>
+            <span className="flex items-center">
+              Metadata
+              <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                <InfoCircledIcon className="ml-2 h-4 w-4" />
+              </Tooltip>
+            </span>
             <span className="justify-self-center">Amount</span>
             <span className="justify-self-center">Address</span>
             <span className="justify-self-end">Entrypoint</span>
             <span className="justify-self-end">Parameters</span>
           </div>
-          <div className="mt-2 space-y-2 font-light">
+          <div className="mt-2 space-y-4 font-light lg:space-y-2">
             {content
               .filter(v => {
                 return true;
