@@ -463,17 +463,26 @@ const History = () => {
         ...proposals.filter(
           ([_, proposal]) => !("Proposing" === proposal.ui.status)
         ),
-      ].concat(
-        transfers
-          .map(x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any)
-          .sort(
-            (a, b) =>
-              Number(Date.parse(b[1].ui.timestamp).toString(10)) -
-              Number(Date.parse(a[1].ui.timestamp).toString(10))
+      ]
+        .concat(
+          transfers.map(
+            x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
           )
-      ),
+        )
+        .sort((a, b) => {
+          const date1 = !!(a[1] as any).timestamp
+            ? new Date((a[1] as any).timestamp).getTime()
+            : new Date(a[1].ui.timestamp).getTime();
+          const date2 = !!(b[1] as any).timestamp
+            ? new Date((b[1] as any).timestamp).getTime()
+            : new Date(b[1].ui.timestamp).getTime();
+
+          return date2 - date1;
+        }),
     [proposals, transfers]
   );
+
+  console.log(filteredProposals);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -521,7 +530,10 @@ const History = () => {
               <div className="space-y-6">
                 {filteredProposals.map((x, i) => {
                   return x[0] == -1 ? (
-                    <div className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4">
+                    <div
+                      key={(x[1] as any).timestamp}
+                      className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
+                    >
                       <span className="justify-self-start font-bold">
                         Received mutez
                       </span>
@@ -552,11 +564,6 @@ const History = () => {
                       </span>
                     </div>
                   ) : (
-                    // <Transfer
-                    //   address={state.currentContract ?? ""}
-                    //   key={(x[1] as any).timestamp as any}
-                    //   prop={x[1] as any}
-                    // />
                     <HistoryCard
                       id={x[0]}
                       key={x[0]}
@@ -576,14 +583,6 @@ const History = () => {
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.proposer}
                     />
-                    // <ProposalCard
-                    //   contract={contract}
-                    //   id={x[0]}
-                    //   key={x[0]}
-                    //   prop={x[1]}
-                    //   address={state.currentContract ?? ""}
-                    //   signable={false}
-                    // />
                   );
                 })}
               </div>
