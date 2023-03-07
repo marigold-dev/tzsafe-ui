@@ -2,6 +2,7 @@ import { FC, useContext, useState } from "react";
 import { AppStateContext, contractStorage, tezosState } from "../context/state";
 import { proposal, proposalContent, status } from "../types/display";
 import { adaptiveTime, countdown } from "../utils/adaptiveTime";
+import useIsOwner from "../utils/useIsOwner";
 import { signers } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 
@@ -52,6 +53,7 @@ const Card: FC<{
   contract: contractStorage;
   setCloseModal?: (arg: boolean | undefined) => void;
 }> = ({ contract, prop, address, id, signable, setCloseModal = () => {} }) => {
+  const isOwner = useIsOwner();
   let state = useContext(AppStateContext)!;
   let [loading, setLoading] = useState(false);
   function resolvable(
@@ -125,7 +127,10 @@ const Card: FC<{
               <button
                 type="button"
                 className={
-                  "mx-none mx-auto block w-full self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
+                  !isOwner
+                    ? "pointer-events-none opacity-50 "
+                    : "" +
+                      "mx-none mx-auto block w-full self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
                 }
                 onClick={async e => {
                   e.preventDefault();
@@ -142,7 +147,10 @@ const Card: FC<{
               <button
                 type="button"
                 className={
-                  "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
+                  !isOwner
+                    ? "pointer-events-none opacity-50 "
+                    : "" +
+                      "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
                 }
                 onClick={async e => {
                   e.preventDefault();

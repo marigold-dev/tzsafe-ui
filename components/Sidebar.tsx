@@ -19,6 +19,7 @@ import React, {
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
+import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
 
@@ -31,9 +32,9 @@ type selectItemProps = {
   disableCopy?: boolean;
 };
 
-const linkClass = (isActive: boolean) =>
-  `${
-    isActive ? "text-zinc-100" : "text-zinc-400"
+const linkClass = (isActive: boolean, isDisabled: boolean = false) =>
+  `${isActive ? "text-zinc-100" : "text-zinc-400"} ${
+    isDisabled ? "pointer-events-none opacity-50" : ""
   } hover:text-zinc-100 flex items-center space-x-3`;
 
 const SelectedItem = ({
@@ -111,6 +112,8 @@ const Sidebar = ({
 
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
+
+  const isOwner = useIsOwner();
 
   useEffect(() => {
     setIsClient(true);
@@ -263,7 +266,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/new-proposal"
-          className={linkClass(path === "/new-proposal")}
+          className={linkClass(path === "/new-proposal", !isOwner)}
           onClick={onClose}
         >
           <svg
@@ -421,7 +424,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/settings"
-          className={linkClass(path === "/settings")}
+          className={linkClass(path === "/settings", !isOwner)}
           onClick={onClose}
         >
           <svg
