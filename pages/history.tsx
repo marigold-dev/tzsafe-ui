@@ -96,13 +96,13 @@ const renderProposalContent = (content: proposalContent, i: number) => {
     data = {
       ...data,
       label: "Update threshold",
-      metadata: content.changeThreshold.toString(),
+      params: content.changeThreshold.toString(),
     };
   } else if ("adjustEffectivePeriod" in content) {
     data = {
       ...data,
       label: "Update proposal duration",
-      metadata: content.adjustEffectivePeriod.toString(),
+      params: content.adjustEffectivePeriod.toString(),
     };
   } else if ("addOwners" in content) {
     data = {
