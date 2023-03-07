@@ -44,11 +44,11 @@ const SignersForm: FC<{
   let [result, setResult] = useState<undefined | boolean>(undefined);
 
   useEffect(() => {
-    if (loading || !result) return;
+    if (loading || result === undefined) return;
 
     setTimeout(() => {
       setResult(undefined);
-    }, 1500);
+    }, 2000);
   }, [result, loading]);
 
   if (state?.address == null) {
