@@ -1,12 +1,22 @@
+import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
 import Meta from "../components/meta";
 import SignersForm from "../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import useIsOwner from "../utils/useIsOwner";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
   const [canDelete, setCanDelete] = useState(true);
+  const router = useRouter();
+  const isOwner = useIsOwner();
+
+  useEffect(() => {
+    if (isOwner) return;
+
+    router.replace("/proposals");
+  }, [isOwner, router]);
 
   useEffect(() => {
     if (canDelete) return;
