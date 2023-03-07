@@ -7,7 +7,7 @@ import {
   Formik,
   FormikErrors,
 } from "formik";
-import { FC, useContext, useState } from "react";
+import { FC, useContext, useEffect, useState } from "react";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -42,6 +42,15 @@ const SignersForm: FC<{
 
   let [loading, setLoading] = useState(false);
   let [result, setResult] = useState<undefined | boolean>(undefined);
+
+  useEffect(() => {
+    if (loading || !result) return;
+
+    setTimeout(() => {
+      setResult(undefined);
+    }, 1500);
+  }, [result, loading]);
+
   if (state?.address == null) {
     return null;
   }
@@ -65,6 +74,7 @@ const SignersForm: FC<{
         : undefined,
     requiredSignatures: props.contract.threshold,
   };
+
   async function changeSettings(
     txs: { name: string; address: string }[],
     requiredSignatures: number,
@@ -128,28 +138,6 @@ const SignersForm: FC<{
               Failed to create proposal
             </span>
           )}
-          <button
-            onClick={() => {
-              props.closeModal();
-            }}
-            type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </ContractLoader>
       </div>
     );

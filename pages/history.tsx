@@ -141,7 +141,20 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       };
     } else {
       const contractData = JSON.parse(metadata.meta);
-      const [endpoint, arg] = Object.entries(contractData.payload)[0];
+
+      const [endpoint, arg] = (() => {
+        if (Array.isArray(contractData.payload)) {
+          return ["default", JSON.stringify(contractData.payload)];
+        }
+
+        if (typeof contractData.payload !== "object") {
+          return ["default", contractData.payload.toString()];
+        }
+
+        const entries = Object.entries(contractData.payload);
+        if (entries.length === 0) return ["default", "{}"];
+        else return entries[0];
+      })();
 
       data = {
         label: "Execute contract",
@@ -279,7 +292,9 @@ const HistoryCard = ({
         onClick={onClick}
       >
         <span className="justify-self-start font-bold">
-          <span className="mr-4 font-light text-zinc-500">#{id}</span>
+          <span className="mr-4 font-light text-zinc-500">
+            #{id.toString().padStart(2, "0")}
+          </span>
           {status ?? "Rejected"}
         </span>
         <span
@@ -534,7 +549,7 @@ const History = () => {
                       key={(x[1] as any).timestamp}
                       className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
                     >
-                      <span className="justify-self-start font-bold">
+                      <span className="ml-11 justify-self-start font-bold">
                         Received mutez
                       </span>
                       <span
