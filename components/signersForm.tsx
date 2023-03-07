@@ -47,7 +47,7 @@ const SignersForm: FC<{
   }
 
   const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
+    return <p className="mt-2 italic text-red-600">{message}</p>;
   };
   const initialProps: {
     validators: { name: string; address: string }[];
@@ -163,6 +163,7 @@ const SignersForm: FC<{
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
           validatorsError?: string;
+          effectivePeriod?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -191,12 +192,17 @@ const SignersForm: FC<{
         if (values.requiredSignatures > values.validators.length) {
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
+
+        if (isNaN(parseInt(values.effectivePeriod as any))) {
+          errors.effectivePeriod = "Invalid duration";
+        }
+
         if (
           result.every(x => x.address === "" && x.name === "") &&
           !errors.requiredSignatures &&
           !errors.validatorsError
         ) {
-          return;
+          return errors;
         }
 
         return errors;
@@ -368,15 +374,10 @@ const SignersForm: FC<{
                 name="effectivePeriod"
                 placeholder={props.contract.effectivePeriod}
               ></Field>
-              <p className="text-lg text-white">
+              <p className="mt-2 text-lg text-white">
                 {adaptiveTime(values.effectivePeriod.toString())}
               </p>
-              <ErrorMessage
-                name={`requiredSignatures`}
-                render={x => {
-                  return renderError(x);
-                }}
-              />
+              <ErrorMessage name={`effectivePeriod`} render={renderError} />
             </div>
           )}
           <div className="flex w-full justify-center">

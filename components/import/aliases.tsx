@@ -179,6 +179,13 @@ function Aliases() {
               name="effectivePeriod"
               value={formState?.effectivePeriod ?? "Unknown"}
               className="rounded p-2"
+              validate={(value: string) => {
+                let error;
+                if (isNaN(parseInt(value))) {
+                  error = "invalid effective period";
+                }
+                return error;
+              }}
             />
           </div>
           <div className="mt-8 flex space-x-6">

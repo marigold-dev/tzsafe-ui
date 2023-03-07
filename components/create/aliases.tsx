@@ -40,7 +40,7 @@ function Aliases() {
     return null;
   }
   const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
+    return <p className="mt-2 italic text-red-600">{message}</p>;
   };
   const initialProps: {
     validators: { name: string; address: string }[];
@@ -62,6 +62,7 @@ function Aliases() {
         const errors: {
           validators: { address: string; name: string }[];
           validatorsError?: string;
+          effectivePeriod?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -91,12 +92,18 @@ function Aliases() {
           }
           return err;
         });
+
+        if (isNaN(parseInt(values.effectivePeriod as any))) {
+          errors.effectivePeriod = "Invalid duration";
+        }
+
         if (
           result.every(x => x.address === "" && x.name === "") &&
           typeof errors.validatorsError == "undefined"
         ) {
-          return;
+          return errors;
         }
+
         errors.validators = result;
         return errors;
       }}
@@ -237,23 +244,11 @@ function Aliases() {
               className="mt-1 rounded p-2 text-black"
               name="effectivePeriod"
               values={values.requiredSignatures}
-              validate={(value: string) => {
-                let error;
-                if (isNaN(Number(value))) {
-                  error = "invalid effective period";
-                }
-                return error;
-              }}
             />
-            <p className="text-lg text-white">
+            <p className="mt-2 text-lg text-white">
               {adaptiveTime(values.effectivePeriod.toString())}
             </p>
-            <ErrorMessage
-              name={`effectivePeriod`}
-              render={x => {
-                return renderError(x);
-              }}
-            />
+            <ErrorMessage name={`effectivePeriod`} render={renderError} />
           </div>
           <div className="mt-8 mb-8 flex space-x-6">
             <Link
