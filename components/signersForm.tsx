@@ -90,9 +90,10 @@ const SignersForm: FC<{
       [...input.values()].filter(x => !initialSigners.has(x))
     );
     let ops: ownersForm[] = [];
+
     if (
       typeof effectivePeriod !== "undefined" &&
-      Number(effectivePeriod) != props.contract.effectivePeriod
+      Number(effectivePeriod) != props.contract.effective_period.toNumber()
     ) {
       ops.push({ adjustEffectivePeriod: Number(effectivePeriod) });
     }
