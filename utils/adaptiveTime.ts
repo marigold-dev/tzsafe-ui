@@ -60,9 +60,9 @@ function conv(duration: Duration): Duration {
   return duration;
 }
 function adaptiveTime(x: string): string {
-  if (isNaN(parseInt(x))) return "";
+  if (isNaN(Number(x))) return "";
 
-  let duration = Duration.fromMillis(parseInt(x) * 1000, {
+  let duration = Duration.fromMillis(Number(x) * 1000, {
     locale: "en",
   }).rescale();
 

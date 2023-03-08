@@ -93,15 +93,16 @@ function Aliases() {
           return err;
         });
 
-        if (isNaN(parseInt(values.effectivePeriod as any))) {
+        if (isNaN(Number(values.effectivePeriod))) {
           errors.effectivePeriod = "Invalid duration";
+          return errors;
         }
 
         if (
           result.every(x => x.address === "" && x.name === "") &&
           typeof errors.validatorsError == "undefined"
         ) {
-          return errors;
+          return;
         }
 
         errors.validators = result;
@@ -172,9 +173,7 @@ function Aliases() {
                             />
                             <ErrorMessage
                               name={`validators.${index}.address`}
-                              render={x => {
-                                return renderError(x);
-                              }}
+                              render={renderError}
                             />
                           </div>
                           <div className="grid grid-flow-col grid-cols-1 grid-rows-3">

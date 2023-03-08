@@ -193,8 +193,9 @@ const SignersForm: FC<{
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
-        if (isNaN(parseInt(values.effectivePeriod as any))) {
+        if (isNaN(Number(values.effectivePeriod))) {
           errors.effectivePeriod = "Invalid duration";
+          return errors;
         }
 
         if (
@@ -202,7 +203,7 @@ const SignersForm: FC<{
           !errors.requiredSignatures &&
           !errors.validatorsError
         ) {
-          return errors;
+          return;
         }
 
         return errors;
@@ -355,12 +356,7 @@ const SignersForm: FC<{
                 ></option>
               ))}
             </Field>
-            <ErrorMessage
-              name={`requiredSignatures`}
-              render={x => {
-                return renderError(x);
-              }}
-            />
+            <ErrorMessage name={`requiredSignatures`} render={renderError} />
           </div>
           {typeof values.effectivePeriod != "undefined" && (
             <div className="mt-4 flex w-full flex-col md:grow">
@@ -382,7 +378,7 @@ const SignersForm: FC<{
           )}
           <div className="flex w-full justify-center">
             <button
-              className="my-2 rounded bg-primary p-2 font-medium text-white "
+              className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
               type="submit"
             >
               Save changes
