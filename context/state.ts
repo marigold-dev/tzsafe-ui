@@ -116,7 +116,7 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts: contracts,
         aliases: aliases,
-        favouriteContract: fav,
+        currentContract: state.currentContract,
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
@@ -130,7 +130,7 @@ function reducer(state: tezosState, action: action): tezosState {
         JSON.stringify({
           contracts: state.contracts,
           aliases,
-          favouriteContract: state.favouriteContract,
+          currentContract: state.currentContract,
         })
       );
       return {
@@ -150,7 +150,7 @@ function reducer(state: tezosState, action: action): tezosState {
           JSON.stringify({
             contracts,
             aliases: state.aliases,
-            favouriteContract: state.favouriteContract,
+            currentContract: state.currentContract,
           })
         );
       }
@@ -160,6 +160,15 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "setCurrentContract":
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({
+          contracts: state.contracts,
+          aliases: state.aliases,
+          currentContract: action.payload,
+        })
+      );
+
       return {
         ...state,
         currentContract: action.payload,
@@ -199,16 +208,16 @@ function reducer(state: tezosState, action: action): tezosState {
           ? Object.keys(state.contracts).at(0) || null
           : state.favouriteContract;
 
+      const addresses = Object.keys(contracts);
+
       localStorage.setItem(
         "app_state",
         JSON.stringify({
           contracts,
           aliases: newAliases,
-          favouriteContract: fav,
+          currentContract: addresses.length > 0 ? addresses[0] : null,
         })
       );
-
-      const addresses = Object.keys(contracts);
 
       return {
         ...state,
@@ -224,7 +233,7 @@ function reducer(state: tezosState, action: action): tezosState {
         JSON.stringify({
           contracts: state.contracts,
           aliases: state.aliases,
-          favouriteContract: action.address,
+          currentContract: state.currentContract,
         })
       );
 

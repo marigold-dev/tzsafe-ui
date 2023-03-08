@@ -48,7 +48,7 @@ const SignersForm: FC<{
   }
 
   const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
+    return <p className="mt-2 italic text-red-600">{message}</p>;
   };
   const initialProps: {
     validators: { name: string; address: string }[];
@@ -164,6 +164,7 @@ const SignersForm: FC<{
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
           validatorsError?: string;
+          effectivePeriod?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -192,6 +193,13 @@ const SignersForm: FC<{
         if (values.requiredSignatures > values.validators.length) {
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
+
+        const parsedNumber = Number(values.effectivePeriod);
+        if (isNaN(parsedNumber) || parsedNumber <= 0) {
+          errors.effectivePeriod = "Invalid duration";
+          return errors;
+        }
+
         if (
           result.every(x => x.address === "" && x.name === "") &&
           !errors.requiredSignatures &&
@@ -360,12 +368,7 @@ const SignersForm: FC<{
                 ></option>
               ))}
             </Field>
-            <ErrorMessage
-              name={`requiredSignatures`}
-              render={x => {
-                return renderError(x);
-              }}
-            />
+            <ErrorMessage name={`requiredSignatures`} render={renderError} />
           </div>
           {typeof values.effectivePeriod != "undefined" && (
             <div className="mt-4 flex w-full flex-col md:grow">
@@ -379,22 +382,17 @@ const SignersForm: FC<{
                 name="effectivePeriod"
                 placeholder={props.contract.effectivePeriod}
               ></Field>
-              <p className="text-lg text-white">
+              <p className="mt-2 text-lg text-white">
                 {adaptiveTime(values.effectivePeriod.toString())}
               </p>
-              <ErrorMessage
-                name={`requiredSignatures`}
-                render={x => {
-                  return renderError(x);
-                }}
-              />
+              <ErrorMessage name={`effectivePeriod`} render={renderError} />
             </div>
           )}
           <div className="flex w-full justify-center">
             <button
               className={`${
                 props.disabled ?? false ? "pointer-events-none opacity-50" : ""
-              } my-2 rounded bg-primary p-2 font-medium text-white`}
+              } my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500`}
               type="submit"
             >
               Save changes
