@@ -1,10 +1,21 @@
-import { useContext } from "react";
+import { useRouter } from "next/router";
+import { useContext, useEffect } from "react";
 import Meta from "../components/meta";
 import TransferForm from "../components/transferForm";
 import { AppStateContext } from "../context/state";
+import useIsOwner from "../utils/useIsOwner";
 
 const CreateProposal = () => {
   const state = useContext(AppStateContext)!;
+
+  const router = useRouter();
+  const isOwner = useIsOwner();
+
+  useEffect(() => {
+    if (isOwner) return;
+
+    router.replace("/proposals");
+  }, [isOwner, router]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
