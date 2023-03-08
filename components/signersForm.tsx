@@ -203,6 +203,8 @@ const SignersForm: FC<{
         return errors;
       }}
       onSubmit={async values => {
+        if (!!props.disabled) return;
+
         setLoading(true);
         try {
           await changeSettings(
