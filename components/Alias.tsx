@@ -10,11 +10,18 @@ const Alias = ({
 }) => {
   const state = useContext(AppStateContext)!;
 
+  const formatted = useMemo(
+    () =>
+      `${address.substring(0, 5)}...${address.substring(address.length - 5)}`,
+    [address]
+  );
+
   const toDisplay = useMemo(
     () =>
-      state.aliases[address] ??
-      `${address.substring(0, 5)}...${address.substring(address.length - 5)}`,
-    [state, address]
+      state.aliases[address] === ""
+        ? formatted
+        : state.aliases[address] ?? formatted,
+    [state, address, formatted]
   );
 
   return <span className={className}>{toDisplay}</span>;

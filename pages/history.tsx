@@ -334,21 +334,7 @@ const HistoryCard = ({
             <span className="justify-self-end">Parameters</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {content
-              .filter(v => {
-                return true;
-                // if ("executeLambda" in v) {
-                //   console.log(
-                //     v.executeLambda.metadata?.includes("lambda unavailable")
-                //   );
-                //   return !v.executeLambda.metadata?.includes(
-                //     "lambda unavailable"
-                //   );
-                // } else {
-                //   return true;
-                // }
-              })
-              .map(renderProposalContent)}
+            {content.map(renderProposalContent)}
           </div>
         </section>
         <section>
@@ -400,6 +386,11 @@ const HistoryCard = ({
     </div>
   );
 };
+
+const getLatestTimestamp = (og: {
+  resolver: { timestamp: string } | undefined;
+  proposer: { timestamp: string };
+}) => (!!og.resolver ? og.resolver.timestamp : og.proposer.timestamp);
 
 const History = () => {
   const state = useContext(AppStateContext)!;
@@ -487,10 +478,11 @@ const History = () => {
         .sort((a, b) => {
           const date1 = !!(a[1] as any).timestamp
             ? new Date((a[1] as any).timestamp).getTime()
-            : new Date(a[1].ui.timestamp).getTime();
+            : new Date(getLatestTimestamp(a[1].og)).getTime();
+
           const date2 = !!(b[1] as any).timestamp
             ? new Date((b[1] as any).timestamp).getTime()
-            : new Date(b[1].ui.timestamp).getTime();
+            : new Date(getLatestTimestamp(b[1].og)).getTime();
 
           return date2 - date1;
         }),
@@ -587,7 +579,11 @@ const History = () => {
                         setOpenPreview(v => ({ ...v, [i]: !(v[i] ?? false) }));
                       }}
                       status={x[1].ui.status}
-                      date={new Date(x[1].ui.timestamp)}
+                      date={
+                        !!x[1].og.resolver
+                          ? new Date(x[1].og.resolver.timestamp)
+                          : new Date(x[1].ui.timestamp)
+                      }
                       activities={x[1].ui.signatures.map(
                         ({ signer, result }) => ({
                           hasApproved: result,
@@ -596,7 +592,7 @@ const History = () => {
                       )}
                       content={x[1].ui.content}
                       proposer={x[1].og.proposer}
-                      resolver={x[1].og.proposer}
+                      resolver={x[1].og.resolver}
                     />
                   );
                 })}
