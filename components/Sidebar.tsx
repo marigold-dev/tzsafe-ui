@@ -425,7 +425,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/settings"
-          className={linkClass(path === "/settings", !isOwner)}
+          className={linkClass(path === "/settings")}
           onClick={onClose}
         >
           <svg

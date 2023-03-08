@@ -9,14 +9,7 @@ const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
   const [canDelete, setCanDelete] = useState(true);
-  const router = useRouter();
   const isOwner = useIsOwner();
-
-  useEffect(() => {
-    if (isOwner) return;
-
-    router.replace("/proposals");
-  }, [isOwner, router]);
 
   useEffect(() => {
     if (canDelete) return;
@@ -61,6 +54,7 @@ const Settings = () => {
             </h2>
           ) : (
             <SignersForm
+              disabled={!isOwner}
               address={state.currentContract}
               contract={state.contracts[state.currentContract]}
               closeModal={console.log}
