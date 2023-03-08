@@ -489,8 +489,6 @@ const History = () => {
     [proposals, transfers]
   );
 
-  console.log(filteredProposals);
-
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"History"} />

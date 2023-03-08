@@ -1,5 +1,6 @@
 import { useContext, useMemo } from "react";
 import { AppStateContext } from "../context/state";
+import Copy from "./Copy";
 
 const Alias = ({
   address,
@@ -24,7 +25,11 @@ const Alias = ({
     [state, address, formatted]
   );
 
-  return <span className={className}>{toDisplay}</span>;
+  return (
+    <Copy value={address} text="Copy address">
+      <span className={className}>{toDisplay}</span>
+    </Copy>
+  );
 };
 
 export default Alias;
