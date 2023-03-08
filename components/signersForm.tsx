@@ -36,6 +36,7 @@ const SignersForm: FC<{
   closeModal: () => void;
   address: string;
   contract: contractStorage;
+  disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
@@ -202,6 +203,8 @@ const SignersForm: FC<{
         return errors;
       }}
       onSubmit={async values => {
+        if (!!props.disabled) return;
+
         setLoading(true);
         try {
           await changeSettings(
@@ -289,6 +292,10 @@ const SignersForm: FC<{
                                 : "") +
                               `mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto ${
                                 index === 0 ? "md:self-end" : "md:self-start"
+                              } ${
+                                props.disabled ?? false
+                                  ? "pointer-events-none opacity-50"
+                                  : ""
                               }`
                             }
                             onClick={e => {
@@ -316,7 +323,11 @@ const SignersForm: FC<{
                     })}
                   <button
                     type="button"
-                    className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
+                    className={`${
+                      props.disabled ?? false
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    } my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white`}
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
@@ -381,7 +392,9 @@ const SignersForm: FC<{
           )}
           <div className="flex w-full justify-center">
             <button
-              className="my-2 rounded bg-primary p-2 font-medium text-white "
+              className={`${
+                props.disabled ?? false ? "pointer-events-none opacity-50" : ""
+              } my-2 rounded bg-primary p-2 font-medium text-white`}
               type="submit"
             >
               Save changes
