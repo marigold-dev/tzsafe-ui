@@ -7,7 +7,6 @@ import {
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import ProposalSignForm from "../components/proposalSignForm";
 import {
   content,
   proposal as p1,
@@ -15,7 +14,7 @@ import {
 } from "../types/008Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
-import { map2Object, matchLambda } from "./apis";
+import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
 import { Versioned } from "./interface";
 
@@ -179,7 +178,7 @@ class Version008 extends Versioned {
     } else if ("transfer" in content) {
       return {
         transfer: {
-          amount: content.transfer.amount,
+          amount: content.transfer.amount.toNumber(),
           destination: content.transfer.target,
         },
       };

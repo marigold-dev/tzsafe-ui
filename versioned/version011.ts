@@ -192,7 +192,7 @@ class Version011 extends Versioned {
     } else if ("transfer" in content) {
       return {
         transfer: {
-          amount: content.transfer.amount,
+          amount: content.transfer.amount.toNumber(),
           destination: content.transfer.target,
         },
       };

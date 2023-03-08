@@ -6,7 +6,7 @@ import {
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import {
   content,
@@ -188,7 +188,7 @@ class Version009 extends Versioned {
     } else if ("transfer" in content) {
       return {
         transfer: {
-          amount: content.transfer.amount,
+          amount: content.transfer.amount.toNumber(),
           destination: content.transfer.target,
         },
       };
