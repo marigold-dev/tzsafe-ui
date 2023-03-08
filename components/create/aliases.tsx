@@ -93,7 +93,8 @@ function Aliases() {
           return err;
         });
 
-        if (isNaN(Number(values.effectivePeriod))) {
+        const parsedNumber = Number(values.effectivePeriod);
+        if (isNaN(parsedNumber) || parsedNumber <= 0) {
           errors.effectivePeriod = "Invalid duration";
           return errors;
         }

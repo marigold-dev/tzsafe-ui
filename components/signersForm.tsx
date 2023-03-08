@@ -193,7 +193,8 @@ const SignersForm: FC<{
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
-        if (isNaN(Number(values.effectivePeriod))) {
+        const parsedNumber = Number(values.effectivePeriod);
+        if (isNaN(parsedNumber) || parsedNumber <= 0) {
           errors.effectivePeriod = "Invalid duration";
           return errors;
         }
