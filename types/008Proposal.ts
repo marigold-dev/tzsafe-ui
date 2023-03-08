@@ -3,7 +3,7 @@ import { BigNumber } from "bignumber.js";
 
 type content =
   | { execute_lambda: { metadata?: string; lambda: string } }
-  | { transfer: { amount: BigNumber; target: string; parameter: {} } }
+  | { transfer: { amount: number; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }
   | { execute: string }
