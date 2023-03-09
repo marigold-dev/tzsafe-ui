@@ -11,7 +11,7 @@ import { DEFAULT_TIMEOUT } from "../context/config";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
-import { promiseWithTimeout, timeout } from "../utils/timeout";
+import { promiseWithTimeout } from "../utils/timeout";
 import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
 import { timeoutAndHash, Versioned } from "./interface";
