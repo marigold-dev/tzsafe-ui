@@ -5,7 +5,7 @@ import {
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
 import {
