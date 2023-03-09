@@ -6,6 +6,8 @@ import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
 import { ownersForm } from "./forms";
 
+export type timeoutAndHash = [boolean, string];
+
 abstract class Versioned {
   readonly version: string;
   readonly contractAddress: string;
@@ -29,20 +31,21 @@ abstract class Versioned {
         }[];
       }[];
     }
-  ): {};
+  ): Promise<timeoutAndHash>;
+
   abstract signProposal(
     cc: WalletContract,
     t: TezosToolkit,
     proposal: number,
     result: boolean | undefined,
     resolve: boolean
-  ): Promise<void>;
+  ): Promise<timeoutAndHash>;
 
   abstract submitSettingsProposals(
     cc: Contract,
     t: TezosToolkit,
     ops: ownersForm[]
-  ): Promise<void>;
+  ): Promise<timeoutAndHash>;
   static toContractState(_contract: any, _balance: BigNumber): contractStorage {
     throw new Error("not implemented!");
   }
