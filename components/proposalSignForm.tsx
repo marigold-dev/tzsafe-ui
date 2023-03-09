@@ -1,6 +1,7 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
@@ -25,8 +26,12 @@ function ProposalSignForm({
   onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
+
   const renderError = (message: string) => (
     <p className="italic text-red-600">{message}</p>
   );
@@ -39,17 +44,62 @@ function ProposalSignForm({
     let cc = await state.connection.wallet.at(address);
     let versioned = VersionedApi(version, address);
 
-    await versioned.signProposal(
-      cc,
-      state.connection,
-      proposal,
-      result,
-      Boolean(resolve)
+    setTimeoutAndHash(
+      await versioned.signProposal(
+        cc,
+        state.connection,
+        proposal,
+        result,
+        Boolean(resolve)
+      )
+    );
+  }
+
+  if (timeoutAndHash[0]) {
+    return (
+      <div className="mx-auto mt-4 w-full text-center text-zinc-400">
+        <p>
+          The wallet {"didn't"} confirmed that the transaction has been
+          validated. You can check it in{" "}
+          <a
+            className="text-zinc-200 hover:text-zinc-300"
+            href={`https://ghostnet.tzkt.io/${timeoutAndHash[1]}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            the explorer
+          </a>
+          , and if it is, {"it'll"} appears in the history
+        </p>
+        <div className="w-full space-x-4">
+          <button
+            className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+            onClick={closeModal}
+          >
+            Close
+          </button>
+          <button
+            className="mt-8 rounded border-2 border-primary bg-primary px-4 py-2 font-medium text-white hover:border-red-500 hover:bg-red-500"
+            onClick={() => {
+              router.push("/history");
+            }}
+          >
+            Go to history
+          </button>
+        </div>
+      </div>
     );
   }
 
   if (loading && typeof result == "undefined") {
-    return <ContractLoader loading={loading}></ContractLoader>;
+    return (
+      <div className="flex w-full flex-col items-center justify-center">
+        <ContractLoader loading={loading}></ContractLoader>
+        <span className="mt-4 text-zinc-400">
+          Waiting for transaction confirmation (it may takes a few mintues)
+        </span>
+      </div>
+    );
   }
   if (!loading && typeof result != "undefined") {
     return (

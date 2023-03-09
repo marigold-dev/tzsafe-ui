@@ -7,6 +7,7 @@ import {
   Formik,
   FormikErrors,
 } from "formik";
+import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useState } from "react";
 import {
   AppDispatchContext,
@@ -39,10 +40,12 @@ const SignersForm: FC<{
   disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+  const router = useRouter();
 
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
+  const [loading, setLoading] = useState(false);
+  const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
 
   useEffect(() => {
     if (loading || result === undefined) return;
@@ -108,10 +111,48 @@ const SignersForm: FC<{
       ops.push({ changeThreshold: requiredSignatures });
     }
     let api = VersionedApi(props.contract.version, props.address);
-    await api.submitSettingsProposals(cc, state.connection, ops);
+    setTimeoutAndHash(
+      await api.submitSettingsProposals(cc, state.connection, ops)
+    );
   }
+
+  if (timeoutAndHash[0]) {
+    return (
+      <div className="mx-auto mt-4 w-full text-center text-zinc-400 lg:w-1/2">
+        <p>
+          The wallet {"didn't"} confirmed that the transaction has been
+          validated. You can check it in{" "}
+          <a
+            className="text-zinc-200 hover:text-zinc-300"
+            href={`https://ghostnet.tzkt.io/${timeoutAndHash[1]}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            the explorer
+          </a>
+          , and if it is, {"it'll"} appears in the proposals
+        </p>
+        <button
+          className="mt-8 rounded bg-primary px-4 py-2 text-white hover:bg-red-500"
+          onClick={() => {
+            router.push("/proposals");
+          }}
+        >
+          Go to proposals
+        </button>
+      </div>
+    );
+  }
+
   if (loading && typeof result == "undefined") {
-    return <ContractLoader loading={loading}></ContractLoader>;
+    return (
+      <div className="flex w-full flex-col items-center justify-center">
+        <ContractLoader loading={loading}></ContractLoader>
+        <span className="mt-4 text-zinc-400">
+          Waiting for transaction confirmation (it may takes a few mintues)
+        </span>
+      </div>
+    );
   }
   if (!loading && typeof result != "undefined") {
     return (
