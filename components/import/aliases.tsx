@@ -30,9 +30,6 @@ function Aliases() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext);
-  if (state?.address == null) {
-    return null;
-  }
   const renderError = (message: string) => {
     return <p className="italic text-red-600">{message}</p>;
   };

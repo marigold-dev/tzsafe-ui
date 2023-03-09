@@ -46,10 +46,6 @@ export default function App({ Component, pageProps }: AppProps) {
     )
       return;
 
-    if (!state.address) {
-      router.replace("/");
-    }
-
     if (Object.values(state.contracts).length > 0) return;
 
     router.replace("/");
@@ -61,7 +57,7 @@ export default function App({ Component, pageProps }: AppProps) {
         let a = init();
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
-          name: "Multisig wallet",
+          name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
           disableDefaultEvents: false,
           eventHandlers: {
@@ -96,14 +92,12 @@ export default function App({ Component, pageProps }: AppProps) {
         <div className="relative min-h-screen">
           <div id="modal" />
           <NavBar />
-          {!!state.address && Object.entries(state.contracts).length > 0 && (
+          {Object.entries(state.contracts).length > 0 && (
             <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
           )}
           <div
             className={`pt-20 pb-28 ${
-              !state.address || Object.entries(state.contracts).length === 0
-                ? ""
-                : "md:pl-72"
+              Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
             }`}
           >
             <button
@@ -115,16 +109,14 @@ export default function App({ Component, pageProps }: AppProps) {
               <span className="text-xs">Open sidebar</span>
               <ArrowRightIcon className="h-4 w-4" />
             </button>
-            {path === "/" && !!state.address && !!state.currentContract ? (
+            {path === "/" && !!state.currentContract ? (
               <Proposals />
             ) : (
               <Component {...pageProps} />
             )}
           </div>
           <Footer
-            shouldRemovePadding={
-              !state.address || Object.entries(state.contracts).length === 0
-            }
+            shouldRemovePadding={Object.entries(state.contracts).length === 0}
           />
         </div>
       </AppDispatchContext.Provider>

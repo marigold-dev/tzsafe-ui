@@ -18,33 +18,7 @@ function Import() {
   const state = useContext(AppStateContext);
   const dispatch = useContext(AppDispatchContext);
 
-  useEffect(() => {
-    const connectWallet = async (): Promise<void> => {
-      try {
-        await state?.beaconWallet!.requestPermissions({
-          network: {
-            type: PREFERED_NETWORK,
-          },
-        });
-        const userAddress: string = await state?.beaconWallet!.getPKH()!;
-        const balance = await state?.connection.tz.getBalance(userAddress);
-        let s = await state?.beaconWallet!.client.getActiveAccount();
-        dispatch!({
-          type: "login",
-          accountInfo: s!,
-          address: userAddress,
-          balance: balance!.toString(),
-        });
-      } catch (error) {
-        router.replace("/");
-      }
-    };
-    (async () => {
-      if (!state?.address && state?.beaconWallet) {
-        await connectWallet();
-      }
-    })();
-  }, [state, dispatch, router]);
+  useEffect(() => {}, [state, dispatch, router]);
 
   return (
     <div className="h-full grow">
