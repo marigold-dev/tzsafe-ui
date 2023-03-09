@@ -170,7 +170,7 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          {typeof formState?.effectivePeriod != "undefined" && (
+          {!!formState?.effectivePeriod && (
             <div className="mt-4 flex w-full flex-col md:grow">
               <label className="mr-4 text-white">
                 Proposal duration (in seconds)
