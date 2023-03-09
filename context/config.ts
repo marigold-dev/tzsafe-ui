@@ -10,3 +10,5 @@ export const PREFERED_NETWORK =
   process.env.NEXT_PUBLIC_NETWORK_TYPE === "mainnet"
     ? NetworkType.MAINNET
     : NetworkType.GHOSTNET;
+
+export const DEFAULT_TIMEOUT = 90000;

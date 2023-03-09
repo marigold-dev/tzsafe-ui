@@ -132,14 +132,26 @@ const SignersForm: FC<{
           </a>
           , and if it is, {"it'll"} appears in the proposals
         </p>
-        <button
-          className="mt-8 rounded bg-primary px-4 py-2 text-white hover:bg-red-500"
-          onClick={() => {
-            router.push("/proposals");
-          }}
-        >
-          Go to proposals
-        </button>
+        <div></div>
+        <div className="mt-8 w-full space-x-4">
+          <button
+            className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+            onClick={() => {
+              setResult(undefined);
+              setTimeoutAndHash([false, ""]);
+            }}
+          >
+            Back to settings
+          </button>
+          <button
+            className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
+            onClick={() => {
+              router.push("/proposals");
+            }}
+          >
+            Go to proposals
+          </button>
+        </div>
       </div>
     );
   }
