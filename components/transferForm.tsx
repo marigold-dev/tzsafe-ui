@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import { emitMicheline, Parser } from "@taquito/michel-codec";
 import { TokenSchema } from "@taquito/michelson-encoder";
 import { char2Bytes, validateContractAddress } from "@taquito/utils";
@@ -12,6 +13,7 @@ import {
 import { useRouter } from "next/router";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
@@ -886,7 +888,9 @@ function TransferForm(
           validated. You can check it in{" "}
           <a
             className="text-zinc-200 hover:text-zinc-300"
-            href={`https://ghostnet.tzkt.io/${timeoutAndHash[1]}`}
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+            }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
           >
@@ -894,14 +898,25 @@ function TransferForm(
           </a>
           , and if it is, {"it'll"} appears in the proposals
         </p>
-        <button
-          className="mt-8 rounded bg-primary px-4 py-2 text-white hover:bg-red-500"
-          onClick={() => {
-            router.push("/proposals");
-          }}
-        >
-          Go to proposals
-        </button>
+        <div className="mt-8 w-full space-x-4">
+          <button
+            className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+            onClick={() => {
+              setResult(undefined);
+              setTimeoutAndHash([false, ""]);
+            }}
+          >
+            Back to proposal creation
+          </button>
+          <button
+            className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
+            onClick={() => {
+              router.push("/proposals");
+            }}
+          >
+            Go to proposals
+          </button>
+        </div>
       </div>
     );
   }

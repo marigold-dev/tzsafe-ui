@@ -8,6 +8,7 @@ import {
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { DEFAULT_TIMEOUT } from "../context/config";
 import {
   content,
   proposal as p1,
@@ -89,7 +90,7 @@ class Version009 extends Versioned {
 
     const transacValue = await promiseWithTimeout(
       op.transactionOperation(),
-      60000
+      DEFAULT_TIMEOUT
     );
 
     if (transacValue === -1) {
@@ -98,7 +99,7 @@ class Version009 extends Versioned {
 
     const confirmationValue = await promiseWithTimeout(
       op.confirmation(1),
-      60000
+      DEFAULT_TIMEOUT
     );
 
     if (confirmationValue === -1) {
@@ -135,7 +136,7 @@ class Version009 extends Versioned {
 
     const confirmationValue = await promiseWithTimeout(
       op.confirmation(1),
-      60000
+      DEFAULT_TIMEOUT
     );
 
     if (confirmationValue === -1) {
@@ -167,7 +168,7 @@ class Version009 extends Versioned {
 
     const transacValue = await promiseWithTimeout(
       op.transactionOperation(),
-      60000
+      DEFAULT_TIMEOUT
     );
 
     if (transacValue === -1) {
