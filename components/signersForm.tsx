@@ -250,6 +250,7 @@ const SignersForm: FC<{
                               {index === 0 ? "Owner Name" : ""}
                             </label>
                             <Field
+                              disabled={props.disabled ? true : null}
                               name={`validators.${index}.name`}
                               className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
@@ -267,6 +268,7 @@ const SignersForm: FC<{
                               {index === 0 ? "Owner Address" : ""}
                             </label>
                             <Field
+                              disabled={props.disabled ? true : null}
                               name={`validators.${index}.address`}
                               className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
@@ -336,10 +338,11 @@ const SignersForm: FC<{
               )}
             </FieldArray>
           </div>
-          <div className="flex w-full flex-col md:grow">
-            <label className="mr-4 text-white">Threshold: </label>
+          <div className="mt-4 flex w-full flex-col md:grow">
+            <label className="mr-4 text-white">Threshold </label>
             <Field
-              className="mt-2 w-full rounded py-1 text-center text-black"
+              disabled={props.disabled ? true : null}
+              className="mt-2 w-full rounded p-2 text-center"
               as="select"
               component="select"
               name="requiredSignatures"
@@ -362,9 +365,10 @@ const SignersForm: FC<{
           {typeof values.effectivePeriod != "undefined" && (
             <div className="mt-4 flex w-full flex-col md:grow">
               <label className="mr-4 text-white">
-                Proposal duration (in seconds):{" "}
+                Proposal duration (in seconds)
               </label>
               <Field
+                disabled={props.disabled ? true : null}
                 className="mt-2 w-full rounded p-2 text-black"
                 as="select"
                 component="input"
