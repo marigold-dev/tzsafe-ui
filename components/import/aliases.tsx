@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
+import { adaptiveTime } from "../../utils/adaptiveTime";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -94,7 +95,7 @@ function Aliases() {
       {({ values, errors }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="mb-2 self-center text-2xl font-medium text-white">
-            Optionally add names of wallet participants below:{" "}
+            Optionally add names of wallet participants below
           </div>
           <div className="mb-2 mt-4 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
@@ -149,14 +150,14 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="mt-4 flex grow items-center">
-            <label className="mr-4 text-white">Threshold: </label>
+          <div className="mt-4 flex w-full flex-col md:grow">
+            <label className="mr-4 text-white">Threshold </label>
             <Field
               disabled
               component="select"
               name="requiredSignatures"
               values={values.requiredSignatures}
-              className="rounded p-2"
+              className="mt-2 w-full rounded p-2 text-center"
             >
               {values.validators.map((_, idx) => (
                 <option
@@ -169,18 +170,24 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          <div className="mt-4 flex grow items-center">
-            <label className="mr-4 text-white">
-              Proposal duration (in seconds):
-            </label>
-            <Field
-              disabled
-              component="input"
-              name="effectivePeriod"
-              value={formState?.effectivePeriod ?? "Unknown"}
-              className="rounded p-2"
-            />
-          </div>
+          {typeof formState?.effectivePeriod != "undefined" && (
+            <div className="mt-4 flex w-full flex-col md:grow">
+              <label className="mr-4 text-white">
+                Proposal duration (in seconds)
+              </label>
+              <Field
+                disabled
+                component="input"
+                name="effectivePeriod"
+                value={formState.effectivePeriod}
+                className="mt-2 w-full rounded p-2"
+              />
+              <p className="mt-2 text-lg text-white">
+                {adaptiveTime(formState.effectivePeriod.toString())}
+              </p>
+              <ErrorMessage name={`effectivePeriod`} render={renderError} />
+            </div>
+          )}
           <div className="mt-8 flex space-x-6">
             <Link
               type="button"
