@@ -10,9 +10,10 @@ import { BigNumber } from "bignumber.js";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { promiseWithTimeout, timeout } from "../utils/timeout";
 import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
-import { Versioned } from "./interface";
+import { timeoutAndHash, Versioned } from "./interface";
 
 class Version006 extends Versioned {
   async submitTxProposals(
@@ -31,7 +32,7 @@ class Version006 extends Versioned {
         }[];
       }[];
     }
-  ): Promise<void> {
+  ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
         proposals.transfers.map(x => {
@@ -64,9 +65,28 @@ class Version006 extends Versioned {
         })
       )
       .toTransferParams();
+
     let op = await t.wallet.transfer(params).send();
-    await op.transactionOperation();
-    await op.confirmation(1);
+
+    const transacValue = await promiseWithTimeout(
+      op.transactionOperation(),
+      60000
+    );
+
+    if (transacValue === -1) {
+      return [true, op.opHash];
+    }
+
+    const confirmationValue = await promiseWithTimeout(
+      op.confirmation(1),
+      60000
+    );
+
+    if (confirmationValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
   static override getProposalsId(_contract: storage): string {
     return _contract.proposal_map.toString();
@@ -77,7 +97,7 @@ class Version006 extends Versioned {
     proposal: number,
     result: boolean | undefined,
     resolve: boolean
-  ): Promise<void> {
+  ): Promise<timeoutAndHash> {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
@@ -90,14 +110,24 @@ class Version006 extends Versioned {
       );
     }
     let op = await batch.send();
-    await op.confirmation(1);
+
+    const confirmationValue = await promiseWithTimeout(
+      op.confirmation(1),
+      60000
+    );
+
+    if (confirmationValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
 
   async submitSettingsProposals(
     cc: Contract,
     t: TezosToolkit,
     ops: ownersForm[]
-  ) {
+  ): Promise<timeoutAndHash> {
     let content = ops
       .map(v => {
         if ("addOwners" in v) {
@@ -111,7 +141,16 @@ class Version006 extends Versioned {
       .filter(x => !!x);
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
-    await op.transactionOperation();
+    const transacValue = await promiseWithTimeout(
+      op.transactionOperation(),
+      60000
+    );
+
+    if (transacValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
   static override toContractState(
     contract: any,
