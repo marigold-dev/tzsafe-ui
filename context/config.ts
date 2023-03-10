@@ -11,4 +11,4 @@ export const PREFERED_NETWORK =
     ? NetworkType.MAINNET
     : NetworkType.GHOSTNET;
 
-export const DEFAULT_TIMEOUT = 90000;
+export const DEFAULT_TIMEOUT = 60000;
