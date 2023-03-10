@@ -250,7 +250,7 @@ const SignersForm: FC<{
                               {index === 0 ? "Owner Name" : ""}
                             </label>
                             <Field
-                              disabled={props.disabled ? true : null}
+                              disabled={props.disabled}
                               name={`validators.${index}.name`}
                               className="md:text-md rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
@@ -268,7 +268,7 @@ const SignersForm: FC<{
                               {index === 0 ? "Owner Address" : ""}
                             </label>
                             <Field
-                              disabled={props.disabled ? true : null}
+                              disabled={props.disabled}
                               name={`validators.${index}.address`}
                               className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.address || "Owner address"}
@@ -341,7 +341,7 @@ const SignersForm: FC<{
           <div className="mt-4 flex w-full flex-col md:grow">
             <label className="mr-4 text-white">Threshold </label>
             <Field
-              disabled={props.disabled ? true : null}
+              disabled={props.disabled}
               className="mt-2 w-full rounded p-2 text-center"
               as="select"
               component="select"
@@ -368,7 +368,7 @@ const SignersForm: FC<{
                 Proposal duration (in seconds)
               </label>
               <Field
-                disabled={props.disabled ? true : null}
+                disabled={props.disabled}
                 className="mt-2 w-full rounded p-2 text-black"
                 as="select"
                 component="input"
