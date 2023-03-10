@@ -141,20 +141,8 @@ const renderProposalContent = (content: proposalContent, i: number) => {
       };
     } else {
       const contractData = JSON.parse(metadata.meta);
-
-      const [endpoint, arg] = (() => {
-        if (Array.isArray(contractData.payload)) {
-          return ["default", JSON.stringify(contractData.payload)];
-        }
-
-        if (typeof contractData.payload !== "object") {
-          return ["default", contractData.payload.toString()];
-        }
-
-        const entries = Object.entries(contractData.payload);
-        if (entries.length === 0) return ["default", "{}"];
-        else return entries[0];
-      })();
+      const endpoint = contractData.entrypoint;
+      const arg = contractData.payload;
 
       data = {
         label: "Execute contract",
