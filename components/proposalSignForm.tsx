@@ -73,7 +73,9 @@ function ProposalSignForm({
           >
             the explorer
           </a>
-          , and if it is, {"it'll"} appear in the history
+          , and if it is, and the proposal is resolved, it will appear in the
+          history, otherwise it will still remain in the proposals with updating
+          status
         </p>
         <div className="w-full space-x-4">
           <button
