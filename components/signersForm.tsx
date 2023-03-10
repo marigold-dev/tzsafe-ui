@@ -362,7 +362,7 @@ const SignersForm: FC<{
             </Field>
             <ErrorMessage name={`requiredSignatures`} render={renderError} />
           </div>
-          {typeof values.effectivePeriod != "undefined" && (
+          {!!values.effectivePeriod && (
             <div className="mt-4 flex w-full flex-col md:grow">
               <label className="mr-4 text-white">
                 Proposal duration (in seconds)
