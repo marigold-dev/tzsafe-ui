@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import { validateAddress } from "@taquito/utils";
 import {
   ErrorMessage,
@@ -9,6 +10,7 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useState } from "react";
+import { PREFERED_NETWORK } from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -120,17 +122,19 @@ const SignersForm: FC<{
     return (
       <div className="mx-auto mt-4 w-full text-center text-zinc-400 lg:w-1/2">
         <p>
-          The wallet {"didn't"} confirmed that the transaction has been
-          validated. You can check it in{" "}
+          The wallet {"can't"} confirm that the transaction has been validated.
+          You can check it in{" "}
           <a
             className="text-zinc-200 hover:text-zinc-300"
-            href={`https://ghostnet.tzkt.io/${timeoutAndHash[1]}`}
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+            }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
           >
             the explorer
           </a>
-          , and if it is, {"it'll"} appears in the proposals
+          , and if it is, {"it'll"} appear in the proposals
         </p>
         <div></div>
         <div className="mt-8 w-full space-x-4">
@@ -161,7 +165,8 @@ const SignersForm: FC<{
       <div className="flex w-full flex-col items-center justify-center">
         <ContractLoader loading={loading}></ContractLoader>
         <span className="mt-4 text-zinc-400">
-          Waiting for transaction confirmation (it may takes a few mintues)
+          Sending and waiting for transaction confirmation (It may take a few
+          minutes)
         </span>
       </div>
     );

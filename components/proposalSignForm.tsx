@@ -1,6 +1,8 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
+import { PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
@@ -59,17 +61,19 @@ function ProposalSignForm({
     return (
       <div className="mx-auto mt-4 w-full text-center text-zinc-400">
         <p>
-          The wallet {"didn't"} confirmed that the transaction has been
-          validated. You can check it in{" "}
+          The wallet {"can't"} confirm that the transaction has been validated.
+          You can check it in{" "}
           <a
             className="text-zinc-200 hover:text-zinc-300"
-            href={`https://ghostnet.tzkt.io/${timeoutAndHash[1]}`}
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+            }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
           >
             the explorer
           </a>
-          , and if it is, {"it'll"} appears in the history
+          , and if it is, {"it'll"} appear in the history
         </p>
         <div className="w-full space-x-4">
           <button
@@ -96,7 +100,8 @@ function ProposalSignForm({
       <div className="flex w-full flex-col items-center justify-center">
         <ContractLoader loading={loading}></ContractLoader>
         <span className="mt-4 text-zinc-400">
-          Waiting for transaction confirmation (it may takes a few mintues)
+          Sending and waiting for transaction confirmation (It may take a few
+          minutes)
         </span>
       </div>
     );
