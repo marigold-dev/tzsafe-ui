@@ -401,7 +401,6 @@ function RenderItem({
             }
             return error;
           }}
-          defaultValue={"init" in item ? item.init : item.placeholder}
         />
         <ErrorMessage name={fieldName} render={renderError} />
       </div>
@@ -858,19 +857,20 @@ function ExecuteForm(
             let lambda = `
             {
               DROP;
-      PUSH address "${props.address}";
-      CONTRACT ${entry} ${typ};
-      IF_NONE {PUSH string "failure" ; FAILWITH } { } ;
-      PUSH mutez ${props.amount} ;
-      PUSH ${typ} ${param} ;
-      TRANSFER_TOKENS 
-          }`;
+              PUSH address "${props.address}";
+              CONTRACT ${entry} ${typ};
+              IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
+              PUSH mutez ${props.amount} ;
+              PUSH ${typ} ${param} ;
+              TRANSFER_TOKENS
+            }`;
             props.setField(
               lambda,
               JSON.stringify(
                 {
                   contract_addr: props.address,
                   mutez_amount: props.amount,
+                  entrypoint: values.entrypoint!.kind,
                   payload: param,
                 },
                 null,
