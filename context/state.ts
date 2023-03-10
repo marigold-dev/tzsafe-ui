@@ -201,7 +201,7 @@ function reducer(state: tezosState, action: action): tezosState {
     }
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;
-      const { [action.address]: __, ...newAliases } = { ...state.aliases };
+      const { [action.address]: __, ...aliases } = { ...state.aliases };
 
       const fav =
         (state.favouriteContract || "") === action.address
@@ -214,7 +214,7 @@ function reducer(state: tezosState, action: action): tezosState {
         "app_state",
         JSON.stringify({
           contracts,
-          aliases: newAliases,
+          aliases,
           currentContract: addresses.length > 0 ? addresses[0] : null,
         })
       );
@@ -224,7 +224,7 @@ function reducer(state: tezosState, action: action): tezosState {
         contracts,
         favouriteContract: fav,
         currentContract: addresses.length > 0 ? addresses[0] : null,
-        aliases: newAliases,
+        aliases,
       };
     }
     case "setFavourite": {

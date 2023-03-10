@@ -102,7 +102,7 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
+                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-x-4 md:flex-row md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="flex flex-col">
