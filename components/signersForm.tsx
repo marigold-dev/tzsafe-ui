@@ -57,10 +57,6 @@ const SignersForm: FC<{
     }, 2000);
   }, [result, loading]);
 
-  if (state?.address == null) {
-    return null;
-  }
-
   const renderError = (message: string) => {
     return <p className="mt-2 italic text-red-600">{message}</p>;
   };
