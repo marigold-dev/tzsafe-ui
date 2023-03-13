@@ -224,7 +224,7 @@ const ProposalCard = ({
           {status ?? "Rejected"}
         </span>
         <span
-          className="truncate font-light text-zinc-300"
+          className="ml-4 truncate font-light text-zinc-300 md:ml-0"
           style={{
             minWidth: "7rem",
           }}
@@ -248,7 +248,7 @@ const ProposalCard = ({
         </div>
       </button>
       {isSignable && (
-        <div className="flex h-16 w-full items-center justify-around">
+        <div className="flex h-16 w-full items-center justify-around px-6">
           {!isExpired && (
             <>
               <button
@@ -294,7 +294,6 @@ const ProposalCard = ({
           )}
         </div>
       )}
-      <div></div>
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
@@ -317,6 +316,15 @@ const ProposalCard = ({
         </section>
         <section>
           <span className="text-xl font-bold">Activity</span>
+          {isSignable && (
+            <p className="mt-2 font-light lg:hidden">
+              Expires at: {date.toLocaleDateString()} -{" "}
+              {`${date.getHours().toString().padStart(2, "0")}:${date
+                .getMinutes()
+                .toString()
+                .padStart(2, "0")}`}
+            </p>
+          )}
           <div className="mt-4 grid grid grid-cols-3 text-zinc-500">
             <span>Date</span>
             <span className="justify-self-center">Proposer</span>
