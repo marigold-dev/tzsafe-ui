@@ -125,11 +125,14 @@ const Proposals = () => {
               {filteredProposals
                 .sort((a, b) => b[0] - a[0])
                 .map(x => {
+                  const effectivePeriod =
+                    state.contracts[currentContract]?.effective_period;
+
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
-                      state.contracts[
-                        currentContract
-                      ]?.effective_period.toNumber() *
+                      (!!effectivePeriod.toNumber
+                        ? effectivePeriod.toNumber()
+                        : Number(effectivePeriod)) *
                         1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();

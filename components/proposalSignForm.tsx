@@ -7,7 +7,7 @@ import { PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
-import { renderProposalContent } from "./ProposalCard";
+import { RenderProposalContent } from "./ProposalCard";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
 
@@ -186,7 +186,7 @@ function ProposalSignForm({
         }, 1500);
       }}
     >
-      <Form className="col-span-2 flex h-full w-full max-w-full  flex-col items-center justify-center">
+      <Form className="col-span-2 flex w-full flex-col items-center justify-center">
         <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
           Review and confirm the action
           {proposal.ui.content.length > 1 ? "s" : ""} below
@@ -207,7 +207,9 @@ function ProposalSignForm({
               <span className="justify-self-end">Parameters</span>
             </div>
             <div className="mt-2 space-y-4 font-light lg:space-y-2">
-              {proposal.ui.content.map(renderProposalContent)}
+              {proposal.ui.content.map((v, i) => (
+                <RenderProposalContent content={v} key={i} />
+              ))}
             </div>
           </section>
           <p className="mt-8 text-lg font-medium text-white">
@@ -223,11 +225,15 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="mb-2 flex w-full flex-col items-center justify-between md:flex-row ">
+                <div className="mb-2 flex w-full flex-col justify-between md:flex-row md:items-center ">
                   <label className="font-medium text-white">
                     Try to resolve immediately?:
                   </label>
-                  <Field name="flag" as="select" className="rounded-md p-2">
+                  <Field
+                    name="flag"
+                    as="select"
+                    className="mt-2 rounded-md p-2 md:mt-0"
+                  >
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                   </Field>
