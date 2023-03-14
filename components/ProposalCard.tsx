@@ -69,6 +69,7 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
+    console.log(metadata);
     if (
       !metadata?.contract_address &&
       !metadata.meta?.includes("contract_addr")
@@ -185,7 +186,15 @@ export const RenderProposalContent = ({
           } justify-self-end text-right`}
         >
           <p className="text-zinc-500 lg:hidden">Params</p>
-          <div>{!!data.params ? `${data.params.substring(0, 7)}...` : "-"}</div>
+          <div>
+            {!!data.params
+              ? `${
+                  data.params.length < 7
+                    ? data.params
+                    : data.params.substring(0, 7) + "..."
+                }`
+              : "-"}
+          </div>
         </span>
       </button>
       <div
@@ -383,7 +392,13 @@ const ProposalCard = ({
             <div className="grid grid-cols-3">
               <span className="w-full font-light">
                 {proposalDate.toLocaleDateString()} -{" "}
-                {`${proposalDate.getHours()}:${proposalDate.getMinutes()}`}
+                {`${proposalDate
+                  .getHours()
+                  .toString()
+                  .padStart(2, "0")}:${proposalDate
+                  .getMinutes()
+                  .toString()
+                  .padStart(2, "0")}`}
               </span>
               <span className="justify-self-center">
                 <Alias address={proposer.actor} />
