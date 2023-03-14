@@ -10,7 +10,7 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useState } from "react";
-import { PREFERED_NETWORK } from "../context/config";
+import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -272,7 +272,7 @@ const SignersForm: FC<{
         setLoading(false);
         setTimeout(() => {
           props.closeModal();
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       {({

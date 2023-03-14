@@ -1,6 +1,7 @@
 import { tzip16 } from "@taquito/tzip16";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
+import { MODAL_TIMEOUT } from "../context/config";
 import fetchVersion from "../context/metadata";
 import {
   AppDispatchContext,
@@ -69,7 +70,7 @@ function TopUp(props: {
         setLoading(false);
         setTimeout(() => {
           props.closeModal(state.contracts[props.address]);
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       <Form className="col-span-2 mt-8 flex flex-col items-center justify-center">
