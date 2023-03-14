@@ -13,7 +13,7 @@ type data = {
   params: undefined | string;
 };
 
-const renderProposalContent = (content: proposalContent, i: number) => {
+export const renderProposalContent = (content: proposalContent, i: number) => {
   let data: data = {
     label: undefined,
     metadata: undefined,
