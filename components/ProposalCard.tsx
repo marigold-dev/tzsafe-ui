@@ -441,7 +441,13 @@ const ProposalCard = ({
               <div className="grid grid-cols-3">
                 <span className="justify-self-start font-light">
                   {resolveDate.toLocaleDateString()} -{" "}
-                  {`${resolveDate.getHours()}:${resolveDate.getMinutes()}`}
+                  {`${resolveDate
+                    .getHours()
+                    .toString()
+                    .padStart(2, "0")}:${resolveDate
+                    .getMinutes()
+                    .toString()
+                    .padStart(2, "0")}`}
                 </span>
                 <span className="justify-self-center">
                   <Alias address={resolver.actor} />
@@ -456,53 +462,4 @@ const ProposalCard = ({
   );
 };
 
-// {
-//   state.address &&
-//     signers(contract).includes(state.address) &&
-//     resolvable(prop.ui.signatures) &&
-//     "Executed" !== prop.ui.status && (
-//       <button
-//         type="button"
-//         className={
-//           !isOwner
-//             ? "pointer-events-none opacity-50 "
-//             : "" +
-//               "mx-none mx-auto block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
-//         }
-//         onClick={async e => {
-//           e.preventDefault();
-//           setCloseModal(undefined);
-//         }}
-//       >
-//         Resolve
-//       </button>
-//     );
-// }
-// {
-//   state.address && signers(contract).includes(state.address) && signable && (
-//     <button
-//       type="button"
-//       className={
-//         "mx-none mx-auto block w-full self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:w-1/3 md:self-end"
-//       }
-//       onClick={async e => {
-//         e.preventDefault();
-//         setCloseModal(true);
-//       }}
-//     >
-//       Sign
-//     </button>
-//   );
-// }
-// {
-//   state.address &&
-//     signers(contract).includes(state.address) &&
-//     !resolvable(prop.ui.signatures) &&
-//     !signable &&
-//     "Proposing" === prop.ui.status && (
-//       <p className="mx-none mx-auto  block w-full self-center justify-self-end bg-primary p-1.5 font-medium text-white md:mx-auto md:w-1/3 md:self-end">
-//         Waiting for signatures of other owners
-//       </p>
-//     );
-// }
 export default ProposalCard;
