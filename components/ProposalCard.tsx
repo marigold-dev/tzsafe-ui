@@ -231,7 +231,7 @@ type ProposalCardProps = {
   proposer: { actor: string; timestamp: string };
   resolver: { actor: string; timestamp: string } | undefined;
   isSignable?: boolean;
-  isExpired?: boolean;
+  shouldResolve?: boolean;
   setCloseModal?: (arg: boolean | undefined) => void;
 };
 
@@ -244,7 +244,7 @@ const ProposalCard = ({
   resolver,
   content,
   isSignable = false,
-  isExpired = false,
+  shouldResolve = false,
   setCloseModal,
 }: ProposalCardProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -296,7 +296,7 @@ const ProposalCard = ({
       </button>
       {isSignable && (
         <div className="flex h-16 w-full items-center justify-around space-x-4 px-6 lg:space-x-0">
-          {!isExpired && (
+          {!shouldResolve && (
             <>
               <button
                 type="button"
@@ -325,7 +325,7 @@ const ProposalCard = ({
             </>
           )}
 
-          {isExpired && (
+          {shouldResolve && (
             <button
               type="button"
               className={

@@ -127,6 +127,7 @@ const Proposals = () => {
                 .map(x => {
                   const effectivePeriod =
                     state.contracts[currentContract]?.effective_period;
+                  const threshold = state.contracts[currentContract]?.threshold;
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
@@ -157,7 +158,10 @@ const Proposals = () => {
                         !!state.currentContract &&
                         !x[1].ui.signatures.find(x => x.signer == state.address)
                       }
-                      isExpired={hasDeadlinePassed}
+                      shouldResolve={
+                        hasDeadlinePassed ||
+                        x[1].ui.signatures.length >= threshold
+                      }
                       setCloseModal={arg => {
                         setCloseModal({ proposal: [arg, x[0]], state: 4 });
                       }}
