@@ -57,10 +57,10 @@ function Home() {
           <h1 className="text-2xl font-extrabold text-white">Address book</h1>
         </div>
       </div>
-      <main className="h-full grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="h-full min-h-full px-4 py-6 sm:px-0">
-            <div className="grid-rows-auto md:grid-cols-auto grid h-96 min-h-full overflow-y-auto  p-2 md:auto-rows-max">
+      <main className="grow">
+        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+          <div className="min-h-full px-4 py-6 sm:px-0">
+            <div className="grid-rows-auto md:grid-cols-auto grid min-h-full p-2 md:auto-rows-max">
               <Formik
                 enableReinitialize={true}
                 initialValues={initialProps}
@@ -78,7 +78,11 @@ function Home() {
                       err.address = "Please provide an address";
                     }
                     if (
-                      byAddress[x.address] &&
+                      values.validators.reduce(
+                        (acc, curr) =>
+                          acc + (curr.address === x.address ? 1 : 0),
+                        0
+                      ) > 1 &&
                       x.initial.address !== x.address
                     ) {
                       err.address = "already exists";
@@ -96,9 +100,6 @@ function Home() {
                       err.name = "already exists";
                     }
 
-                    if (!x.name) {
-                      err.name = "Please provide an alias";
-                    }
                     return err;
                   });
                   if (
@@ -126,21 +127,7 @@ function Home() {
                 }) => (
                   <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
                     <div className="mb-2 self-center text-2xl font-medium text-white">
-                      Modify saved Names & Addresses below
-                    </div>
-                    <div className="grid w-full grid-flow-row grid-rows-2 gap-2 md:grid-flow-col md:grid-cols-2 md:grid-rows-1 md:justify-around">
-                      <button
-                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
-                        onClick={handleReset}
-                      >
-                        Reset
-                      </button>
-                      <button
-                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
-                        type="submit"
-                      >
-                        Save
-                      </button>
+                      Modify saved names and addresses below
                     </div>
                     <ErrorMessage
                       name={`validatorsError`}
@@ -151,32 +138,43 @@ function Home() {
                         {({ remove, unshift }) => (
                           <div>
                             {" "}
-                            <button
-                              type="button"
-                              className="my-2 mx-auto block w-full self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
-                              onClick={e => {
-                                e.preventDefault();
-                                unshift({
-                                  name: "",
-                                  address: "",
-                                  initial: { name: "", address: "" },
-                                });
-                              }}
-                            >
-                              Add name
-                            </button>
+                            <div className="flex space-x-8">
+                              <button
+                                type="button"
+                                className="my-2 mx-auto block w-full self-center justify-self-center rounded border border-white bg-transparent p-2 font-medium text-white"
+                                onClick={e => {
+                                  e.preventDefault();
+                                  unshift({
+                                    name: "",
+                                    address: "",
+                                    initial: { name: "", address: "" },
+                                  });
+                                }}
+                              >
+                                Add an address
+                              </button>
+                              <button
+                                className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
+                                type="submit"
+                              >
+                                Save
+                              </button>
+                            </div>
                             <div className="min-w-full">
                               {values.validators.length > 0 &&
                                 values.validators.map((validator, index) => {
                                   return (
                                     <div
-                                      className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
+                                      className={`${
+                                        index !== 0 ? "-mt-12" : ""
+                                      } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 py-2 md:flex-row md:rounded-none md:border-none`}
                                       key={index}
                                     >
                                       <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">
                                         <label className="text-white">
-                                          Name
+                                          {index === 0 ? "Name" : ""}
                                         </label>
+
                                         <Field
                                           name={`validators.${index}.name`}
                                           className="md:text-md rounded p-2 text-sm"
@@ -192,8 +190,9 @@ function Home() {
                                           className="text-white"
                                           htmlFor={`validators.${index}.address`}
                                         >
-                                          Address
+                                          {index === 0 ? "Address" : ""}
                                         </label>
+
                                         <Field
                                           name={`validators.${index}.address`}
                                           className="md:text-md w-full rounded p-2 text-sm"
