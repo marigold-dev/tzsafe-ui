@@ -69,7 +69,6 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    console.log("META:", metadata);
     if (
       !metadata?.contract_address &&
       !metadata.meta?.includes("contract_addr")
@@ -214,7 +213,12 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {
-    return "Execute lambda";
+    const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
+
+    return !metadata?.contract_address &&
+      !metadata.meta?.includes("contract_addr")
+      ? "Execute lambda"
+      : "Execute contract";
   }
 };
 
