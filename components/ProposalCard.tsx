@@ -69,7 +69,6 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    console.log(metadata);
     if (
       !metadata?.contract_address &&
       !metadata.meta?.includes("contract_addr")
@@ -84,19 +83,39 @@ export const RenderProposalContent = ({
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
         if (metadata.contract_address) {
+          const data = (() => {
+            const entries = Object.entries(metadata.payload);
+
+            if (entries.length === 0) return ["default", "{}"];
+
+            return entries[0];
+          })();
+
           return [
             metadata.meta,
             metadata.mutez_amount,
             metadata.contract_address,
-            ...Object.entries(metadata.payload)[0],
+            ...data,
           ];
         } else {
           const contractData = JSON.parse(metadata.meta);
+
+          const data = (() => {
+            if (typeof contractData.payload !== "object")
+              return ["default", contractData?.payload];
+
+            const entries = Object.entries(contractData.payload);
+
+            if (entries.length === 0) return ["default", "{}"];
+
+            return entries[0];
+          })();
+
           return [
             undefined,
             contractData.mutez_amount,
             contractData.contract_addr,
-            ...Object.entries(contractData.payload)[0],
+            ...data,
           ];
         }
       })();
