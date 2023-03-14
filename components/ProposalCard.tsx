@@ -13,7 +13,13 @@ type data = {
   params: undefined | string;
 };
 
-export const renderProposalContent = (content: proposalContent, i: number) => {
+export const RenderProposalContent = ({
+  content,
+}: {
+  content: proposalContent;
+}) => {
+  const [hasParam, setHasParam] = useState(false);
+
   let data: data = {
     label: undefined,
     metadata: undefined,
@@ -63,96 +69,112 @@ export const renderProposalContent = (content: proposalContent, i: number) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    if (!metadata?.meta?.includes("contract_addr")) {
+    if (!metadata?.contract_address) {
       data = {
         ...data,
         label: "Execute lambda",
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
+        params: metadata.lambda,
       };
     } else {
-      const contractData = JSON.parse(metadata.meta);
-      const endpoint = contractData.entrypoint;
-      const arg = contractData.payload;
+      const [entrypoint, arg] = Object.entries(metadata.payload)[0];
 
       data = {
         label: "Execute contract",
-        metadata: contractData.meta,
-        amount: contractData.mutez_amount,
-        addresses: [contractData.contract_addr],
-        entrypoints: endpoint,
+        metadata: metadata.meta,
+        amount: metadata.mutez_amount,
+        addresses: [metadata.contract_address],
+        entrypoints: entrypoint,
         params: JSON.stringify(arg),
       };
     }
   }
 
   return (
-    <div
-      key={i}
-      className="after:content[''] relative grid grid-cols-3 gap-4 after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 lg:grid-cols-6 lg:after:hidden"
-    >
-      <span
-        className={`${!data.label ? "text-zinc-500" : ""} justify-self-start`}
-      >
-        <p className="text-zinc-500 lg:hidden">Function</p>
-        {data.label ?? "-"}
-      </span>
-      <span
+    <div className="after:content[''] relative w-full after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 lg:after:hidden">
+      <button
         className={`${
-          !data.metadata ? "text-zinc-500" : ""
-        } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
+          !data.params ? "cursor-default" : ""
+        } grid w-full grid-cols-3 gap-4 text-left lg:grid-cols-6`}
+        onClick={() => {
+          if (!data.params) return;
+
+          setHasParam(v => !v);
+        }}
+        type="button"
+        title={!!data.params ? "Show parameters" : undefined}
       >
-        <p className="flex text-zinc-500 lg:hidden">
-          Metadata
-          <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
-            <InfoCircledIcon className="ml-2 h-4 w-4" />
-          </Tooltip>
-        </p>
-        {data.metadata ?? "-"}
-      </span>
-      <span
-        className={`${
-          !data.amount ? "text-zinc-500" : ""
-        } justify-self-end text-right lg:justify-self-center`}
-      >
-        <p className="text-zinc-500 lg:hidden">Amount</p>
-        {!data.amount ? "-" : `${data.amount} mutez`}
-      </span>
-      {!data.addresses ? (
-        <span className="justify-self-start text-zinc-500 lg:justify-self-center">
-          <p className="text-zinc-500 lg:hidden">Address</p>-
+        <span
+          className={`${!data.label ? "text-zinc-500" : ""} justify-self-start`}
+        >
+          <p className="text-zinc-500 lg:hidden">Function</p>
+          {data.label ?? "-"}
         </span>
-      ) : data.addresses.length === 1 ? (
-        <span className="justify-self-start lg:justify-self-center">
-          <p className="text-zinc-500 lg:hidden">Address</p>
-          <Alias address={data.addresses[0]} />
+        <span
+          className={`${
+            !data.metadata ? "text-zinc-500" : ""
+          } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
+        >
+          <p className="flex text-zinc-500 lg:hidden">
+            Metadata
+            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+              <InfoCircledIcon className="ml-2 h-4 w-4" />
+            </Tooltip>
+          </p>
+          {data.metadata ?? "-"}
         </span>
-      ) : (
-        <ul className="justify-self-start lg:justify-self-center">
-          <li className="text-zinc-500 lg:hidden">Addresses:</li>
-          {data.addresses.map((address, i) => (
-            <li key={i}>
-              <Alias address={address} />
-            </li>
-          ))}
-        </ul>
-      )}
-      <span
+        <span
+          className={`${
+            !data.amount ? "text-zinc-500" : ""
+          } justify-self-end text-right lg:justify-self-center`}
+        >
+          <p className="text-zinc-500 lg:hidden">Amount</p>
+          {!data.amount ? "-" : `${data.amount} mutez`}
+        </span>
+        {!data.addresses ? (
+          <span className="justify-self-start text-zinc-500 lg:justify-self-center">
+            <p className="text-zinc-500 lg:hidden">Address</p>-
+          </span>
+        ) : data.addresses.length === 1 ? (
+          <span className="justify-self-start lg:justify-self-center">
+            <p className="text-zinc-500 lg:hidden">Address</p>
+            <Alias address={data.addresses[0]} />
+          </span>
+        ) : (
+          <ul className="justify-self-start lg:justify-self-center">
+            <li className="text-zinc-500 lg:hidden">Addresses:</li>
+            {data.addresses.map((address, i) => (
+              <li key={i}>
+                <Alias address={address} />
+              </li>
+            ))}
+          </ul>
+        )}
+        <span
+          className={`${
+            !data.entrypoints ? "text-zinc-500" : ""
+          } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
+        >
+          <p className="text-zinc-500 lg:hidden">Entrypoint</p>
+          {data.entrypoints ?? "-"}
+        </span>
+        <span
+          className={`${
+            !data.params ? "text-zinc-500" : ""
+          } justify-self-end text-right`}
+        >
+          <p className="text-zinc-500 lg:hidden">Params</p>
+          <div>{!!data.params ? `${data.params.substring(0, 7)}...` : "-"}</div>
+        </span>
+      </button>
+      <div
         className={`${
-          !data.entrypoints ? "text-zinc-500" : ""
-        } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
+          hasParam ? "block" : "hidden"
+        } mt-2 overflow-auto rounded bg-zinc-900 px-4 py-4 font-light`}
       >
-        <p className="text-zinc-500 lg:hidden">Entrypoint</p>
-        {data.entrypoints ?? "-"}
-      </span>
-      <span
-        className={`${
-          !data.params ? "text-zinc-500" : ""
-        } justify-self-end text-right`}
-      >
-        <p className="text-zinc-500 lg:hidden">Params</p>
-        {data.params ?? "-"}
-      </span>
+        {data.params}
+      </div>
     </div>
   );
 };
@@ -224,7 +246,7 @@ const ProposalCard = ({
           {status ?? "Rejected"}
         </span>
         <span
-          className="ml-4 truncate font-light text-zinc-300 md:ml-0"
+          className="ml-8 truncate font-light text-zinc-300 md:ml-0"
           style={{
             minWidth: "7rem",
           }}
@@ -248,7 +270,7 @@ const ProposalCard = ({
         </div>
       </button>
       {isSignable && (
-        <div className="flex h-16 w-full items-center justify-around px-6">
+        <div className="flex h-16 w-full items-center justify-around space-x-4 px-6 lg:space-x-0">
           {!isExpired && (
             <>
               <button
@@ -311,7 +333,9 @@ const ProposalCard = ({
             <span className="justify-self-end">Parameters</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {content.map(renderProposalContent)}
+            {content.map((v, i) => (
+              <RenderProposalContent key={i} content={v} />
+            ))}
           </div>
         </section>
         <section>
