@@ -64,6 +64,7 @@ function Home() {
               enableReinitialize={true}
               initialValues={initialProps}
               validate={values => {
+                console.log("Validate:", values);
                 const errors: {
                   validators: { address: string; name: string }[];
                   validatorsError?: string;
@@ -107,7 +108,7 @@ function Home() {
               }}
               onSubmit={values => {
                 dispatch!({
-                  type: "updateAliaces",
+                  type: "updateAliases",
                   payload: values.validators,
                 });
               }}
@@ -220,7 +221,7 @@ function Home() {
                                           { validatorsError: true },
                                           true
                                         );
-                                        validateForm();
+
                                         remove(index);
                                       }}
                                     >
