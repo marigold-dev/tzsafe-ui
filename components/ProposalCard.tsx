@@ -69,7 +69,11 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    if (!metadata?.contract_address) {
+    console.log("META:", metadata);
+    if (
+      !metadata?.contract_address &&
+      !metadata.meta?.includes("contract_addr")
+    ) {
       data = {
         ...data,
         label: "Execute lambda",
@@ -78,13 +82,30 @@ export const RenderProposalContent = ({
         params: metadata.lambda,
       };
     } else {
-      const [entrypoint, arg] = Object.entries(metadata.payload)[0];
+      const [meta, amount, address, entrypoint, arg] = (() => {
+        if (metadata.contract_address) {
+          return [
+            metadata.meta,
+            metadata.mutez_amount,
+            metadata.contract_address,
+            ...Object.entries(metadata.payload)[0],
+          ];
+        } else {
+          const contractData = JSON.parse(metadata.meta);
+          return [
+            undefined,
+            contractData.mutez_amount,
+            contractData.contract_addr,
+            ...Object.entries(contractData.payload)[0],
+          ];
+        }
+      })();
 
       data = {
         label: "Execute contract",
-        metadata: metadata.meta,
-        amount: metadata.mutez_amount,
-        addresses: [metadata.contract_address],
+        metadata: meta,
+        amount,
+        addresses: [address],
         entrypoints: entrypoint,
         params: JSON.stringify(arg),
       };
