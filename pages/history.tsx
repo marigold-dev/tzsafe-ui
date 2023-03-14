@@ -196,11 +196,13 @@ const History = () => {
                       <span className="hidden justify-self-end lg:block">
                         {new Date((x[1] as any).timestamp).toLocaleDateString()}{" "}
                         -{" "}
-                        {`${new Date(
-                          (x[1] as any).timestamp
-                        ).getHours()}:${new Date(
-                          (x[1] as any).timestamp
-                        ).getMinutes()}`}
+                        {`${new Date((x[1] as any).timestamp)
+                          .getHours()
+                          .toString()
+                          .padStart(2, "0")}:${new Date((x[1] as any).timestamp)
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, "0")}`}
                       </span>
                     </div>
                   ) : (
