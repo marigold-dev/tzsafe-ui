@@ -90,7 +90,7 @@ type action =
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
-  | { type: "updateAliaces"; payload: { address: string; name: string }[] };
+  | { type: "updateAliases"; payload: { address: string; name: string }[] };
 
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
@@ -120,11 +120,11 @@ function reducer(state: tezosState, action: action): tezosState {
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
-    case "updateAliaces": {
-      let al = Object.fromEntries(
+    case "updateAliases": {
+      const aliases = Object.fromEntries(
         action.payload.map(({ name, address }) => [address, name])
       );
-      let aliases = { ...state.aliases, ...al };
+
       localStorage.setItem(
         "app_state",
         JSON.stringify({
