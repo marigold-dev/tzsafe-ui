@@ -11,12 +11,14 @@ import { getProposals } from "../context/proposals";
 import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
 import { countdown } from "../utils/adaptiveTime";
+import useIsOwner from "../utils/useIsOwner";
 import { getProposalsId, toProposal } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
 const Proposals = () => {
   const state = useContext(AppStateContext)!;
+  const isOwner = useIsOwner();
 
   const [isLoading, setIsLoading] = useState(true);
   const [invalid, setInvalid] = useState(false);
@@ -137,12 +139,26 @@ const Proposals = () => {
                         1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
+                  const shouldResolve =
+                    hasDeadlinePassed || x[1].ui.signatures.length >= threshold;
+
+                  const hasSigned = !!x[1].ui.signatures.find(
+                    x => x.signer == state.address
+                  );
 
                   return (
                     <ProposalCard
                       id={x[0]}
                       key={x[0]}
-                      status={hasDeadlinePassed ? "Expired" : x[1].ui.status}
+                      status={
+                        hasDeadlinePassed
+                          ? "Expired"
+                          : shouldResolve
+                          ? "Waiting for resolution"
+                          : hasSigned
+                          ? "Waiting for signers"
+                          : x[1].ui.status
+                      }
                       date={deadline}
                       activities={x[1].ui.signatures.map(
                         ({ signer, result }) => ({
@@ -154,14 +170,12 @@ const Proposals = () => {
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.resolver}
                       isSignable={
+                        isOwner &&
                         !!state.address &&
                         !!state.currentContract &&
-                        !x[1].ui.signatures.find(x => x.signer == state.address)
+                        (!hasSigned || shouldResolve)
                       }
-                      shouldResolve={
-                        hasDeadlinePassed ||
-                        x[1].ui.signatures.length >= threshold
-                      }
+                      shouldResolve={shouldResolve}
                       setCloseModal={arg => {
                         setCloseModal({ proposal: [arg, x[0]], state: 4 });
                       }}

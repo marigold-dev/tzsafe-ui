@@ -44,7 +44,7 @@ function ProposalSignForm({
     proposal: number,
     prop: any,
     result: boolean | undefined,
-    resolve: true | false
+    resolve: boolean
   ) {
     let cc = await state.connection.wallet.at(address);
     let versioned = VersionedApi(version, address);
@@ -55,7 +55,7 @@ function ProposalSignForm({
         state.connection,
         proposal,
         result,
-        Boolean(resolve)
+        resolve
       )
     );
   }
@@ -167,12 +167,13 @@ function ProposalSignForm({
   return (
     <Formik
       initialValues={{
-        flag: typeof modalState === "undefined" ? true : false,
+        flag: typeof modalState === "undefined" ? "1" : "0",
       }}
       onSubmit={async values => {
         setLoading(true);
+
         try {
-          await sign(id, proposal.og, modalState, values.flag);
+          await sign(id, proposal.og, modalState, values.flag === "1");
           onSuccess?.();
           setResult(true);
           setLoading(false);
@@ -234,8 +235,8 @@ function ProposalSignForm({
                     as="select"
                     className="mt-2 rounded-md p-2 md:mt-0"
                   >
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
                   </Field>
                 </div>
               ))}
