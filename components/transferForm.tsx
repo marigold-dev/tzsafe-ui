@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/router";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { PREFERED_NETWORK } from "../context/config";
+import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
@@ -1093,28 +1093,6 @@ function TransferForm(
               </span>
             )}
           </div>
-          <button
-            onClick={() => {
-              props.closeModal();
-            }}
-            type="button"
-            className="absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </ContractLoader>
       </div>
     );
@@ -1178,7 +1156,7 @@ function TransferForm(
         setLoading(false);
         setTimeout(() => {
           setResult(undefined);
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       {({ values, errors, setFieldValue, getFieldProps }) => (

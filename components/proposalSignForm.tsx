@@ -3,7 +3,7 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
-import { PREFERED_NETWORK } from "../context/config";
+import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
@@ -138,28 +138,6 @@ function ProposalSignForm({
               Failed to sign
             </span>
           )}
-          <button
-            onClick={() => {
-              closeModal();
-            }}
-            type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </ContractLoader>
       </div>
     );
@@ -184,7 +162,7 @@ function ProposalSignForm({
         setLoading(false);
         setTimeout(() => {
           closeModal();
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       <Form className="col-span-2 flex w-full flex-col items-center justify-center">
