@@ -43,7 +43,7 @@ const TextInputWithCompletion: FC<
     <div className="w-full">
       <input
         autoComplete="false"
-        className={props.className + " relative "}
+        className={props.className + " relative rounded"}
         {...field}
         onFocus={handleFocus}
         onBlur={handleBLur}

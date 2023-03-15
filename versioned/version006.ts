@@ -8,6 +8,7 @@ import {
 } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa2Michelson } from "../context/fa2";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
@@ -61,8 +62,14 @@ class Version006 extends Versioned {
               };
             }
             case "fa2": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
+              const michelsonCode = makeFa2Michelson({
+                walletAddress: cc.address,
+                targetAddress: x.values.targetAddress,
+                tokenId: Number(x.values.tokenId),
+                amount: Number(x.values.amount),
+                fa2Address: "?",
+              });
+
               return {
                 execute_lambda: michelsonCode,
               };

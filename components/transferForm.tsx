@@ -1100,7 +1100,7 @@ function TransferForm(
 
   const initialProps: {
     transfers: {
-      type: "lambda" | "transfer" | "contract";
+      type: "lambda" | "transfer" | "contract" | "fa2";
       values: { [key: string]: string };
       fields: {
         field: string;
@@ -1204,6 +1204,19 @@ function TransferForm(
                       }}
                     >
                       Add execute contract
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "fa2",
+                          ...Versioned.fa2(props.contract),
+                        });
+                      }}
+                    >
+                      Add fa2 transfer
                     </button>
                   </div>
                   {values.transfers.length > 0 &&
@@ -1322,7 +1335,7 @@ function TransferForm(
                                       component={value.kind}
                                       name={`transfers.${index}.values.${value.field}`}
                                       className={
-                                        "md:text-md relative h-fit min-h-fit p-2 text-sm" +
+                                        "md:text-md relative h-fit min-h-fit rounded p-2 text-sm" +
                                         withTextArea
                                       }
                                       placeholder={value.placeholder}
