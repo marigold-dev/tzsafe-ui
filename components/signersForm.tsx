@@ -264,7 +264,10 @@ const SignersForm: FC<{
             values.effectivePeriod
           );
           setResult(true);
-          dispatch!({ type: "updateAliases", payload: values.validators });
+          dispatch!({
+            type: "updateAliases",
+            payload: { aliases: values.validators, keepOld: true },
+          });
         } catch (e) {
           console.log(e);
           setResult(false);
