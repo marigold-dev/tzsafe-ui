@@ -1088,7 +1088,7 @@ function TransferForm(
 
   const initialProps: {
     transfers: {
-      type: "lambda" | "transfer" | "contract";
+      type: "lambda" | "transfer" | "contract" | "fa2";
       values: { [key: string]: string };
       fields: {
         field: string;
