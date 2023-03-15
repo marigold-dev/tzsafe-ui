@@ -1295,10 +1295,16 @@ function TransferForm(
                                 )
                                   ? " w-3/4 "
                                   : "";
-                              let classn =
+                              let classn = `${
                                 (idx + 1) % 2 === 0
-                                  ? "relative flex flex-col w-full md:grow justify-start"
-                                  : "flex flex-col";
+                                  ? `relative flex flex-col justify-start`
+                                  : "flex flex-col"
+                              } ${
+                                !!value.kind && value.kind === "input-complete"
+                                  ? "w-full md:grow"
+                                  : ""
+                              }`;
+
                               return (
                                 <div
                                   className={classn + width + withTextArea}

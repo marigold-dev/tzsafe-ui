@@ -301,7 +301,7 @@ abstract class Versioned {
         },
         {
           field: "amount",
-          label: "Amount in Mutez: ",
+          label: "Amount: ",
           path: ".amount",
           placeholder: "0",
           validate: (x: string) => {
