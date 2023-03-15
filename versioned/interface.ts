@@ -197,7 +197,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez: ",
+            label: "Amount in Mutez",
             path: ".amount",
             placeholder: "0",
             validate: (x: string) => {
@@ -210,7 +210,7 @@ abstract class Versioned {
           },
           {
             field: "to",
-            label: "Transfer to:",
+            label: "Transfer to",
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
@@ -236,7 +236,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez: ",
+            label: "Amount in Mutez",
             path: ".amount",
             placeholder: "0",
             validate: (x: string) => {
@@ -249,7 +249,7 @@ abstract class Versioned {
           },
           {
             field: "to",
-            label: "Transfer to:",
+            label: "Transfer to",
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
