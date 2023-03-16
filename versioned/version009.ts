@@ -9,6 +9,7 @@ import {
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa2Michelson } from "../context/fa2";
 import {
   content,
   proposal as p1,
@@ -30,7 +31,7 @@ class Version009 extends Versioned {
     t: TezosToolkit,
     proposals: {
       transfers: {
-        type: "transfer" | "lambda" | "contract";
+        type: "transfer" | "lambda" | "contract" | "fa2";
         values: { [key: string]: string };
         fields: {
           field: string;
@@ -78,6 +79,24 @@ class Version009 extends Versioned {
                   metadata: meta,
                   lambda: michelsonCode,
                 },
+              };
+            }
+            case "fa2": {
+              const michelsonCode = makeFa2Michelson({
+                walletAddress: cc.address,
+                targetAddress: x.values.targetAddress,
+                tokenId: Number(x.values.tokenId),
+                amount: Number(x.values.amount),
+                fa2Address: x.values.fa2Address,
+              });
+
+              return {
+                metadata: {
+                  contract_addr: x.values.fa2Address,
+                  payload: { token_id: Number(x.values.tokenId) },
+                  amount: Number(x.values.amount),
+                },
+                execute_lambda: michelsonCode,
               };
             }
             default:

@@ -1278,7 +1278,7 @@ function TransferForm(
                           <div
                             className={
                               withTextArea +
-                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-x-4 md:flex-row  md:rounded-none md:border-none"
+                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around md:flex-row md:space-x-4  md:rounded-none md:border-none"
                             }
                             key={index}
                           >

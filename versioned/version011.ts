@@ -74,6 +74,7 @@ class Version011 extends Versioned {
               let meta = !!x.values.metadata
                 ? convert(x.values.metadata)
                 : null;
+
               return {
                 execute_lambda: {
                   metadata: meta,
@@ -87,11 +88,20 @@ class Version011 extends Versioned {
                 targetAddress: x.values.targetAddress,
                 tokenId: Number(x.values.tokenId),
                 amount: Number(x.values.amount),
-                fa2Address: "?",
+                fa2Address: x.values.fa2Address,
               });
 
               return {
-                execute_lambda: michelsonCode,
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      contract_addr: x.values.fa2Address,
+                      payload: { token_id: Number(x.values.tokenId) },
+                      amount: Number(x.values.amount),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
               };
             }
             default:
@@ -100,6 +110,8 @@ class Version011 extends Versioned {
         })
       )
       .toTransferParams();
+
+    console.log(params);
 
     let op = await t.wallet.transfer(params).send();
 

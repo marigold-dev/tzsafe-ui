@@ -197,7 +197,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez: ",
+            label: "Amount in Mutez",
             path: ".amount",
             placeholder: "0",
             validate: (x: string) => {
@@ -210,7 +210,7 @@ abstract class Versioned {
           },
           {
             field: "to",
-            label: "Transfer to:",
+            label: "Transfer to",
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
@@ -236,7 +236,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez: ",
+            label: "Amount in Mutez",
             path: ".amount",
             placeholder: "0",
             validate: (x: string) => {
@@ -249,7 +249,7 @@ abstract class Versioned {
           },
           {
             field: "to",
-            label: "Transfer to:",
+            label: "Transfer to",
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
@@ -285,11 +285,21 @@ abstract class Versioned {
         targetAddress: "",
         tokenId: "",
         amount: "",
+        fa2Address: "",
       },
       fields: [
         {
+          field: "fa2Address",
+          label: "FA2 address",
+          path: ".fa2Address",
+          kind: "input-complete",
+          placeholder: "Fa2 address",
+          validate: (x: string) =>
+            validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+        },
+        {
           field: "tokenId",
-          label: "Token Id: ",
+          label: "Token Id",
           path: ".tokenId",
           placeholder: "0",
           validate: (x: string) => {
@@ -301,7 +311,7 @@ abstract class Versioned {
         },
         {
           field: "amount",
-          label: "Amount: ",
+          label: "Amount",
           path: ".amount",
           placeholder: "0",
           validate: (x: string) => {
@@ -313,7 +323,7 @@ abstract class Versioned {
         },
         {
           field: "targetAddress",
-          label: "Transfer to:",
+          label: "Transfer to",
           path: ".targetAddress",
           kind: "input-complete",
           placeholder: "Destination address",

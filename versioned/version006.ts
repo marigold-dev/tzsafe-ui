@@ -67,10 +67,15 @@ class Version006 extends Versioned {
                 targetAddress: x.values.targetAddress,
                 tokenId: Number(x.values.tokenId),
                 amount: Number(x.values.amount),
-                fa2Address: "?",
+                fa2Address: x.values.fa2Address,
               });
 
               return {
+                metadata: {
+                  contract_addr: x.values.fa2Address,
+                  payload: { token_id: Number(x.values.tokenId) },
+                  amount: Number(x.values.amount),
+                },
                 execute_lambda: michelsonCode,
               };
             }
