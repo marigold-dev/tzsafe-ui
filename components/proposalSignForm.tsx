@@ -142,6 +142,7 @@ function ProposalSignForm({
       </div>
     );
   }
+
   return (
     <Formik
       initialValues={{

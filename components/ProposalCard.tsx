@@ -58,7 +58,7 @@ export const RenderProposalContent = ({
       ...data,
       label: "Transfer",
       addresses: [content.transfer.destination],
-      amount: content.transfer.amount.toString(),
+      amount: `${content.transfer.amount.toString()} mutez`,
     };
   } else if ("execute" in content) {
     data = {
@@ -71,7 +71,7 @@ export const RenderProposalContent = ({
 
     if (
       !metadata?.contract_address &&
-      !metadata.meta?.includes("contract_addr")
+      !metadata?.meta?.includes("contract_addr")
     ) {
       data = {
         ...data,
@@ -79,6 +79,35 @@ export const RenderProposalContent = ({
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         params: metadata.lambda,
+      };
+    } else if (metadata?.meta?.includes("fa2_address")) {
+      const contractData = JSON.parse(metadata.meta);
+
+      data = {
+        label: "Transfer FA2",
+        metadata: undefined,
+        amount: contractData.amount,
+        addresses: [contractData.contract_addr],
+        entrypoints: undefined,
+        params: contractData.payload.token_id.toString(),
+      };
+    } else if (metadata.entrypoint === "%transfer") {
+      const [
+        {
+          txs: [{ to_, token_id, amount }],
+        },
+      ] = metadata.payload;
+
+      data = {
+        label: "Transfer FA2",
+        metadata: undefined,
+        amount,
+        addresses: [to_],
+        entrypoints: undefined,
+        params: JSON.stringify({
+          fa2_address: metadata.contract_address,
+          token_id,
+        }),
       };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -123,7 +152,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount,
+        amount: `${amount} mutez`,
         addresses: [address],
         entrypoints: entrypoint,
         params: JSON.stringify(arg),
@@ -170,7 +199,7 @@ export const RenderProposalContent = ({
           } justify-self-end text-right lg:justify-self-center`}
         >
           <p className="text-zinc-500 lg:hidden">Amount</p>
-          {!data.amount ? "-" : `${data.amount} mutez`}
+          {!data.amount ? "-" : `${data.amount}`}
         </span>
         {!data.addresses ? (
           <span className="justify-self-start text-zinc-500 lg:justify-self-center">
@@ -243,10 +272,13 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    return !metadata?.contract_address &&
-      !metadata.meta?.includes("contract_addr")
-      ? "Execute lambda"
-      : "Execute contract";
+    return !!metadata.meta &&
+      (metadata.meta.includes("fa2_address") || metadata.meta.includes("txs"))
+      ? "Transfer FA2"
+      : metadata.contract_address ||
+        (!!metadata.meta && metadata.meta?.includes("contract_addr"))
+      ? "Execute contract"
+      : "Execute lambda";
   }
 };
 
@@ -383,7 +415,7 @@ const ProposalCard = ({
             <span className="justify-self-center">Amount</span>
             <span className="justify-self-center">Address</span>
             <span className="justify-self-end">Entrypoint</span>
-            <span className="justify-self-end">Parameters</span>
+            <span className="justify-self-end">Parameters/Token</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
             {content.map((v, i) => (
