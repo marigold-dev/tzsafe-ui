@@ -95,7 +95,9 @@ const SignersForm: FC<{
 
     if (
       !!effectivePeriod &&
-      Number(effectivePeriod) != props.contract.effective_period.toNumber()
+      Number(effectivePeriod) !=
+        (props.contract.effective_period.toNumber?.() ??
+          Number(props.contract.effective_period))
     ) {
       ops.push({ adjustEffectivePeriod: Number(effectivePeriod) });
     }
