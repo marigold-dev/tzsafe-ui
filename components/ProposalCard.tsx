@@ -272,7 +272,6 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    console.log(metadata, metadata.entrypoint === "%transfer");
     return metadata.entrypoint === "%transfer" ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
