@@ -521,11 +521,11 @@ function Basic({
             <div className="flex w-full flex-col pr-2 md:pr-0">
               <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
-                  Amount in mutez:{" "}
+                  Amount in mutez
                 </label>
                 <Field
                   name="amount"
-                  className=" w-full p-2 text-black"
+                  className=" w-full rounded p-2 text-black"
                   placeholder="0"
                   validate={(value: string) => {
                     let error;
@@ -956,7 +956,7 @@ function ExecuteContractForm(
   if (done) {
     return (
       <div className=" mb-2 w-full border-2 border-white p-2 text-white">
-        <p className="mt-4 text-lg text-white">Execute contract</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <p>Metadata: {props.getFieldProps()}</p>
       </div>
     );
@@ -964,14 +964,14 @@ function ExecuteContractForm(
   if (!state.address) {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <Basic setFormState={x => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -1177,33 +1177,7 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add transfer
-                    </button>
-                    <button
-                      type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "lambda",
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Add execute lambda
-                    </button>
-                    <button
-                      type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "contract",
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Add execute contract
+                      Transfer
                     </button>
                     <button
                       type="button"
@@ -1216,7 +1190,33 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add fa2 transfer
+                      FA2 Transfer
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "contract",
+                          ...Versioned.lambdaForm(props.contract),
+                        });
+                      }}
+                    >
+                      Contract Execution
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "lambda",
+                          ...Versioned.lambdaForm(props.contract),
+                        });
+                      }}
+                    >
+                      Lambda Execution
                     </button>
                   </div>
                   {values.transfers.length > 0 &&
@@ -1271,9 +1271,8 @@ function TransferForm(
                         <>
                           <p className="text-lg text-white">
                             {!transfer.fields.find(v => v.kind === "textarea")
-                              ? "Make transfer"
-                              : "Execute lambda"}
-                            :
+                              ? "Make Transfer"
+                              : "Execute Lambda"}
                           </p>
                           <div
                             className={
