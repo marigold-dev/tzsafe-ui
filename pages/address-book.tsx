@@ -109,7 +109,7 @@ function Home() {
               onSubmit={values => {
                 dispatch!({
                   type: "updateAliases",
-                  payload: values.validators,
+                  payload: { aliases: values.validators, keepOld: false },
                 });
               }}
             >
