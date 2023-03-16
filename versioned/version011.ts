@@ -117,8 +117,6 @@ class Version011 extends Versioned {
       )
       .toTransferParams();
 
-    console.log(params);
-
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(

@@ -110,7 +110,6 @@ export const RenderProposalContent = ({
         }),
       };
     } else {
-      console.log(content);
       const [meta, amount, address, entrypoint, arg] = (() => {
         if (metadata.contract_address) {
           const data = (() => {
