@@ -876,7 +876,7 @@ function ExecuteForm(
         }}
       >
         {({ resetForm }) => (
-          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center border-2 border-white">
+          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
             <div className="mb-2 self-center text-2xl font-medium text-white">
               Add items below
             </div>
