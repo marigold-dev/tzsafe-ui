@@ -83,7 +83,6 @@ export const RenderProposalContent = ({
     } else if (metadata?.meta?.includes("fa2_address")) {
       const contractData = JSON.parse(metadata.meta);
 
-      console.log(contractData);
       data = {
         label: "Transfer FA2",
         metadata: undefined,
