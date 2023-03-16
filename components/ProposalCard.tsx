@@ -83,13 +83,17 @@ export const RenderProposalContent = ({
     } else if (metadata?.meta?.includes("fa2_address")) {
       const contractData = JSON.parse(metadata.meta);
 
+      console.log(contractData);
       data = {
         label: "Transfer FA2",
         metadata: undefined,
         amount: contractData.amount,
         addresses: [contractData.contract_addr],
         entrypoints: undefined,
-        params: contractData.payload.token_id.toString(),
+        params: JSON.stringify({
+          fa2_address: contractData.payload.fa2_address,
+          token_id: contractData.payload.token_id.toString(),
+        }),
       };
     } else if (metadata.entrypoint === "%transfer") {
       const [
