@@ -945,7 +945,6 @@ function ExecuteContractForm(
   }
   if (done) {
     const data = JSON.parse(props.getFieldProps());
-    // const payload = JSON.stringify(data.payload);
 
     return (
       <div className="mt-8 w-full rounded border-2 border-white p-4 text-white">
