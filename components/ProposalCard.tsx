@@ -13,6 +13,12 @@ type data = {
   params: undefined | string;
 };
 
+const isFa2 = (txs: any[]) => {
+  if (txs.length !== 1) return false;
+
+  return !!txs[0].to_ && !!txs[0].token_id && !!txs[0].amount;
+};
+
 export const RenderProposalContent = ({
   content,
 }: {
@@ -58,7 +64,7 @@ export const RenderProposalContent = ({
       ...data,
       label: "Transfer",
       addresses: [content.transfer.destination],
-      amount: content.transfer.amount.toString(),
+      amount: `${content.transfer.amount.toString()} mutez`,
     };
   } else if ("execute" in content) {
     data = {
@@ -71,7 +77,7 @@ export const RenderProposalContent = ({
 
     if (
       !metadata?.contract_address &&
-      !metadata.meta?.includes("contract_addr")
+      !metadata?.meta?.includes("contract_addr")
     ) {
       data = {
         ...data,
@@ -80,13 +86,49 @@ export const RenderProposalContent = ({
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         params: metadata.lambda,
       };
+    } else if (metadata?.meta?.includes("fa2_address")) {
+      const contractData = JSON.parse(metadata.meta);
+
+      data = {
+        label: "Transfer FA2",
+        metadata: undefined,
+        amount: contractData.amount,
+        addresses: [contractData.contract_addr],
+        entrypoints: undefined,
+        params: JSON.stringify({
+          fa2_address: contractData.payload.fa2_address,
+          token_id: contractData.payload.token_id.toString(),
+        }),
+      };
+    } else if (
+      metadata.entrypoint === "%transfer" &&
+      Array.isArray(metadata.payload) &&
+      isFa2(metadata.payload)
+    ) {
+      const [
+        {
+          txs: [{ to_, token_id, amount }],
+        },
+      ] = metadata.payload;
+
+      data = {
+        label: "Transfer FA2",
+        metadata: undefined,
+        amount,
+        addresses: [to_],
+        entrypoints: undefined,
+        params: JSON.stringify({
+          fa2_address: metadata.contract_address,
+          token_id,
+        }),
+      };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
         if (metadata.contract_address) {
           const data = (() => {
-            const entries = Object.entries(metadata.payload);
+            const entries = Object.entries(metadata.payload ?? {});
 
-            if (entries.length === 0) return ["default", "{}"];
+            if (entries.length === 0) return ["default", "Unit"];
 
             return entries[0];
           })();
@@ -123,7 +165,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount,
+        amount: `${amount} mutez`,
         addresses: [address],
         entrypoints: entrypoint,
         params: JSON.stringify(arg),
@@ -170,7 +212,7 @@ export const RenderProposalContent = ({
           } justify-self-end text-right lg:justify-self-center`}
         >
           <p className="text-zinc-500 lg:hidden">Amount</p>
-          {!data.amount ? "-" : `${data.amount} mutez`}
+          {!data.amount ? "-" : `${data.amount}`}
         </span>
         {!data.addresses ? (
           <span className="justify-self-start text-zinc-500 lg:justify-self-center">
@@ -243,10 +285,15 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    return !metadata?.contract_address &&
-      !metadata.meta?.includes("contract_addr")
-      ? "Execute lambda"
-      : "Execute contract";
+    return (metadata.entrypoint === "%transfer" &&
+      Array.isArray(metadata.payload) &&
+      isFa2(metadata.payload)) ||
+      (!!metadata.meta && metadata.meta.includes("fa2_address"))
+      ? "Transfer FA2"
+      : metadata.contract_address ||
+        (!!metadata.meta && metadata.meta?.includes("contract_addr"))
+      ? "Execute contract"
+      : "Execute lambda";
   }
 };
 

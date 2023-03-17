@@ -513,7 +513,7 @@ function Basic({
                 </label>
                 <Field
                   name="amount"
-                  className=" w-full p-2 text-black"
+                  className=" w-full rounded p-2 text-black"
                   placeholder="0"
                   validate={(value: string) => {
                     let error;
@@ -968,14 +968,14 @@ function ExecuteContractForm(
   if (!state.address) {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <Basic setFormState={x => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -1104,7 +1104,7 @@ function TransferForm(
 
   const initialProps: {
     transfers: {
-      type: "lambda" | "transfer" | "contract";
+      type: "lambda" | "transfer" | "contract" | "fa2";
       values: { [key: string]: string };
       fields: {
         field: string;
@@ -1181,7 +1181,7 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add transfer
+                      Transfer
                     </button>
                     <button
                       type="button"
@@ -1189,12 +1189,12 @@ function TransferForm(
                       onClick={e => {
                         e.preventDefault();
                         push({
-                          type: "lambda",
-                          ...Versioned.lambdaForm(props.contract),
+                          type: "fa2",
+                          ...Versioned.fa2(props.contract),
                         });
                       }}
                     >
-                      Add execute lambda
+                      FA2 Transfer
                     </button>
                     <button
                       type="button"
@@ -1207,7 +1207,20 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add execute contract
+                      Contract Execution
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "lambda",
+                          ...Versioned.lambdaForm(props.contract),
+                        });
+                      }}
+                    >
+                      Lambda Execution
                     </button>
                   </div>
                   {values.transfers.length > 0 &&
@@ -1268,7 +1281,7 @@ function TransferForm(
                           <div
                             className={
                               withTextArea +
-                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-x-4 md:flex-row  md:rounded-none md:border-none"
+                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around md:flex-row md:space-x-4  md:rounded-none md:border-none"
                             }
                             key={index}
                           >
@@ -1285,10 +1298,16 @@ function TransferForm(
                                 )
                                   ? " w-3/4 "
                                   : "";
-                              let classn =
+                              let classn = `${
                                 (idx + 1) % 2 === 0
-                                  ? "relative flex flex-col w-full md:grow justify-start"
-                                  : "flex flex-col";
+                                  ? `relative flex flex-col justify-start`
+                                  : "flex flex-col"
+                              } ${
+                                !!value.kind && value.kind === "input-complete"
+                                  ? "w-full md:grow"
+                                  : ""
+                              }`;
+
                               return (
                                 <div
                                   className={classn + width + withTextArea}
@@ -1325,7 +1344,7 @@ function TransferForm(
                                       component={value.kind}
                                       name={`transfers.${index}.values.${value.field}`}
                                       className={
-                                        "md:text-md relative h-fit min-h-fit rounded rounded p-2 text-sm" +
+                                        "md:text-md relative h-fit min-h-fit rounded p-2 text-sm " +
                                         withTextArea
                                       }
                                       placeholder={value.placeholder}

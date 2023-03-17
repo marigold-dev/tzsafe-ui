@@ -8,6 +8,7 @@ import {
 } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa2Michelson } from "../context/fa2";
 import { content, contractStorage as storage } from "../types/006Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
@@ -22,7 +23,7 @@ class Version006 extends Versioned {
     t: TezosToolkit,
     proposals: {
       transfers: {
-        type: "transfer" | "lambda" | "contract";
+        type: "transfer" | "lambda" | "contract" | "fa2";
         values: { [key: string]: string };
         fields: {
           field: string;
@@ -58,6 +59,34 @@ class Version006 extends Versioned {
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
               return {
                 execute_lambda: michelsonCode,
+              };
+            }
+            case "fa2": {
+              const parser = new Parser();
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa2Michelson({
+                  walletAddress: cc.address,
+                  targetAddress: x.values.targetAddress,
+                  tokenId: Number(x.values.tokenId),
+                  amount: Number(x.values.amount),
+                  fa2Address: x.values.fa2Address,
+                })
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      contract_addr: x.values.targetAddress,
+                      payload: {
+                        token_id: Number(x.values.tokenId),
+                        fa2_address: x.values.fa2Address,
+                      },
+                      amount: Number(x.values.amount),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
               };
             }
             default:
@@ -246,3 +275,6 @@ class Version006 extends Versioned {
 }
 
 export default Version006;
+function convert(arg0: string): any {
+  throw new Error("Function not implemented.");
+}
