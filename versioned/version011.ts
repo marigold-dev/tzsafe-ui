@@ -185,7 +185,7 @@ class Version011 extends Versioned {
         } else if ("removeOwners" in v) {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
-          return { change_threshold: v.changeThreshold };
+          return { adjust_threshold: Number(v.changeThreshold) };
         } else {
           return { adjust_effective_period: v.adjustEffectivePeriod };
         }
@@ -193,6 +193,7 @@ class Version011 extends Versioned {
       .filter(x => !!x);
 
     let params = cc.methods.create_proposal(content).toTransferParams();
+    console.log(content, params);
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(
