@@ -50,26 +50,28 @@ const TextInputWithCompletion: FC<
         onBlur={handleBLur}
         placeholder={props.placeholder}
       />
-      {shouldShow && completions.length > 0 && (
-        <div className="xz-20 absolute row-auto grid h-36 w-full grid-flow-row grid-cols-1 gap-2 overflow-y-auto break-words border-2 bg-white text-xs">
-          {completions.map(x => {
-            return (
-              <button
-                className="text-md z-50 block w-full bg-white p-2 text-left text-black hover:bg-slate-300"
-                key={x.term}
-                type="button"
-                onClick={e => {
-                  e.preventDefault();
-                  props.setTerms(x);
-                }}
-              >
-                {x.term}
-                <p className="text-gray text-sm">{x.payload}</p>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {
+        //shouldShow && completions.length > 0 && (
+        // <div className="xz-20 absolute row-auto grid h-36 w-full grid-flow-row grid-cols-1 gap-2 overflow-y-auto break-words border-2 bg-white text-xs">
+        //   {completions.map(x => {
+        //     return (
+        //       <button
+        //         className="text-md z-50 block w-full bg-white p-2 text-left text-black hover:bg-slate-300"
+        //         key={x.term}
+        //         type="button"
+        //         onClick={e => {
+        //           e.preventDefault();
+        //           props.setTerms(x);
+        //         }}
+        //       >
+        //         {x.term}
+        //         <p className="text-gray text-sm">{x.payload}</p>
+        //       </button>
+        //     );
+        //   })}
+        // </div>
+        //)
+      }
     </div>
   );
 };

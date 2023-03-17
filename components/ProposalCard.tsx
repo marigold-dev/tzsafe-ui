@@ -89,7 +89,10 @@ export const RenderProposalContent = ({
         amount: contractData.amount,
         addresses: [contractData.contract_addr],
         entrypoints: undefined,
-        params: contractData.payload.token_id.toString(),
+        params: JSON.stringify({
+          fa2_address: contractData.payload.fa2_address,
+          token_id: contractData.payload.token_id.toString(),
+        }),
       };
     } else if (metadata.entrypoint === "%transfer" && !!metadata.payload) {
       const [
@@ -110,7 +113,6 @@ export const RenderProposalContent = ({
         }),
       };
     } else {
-      console.log(content);
       const [meta, amount, address, entrypoint, arg] = (() => {
         if (metadata.contract_address) {
           const data = (() => {

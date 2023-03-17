@@ -228,7 +228,7 @@ function RenderItem({
   const { values, setFieldValue, getFieldProps } = useFormikContext<any>();
   if ("select" == item?.type) {
     return (
-      <div className="flex w-full flex-col border-2 border-white p-2">
+      <div className="flex w-full flex-col border-2 p-2">
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name))
@@ -237,7 +237,7 @@ function RenderItem({
           )}
         </label>
         <Field
-          className="text-black"
+          className="p-2 text-left text-black"
           name={makeName(parent, item.name) + ".kind"}
           as="select"
         >
@@ -288,11 +288,7 @@ function RenderItem({
         setFieldValue(fieldName, item.value);
       }, 250);
     }
-    return (
-      <p className="text-white">
-        {item.name}: {JSON.stringify(item.value)}
-      </p>
-    );
+    return <p className="text-white">{JSON.stringify(item.value)}</p>;
   }
   if ("list" == item?.type) {
     let fieldName =
@@ -311,7 +307,7 @@ function RenderItem({
           return (
             <div className="grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
-                <p className="text-white">{item.name}</p>
+                <p className="text-white"></p>
               ) : (
                 <p className="text-white">
                   {item.type}: {item.fields.type}
@@ -361,7 +357,7 @@ function RenderItem({
                     let field =
                       item.fields.type === "select"
                         ? { kind: item.fields.fields[0].name }
-                        : item.fields.name;
+                        : "";
                     push(field);
                   }}
                 >
@@ -391,9 +387,7 @@ function RenderItem({
         </label>
         <Field
           as="input"
-          className={
-            "md:text-md relative h-fit min-h-fit w-full p-2 text-sm text-black"
-          }
+          className="md:text-md relative h-fit min-h-fit w-full p-2 text-black"
           placeholder={item.placeholder}
           rows={10}
           name={fieldName}
@@ -439,16 +433,10 @@ function RenderItem({
         ? makeName(parent, item.name)
         : parent.join(".");
     return (
-      <div
-        className={
-          "relative flex w-full flex-col justify-start md:w-full  md:grow "
-        }
-      >
+      <div className="relative flex w-full flex-col justify-start md:w-full md:grow">
         <label className="text-white">{item.name}</label>
         <Field
-          className={
-            "md:text-md relative h-fit min-h-fit w-full p-2 text-sm text-black"
-          }
+          className="md:text-md relative h-fit min-h-fit w-full p-2 text-black"
           placeholder={"Enter lambda here"}
           rows={10}
           name={fieldName}
@@ -521,11 +509,11 @@ function Basic({
             <div className="flex w-full flex-col pr-2 md:pr-0">
               <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
-                  Amount in mutez:{" "}
+                  Amount in mutez
                 </label>
                 <Field
                   name="amount"
-                  className=" w-full p-2 text-black"
+                  className=" w-full rounded p-2 text-black"
                   placeholder="0"
                   validate={(value: string) => {
                     let error;
@@ -888,7 +876,7 @@ function ExecuteForm(
         }}
       >
         {({ resetForm }) => (
-          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center border-2 border-white">
+          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
             <div className="mb-2 self-center text-2xl font-medium text-white">
               Add items below
             </div>
@@ -956,7 +944,7 @@ function ExecuteContractForm(
   if (done) {
     return (
       <div className=" mb-2 w-full border-2 border-white p-2 text-white">
-        <p className="mt-4 text-lg text-white">Execute contract</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <p>Metadata: {props.getFieldProps()}</p>
       </div>
     );
@@ -964,14 +952,14 @@ function ExecuteContractForm(
   if (!state.address) {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <Basic setFormState={x => setState({ ...x, shape: {} })} />
       </div>
     );
   } else {
     return (
       <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute contract:</p>
+        <p className="mt-4 text-lg text-white">Execute Contract</p>
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -1177,33 +1165,7 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add transfer
-                    </button>
-                    <button
-                      type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "lambda",
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Add execute lambda
-                    </button>
-                    <button
-                      type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "contract",
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Add execute contract
+                      Transfer
                     </button>
                     <button
                       type="button"
@@ -1216,7 +1178,33 @@ function TransferForm(
                         });
                       }}
                     >
-                      Add fa2 transfer
+                      FA2 Transfer
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "contract",
+                          ...Versioned.lambdaForm(props.contract),
+                        });
+                      }}
+                    >
+                      Contract Execution
+                    </button>
+                    <button
+                      type="button"
+                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      onClick={e => {
+                        e.preventDefault();
+                        push({
+                          type: "lambda",
+                          ...Versioned.lambdaForm(props.contract),
+                        });
+                      }}
+                    >
+                      Lambda Execution
                     </button>
                   </div>
                   {values.transfers.length > 0 &&
@@ -1271,9 +1259,8 @@ function TransferForm(
                         <>
                           <p className="text-lg text-white">
                             {!transfer.fields.find(v => v.kind === "textarea")
-                              ? "Make transfer"
+                              ? "Transfer"
                               : "Execute lambda"}
-                            :
                           </p>
                           <div
                             className={
