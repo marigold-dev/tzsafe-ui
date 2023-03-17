@@ -193,7 +193,7 @@ class Version011 extends Versioned {
       .filter(x => !!x);
 
     let params = cc.methods.create_proposal(content).toTransferParams();
-    console.log(content, params);
+
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(
