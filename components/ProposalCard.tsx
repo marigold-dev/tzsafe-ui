@@ -14,21 +14,9 @@ type data = {
 };
 
 const isFa2 = (txs: any[]) => {
-  for (let i = 0; i < txs.length; i++) {
-    const current = txs[i];
+  if (txs.length !== 1) return false;
 
-    if (
-      !!current.txs &&
-      !!current.txs[0].to_ &&
-      !!current.txs[0].token_id &&
-      !!current.txs[0].amount
-    )
-      continue;
-
-    return false;
-  }
-
-  return true;
+  return !!txs[0].to_ && !!txs[0].token_id && !!txs[0].amount;
 };
 
 export const RenderProposalContent = ({
