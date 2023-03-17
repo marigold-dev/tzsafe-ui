@@ -945,7 +945,7 @@ function ExecuteContractForm(
   }
   if (done) {
     const data = JSON.parse(props.getFieldProps());
-    const payload = JSON.stringify(data.payload);
+    // const payload = JSON.stringify(data.payload);
 
     return (
       <div className="mt-8 w-full rounded border-2 border-white p-4 text-white">
@@ -961,7 +961,7 @@ function ExecuteContractForm(
           <span className="font-light">Entrypoint:</span> {data.entrypoint}
         </p>
         <p>
-          <span className="font-light">Payload:</span> {payload}
+          <span className="font-light">Params:</span> {data.payload}
         </p>
       </div>
     );
