@@ -228,7 +228,7 @@ function RenderItem({
   const { values, setFieldValue, getFieldProps } = useFormikContext<any>();
   if ("select" == item?.type) {
     return (
-      <div className="flex w-full flex-col border-2 p-2">
+      <div className="flex w-full flex-col rounded border-2 p-4">
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name))
@@ -237,7 +237,7 @@ function RenderItem({
           )}
         </label>
         <Field
-          className="p-2 text-left text-black"
+          className="rounded p-2 text-left text-black"
           name={makeName(parent, item.name) + ".kind"}
           as="select"
         >
@@ -305,7 +305,7 @@ function RenderItem({
       <FieldArray name={fieldName}>
         {({ push, pop }) => {
           return (
-            <div className="grid w-full grid-flow-row grid-cols-1 gap-2">
+            <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
                 <p className="text-white"></p>
               ) : (
@@ -322,7 +322,7 @@ function RenderItem({
                     return (
                       <div
                         key={idx}
-                        className="grid w-full grid-flow-row grid-cols-1 gap-2"
+                        className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
                       >
                         <RenderItem
                           parent={[...parent, item.name]}
@@ -334,7 +334,7 @@ function RenderItem({
                       </div>
                     );
                   })}
-              <div className="flex flex-col md:flex-row">
+              <div className="mt-2 flex flex-col md:flex-row">
                 {path && path.length > 0 && (
                   <button
                     type="button"
@@ -351,7 +351,7 @@ function RenderItem({
                 )}
                 <button
                   type="button"
-                  className="mx-none block self-center justify-self-end bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                  className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                   onClick={e => {
                     e.preventDefault();
                     let field =
@@ -379,7 +379,7 @@ function RenderItem({
         ? makeName(parent, item.name)
         : parent.join(".");
     return (
-      <div className="grid w-full grid-flow-row grid-cols-1 gap-2">
+      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
         <label className="text-white">
           {capitalizeFirstLetter(
             !Number.isNaN(Number(item.name)) ? item.placeholder : item.name
@@ -387,7 +387,7 @@ function RenderItem({
         </label>
         <Field
           as="input"
-          className="md:text-md relative h-fit min-h-fit w-full p-2 text-black"
+          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-black"
           placeholder={item.placeholder}
           rows={10}
           name={fieldName}
@@ -405,7 +405,7 @@ function RenderItem({
   }
   if ("record" == item?.type) {
     return (
-      <div className="mb-2 grid w-full grid-flow-row items-start gap-4 border-2 border-white">
+      <div className="mb-2 mt-2 grid w-full grid-flow-row items-start gap-4 rounded border-2 border-white p-4">
         {item.fields.map(x => (
           <RenderItem key={x.name} parent={[...parent, item.name]} item={x} />
         ))}
@@ -415,7 +415,7 @@ function RenderItem({
 
   if ("array" == item?.type) {
     return (
-      <div className="mb-2 grid w-full grid-flow-row items-start gap-4 border-2 border-white">
+      <div className="mb-2 mt-2 grid w-full grid-flow-row items-start gap-4 rounded border-2 border-white p-4">
         {item.fields.map(x => {
           return (
             <RenderItem key={x.name} parent={[...parent, item.name]} item={x} />
@@ -612,6 +612,7 @@ function ExecuteForm(
       })();
     }
   }, [address, loading, props.shape]);
+
   return (
     <div className="w-full text-white">
       <Formik
@@ -880,7 +881,7 @@ function ExecuteForm(
             <div className="mb-2 self-center text-2xl font-medium text-white">
               Add items below
             </div>
-            <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto p-2">
+            <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape && (
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
@@ -888,7 +889,7 @@ function ExecuteForm(
             <ErrorMessage name="entrypoint.kind" render={renderError} />
             <div className="flex flex-row justify-around md:w-1/3">
               <button
-                className=" my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 onClick={e => {
                   e.preventDefault();
                   props.reset();
@@ -897,7 +898,7 @@ function ExecuteForm(
                 Reset
               </button>
               <button
-                className="my-2 bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 type="submit"
               >
                 Confirm
@@ -934,18 +935,34 @@ function ExecuteContractForm(
       return { ...prev, shape };
     });
   }, []);
+
   if (loading) {
     return (
-      <div className=" mb-2 flex w-full items-center justify-center border-2 border-white p-2 align-middle">
+      <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
         <ContractLoader loading={loading}></ContractLoader>
       </div>
     );
   }
   if (done) {
+    const data = JSON.parse(props.getFieldProps());
+    const payload = JSON.stringify(data.payload);
+
     return (
-      <div className=" mb-2 w-full border-2 border-white p-2 text-white">
-        <p className="mt-4 text-lg text-white">Execute contract</p>
-        <p>Metadata: {props.getFieldProps()}</p>
+      <div className="mt-8 w-full rounded border-2 border-white p-4 text-white">
+        <p className="text-lg text-white">Execute Contract</p>
+        <p>
+          <span className="font-light">Contract address:</span>{" "}
+          {data.contract_addr}
+        </p>
+        <p>
+          <span className="font-light">Mutez amount:</span> {data.mutez_amount}
+        </p>
+        <p>
+          <span className="font-light">Entrypoint:</span> {data.entrypoint}
+        </p>
+        <p>
+          <span className="font-light">Payload:</span> {payload}
+        </p>
       </div>
     );
   }
@@ -1198,7 +1215,7 @@ function TransferForm(
                     values.transfers.map((transfer, index) => {
                       if (transfer.type === "contract") {
                         return ReactDOM.createPortal(
-                          <div className="flex flex-col md:flex-row">
+                          <div className="flex flex-col space-x-4 md:flex-row">
                             <ExecuteContractForm
                               key={index}
                               getFieldProps={() =>
@@ -1309,7 +1326,7 @@ function TransferForm(
                                       component={value.kind}
                                       name={`transfers.${index}.values.${value.field}`}
                                       className={
-                                        "md:text-md relative h-fit min-h-fit p-2 text-sm" +
+                                        "md:text-md relative h-fit min-h-fit rounded rounded p-2 text-sm" +
                                         withTextArea
                                       }
                                       placeholder={value.placeholder}
