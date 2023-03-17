@@ -13,6 +13,24 @@ type data = {
   params: undefined | string;
 };
 
+const isFa2 = (txs: any[]) => {
+  for (let i = 0; i < txs.length; i++) {
+    const current = txs[i];
+
+    if (
+      !!current.txs &&
+      !!current.txs[0].to_ &&
+      !!current.txs[0].token_id &&
+      !!current.txs[0].amount
+    )
+      continue;
+
+    return false;
+  }
+
+  return true;
+};
+
 export const RenderProposalContent = ({
   content,
 }: {
@@ -97,9 +115,8 @@ export const RenderProposalContent = ({
     } else if (
       metadata.entrypoint === "%transfer" &&
       Array.isArray(metadata.payload) &&
-      !!metadata.payload[0]?.txs
+      isFa2(metadata.payload)
     ) {
-      console.log(metadata.payload);
       const [
         {
           txs: [{ to_, token_id, amount }],
@@ -282,7 +299,7 @@ const labelOfProposalContent = (content: proposalContent) => {
 
     return (metadata.entrypoint === "%transfer" &&
       Array.isArray(metadata.payload) &&
-      !!metadata.payload[0]?.txs) ||
+      isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
       : metadata.contract_address ||
