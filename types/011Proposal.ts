@@ -7,6 +7,7 @@ type content =
   | { add_owners: string[] }
   | { remove_owners: string[] }
   | { change_threshold: number }
+  | { adjust_threshold: number }
   | { execute: string }
   | { adjust_effective_period: number };
 

@@ -277,6 +277,10 @@ class Version011 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
+    } else if ("adjust_threshold" in content) {
+      return {
+        changeThreshold: content.adjust_threshold,
+      };
     } else if ("adjust_effective_period" in content) {
       return {
         adjustEffectivePeriod: content.adjust_effective_period,
