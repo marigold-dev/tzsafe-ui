@@ -198,7 +198,7 @@ export const RenderProposalContent = ({
             !data.metadata ? "text-zinc-500" : ""
           } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
         >
-          <p className="flex text-zinc-500 lg:hidden">
+          <p className="flex justify-center text-zinc-500 lg:hidden">
             Metadata
             <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
               <InfoCircledIcon className="ml-2 h-4 w-4" />
@@ -225,7 +225,7 @@ export const RenderProposalContent = ({
           </span>
         ) : (
           <ul className="justify-self-start lg:justify-self-center">
-            <li className="text-zinc-500 lg:hidden">Addresses:</li>
+            <li className="text-zinc-500 lg:hidden">Addresses</li>
             {data.addresses.map((address, i) => (
               <li key={i}>
                 <Alias address={address} />
@@ -430,7 +430,7 @@ const ProposalCard = ({
             <span className="justify-self-center">Amount</span>
             <span className="justify-self-center">Address</span>
             <span className="justify-self-end">Entrypoint</span>
-            <span className="justify-self-end">Parameters/Token</span>
+            <span className="justify-self-end">Params/Token</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
             {content.map((v, i) => (
