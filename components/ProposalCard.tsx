@@ -91,7 +91,7 @@ export const RenderProposalContent = ({
         entrypoints: undefined,
         params: contractData.payload.token_id.toString(),
       };
-    } else if (metadata.entrypoint === "%transfer") {
+    } else if (metadata.entrypoint === "%transfer" && !!metadata.payload) {
       const [
         {
           txs: [{ to_, token_id, amount }],
@@ -273,7 +273,7 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    return metadata.entrypoint === "%transfer" ||
+    return (metadata.entrypoint === "%transfer" && !!metadata.payload) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
       : metadata.contract_address ||
