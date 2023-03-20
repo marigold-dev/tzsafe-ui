@@ -24,8 +24,8 @@ function Home() {
                       Create new TzSafe wallet
                     </h2>
                     <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
-                      Create a new TzSafe wallet that is controlled by one or
-                      multiple signers.
+                      Create a new Tzsafe wallet for an advanced management of
+                      ownership and security to guard Tezos assets
                     </p>
                   </div>
                   <Link

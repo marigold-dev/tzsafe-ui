@@ -122,7 +122,7 @@ abstract class Versioned {
               try {
                 const _ = p.parseScript(x);
               } catch {
-                return "Bad lambda";
+                return "Unable to parse the lambda";
               }
             },
           },
@@ -161,9 +161,9 @@ abstract class Versioned {
               }
               const p = new Parser();
               try {
-                const _ = p.parseScript(x);
+                p.parseScript(x);
               } catch {
-                return "Bad lambda";
+                return "Unable to parse the lambda";
               }
             },
           },
@@ -213,11 +213,8 @@ abstract class Versioned {
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
-            validate: (x: string) => {
-              return validateAddress(x) !== 3
-                ? `invalid address ${x}`
-                : undefined;
-            },
+            validate: (x: string) =>
+              validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
           },
         ],
       };
@@ -240,7 +237,6 @@ abstract class Versioned {
             placeholder: "1",
             validate: (x: string) => {
               const amount = Number.parseInt(x);
-              console.log("Hello?", amount);
               if (isNaN(amount) || amount <= 0) {
                 return `invalid amount ${x}`;
               }
