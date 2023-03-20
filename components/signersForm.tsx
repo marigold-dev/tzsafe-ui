@@ -317,11 +317,12 @@ const SignersForm: FC<{
                       values.validators.map((validator, index) => {
                         return (
                           <div
-                            className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none"
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 px-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
                             key={index}
                           >
                             <div className="flex w-full flex-col md:w-auto">
                               <label className="text-white">
+                                <span className="md:hidden">Owner name</span>
                                 {index === 0 ? "Owner Name" : ""}
                               </label>
                               <Field
@@ -340,6 +341,7 @@ const SignersForm: FC<{
                                 className="text-white"
                                 htmlFor={`validators.${index}.address`}
                               >
+                                <span className="md:hidden">Owner address</span>
                                 {index === 0 ? "Owner Address" : ""}
                               </label>
                               <Field
