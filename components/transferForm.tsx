@@ -578,11 +578,14 @@ function ExecuteForm(
     loading: boolean;
   }>
 ) {
-  let state = useContext(AppStateContext)!;
+  const state = useContext(AppStateContext)!;
+  const [submitError, setSubmitError] = useState<undefined | string>(undefined);
+
   let address = props.address;
   let conn = state.connection;
   let setLoading = props.setLoading;
   let loading = props.loading;
+
   useEffect(() => {
     if (!Object.keys(props.shape).length && !loading) {
       (async () => {
@@ -875,6 +878,7 @@ function ExecuteForm(
             props.setLoading(false);
           } catch (e) {
             console.log(e);
+            setSubmitError((e as Error).message);
             props.setLoading(false);
           }
         }}
@@ -889,8 +893,11 @@ function ExecuteForm(
                 <RenderItem item={props.shape.form} parent={[]} />
               )}
             </div>
+            {!!submitError ? (
+              <span className="text-red-600">{submitError}</span>
+            ) : null}
             <ErrorMessage name="entrypoint.kind" render={renderError} />
-            <div className="flex flex-row justify-around md:w-1/3">
+            <div className="mt-4 flex flex-row justify-around md:w-1/3">
               <button
                 className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 onClick={e => {
@@ -1352,9 +1359,11 @@ function TransferForm(
                                       }
                                       placeholder={value.placeholder}
                                       rows={10}
+                                      validate={value.validate}
                                     />
                                   )}
                                   <ErrorMessage
+                                    className="mt-2"
                                     name={`transfers.${index}.values.${value.field}`}
                                     render={renderError}
                                   />
