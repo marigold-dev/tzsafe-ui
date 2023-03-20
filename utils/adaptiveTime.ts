@@ -62,11 +62,11 @@ function conv(duration: Duration): Duration {
 function adaptiveTime(x: string): string {
   if (isNaN(Number(x))) return "";
 
-  let duration = Duration.fromMillis(Number(x) * 1000, {
+  const duration = Duration.fromMillis(Number(x) * 1000, {
     locale: "en",
   }).rescale();
 
-  return conv(duration).normalize().toHuman();
+  return duration.normalize().toHuman();
 }
 function countdown(x: string, createdOn: string): string {
   let created = DateTime.fromISO(new Date(createdOn).toISOString()).toObject();
