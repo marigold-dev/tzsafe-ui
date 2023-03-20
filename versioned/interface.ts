@@ -199,13 +199,12 @@ abstract class Versioned {
             field: "amount",
             label: "Amount in Mutez",
             path: ".amount",
-            placeholder: "0",
+            placeholder: "1",
             validate: (x: string) => {
               const amount = Number.parseInt(x);
               if (isNaN(amount) || amount <= 0) {
                 return `invalid amount ${x}`;
               }
-              return undefined;
             },
           },
           {
@@ -238,13 +237,13 @@ abstract class Versioned {
             field: "amount",
             label: "Amount in Mutez",
             path: ".amount",
-            placeholder: "0",
+            placeholder: "1",
             validate: (x: string) => {
               const amount = Number.parseInt(x);
+              console.log("Hello?", amount);
               if (isNaN(amount) || amount <= 0) {
                 return `invalid amount ${x}`;
               }
-              return undefined;
             },
           },
           {
@@ -313,7 +312,7 @@ abstract class Versioned {
           field: "amount",
           label: "Amount",
           path: ".amount",
-          placeholder: "0",
+          placeholder: "1",
           validate: (x: string) => {
             const amount = parseInt(x);
             if (isNaN(amount) || amount <= 0) {

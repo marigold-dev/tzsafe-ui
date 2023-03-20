@@ -493,7 +493,10 @@ function Basic({
         if (!exists) {
           errors.walletAddress = `Contract does not exist at address ${values.walletAddress}`;
         }
-        if (isNaN(Number(values.amount))) {
+
+        const convertedValue = Number(values.amount);
+
+        if (isNaN(convertedValue) || convertedValue <= 0) {
           errors.amount = "Invalid amount " + values.amount;
         }
 
@@ -514,7 +517,7 @@ function Basic({
                 <Field
                   name="amount"
                   className=" w-full rounded p-2 text-black"
-                  placeholder="0"
+                  placeholder="1"
                   validate={(value: string) => {
                     let error;
                     if (isNaN(Number(value))) {
