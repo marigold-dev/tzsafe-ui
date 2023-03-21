@@ -126,7 +126,7 @@ const History = () => {
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"History"} />
+      <Meta title={"History - TzSafe"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm

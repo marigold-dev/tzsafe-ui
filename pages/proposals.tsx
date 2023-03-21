@@ -81,7 +81,7 @@ const Proposals = () => {
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Proposals"} />
+      <Meta title={"Proposals - TzSafe"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm
