@@ -7,7 +7,7 @@ TzSafe is a website to interact with multi-signatures wallets. The goal is to ha
 First, clone the repository:
 
 ```bash
-git clone https://github.com/marigold-dev/Multisig-ui/
+git clone https://github.com/marigold-dev/tzsafe-ui/
 ```
 
 Then install the dependencies:
