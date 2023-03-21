@@ -24,7 +24,7 @@ function Home() {
                       Create new TzSafe wallet
                     </h2>
                     <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
-                      Create a new Tzsafe wallet for an advanced management of
+                      Create a new TzSafe wallet for an advanced management of
                       ownership and security to guard Tezos assets
                     </p>
                   </div>
@@ -44,7 +44,7 @@ function Home() {
                 <div className="grid min-h-max grid-rows-5 rounded bg-graybg p-4">
                   <div className="row-span-6">
                     <h2 className="text-xl font-extrabold text-white md:text-2xl">
-                      Import wallet
+                      Import TzSafe wallet
                     </h2>
                     <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
                       Already have a TzSafe wallet or want to access it from a
