@@ -6,15 +6,6 @@ import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
 import LoginButton from "./loginButton";
 
-let RenderContracts = () => {
-  const state = useContext(AppStateContext);
-  return state &&
-    state?.contracts &&
-    Object.keys(state.contracts).length > 0 ? (
-    <LinkComponent path="/wallets" text={"Wallets"} />
-  ) : null;
-};
-
 const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
   let [loginOpen, setLoginOpen] = useState(false);
@@ -51,11 +42,9 @@ const NavBar = (_: React.PropsWithChildren) => {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                {/* <RenderContracts /> */}
                 <LinkComponent path="/address-book" text={"Address book"} />
                 <LinkComponent path="/new-wallet" text={"New wallet"} />
                 <LinkComponent path="/import-wallet" text={"Import wallet"} />
-                {/* <!-- Current: "bg-zinc-900 text-white", Default: "text-zinc-300 hover:bg-zinc-700 hover:text-white" --> */}
               </div>
             </div>
           </div>
@@ -186,7 +175,6 @@ const NavBar = (_: React.PropsWithChildren) => {
 
       <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
         <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
-          {/* <RenderContracts /> */}
           <LinkComponent path="/address-book" text={"Address book"} />
           <LinkComponent path="/new-wallet" text={"New wallet"} />
           <LinkComponent path="/import-wallet" text={"Import wallet"} />

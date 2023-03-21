@@ -54,7 +54,7 @@ const SignersForm: FC<{
 
     setTimeout(() => {
       setResult(undefined);
-    }, 2000);
+    }, MODAL_TIMEOUT);
   }, [result, loading]);
 
   const renderError = (message: string) => {

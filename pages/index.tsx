@@ -4,7 +4,7 @@ import Meta from "../components/meta";
 function Home() {
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Welcome"} />
+      <Meta title={"Welcome - TzSafe"} />
 
       <div>
         <div>

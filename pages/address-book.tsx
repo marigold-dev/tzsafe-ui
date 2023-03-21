@@ -51,7 +51,7 @@ function Home() {
   };
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Address book"} />
+      <Meta title={"Address book - TzSafe"} />
       <div>
         <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Address book</h1>
