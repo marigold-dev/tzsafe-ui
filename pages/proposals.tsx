@@ -10,7 +10,6 @@ import fetchVersion from "../context/metadata";
 import { getProposals } from "../context/proposals";
 import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
-import { countdown } from "../utils/adaptiveTime";
 import useIsOwner from "../utils/useIsOwner";
 import { getProposalsId, toProposal } from "../versioned/apis";
 

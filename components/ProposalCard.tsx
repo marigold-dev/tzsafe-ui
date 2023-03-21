@@ -13,10 +13,14 @@ type data = {
   params: undefined | string;
 };
 
-const isFa2 = (txs: any[]) => {
-  if (txs.length !== 1) return false;
+const isFa2 = (payload: any[]) => {
+  if (payload.length !== 1 || payload[0].txs.length === 0) return false;
 
-  return !!txs[0].to_ && !!txs[0].token_id && !!txs[0].amount;
+  return (
+    !!payload[0].txs[0].to_ &&
+    !!payload[0].txs[0].token_id &&
+    !!payload[0].txs[0].amount
+  );
 };
 
 export const RenderProposalContent = ({
@@ -74,6 +78,14 @@ export const RenderProposalContent = ({
     };
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
+
+    if (metadata.entrypoint === "%transfer")
+      console.log(
+        metadata,
+        metadata.entrypoint === "%transfer",
+        Array.isArray(metadata.payload),
+        isFa2(metadata.payload)
+      );
 
     if (
       !metadata?.contract_address &&
