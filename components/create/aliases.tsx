@@ -217,11 +217,11 @@ function Aliases() {
             </FieldArray>
           </div>
           <div className="flex w-full grow flex-col p-2">
-            <label className="mr-4 text-white">Threshold: </label>
+            <label className="mr-4 text-white">Threshold </label>
             <Field
               component="select"
               name="requiredSignatures"
-              className="mt-1 w-1/4 rounded p-1 text-center text-black"
+              className="mt-2 w-full rounded p-2 text-center text-black"
               values={values.requiredSignatures}
             >
               {values.validators.map((_, idx) => (
@@ -237,11 +237,11 @@ function Aliases() {
           </div>
           <div className="flex w-full grow flex-col p-2">
             <label className="mr-4 text-white">
-              Proposal duration (in seconds):
+              Proposal duration (in seconds)
             </label>
             <Field
               component="input"
-              className="mt-1 rounded p-2 text-black"
+              className="mt-2 rounded p-2 text-black"
               name="effectivePeriod"
               values={values.requiredSignatures}
             />

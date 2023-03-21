@@ -124,7 +124,7 @@ function Basic() {
               <label className="font-medium text-white">Wallet name</label>
               <Field
                 name="walletName"
-                className=" w-full p-2"
+                className=" mt-2 w-full rounded p-2"
                 placeholder="example-wallet"
               />
             </div>
@@ -135,7 +135,7 @@ function Basic() {
               <label className="font-medium text-white">Wallet address</label>
               <Field
                 name="walletAddress"
-                className=" w-full p-2"
+                className=" mt-2 w-full rounded p-2"
                 placeholder="your wallet address"
               />
             </div>
