@@ -1,10 +1,15 @@
-import { BeaconEvent, defaultEventCallbacks } from "@airgap/beacon-sdk";
+import {
+  BeaconEvent,
+  defaultEventCallbacks,
+  NetworkType,
+} from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
+import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
@@ -91,6 +96,12 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          <Banner>
+            <span className="font-light">Make sure the URL is </span>
+            {PREFERED_NETWORK === NetworkType.MAINNET
+              ? "tzsafe.marigold.dev"
+              : "ghostnet.tzsafe.marigold.dev"}
+          </Banner>
           <NavBar />
           {Object.entries(state.contracts).length > 0 && (
             <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
