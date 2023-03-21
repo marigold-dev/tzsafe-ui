@@ -10,16 +10,19 @@ import { AppStateContext } from "../../context/state";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
 
+const renderError = (message: string) => (
+  <p className="mt-1 italic text-red-600">{message}</p>
+);
+
 function Basic() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<undefined | string>(undefined);
 
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext)!;
-  let params = useSearchParams();
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
+  const params = useSearchParams();
+
   let [initialState, set] = useState({
     walletName: "example-wallet",
     walletAddress: formState?.walletAddress || "",
@@ -42,6 +45,8 @@ function Basic() {
       enableReinitialize={true}
       initialValues={initialState}
       validate={async values => {
+        if (!!error) setError(undefined);
+
         let errors: any = {};
         if (validateContractAddress(values.walletAddress) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
@@ -69,32 +74,44 @@ function Basic() {
       }}
       onSubmit={async values => {
         setIsLoading(true);
-        const contract = await state.connection.contract.at(
-          values.walletAddress,
-          tzip16
-        );
-        const storage: any = await contract.storage();
-        let version = await fetchVersion(contract!);
+        setError(undefined);
 
-        let balance = await state?.connection.tz.getBalance(
-          values.walletAddress
-        );
-        let v = toStorage(version, storage, balance);
-        const validators = signers(v).map((x: string) => ({
-          address: x,
-          name: state.aliases[x] || "",
-        }));
+        try {
+          const contract = await state.connection.contract.at(
+            values.walletAddress,
+            tzip16
+          );
+          const storage: any = await contract.storage();
+          let version = await fetchVersion(contract!);
 
-        const data = {
-          ...formState,
-          ...values,
-          validators,
-          requiredSignatures: storage.threshold.toNumber(),
-          effectivePeriod: storage.effective_period.toNumber(),
-        };
-        setFormState(data as any);
-        setActiveStepIndex(activeStepIndex + 1);
-        setIsLoading(false);
+          if (version === "unknown version") {
+            throw new Error("The contract is not a TzSafe contract");
+          }
+
+          let balance = await state?.connection.tz.getBalance(
+            values.walletAddress
+          );
+          let v = toStorage(version, storage, balance);
+          const validators = signers(v).map((x: string) => ({
+            address: x,
+            name: state.aliases[x] || "",
+          }));
+
+          const data = {
+            ...formState,
+            ...values,
+            validators,
+            requiredSignatures: storage.threshold.toNumber(),
+            effectivePeriod: storage.effective_period.toNumber(),
+          };
+          setFormState(data as any);
+          setActiveStepIndex(activeStepIndex + 1);
+          setIsLoading(false);
+        } catch (e) {
+          console.log(e);
+          setError((e as Error).message);
+          setIsLoading(false);
+        }
       }}
     >
       <Form className="align-self-center col-span-2 flex w-full flex-col items-center justify-center justify-self-center">
@@ -122,6 +139,7 @@ function Basic() {
                 placeholder="your wallet address"
               />
             </div>
+            {!!error && renderError(error)}
             <ErrorMessage name="walletAddress" render={renderError} />
           </div>
         </div>
