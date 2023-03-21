@@ -298,8 +298,7 @@ abstract class Versioned {
           path: ".tokenId",
           placeholder: "0",
           validate: (x: string) => {
-            const amount = parseInt(x);
-            if (isNaN(amount) || amount <= 0) {
+            if (isNaN(parseInt(x))) {
               return `invalid id ${x}`;
             }
           },

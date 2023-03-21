@@ -1217,7 +1217,7 @@ function TransferForm(
                     >
                       Contract Execution
                     </button>
-                    <button
+                    {/* <button
                       type="button"
                       className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
@@ -1229,7 +1229,7 @@ function TransferForm(
                       }}
                     >
                       Lambda Execution
-                    </button>
+                    </button> */}
                   </div>
                   {values.transfers.length > 0 &&
                     values.transfers.map((transfer, index) => {
