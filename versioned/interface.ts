@@ -191,7 +191,7 @@ abstract class Versioned {
     if (c.version === "0.0.6") {
       return {
         values: {
-          amount: "0",
+          amount: "",
           to: "",
         },
         fields: [
@@ -226,7 +226,7 @@ abstract class Versioned {
     ) {
       return {
         values: {
-          amount: "0",
+          amount: "",
           to: "",
         },
         fields: [
