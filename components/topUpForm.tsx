@@ -36,13 +36,13 @@ function TopUp(props: {
   return (
     <Formik
       initialValues={{
-        amount: 0,
+        amount: 1,
       }}
       validate={values => {
-        if (isNaN(values.amount)) {
-          return { amount: `not a valid amount ${values.amount}` };
-        } else {
-          return;
+        const parsed = Number(values.amount);
+
+        if (isNaN(parsed) || parsed <= 0) {
+          return { amount: `Invalid amount ${values.amount}` };
         }
       }}
       onSubmit={async values => {
@@ -110,7 +110,7 @@ function TopUp(props: {
           <Field
             name="amount"
             className="mt-2 rounded-md p-2"
-            placeholder="0"
+            placeholder="1"
           />
         </div>
         <ErrorMessage name="amount" render={renderError} />

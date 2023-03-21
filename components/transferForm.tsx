@@ -494,9 +494,7 @@ function Basic({
           errors.walletAddress = `Contract does not exist at address ${values.walletAddress}`;
         }
 
-        const convertedValue = Number(values.amount);
-
-        if (isNaN(convertedValue) || convertedValue <= 0) {
+        if (isNaN(Number(values.amount))) {
           errors.amount = "Invalid amount " + values.amount;
         }
 
@@ -517,7 +515,7 @@ function Basic({
                 <Field
                   name="amount"
                   className=" w-full rounded p-2 text-black"
-                  placeholder="1"
+                  placeholder="0"
                   validate={(value: string) => {
                     let error;
                     if (isNaN(Number(value))) {
@@ -1006,7 +1004,7 @@ function ExecuteContractForm(
   }
 }
 function renderError(message: string) {
-  return <p className="italic text-red-600">{message}</p>;
+  return <p className="mt-2 italic text-red-600">{message}</p>;
 }
 function TransferForm(
   props: React.PropsWithoutRef<{
@@ -1363,7 +1361,6 @@ function TransferForm(
                                     />
                                   )}
                                   <ErrorMessage
-                                    className="mt-2"
                                     name={`transfers.${index}.values.${value.field}`}
                                     render={renderError}
                                   />
