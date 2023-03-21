@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 
 type content =
   | { execute_lambda: string | undefined }
-  | { transfer: { amount: BigNumber; target: string; parameter: {} } }
+  | { transfer: { amount: number; target: string; parameter: {} } }
   | { add_signers: string[] }
   | { remove_signers: string[] }
   | { execute: string }

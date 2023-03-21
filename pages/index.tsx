@@ -4,13 +4,13 @@ import Meta from "../components/meta";
 function Home() {
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Welcome"} />
+      <Meta title={"Welcome - TzSafe"} />
 
       <div>
         <div>
           <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-extrabold text-white">
-              Welcome to Multisig
+              Welcome to TzSafe
             </h1>
           </div>
         </div>
@@ -21,16 +21,16 @@ function Home() {
                 <div className="grid min-h-max grid-rows-5 rounded bg-graybg p-4">
                   <div className="row-span-6">
                     <h2 className="text-xl font-extrabold text-white md:text-2xl">
-                      Create new Multisig wallet
+                      Create new TzSafe wallet
                     </h2>
-                    <p className="md:text-l text-s my-2 break-words font-thin text-white md:my-6 md:w-3/4">
-                      Create a new Multisig wallet that is controlled by one or
-                      multiple signers.
+                    <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
+                      Create a new TzSafe wallet for an advanced management of
+                      ownership and security to guard Tezos assets
                     </p>
                   </div>
                   <Link
                     type="button"
-                    href={{ pathname: "/create" }}
+                    href={{ pathname: "/new-wallet" }}
                     className={
                       "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:py-1.5 md:px-1 md:text-2xl "
                     }
@@ -44,16 +44,16 @@ function Home() {
                 <div className="grid min-h-max grid-rows-5 rounded bg-graybg p-4">
                   <div className="row-span-6">
                     <h2 className="text-xl font-extrabold text-white md:text-2xl">
-                      Import existing multisig
+                      Import TzSafe wallet
                     </h2>
                     <p className="md:text-l text-s my-2 break-words font-light text-white md:my-6 md:w-3/4">
-                      Already have a Multisig wallet or want to access it from a
+                      Already have a TzSafe wallet or want to access it from a
                       different device? Load it using its address
                     </p>
                   </div>
                   <Link
                     type="button"
-                    href={{ pathname: "/import" }}
+                    href={{ pathname: "/import-wallet" }}
                     className={
                       "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1.5 md:px-1 md:text-2xl "
                     }

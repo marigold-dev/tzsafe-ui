@@ -1,18 +1,10 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
+import { PREFERED_NETWORK } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
 import LoginButton from "./loginButton";
-
-let RenderContracts = () => {
-  const state = useContext(AppStateContext);
-  return state &&
-    state?.contracts &&
-    Object.keys(state.contracts).length > 0 ? (
-    <LinkComponent path="/wallets" text={"Wallets"} />
-  ) : null;
-};
 
 const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
@@ -36,7 +28,7 @@ const NavBar = (_: React.PropsWithChildren) => {
         menuOpen ? "h-auto" : "h-20"
       } fixed top-0 left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
-      <div className="mx-auto w-full px-4 sm:px-6 md:max-w-7xl lg:px-8">
+      <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -44,17 +36,15 @@ const NavBar = (_: React.PropsWithChildren) => {
                 href={"/"}
                 className="text-xl font-bold tracking-wider text-white"
               >
-                <span>MULTISIG</span>
+                <span>TZSAFE</span>
                 <span className="ml-4 text-xs">BETA</span>
               </Link>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                {/* <RenderContracts /> */}
                 <LinkComponent path="/address-book" text={"Address book"} />
-                <LinkComponent path="/create" text={"Create a new wallet"} />
-                <LinkComponent path="/import" text={"Import existing wallet"} />
-                {/* <!-- Current: "bg-zinc-900 text-white", Default: "text-zinc-300 hover:bg-zinc-700 hover:text-white" --> */}
+                <LinkComponent path="/new-wallet" text={"New wallet"} />
+                <LinkComponent path="/import-wallet" text={"Import wallet"} />
               </div>
             </div>
           </div>
@@ -106,7 +96,9 @@ const NavBar = (_: React.PropsWithChildren) => {
                             state?.address.slice(33)}
                         </span>
                         <span className="font-xs block text-white">
-                          Ghostnet
+                          {PREFERED_NETWORK === "mainnet"
+                            ? "Mainnet"
+                            : "Ghostnet"}
                         </span>
                       </div>
                     </button>
@@ -183,10 +175,9 @@ const NavBar = (_: React.PropsWithChildren) => {
 
       <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
         <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
-          <RenderContracts />
           <LinkComponent path="/address-book" text={"Address book"} />
-          <LinkComponent path="/create" text={"Create a new wallet"} />
-          <LinkComponent path="/import" text={"Import existing wallet"} />
+          <LinkComponent path="/new-wallet" text={"New wallet"} />
+          <LinkComponent path="/import-wallet" text={"Import wallet"} />
         </div>
         {state?.address == null ? (
           <div className="mx-2 flex items-center justify-center pb-2">
@@ -210,7 +201,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                     state?.address.slice(33)}
                 </div>
                 <div className="text-sm font-medium leading-none text-white">
-                  GhostNet
+                  {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}
                 </div>
               </div>
             </div>

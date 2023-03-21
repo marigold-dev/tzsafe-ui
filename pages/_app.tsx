@@ -1,7 +1,7 @@
 import {
-  NetworkType,
   BeaconEvent,
   defaultEventCallbacks,
+  NetworkType,
 } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
@@ -9,9 +9,11 @@ import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
+import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
+import { PREFERED_NETWORK } from "../context/config";
 import {
   tezosState,
   action,
@@ -43,15 +45,11 @@ export default function App({ Component, pageProps }: AppProps) {
         "/settings",
         "/proposals",
         "/history",
-        "/top-up",
-        "/create-proposal",
+        "/fund-wallet",
+        "/new-proposal",
       ].includes(path)
     )
       return;
-
-    if (!state.address) {
-      router.replace("/");
-    }
 
     if (Object.values(state.contracts).length > 0) return;
 
@@ -64,8 +62,8 @@ export default function App({ Component, pageProps }: AppProps) {
         let a = init();
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
-          name: "Multisig wallet",
-          preferredNetwork: NetworkType.GHOSTNET,
+          name: "TzSafe",
+          preferredNetwork: PREFERED_NETWORK,
           disableDefaultEvents: false,
           eventHandlers: {
             [BeaconEvent.PAIR_INIT]: {
@@ -98,16 +96,19 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          <Banner>
+            <span className="font-light">Make sure the URL is </span>
+            {PREFERED_NETWORK === NetworkType.MAINNET
+              ? "tzsafe.marigold.dev"
+              : "ghostnet.tzsafe.marigold.dev"}
+          </Banner>
           <NavBar />
-          {!!state.address && Object.entries(state.contracts).length > 0 && (
+          {Object.entries(state.contracts).length > 0 && (
             <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
           )}
           <div
             className={`pt-20 pb-28 ${
-              path === "/" &&
-              (!state.address || Object.entries(state.contracts).length === 0)
-                ? ""
-                : "md:pl-72"
+              Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
             }`}
           >
             <button
@@ -119,17 +120,14 @@ export default function App({ Component, pageProps }: AppProps) {
               <span className="text-xs">Open sidebar</span>
               <ArrowRightIcon className="h-4 w-4" />
             </button>
-            {path === "/" && !!state.address && !!state.currentContract ? (
+            {path === "/" && !!state.currentContract ? (
               <Proposals />
             ) : (
               <Component {...pageProps} />
             )}
           </div>
           <Footer
-            shouldRemovePadding={
-              path === "/" &&
-              (!state.address || Object.entries(state.contracts).length === 0)
-            }
+            shouldRemovePadding={Object.entries(state.contracts).length === 0}
           />
         </div>
       </AppDispatchContext.Provider>

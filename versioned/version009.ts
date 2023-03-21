@@ -6,8 +6,10 @@ import {
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char, encodePubKey } from "@taquito/utils";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa2Michelson } from "../context/fa2";
 import {
   content,
   proposal as p1,
@@ -15,9 +17,10 @@ import {
 } from "../types/009Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { promiseWithTimeout } from "../utils/timeout";
 import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
-import { Versioned } from "./interface";
+import { timeoutAndHash, Versioned } from "./interface";
 
 function convert(x: string): string {
   return char2Bytes(x);
@@ -28,7 +31,7 @@ class Version009 extends Versioned {
     t: TezosToolkit,
     proposals: {
       transfers: {
-        type: "transfer" | "lambda" | "contract";
+        type: "transfer" | "lambda" | "contract" | "fa2";
         values: { [key: string]: string };
         fields: {
           field: string;
@@ -39,7 +42,7 @@ class Version009 extends Versioned {
         }[];
       }[];
     }
-  ): Promise<void> {
+  ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
         proposals.transfers.map(x => {
@@ -78,6 +81,34 @@ class Version009 extends Versioned {
                 },
               };
             }
+            case "fa2": {
+              const parser = new Parser();
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa2Michelson({
+                  walletAddress: cc.address,
+                  targetAddress: x.values.targetAddress,
+                  tokenId: Number(x.values.tokenId),
+                  amount: Number(x.values.amount),
+                  fa2Address: x.values.fa2Address,
+                })
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      contract_addr: x.values.targetAddress,
+                      payload: {
+                        token_id: Number(x.values.tokenId),
+                        fa2_address: x.values.fa2Address,
+                      },
+                      amount: Number(x.values.amount),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
+            }
             default:
               return {};
           }
@@ -85,8 +116,26 @@ class Version009 extends Versioned {
       )
       .toTransferParams();
     let op = await t.wallet.transfer(params).send();
-    await op.transactionOperation();
-    await op.confirmation(1);
+
+    const transacValue = await promiseWithTimeout(
+      op.transactionOperation(),
+      DEFAULT_TIMEOUT
+    );
+
+    if (transacValue === -1) {
+      return [true, op.opHash];
+    }
+
+    const confirmationValue = await promiseWithTimeout(
+      op.confirmation(1),
+      DEFAULT_TIMEOUT
+    );
+
+    if (confirmationValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
   async signProposal(
     cc: WalletContract,
@@ -94,7 +143,7 @@ class Version009 extends Versioned {
     proposal: number,
     result: boolean | undefined,
     resolve: boolean
-  ): Promise<void> {
+  ): Promise<timeoutAndHash> {
     let proposals: { proposals: BigMapAbstraction } = await cc.storage();
     let prop: any = await proposals.proposals.get(BigNumber(proposal));
     let batch = t.wallet.batch();
@@ -113,14 +162,24 @@ class Version009 extends Versioned {
       );
     }
     let op = await batch.send();
-    await op.confirmation(1);
+
+    const confirmationValue = await promiseWithTimeout(
+      op.confirmation(1),
+      DEFAULT_TIMEOUT
+    );
+
+    if (confirmationValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
 
   async submitSettingsProposals(
     cc: Contract,
     t: TezosToolkit,
     ops: ownersForm[]
-  ) {
+  ): Promise<timeoutAndHash> {
     let content = ops
       .map(v => {
         if ("addOwners" in v) {
@@ -135,7 +194,17 @@ class Version009 extends Versioned {
 
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
-    await op.transactionOperation();
+
+    const transacValue = await promiseWithTimeout(
+      op.transactionOperation(),
+      DEFAULT_TIMEOUT
+    );
+
+    if (transacValue === -1) {
+      return [true, op.opHash];
+    }
+
+    return [false, op.opHash];
   }
   static override toContractState(
     contract: any,

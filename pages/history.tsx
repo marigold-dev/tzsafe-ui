@@ -1,8 +1,11 @@
+import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import { FC, useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import Alias from "../components/Alias";
 import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
+import Tooltip from "../components/Tooltip";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
@@ -13,71 +16,33 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { mutezTransfer, proposal, version } from "../types/display";
+import {
+  mutezTransfer,
+  proposal,
+  proposalContent,
+  version,
+} from "../types/display";
 import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
-const Transfer: FC<{
-  prop: mutezTransfer;
-  address: string;
-}> = ({ prop, address }) => {
-  let state = useContext(AppStateContext)!;
-  return (
-    <div className="rounded bg-zinc-800 px-6 py-4">
-      <div>
-        <p className="font-bold text-white md:inline-block">
-          Transaction: received Mutez{" "}
-        </p>
-      </div>
-      <div>
-        <p className="font-bold text-white md:inline-block">Sender: </p>
-        <p className="md:text-md text-sm font-bold text-white md:inline-block">
-          {state.aliases[prop.sender.address] || prop.sender.address}
-        </p>
-      </div>
-      {prop.initiator && (
-        <div>
-          <p className="font-bold text-white md:inline-block">Initiator: </p>
-          <p className="md:text-md text-sm font-bold text-white md:inline-block">
-            {state.aliases[prop.initiator.address] || prop.initiator.address}
-          </p>
-        </div>
-      )}
-      <div>
-        <p className="font-bold text-white md:inline-block">Target: </p>
-        <p className="md:text-md text-sm font-bold text-white md:inline-block">
-          {state.aliases[address] || address}
-        </p>
-      </div>
-      <div>
-        <p className="font-bold text-white md:inline-block">Amount(Mutez): </p>
-        <p className="md:text-md text-sm font-bold text-white md:inline-block">
-          {prop.amount}
-        </p>
-      </div>
-      <div>
-        <p className="font-bold text-white md:inline-block">Timestamp: </p>
-        <p className="md:text-md text-sm font-bold text-white md:inline-block">
-          {prop.timestamp}
-        </p>
-      </div>
-    </div>
-  );
-};
+const getLatestTimestamp = (og: {
+  resolver: { timestamp: string } | undefined;
+  proposer: { timestamp: string };
+}) => (!!og.resolver ? og.resolver.timestamp : og.proposer.timestamp);
 
 const History = () => {
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
 
-  let [isLoading, setIsLoading] = useState(true);
-  let [invalid, setInvalid] = useState(false);
-  let [contract, setContract] = useState<contractStorage>(
+  const [isLoading, setIsLoading] = useState(true);
+  const [invalid, setInvalid] = useState(false);
+  const [contract, setContract] = useState<contractStorage>(
     state.contracts[state.currentContract ?? ""]
   );
-  let [proposals, setProposals] = useState(emptyProps);
-  let [transfers, setTransfers] = useState([] as mutezTransfer[]);
-  let [openModal, setCloseModal] = useState<{
+  const [proposals, setProposals] = useState(emptyProps);
+  const [transfers, setTransfers] = useState([] as mutezTransfer[]);
+  const [openModal, setCloseModal] = useState<{
     state: number;
     proposal: [boolean | undefined, number];
   }>({
@@ -94,6 +59,7 @@ const History = () => {
     }
 
     (async () => {
+      setIsLoading(true);
       if (!state.currentContract) return;
 
       let c = await state.connection.contract.at(state.currentContract, tzip16);
@@ -133,17 +99,34 @@ const History = () => {
   }, [state.currentContract]);
 
   const filteredProposals = useMemo(
-    () => [
-      ...proposals.filter(
-        ([_, proposal]) => !("Proposing" === proposal.ui.status)
-      ),
-    ],
-    [proposals]
+    () =>
+      [
+        ...proposals.filter(
+          ([_, proposal]) => !("Proposing" === proposal.ui.status)
+        ),
+      ]
+        .concat(
+          transfers.map(
+            x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
+          )
+        )
+        .sort((a, b) => {
+          const date1 = !!(a[1] as any).timestamp
+            ? new Date((a[1] as any).timestamp).getTime()
+            : new Date(getLatestTimestamp(a[1].og)).getTime();
+
+          const date2 = !!(b[1] as any).timestamp
+            ? new Date((b[1] as any).timestamp).getTime()
+            : new Date(getLatestTimestamp(b[1].og)).getTime();
+
+          return date2 - date1;
+        }),
+    [proposals, transfers]
   );
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Wallets"} />
+      <Meta title={"History - TzSafe"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm
@@ -185,35 +168,65 @@ const History = () => {
           ) : (
             filteredProposals.length > 0 && (
               <div className="space-y-6">
-                {filteredProposals
-                  .concat(
-                    transfers.map(
-                      x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
-                    )
-                  )
-                  .sort(
-                    (a, b) =>
-                      Number(Date.parse(b[1].ui.timestamp).toString(10)) -
-                      Number(Date.parse(a[1].ui.timestamp).toString(10))
-                  )
-                  .map(x => {
-                    return x[0] == -1 ? (
-                      <Transfer
-                        address={state.currentContract ?? ""}
-                        key={(x[1] as any).timestamp as any}
-                        prop={x[1] as any}
-                      />
-                    ) : (
-                      <ProposalCard
-                        contract={contract}
-                        id={x[0]}
-                        key={x[0]}
-                        prop={x[1]}
-                        address={state.currentContract ?? ""}
-                        signable={false}
-                      />
-                    );
-                  })}
+                {filteredProposals.map((x, i) => {
+                  return x[0] == -1 ? (
+                    <div
+                      key={(x[1] as any).timestamp}
+                      className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
+                    >
+                      <span className="ml-11 justify-self-start font-bold">
+                        Received mutez
+                      </span>
+                      <span
+                        className="font-light text-zinc-300"
+                        style={{
+                          minWidth: "7rem",
+                        }}
+                      >
+                        From: <Alias address={(x[1] as any).sender.address} />
+                      </span>
+                      <span
+                        className="font-light text-zinc-300"
+                        style={{
+                          minWidth: "7rem",
+                        }}
+                      >
+                        Amount: {(x[1] as any).amount} mutez
+                      </span>
+                      <span className="hidden justify-self-end lg:block">
+                        {new Date((x[1] as any).timestamp).toLocaleDateString()}{" "}
+                        -{" "}
+                        {`${new Date((x[1] as any).timestamp)
+                          .getHours()
+                          .toString()
+                          .padStart(2, "0")}:${new Date((x[1] as any).timestamp)
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, "0")}`}
+                      </span>
+                    </div>
+                  ) : (
+                    <ProposalCard
+                      id={x[0]}
+                      key={x[0]}
+                      status={x[1].ui.status}
+                      date={
+                        !!x[1].og.resolver
+                          ? new Date(x[1].og.resolver.timestamp)
+                          : new Date(x[1].ui.timestamp)
+                      }
+                      activities={x[1].ui.signatures.map(
+                        ({ signer, result }) => ({
+                          hasApproved: result,
+                          signer,
+                        })
+                      )}
+                      content={x[1].ui.content}
+                      proposer={x[1].og.proposer}
+                      resolver={x[1].og.resolver}
+                    />
+                  );
+                })}
               </div>
             )
           )}

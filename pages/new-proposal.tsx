@@ -1,19 +1,28 @@
-import { useContext } from "react";
+import { useRouter } from "next/router";
+import { useContext, useEffect } from "react";
 import Meta from "../components/meta";
 import TransferForm from "../components/transferForm";
 import { AppStateContext } from "../context/state";
+import useIsOwner from "../utils/useIsOwner";
 
 const CreateProposal = () => {
   const state = useContext(AppStateContext)!;
 
+  const router = useRouter();
+  const isOwner = useIsOwner();
+
+  useEffect(() => {
+    if (isOwner) return;
+
+    router.replace("/proposals");
+  }, [isOwner, router]);
+
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Create Proposal"} />
+      <Meta title={"New Proposal - TzSafe"} />
       <div>
         <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">
-            Create a proposal
-          </h1>
+          <h1 className="text-2xl font-extrabold text-white">New proposal</h1>
         </div>
       </div>
       <main className="h-full min-h-fit grow">

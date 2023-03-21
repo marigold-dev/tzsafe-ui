@@ -8,10 +8,10 @@ const TopUpPage = () => {
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Top up wallet"} />
+      <Meta title={"Fund wallet - TzSafe"} />
       <div>
         <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">Top up wallet</h1>
+          <h1 className="text-2xl font-extrabold text-white">Fund wallet</h1>
         </div>
       </div>
       <main className="h-full min-h-fit grow">

@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import { validateAddress } from "@taquito/utils";
 import {
   ErrorMessage,
@@ -7,13 +8,14 @@ import {
   Formik,
   FormikErrors,
 } from "formik";
-import { FC, useContext, useState } from "react";
+import { useRouter } from "next/router";
+import { FC, useContext, useEffect, useState } from "react";
+import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import contract from "../context/unitContract";
 import { adaptiveTime } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
@@ -37,19 +39,28 @@ const SignersForm: FC<{
   closeModal: () => void;
   address: string;
   contract: contractStorage;
+  disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+  const router = useRouter();
 
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
-  if (state?.address == null) {
-    return null;
-  }
+  const [loading, setLoading] = useState(false);
+  const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
+
+  useEffect(() => {
+    if (loading || result === undefined) return;
+
+    setTimeout(() => {
+      setResult(undefined);
+    }, MODAL_TIMEOUT);
+  }, [result, loading]);
 
   const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
+    return <p className="mt-2 italic text-red-600">{message}</p>;
   };
+
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
@@ -66,12 +77,12 @@ const SignersForm: FC<{
         : undefined,
     requiredSignatures: props.contract.threshold,
   };
-  async function changeSettings(
+
+  function getOps(
     txs: { name: string; address: string }[],
     requiredSignatures: number,
     effectivePeriod: number | undefined
   ) {
-    let cc = await state.connection.contract.at(props.address);
     let initialSigners = new Set(signers(props.contract));
     let input = new Set(txs.map(x => x.address));
     let removed = new Set(
@@ -81,9 +92,12 @@ const SignersForm: FC<{
       [...input.values()].filter(x => !initialSigners.has(x))
     );
     let ops: ownersForm[] = [];
+
     if (
-      typeof effectivePeriod !== "undefined" &&
-      Number(effectivePeriod) != props.contract.effectivePeriod
+      !!effectivePeriod &&
+      Number(effectivePeriod) !=
+        (props.contract.effective_period.toNumber?.() ??
+          Number(props.contract.effective_period))
     ) {
       ops.push({ adjustEffectivePeriod: Number(effectivePeriod) });
     }
@@ -96,11 +110,70 @@ const SignersForm: FC<{
     if (props.contract.threshold !== requiredSignatures) {
       ops.push({ changeThreshold: requiredSignatures });
     }
-    let api = VersionedApi(props.contract.version, props.address);
-    await api.submitSettingsProposals(cc, state.connection, ops);
+
+    return ops;
   }
+
+  const updateSettings = async (ops: ownersForm[]) => {
+    let cc = await state.connection.contract.at(props.address);
+    let api = VersionedApi(props.contract.version, props.address);
+    setTimeoutAndHash(
+      await api.submitSettingsProposals(cc, state.connection, ops)
+    );
+  };
+
+  if (timeoutAndHash[0]) {
+    return (
+      <div className="mx-auto mt-4 w-full text-center text-zinc-400 lg:w-1/2">
+        <p>
+          The wallet {"can't"} confirm that the transaction has been validated.
+          You can check it in{" "}
+          <a
+            className="text-zinc-200 hover:text-zinc-300"
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+            }tzkt.io/${timeoutAndHash[1]}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            the explorer
+          </a>
+          , and if it is, {"it'll"} appear in the proposals
+        </p>
+        <div></div>
+        <div className="mt-8 w-full space-x-4">
+          <button
+            className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+            onClick={() => {
+              setResult(undefined);
+              setTimeoutAndHash([false, ""]);
+            }}
+          >
+            Back to settings
+          </button>
+          <button
+            className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
+            onClick={() => {
+              router.push("/proposals");
+            }}
+          >
+            Go to proposals
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading && typeof result == "undefined") {
-    return <ContractLoader loading={loading}></ContractLoader>;
+    return (
+      <div className="flex w-full flex-col items-center justify-center">
+        <ContractLoader loading={loading}></ContractLoader>
+        <span className="mt-4 text-zinc-400">
+          Sending and waiting for transaction confirmation (It may take a few
+          minutes)
+        </span>
+      </div>
+    );
   }
   if (!loading && typeof result != "undefined") {
     return (
@@ -129,28 +202,6 @@ const SignersForm: FC<{
               Failed to create proposal
             </span>
           )}
-          <button
-            onClick={() => {
-              props.closeModal();
-            }}
-            type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </ContractLoader>
       </div>
     );
@@ -164,6 +215,7 @@ const SignersForm: FC<{
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
           validatorsError?: string;
+          effectivePeriod?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -192,6 +244,13 @@ const SignersForm: FC<{
         if (values.requiredSignatures > values.validators.length) {
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
+
+        const parsedNumber = Number(values.effectivePeriod);
+        if (isNaN(parsedNumber) || parsedNumber <= 0) {
+          errors.effectivePeriod = "Invalid duration";
+          return errors;
+        }
+
         if (
           result.every(x => x.address === "" && x.name === "") &&
           !errors.requiredSignatures &&
@@ -203,15 +262,22 @@ const SignersForm: FC<{
         return errors;
       }}
       onSubmit={async values => {
+        if (!!props.disabled) return;
+
         setLoading(true);
         try {
-          await changeSettings(
-            values.validators,
-            values.requiredSignatures,
-            values.effectivePeriod
+          await updateSettings(
+            getOps(
+              values.validators,
+              values.requiredSignatures,
+              values.effectivePeriod
+            )
           );
           setResult(true);
-          dispatch!({ type: "updateAliaces", payload: values.validators });
+          dispatch!({
+            type: "updateAliases",
+            payload: { aliases: values.validators, keepOld: true },
+          });
         } catch (e) {
           console.log(e);
           setResult(false);
@@ -219,7 +285,7 @@ const SignersForm: FC<{
         setLoading(false);
         setTimeout(() => {
           props.closeModal();
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       {({
@@ -229,163 +295,189 @@ const SignersForm: FC<{
         setFieldValue,
         setTouched,
         validateForm,
-      }) => (
-        <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
-          <div className="mb-2 self-center text-2xl font-medium text-white">
-            Change wallet participants below
-          </div>
-          <ErrorMessage name={`validatorsError`} render={renderError} />
-          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
-            <FieldArray name="validators">
-              {({ remove, push }) => (
-                <div className="min-w-full">
-                  {values.validators.length > 0 &&
-                    values.validators.map((validator, index) => {
-                      return (
-                        <div
-                          className="md:p-none flex min-w-full flex-col items-start justify-start space-y-2 p-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
-                          key={index}
-                        >
-                          <div className="flex w-full flex-col md:w-auto">
-                            <label className="text-white">Owner Name</label>
-                            <Field
-                              name={`validators.${index}.name`}
-                              className="md:text-md rounded p-2 text-sm"
-                              placeholder={validator.name || "Owner Name"}
-                            />
-                            <ErrorMessage
-                              name={`validators.${index}.name`}
-                              render={renderError}
-                            />
-                          </div>
-                          <div className="relative flex w-full flex-col justify-start md:w-auto md:grow">
-                            <label
-                              className="text-white"
-                              htmlFor={`validators.${index}.address`}
-                            >
-                              Owner Address
-                            </label>
-                            <Field
-                              name={`validators.${index}.address`}
-                              className="md:text-md w-full rounded p-2 text-sm"
-                              placeholder={validator.address || "Owner address"}
-                              default={validator.address}
-                            />
-                            <ErrorMessage
-                              name={`validators.${index}.address`}
-                              render={x => {
-                                return renderError(x);
-                              }}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className={
-                              (errors.validators &&
-                              errors.validators[index] &&
-                              get(errors.validators[index])
-                                ? "my-auto"
-                                : "") +
-                              "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-end "
-                            }
-                            onClick={e => {
-                              e.preventDefault();
-                              remove(index);
-                              setTouched({ validatorsError: true }, true);
-                              validateForm();
-                              if (
-                                values.requiredSignatures >
-                                values.validators.length
-                              ) {
-                                setFieldTouched("requiredSignatures", true);
-                                values.requiredSignatures >= 2 &&
-                                  setFieldValue(
-                                    "requiredSignatures",
-                                    values.requiredSignatures - 1
-                                  );
-                              }
-                            }}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      );
-                    })}
-                  <button
-                    type="button"
-                    className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
-                    onClick={e => {
-                      e.preventDefault();
-                      push({ name: "", address: "" });
-                    }}
-                  >
-                    Add Owner
-                  </button>
-                </div>
-              )}
-            </FieldArray>
-          </div>
-          <div className="flex w-full flex-col md:grow">
-            <label className="mr-4 text-white">Threshold: </label>
-            <Field
-              className="mt-2 w-full rounded py-1 text-center text-black"
-              as="select"
-              component="select"
-              name="requiredSignatures"
-              values={values.requiredSignatures}
-            >
-              {[
-                ...Array(
-                  Math.max(values.requiredSignatures, values.validators.length)
-                ).keys(),
-              ].map(idx => (
-                <option
-                  key={idx + values.validators.length}
-                  label={`${idx + 1}/${values.validators.length}`}
-                  value={idx + 1}
-                ></option>
-              ))}
-            </Field>
-            <ErrorMessage
-              name={`requiredSignatures`}
-              render={x => {
-                return renderError(x);
-              }}
-            />
-          </div>
-          {typeof values.effectivePeriod != "undefined" && (
-            <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">
-                Proposal duration (in seconds):{" "}
-              </label>
-              <Field
-                className="mt-2 w-full rounded p-2 text-black"
-                as="select"
-                component="input"
-                name="effectivePeriod"
-                placeholder={props.contract.effectivePeriod}
-              ></Field>
-              <p className="text-lg text-white">
-                {adaptiveTime(values.effectivePeriod.toString())}
-              </p>
-              <ErrorMessage
-                name={`requiredSignatures`}
-                render={x => {
-                  return renderError(x);
-                }}
-              />
+      }) => {
+        const hasNoChange =
+          getOps(
+            values.validators,
+            values.requiredSignatures,
+            values.effectivePeriod
+          ).length === 0;
+
+        return (
+          <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
+            <div className="mb-2 self-center text-2xl font-medium text-white">
+              Change wallet participants below
             </div>
-          )}
-          <div className="flex w-full justify-center">
-            <button
-              className="my-2 rounded bg-primary p-2 font-medium text-white "
-              type="submit"
-            >
-              Save changes
-            </button>
-          </div>
-        </Form>
-      )}
+            <ErrorMessage name={`validatorsError`} render={renderError} />
+            <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
+              <FieldArray name="validators">
+                {({ remove, push }) => (
+                  <div className="min-w-full space-y-6">
+                    {values.validators.length > 0 &&
+                      values.validators.map((validator, index) => {
+                        return (
+                          <div
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 px-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
+                            key={index}
+                          >
+                            <div className="flex w-full flex-col md:w-auto">
+                              <label className="text-white">
+                                <span className="md:hidden">Owner name</span>
+                                {index === 0 ? "Owner Name" : ""}
+                              </label>
+                              <Field
+                                disabled={props.disabled}
+                                name={`validators.${index}.name`}
+                                className="md:text-md rounded p-2 text-sm"
+                                placeholder={validator.name || "Owner Name"}
+                              />
+                              <ErrorMessage
+                                name={`validators.${index}.name`}
+                                render={renderError}
+                              />
+                            </div>
+                            <div className="relative flex w-full flex-col justify-start md:w-auto md:grow">
+                              <label
+                                className="text-white"
+                                htmlFor={`validators.${index}.address`}
+                              >
+                                <span className="md:hidden">Owner address</span>
+                                {index === 0 ? "Owner Address" : ""}
+                              </label>
+                              <Field
+                                disabled={props.disabled}
+                                name={`validators.${index}.address`}
+                                className="md:text-md w-full rounded p-2 text-sm"
+                                placeholder={
+                                  validator.address || "Owner address"
+                                }
+                                default={validator.address}
+                              />
+                              <ErrorMessage
+                                name={`validators.${index}.address`}
+                                render={x => {
+                                  return renderError(x);
+                                }}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              className={
+                                (errors.validators &&
+                                errors.validators[index] &&
+                                get(errors.validators[index])
+                                  ? "my-auto"
+                                  : "") +
+                                `mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white md:mx-auto ${
+                                  index === 0 ? "md:self-end" : "md:self-start"
+                                } ${
+                                  props.disabled ?? false
+                                    ? "pointer-events-none opacity-50"
+                                    : ""
+                                }`
+                              }
+                              onClick={e => {
+                                e.preventDefault();
+                                remove(index);
+                                setTouched({ validatorsError: true }, true);
+                                validateForm();
+                                if (
+                                  values.requiredSignatures >
+                                  values.validators.length
+                                ) {
+                                  setFieldTouched("requiredSignatures", true);
+                                  values.requiredSignatures >= 2 &&
+                                    setFieldValue(
+                                      "requiredSignatures",
+                                      values.requiredSignatures - 1
+                                    );
+                                }
+                              }}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        );
+                      })}
+                    <button
+                      type="button"
+                      className={`${
+                        props.disabled ?? false
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      } my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white`}
+                      onClick={e => {
+                        e.preventDefault();
+                        push({ name: "", address: "" });
+                      }}
+                    >
+                      Add Owner
+                    </button>
+                  </div>
+                )}
+              </FieldArray>
+            </div>
+            <div className="mt-4 flex w-full flex-col md:grow">
+              <label className="mr-4 text-white">Threshold </label>
+              <Field
+                disabled={props.disabled}
+                className="mt-2 w-full rounded p-2 text-center"
+                as="select"
+                component="select"
+                name="requiredSignatures"
+                values={values.requiredSignatures}
+              >
+                {[
+                  ...Array(
+                    Math.max(
+                      values.requiredSignatures,
+                      values.validators.length
+                    )
+                  ).keys(),
+                ].map(idx => (
+                  <option
+                    key={idx + values.validators.length}
+                    label={`${idx + 1}/${values.validators.length}`}
+                    value={idx + 1}
+                  ></option>
+                ))}
+              </Field>
+              <ErrorMessage name={`requiredSignatures`} render={renderError} />
+            </div>
+            {!!values.effectivePeriod && (
+              <div className="mt-4 flex w-full flex-col md:grow">
+                <label className="mr-4 text-white">
+                  Proposal duration (in seconds)
+                </label>
+                <Field
+                  disabled={props.disabled}
+                  className="mt-2 w-full rounded p-2 text-black"
+                  as="select"
+                  component="input"
+                  name="effectivePeriod"
+                  placeholder={props.contract.effectivePeriod}
+                ></Field>
+                <p className="mt-2 text-lg text-white">
+                  {adaptiveTime(values.effectivePeriod.toString())}
+                </p>
+                <ErrorMessage name={`effectivePeriod`} render={renderError} />
+              </div>
+            )}
+            <div className="flex w-full justify-center">
+              <button
+                className={`${
+                  (props.disabled ?? false) || hasNoChange
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                } my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500`}
+                type="submit"
+              >
+                Save changes
+              </button>
+            </div>
+          </Form>
+        );
+      }}
     </Formik>
   );
 };

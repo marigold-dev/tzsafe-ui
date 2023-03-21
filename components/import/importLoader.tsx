@@ -52,7 +52,10 @@ function Success() {
   }, [formState, state, address, loading, dispatch]);
   if (loading) {
     return (
-      <div role="status">
+      <div
+        role="status"
+        className="mt-8 flex w-full items-center justify-center"
+      >
         <svg
           aria-hidden="true"
           className="mr-2 h-8 w-8 animate-spin fill-red-600 text-zinc-200 dark:text-zinc-600"
@@ -76,14 +79,14 @@ function Success() {
   return address.status === 1 ? (
     <div className="my-auto flex flex-col text-sm font-bold text-white md:text-xl">
       <p className="my-auto text-sm font-bold text-white md:text-xl">
-        {`Wallet successfully imported!`}
+        Wallet successfully imported!
       </p>
       <Link
         href={`/proposals`}
         onClick={() => {
           dispatch!({ type: "setCurrentContract", payload: address.address });
         }}
-        className="text-md row-span-1 w-full max-w-full items-center justify-self-end bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1 md:px-2 md:text-xl"
+        className="text-md row-span-1 mt-4 w-full max-w-full items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1 md:px-2 md:text-xl"
       >
         Go to the wallet
       </Link>

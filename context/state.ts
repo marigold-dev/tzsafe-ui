@@ -11,7 +11,7 @@ import {
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { IPFS_NODE, RPC } from "./config";
+import { IPFS_NODE, RPC_URL } from "./config";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -31,7 +31,7 @@ type storage = {
 };
 
 let emptyState = () => {
-  let connection = new TezosToolkit(RPC);
+  const connection = new TezosToolkit(RPC_URL);
   const customHandler = new Map<string, Handler>([
     ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
     ["tezos-storage", new TezosStorageHandler()],
@@ -90,7 +90,13 @@ type action =
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
-  | { type: "updateAliaces"; payload: { address: string; name: string }[] };
+  | {
+      type: "updateAliases";
+      payload: {
+        aliases: { address: string; name: string }[];
+        keepOld: boolean;
+      };
+    };
 
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
@@ -116,21 +122,26 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts: contracts,
         aliases: aliases,
-        favouriteContract: fav,
+        currentContract: state.currentContract,
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
     }
-    case "updateAliaces": {
-      let al = Object.fromEntries(
-        action.payload.map(({ name, address }) => [address, name])
+    case "updateAliases": {
+      const newAliases = Object.fromEntries(
+        action.payload.aliases.map(({ name, address }) => [address, name])
       );
-      let aliases = { ...state.aliases, ...al };
+
+      const aliases = {
+        ...(action.payload.keepOld ? state.aliases : {}),
+        ...newAliases,
+      };
+
       localStorage.setItem(
         "app_state",
         JSON.stringify({
           contracts: state.contracts,
           aliases,
-          favouriteContract: state.favouriteContract,
+          currentContract: state.currentContract,
         })
       );
       return {
@@ -150,7 +161,7 @@ function reducer(state: tezosState, action: action): tezosState {
           JSON.stringify({
             contracts,
             aliases: state.aliases,
-            favouriteContract: state.favouriteContract,
+            currentContract: state.currentContract,
           })
         );
       }
@@ -160,6 +171,15 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "setCurrentContract":
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({
+          contracts: state.contracts,
+          aliases: state.aliases,
+          currentContract: action.payload,
+        })
+      );
+
       return {
         ...state,
         currentContract: action.payload,
@@ -191,27 +211,31 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "removeContract": {
-      let { [action.address]: _, ...contracts } = state.contracts;
-      let fav =
+      const { [action.address]: _, ...contracts } = state.contracts;
+      const { [action.address]: __, ...aliases } = { ...state.aliases };
+
+      const fav =
         (state.favouriteContract || "") === action.address
           ? Object.keys(state.contracts).at(0) || null
           : state.favouriteContract;
-      if (state.contracts[action.address]) {
-        localStorage.setItem(
-          "app_state",
-          JSON.stringify({
-            contracts,
-            aliases: state.aliases,
-            favouriteContract: fav,
-          })
-        );
-      }
+
+      const addresses = Object.keys(contracts);
+
+      localStorage.setItem(
+        "app_state",
+        JSON.stringify({
+          contracts,
+          aliases,
+          currentContract: addresses.length > 0 ? addresses[0] : null,
+        })
+      );
 
       return {
         ...state,
-        contracts: contracts,
+        contracts,
         favouriteContract: fav,
-        currentContract: null,
+        currentContract: addresses.length > 0 ? addresses[0] : null,
+        aliases,
       };
     }
     case "setFavourite": {
@@ -220,7 +244,7 @@ function reducer(state: tezosState, action: action): tezosState {
         JSON.stringify({
           contracts: state.contracts,
           aliases: state.aliases,
-          favouriteContract: action.address,
+          currentContract: state.currentContract,
         })
       );
 

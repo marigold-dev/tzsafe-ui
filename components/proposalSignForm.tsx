@@ -1,8 +1,14 @@
+import { NetworkType } from "@airgap/beacon-sdk";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
+import { RenderProposalContent } from "./ProposalCard";
+import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
 
 function ProposalSignForm({
@@ -25,8 +31,12 @@ function ProposalSignForm({
   onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+  const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
+
   const renderError = (message: string) => (
     <p className="italic text-red-600">{message}</p>
   );
@@ -34,22 +44,72 @@ function ProposalSignForm({
     proposal: number,
     prop: any,
     result: boolean | undefined,
-    resolve: true | false
+    resolve: boolean
   ) {
     let cc = await state.connection.wallet.at(address);
     let versioned = VersionedApi(version, address);
 
-    await versioned.signProposal(
-      cc,
-      state.connection,
-      proposal,
-      result,
-      Boolean(resolve)
+    setTimeoutAndHash(
+      await versioned.signProposal(
+        cc,
+        state.connection,
+        proposal,
+        result,
+        resolve
+      )
+    );
+  }
+
+  if (timeoutAndHash[0]) {
+    return (
+      <div className="mx-auto mt-4 w-full text-center text-zinc-400">
+        <p>
+          The wallet {"can't"} confirm that the transaction has been validated.
+          You can check it in{" "}
+          <a
+            className="text-zinc-200 hover:text-zinc-300"
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+            }tzkt.io/${timeoutAndHash[1]}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            the explorer
+          </a>
+          , and if it is, and the proposal is resolved, it will appear in the
+          history, otherwise it will still remain in the proposals with updating
+          status
+        </p>
+        <div className="w-full space-x-4">
+          <button
+            className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+            onClick={closeModal}
+          >
+            Close
+          </button>
+          <button
+            className="mt-8 rounded border-2 border-primary bg-primary px-4 py-2 font-medium text-white hover:border-red-500 hover:bg-red-500"
+            onClick={() => {
+              router.push("/history");
+            }}
+          >
+            Go to history
+          </button>
+        </div>
+      </div>
     );
   }
 
   if (loading && typeof result == "undefined") {
-    return <ContractLoader loading={loading}></ContractLoader>;
+    return (
+      <div className="flex w-full flex-col items-center justify-center">
+        <ContractLoader loading={loading}></ContractLoader>
+        <span className="mt-4 text-zinc-400">
+          Sending and waiting for transaction confirmation (It may take a few
+          minutes)
+        </span>
+      </div>
+    );
   }
   if (!loading && typeof result != "undefined") {
     return (
@@ -78,41 +138,21 @@ function ProposalSignForm({
               Failed to sign
             </span>
           )}
-          <button
-            onClick={() => {
-              closeModal();
-            }}
-            type="button"
-            className=" absolute right-4 top-4 ml-4 rounded-full bg-primary p-1 text-white hover:text-slate-400 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 md:px-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6 fill-white"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </ContractLoader>
       </div>
     );
   }
+
   return (
     <Formik
       initialValues={{
-        flag: typeof modalState === "undefined" ? true : false,
+        flag: typeof modalState === "undefined" ? "1" : "0",
       }}
       onSubmit={async values => {
         setLoading(true);
+
         try {
-          await sign(id, proposal.og, modalState, values.flag);
+          await sign(id, proposal.og, modalState, values.flag === "1");
           onSuccess?.();
           setResult(true);
           setLoading(false);
@@ -123,21 +163,36 @@ function ProposalSignForm({
         setLoading(false);
         setTimeout(() => {
           closeModal();
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
-      <Form className="col-span-2 flex h-full max-w-full  flex-col items-center justify-center">
-        <div className="mb-2 self-start  text-2xl font-medium text-white">
-          Review and confirm the Action below:
+      <Form className="col-span-2 flex w-full flex-col items-center justify-center">
+        <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+          Review and confirm the action
+          {proposal.ui.content.length > 1 ? "s" : ""} below
         </div>
         <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
-          <p className="text-lg font-medium text-white">
-            Raw proposal contents:
-          </p>
-          <code className=" mb-2  mt-2 h-96 max-w-full overflow-y-auto break-words border-2 border-white p-2 font-medium text-white">
-            {JSON.stringify(proposal.og, null, 2)}
-          </code>
-          <p className="text-lg font-medium text-white">
+          <section className="w-full text-white">
+            <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
+              <span>Function</span>
+              <span className="flex items-center">
+                Metadata
+                <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                  <InfoCircledIcon className="ml-2 h-4 w-4" />
+                </Tooltip>
+              </span>
+              <span className="justify-self-center">Amount</span>
+              <span className="justify-self-center">Address</span>
+              <span className="justify-self-end">Entrypoint</span>
+              <span className="justify-self-end">Parameters</span>
+            </div>
+            <div className="mt-2 space-y-4 font-light lg:space-y-2">
+              {proposal.ui.content.map((v, i) => (
+                <RenderProposalContent content={v} key={i} />
+              ))}
+            </div>
+          </section>
+          <p className="mt-8 text-lg font-medium text-white">
             Action:{" "}
             {typeof modalState === "boolean"
               ? modalState
@@ -150,13 +205,17 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="mb-2 flex w-full flex-col items-center justify-between md:flex-row ">
+                <div className="mb-2 flex w-full flex-col justify-between md:flex-row md:items-center ">
                   <label className="font-medium text-white">
                     Try to resolve immediately?:
                   </label>
-                  <Field name="flag" as="select" className="rounded-md p-2">
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
+                  <Field
+                    name="flag"
+                    as="select"
+                    className="mt-2 rounded-md p-2 md:mt-0"
+                  >
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
                   </Field>
                 </div>
               ))}

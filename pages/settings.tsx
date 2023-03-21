@@ -1,31 +1,48 @@
-import { useContext } from "react";
+import { useRouter } from "next/router";
+import { useContext, useEffect, useState } from "react";
 import Meta from "../components/meta";
 import SignersForm from "../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import useIsOwner from "../utils/useIsOwner";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+  const [canDelete, setCanDelete] = useState(true);
+  const isOwner = useIsOwner();
+
+  useEffect(() => {
+    if (canDelete) return;
+
+    const timeoutId = setTimeout(() => {
+      setCanDelete(true);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [canDelete]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Create Proposal"} />
+      <Meta title={"Settings - TzSafe"} />
       <div>
         <div className="mx-auto flex max-w-7xl flex-col justify-start py-6 px-4 sm:px-6 md:flex-row md:justify-between lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Settings</h1>
 
           <button
-            className="self-end rounded bg-primary p-2 text-white hover:bg-red-500"
+            className={`${
+              canDelete ? "" : "pointer-events-none opacity-50"
+            } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
               if (!state.currentContract) return;
 
+              setCanDelete(false);
               dispatch!({
                 type: "removeContract",
                 address: state.currentContract,
               });
             }}
           >
-            Delete wallet
+            {canDelete ? `Delete wallet` : `Deleting wallet`}
           </button>
         </div>
       </div>
@@ -37,6 +54,7 @@ const Settings = () => {
             </h2>
           ) : (
             <SignersForm
+              disabled={!isOwner}
               address={state.currentContract}
               contract={state.contracts[state.currentContract]}
               closeModal={console.log}

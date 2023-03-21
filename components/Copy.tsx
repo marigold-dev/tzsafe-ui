@@ -5,9 +5,10 @@ export type copyProps = {
   children: React.ReactNode;
   value: string;
   disabled?: boolean;
+  text?: string;
 };
 
-const Copy = ({ children, value, disabled = false }: copyProps) => {
+const Copy = ({ children, value, disabled = false, text }: copyProps) => {
   const [isCopying, setIsCopying] = useState(false);
 
   useEffect(() => {
@@ -20,7 +21,7 @@ const Copy = ({ children, value, disabled = false }: copyProps) => {
 
   return (
     <Tooltip
-      text={isCopying ? "Copied" : "Copy"}
+      text={isCopying ? "Copied" : text ?? "Copy"}
       disabled={disabled}
       visible={isCopying ? true : undefined}
     >

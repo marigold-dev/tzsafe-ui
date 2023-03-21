@@ -10,12 +10,14 @@ import fetchVersion from "../context/metadata";
 import { getProposals } from "../context/proposals";
 import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
+import useIsOwner from "../utils/useIsOwner";
 import { getProposalsId, toProposal } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
 const Proposals = () => {
   const state = useContext(AppStateContext)!;
+  const isOwner = useIsOwner();
 
   const [isLoading, setIsLoading] = useState(true);
   const [invalid, setInvalid] = useState(false);
@@ -76,9 +78,10 @@ const Proposals = () => {
   );
 
   const currentContract = state.currentContract ?? "";
+
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Wallets"} />
+      <Meta title={"Proposals - TzSafe"} />
       <Modal opened={!!openModal.state}>
         {!!openModal.state && (
           <ProposalSignForm
@@ -116,31 +119,68 @@ const Proposals = () => {
             </div>
           ) : filteredProposals.length === 0 ? (
             <h2 className="text-center text-xl text-zinc-600">
-              There's currently no proposal
+              {"There's currently no proposal"}
             </h2>
           ) : (
             <div className="space-y-6">
               {filteredProposals
                 .sort((a, b) => b[0] - a[0])
-                .map(x => (
-                  <ProposalCard
-                    contract={state.contracts[currentContract]}
-                    id={x[0]}
-                    setCloseModal={(arg: boolean | undefined) =>
-                      setCloseModal({ proposal: [arg, x[0]], state: 4 })
-                    }
-                    key={JSON.stringify(x[1])}
-                    prop={x[1]}
-                    address={state.currentContract ?? ""}
-                    signable={
-                      !!state.address &&
-                      !!!x[1].ui.signatures.find(
-                        x => x.signer == state.address
-                      ) &&
-                      true
-                    }
-                  />
-                ))}
+                .map(x => {
+                  const effectivePeriod =
+                    state.contracts[currentContract]?.effective_period;
+                  const threshold = state.contracts[currentContract]?.threshold;
+
+                  const deadline = new Date(
+                    new Date(x[1].ui.timestamp).getTime() +
+                      (!!effectivePeriod.toNumber
+                        ? effectivePeriod.toNumber()
+                        : Number(effectivePeriod)) *
+                        1000
+                  );
+                  const hasDeadlinePassed = Date.now() >= deadline.getTime();
+                  const shouldResolve =
+                    hasDeadlinePassed || x[1].ui.signatures.length >= threshold;
+
+                  const hasSigned = !!x[1].ui.signatures.find(
+                    x => x.signer == state.address
+                  );
+
+                  return (
+                    <ProposalCard
+                      id={x[0]}
+                      key={x[0]}
+                      status={
+                        hasDeadlinePassed
+                          ? "Expired"
+                          : shouldResolve
+                          ? "Waiting for resolution"
+                          : hasSigned
+                          ? "Waiting for signers"
+                          : x[1].ui.status
+                      }
+                      date={deadline}
+                      activities={x[1].ui.signatures.map(
+                        ({ signer, result }) => ({
+                          hasApproved: result,
+                          signer,
+                        })
+                      )}
+                      content={x[1].ui.content}
+                      proposer={x[1].og.proposer}
+                      resolver={x[1].og.resolver}
+                      isSignable={
+                        isOwner &&
+                        !!state.address &&
+                        !!state.currentContract &&
+                        (!hasSigned || shouldResolve)
+                      }
+                      shouldResolve={shouldResolve}
+                      setCloseModal={arg => {
+                        setCloseModal({ proposal: [arg, x[0]], state: 4 });
+                      }}
+                    />
+                  );
+                })}
             </div>
           )}
         </div>

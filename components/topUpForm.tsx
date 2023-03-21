@@ -1,6 +1,7 @@
 import { tzip16 } from "@taquito/tzip16";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
+import { MODAL_TIMEOUT } from "../context/config";
 import fetchVersion from "../context/metadata";
 import {
   AppDispatchContext,
@@ -35,13 +36,13 @@ function TopUp(props: {
   return (
     <Formik
       initialValues={{
-        amount: 0,
+        amount: 1,
       }}
       validate={values => {
-        if (isNaN(values.amount)) {
-          return { amount: `not a valid amount ${values.amount}` };
-        } else {
-          return;
+        const parsed = Number(values.amount);
+
+        if (isNaN(parsed) || parsed <= 0) {
+          return { amount: `Invalid amount ${values.amount}` };
         }
       }}
       onSubmit={async values => {
@@ -69,7 +70,7 @@ function TopUp(props: {
         setLoading(false);
         setTimeout(() => {
           props.closeModal(state.contracts[props.address]);
-        }, 1500);
+        }, MODAL_TIMEOUT);
       }}
     >
       <Form className="col-span-2 mt-8 flex flex-col items-center justify-center">
@@ -109,7 +110,7 @@ function TopUp(props: {
           <Field
             name="amount"
             className="mt-2 rounded-md p-2"
-            placeholder="0"
+            placeholder="1"
           />
         </div>
         <ErrorMessage name="amount" render={renderError} />
@@ -118,7 +119,7 @@ function TopUp(props: {
             className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
-            Top up
+            Fund
           </button>
         </div>
       </Form>

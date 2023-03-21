@@ -51,109 +51,82 @@ function Home() {
   };
   return (
     <div className="min-h-content relative flex grow flex-col">
-      <Meta title={"Address book"} />
+      <Meta title={"Address book - TzSafe"} />
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Address book</h1>
         </div>
       </div>
-      <main className="h-full grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="h-full min-h-full px-4 py-6 sm:px-0">
-            <div className="grid-rows-auto md:grid-cols-auto grid h-96 min-h-full overflow-y-auto  p-2 md:auto-rows-max">
-              <Formik
-                enableReinitialize={true}
-                initialValues={initialProps}
-                validate={values => {
-                  const errors: {
-                    validators: { address: string; name: string }[];
-                    validatorsError?: string;
-                  } = { validators: [] };
-                  if (values.validators.length < 1) {
-                    errors.validatorsError = "Should be at least one owner";
+      <main className="grow">
+        <div className="mx-auto max-w-7xl px-2 lg:px-8">
+          <div className="grid-rows-auto md:grid-cols-auto grid min-h-full p-2 md:auto-rows-max">
+            <Formik
+              enableReinitialize={true}
+              initialValues={initialProps}
+              validate={values => {
+                console.log("Validate:", values);
+                const errors: {
+                  validators: { address: string; name: string }[];
+                  validatorsError?: string;
+                } = { validators: [] };
+                if (values.validators.length < 1) {
+                  errors.validatorsError = "Should be at least one owner";
+                }
+                let result = values.validators.map(x => {
+                  let err = { address: "", name: "" };
+                  if (!x.address) {
+                    err.address = "Please provide an address";
                   }
-                  let result = values.validators.map(x => {
-                    let err = { address: "", name: "" };
-                    if (!x.address) {
-                      err.address = "Please provide an address";
-                    }
-                    if (
-                      byAddress[x.address] &&
-                      x.initial.address !== x.address
-                    ) {
-                      err.address = "already exists";
-                    } else {
-                      err.address =
-                        validateAddress(x.address) !== 3
-                          ? `invalid address ${x.address}`
-                          : "";
-                    }
-                    if (
-                      !!x.name &&
-                      byName[x.name] &&
-                      x.initial.name !== x.name
-                    ) {
-                      err.name = "already exists";
-                    }
-
-                    if (!x.name) {
-                      err.name = "Please provide an alias";
-                    }
-                    return err;
-                  });
                   if (
-                    result.every(x => x.address === "" && x.name === "") &&
-                    typeof errors.validatorsError == "undefined"
+                    values.validators.reduce(
+                      (acc, curr) => acc + (curr.address === x.address ? 1 : 0),
+                      0
+                    ) > 1 &&
+                    x.initial.address !== x.address
                   ) {
-                    return;
+                    err.address = "already exists";
+                  } else {
+                    err.address =
+                      validateAddress(x.address) !== 3
+                        ? `invalid address ${x.address}`
+                        : "";
                   }
-                  errors.validators = result;
-                  return errors;
-                }}
-                onSubmit={values => {
-                  dispatch!({
-                    type: "updateAliaces",
-                    payload: values.validators,
-                  });
-                }}
-              >
-                {({
-                  values,
-                  errors,
-                  validateForm,
-                  setTouched,
-                  handleReset,
-                }) => (
-                  <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-                    <div className="mb-2 self-center text-2xl font-medium text-white">
-                      Modify saved Names & Addresses below
-                    </div>
-                    <div className="grid w-full grid-flow-row grid-rows-2 gap-2 md:grid-flow-col md:grid-cols-2 md:grid-rows-1 md:justify-around">
-                      <button
-                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
-                        onClick={handleReset}
-                      >
-                        Reset
-                      </button>
-                      <button
-                        className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
-                        type="submit"
-                      >
-                        Save
-                      </button>
-                    </div>
-                    <ErrorMessage
-                      name={`validatorsError`}
-                      render={renderError}
-                    />
-                    <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
-                      <FieldArray name="validators">
-                        {({ remove, unshift }) => (
-                          <div>
-                            {" "}
+                  if (!!x.name && byName[x.name] && x.initial.name !== x.name) {
+                    err.name = "already exists";
+                  }
+
+                  return err;
+                });
+                if (
+                  result.every(x => x.address === "" && x.name === "") &&
+                  typeof errors.validatorsError == "undefined"
+                ) {
+                  return;
+                }
+                errors.validators = result;
+                return errors;
+              }}
+              onSubmit={values => {
+                dispatch!({
+                  type: "updateAliases",
+                  payload: { aliases: values.validators, keepOld: false },
+                });
+              }}
+            >
+              {({ values, errors, validateForm, setTouched, handleReset }) => (
+                <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+                  <div className="mt-4 self-center text-2xl font-medium text-white">
+                    Modify saved names and addresses below
+                  </div>
+                  <ErrorMessage name={`validatorsError`} render={renderError} />
+                  <div className="mt-8 grid w-full grid-flow-row items-start gap-4">
+                    <FieldArray name="validators">
+                      {({ remove, unshift }) => (
+                        <div>
+                          <div className="flex space-x-8">
                             <button
                               type="button"
-                              className="my-2 mx-auto block w-full self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
+                              className="my-2 mx-auto block w-full self-center justify-self-center rounded border border-white bg-transparent p-2 font-medium text-white"
                               onClick={e => {
                                 e.preventDefault();
                                 unshift({
@@ -163,86 +136,108 @@ function Home() {
                                 });
                               }}
                             >
-                              Add name
+                              Add an address
                             </button>
-                            <div className="min-w-full">
-                              {values.validators.length > 0 &&
-                                values.validators.map((validator, index) => {
-                                  return (
-                                    <div
-                                      className="md:p-none flex min-w-full flex-col items-start justify-start space-x-4 p-2 md:flex-row md:rounded-none md:border-none"
-                                      key={index}
-                                    >
-                                      <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">
-                                        <label className="text-white">
+                            <button
+                              className="my-2 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500"
+                              type="submit"
+                            >
+                              Save
+                            </button>
+                          </div>
+                          <div className="mt-4 min-w-full">
+                            {values.validators.length > 0 &&
+                              values.validators.map((validator, index) => {
+                                return (
+                                  <div
+                                    className={`${
+                                      index !== 0 ? "lg:-mt-12" : ""
+                                    } md:p-none flex min-w-full flex-col items-start justify-start py-2 md:flex-row md:space-x-4 md:rounded-none md:border-none`}
+                                    key={index}
+                                  >
+                                    <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3">
+                                      <label className="text-white">
+                                        <span
+                                          className={`${
+                                            index === 0 ? "" : "lg:hidden"
+                                          }`}
+                                        >
                                           Name
-                                        </label>
-                                        <Field
-                                          name={`validators.${index}.name`}
-                                          className="md:text-md rounded p-2 text-sm"
-                                          placeholder={validator.name || "Name"}
-                                        />
-                                        <ErrorMessage
-                                          name={`validators.${index}.name`}
-                                          render={renderError}
-                                        />
-                                      </div>
-                                      <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:grow">
-                                        <label
-                                          className="text-white"
-                                          htmlFor={`validators.${index}.address`}
+                                        </span>
+                                      </label>
+
+                                      <Field
+                                        name={`validators.${index}.name`}
+                                        className="md:text-md rounded p-2 text-sm"
+                                        placeholder={validator.name || "Name"}
+                                      />
+                                      <ErrorMessage
+                                        name={`validators.${index}.name`}
+                                        render={renderError}
+                                      />
+                                    </div>
+                                    <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:grow">
+                                      <label
+                                        className="text-white"
+                                        htmlFor={`validators.${index}.address`}
+                                      >
+                                        <span
+                                          className={`${
+                                            index === 0 ? "" : "lg:hidden"
+                                          }`}
                                         >
                                           Address
-                                        </label>
-                                        <Field
-                                          name={`validators.${index}.address`}
-                                          className="md:text-md w-full rounded p-2 text-sm"
-                                          placeholder={
-                                            validator.address || "Address"
-                                          }
-                                          default={validator.address}
-                                        />
-                                        <ErrorMessage
-                                          name={`validators.${index}.address`}
-                                          render={x => {
-                                            return renderError(x);
-                                          }}
-                                        />
-                                      </div>
-                                      <button
-                                        type="button"
-                                        className={
-                                          (errors.validators &&
-                                          errors.validators[index] &&
-                                          get(errors.validators[index])
-                                            ? "my-auto"
-                                            : "") +
-                                          "mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 md:mx-auto md:self-center "
+                                        </span>
+                                      </label>
+
+                                      <Field
+                                        name={`validators.${index}.address`}
+                                        className="md:text-md w-full rounded p-2 text-sm"
+                                        placeholder={
+                                          validator.address || "Address"
                                         }
-                                        onClick={async e => {
-                                          e.preventDefault();
-                                          setTouched(
-                                            { validatorsError: true },
-                                            true
-                                          );
-                                          validateForm();
-                                          remove(index);
+                                        default={validator.address}
+                                      />
+                                      <ErrorMessage
+                                        name={`validators.${index}.address`}
+                                        render={x => {
+                                          return renderError(x);
                                         }}
-                                      >
-                                        Remove
-                                      </button>
+                                      />
                                     </div>
-                                  );
-                                })}
-                            </div>
+                                    <button
+                                      type="button"
+                                      className={
+                                        (errors.validators &&
+                                        errors.validators[index] &&
+                                        get(errors.validators[index])
+                                          ? "my-auto"
+                                          : "") +
+                                        "mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 md:mx-auto md:self-center "
+                                      }
+                                      onClick={async e => {
+                                        e.preventDefault();
+                                        setTouched(
+                                          { validatorsError: true },
+                                          true
+                                        );
+
+                                        remove(index);
+                                      }}
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                );
+                              })}
                           </div>
-                        )}
-                      </FieldArray>
-                    </div>
-                  </Form>
-                )}
-              </Formik>
-            </div>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </main>
