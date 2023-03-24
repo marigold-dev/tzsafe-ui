@@ -79,14 +79,6 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    if (metadata.entrypoint === "%transfer")
-      console.log(
-        metadata,
-        metadata.entrypoint === "%transfer",
-        Array.isArray(metadata.payload),
-        isFa2(metadata.payload)
-      );
-
     if (
       !metadata?.contract_address &&
       !metadata?.meta?.includes("contract_addr")
@@ -136,42 +128,15 @@ export const RenderProposalContent = ({
       };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
-        if (metadata.contract_address) {
-          const data = (() => {
-            const entries = Object.entries(metadata.payload ?? {});
+        const contractData = JSON.parse(metadata.meta);
 
-            if (entries.length === 0) return ["default", "Unit"];
-
-            return entries[0];
-          })();
-
-          return [
-            metadata.meta,
-            metadata.mutez_amount,
-            metadata.contract_address,
-            ...data,
-          ];
-        } else {
-          const contractData = JSON.parse(metadata.meta);
-
-          const data = (() => {
-            if (typeof contractData.payload !== "object")
-              return ["default", contractData?.payload];
-
-            const entries = Object.entries(contractData.payload);
-
-            if (entries.length === 0) return ["default", "{}"];
-
-            return entries[0];
-          })();
-
-          return [
-            undefined,
-            contractData.mutez_amount,
-            contractData.contract_addr,
-            ...data,
-          ];
-        }
+        return [
+          undefined,
+          contractData.mutez_amount,
+          contractData.contract_addr,
+          contractData.entrypoint ?? "default",
+          contractData.payload ?? "Unit",
+        ];
       })();
 
       data = {
@@ -180,7 +145,7 @@ export const RenderProposalContent = ({
         amount: `${amount} mutez`,
         addresses: [address],
         entrypoints: entrypoint,
-        params: JSON.stringify(arg),
+        params: arg,
       };
     }
   }
