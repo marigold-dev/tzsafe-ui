@@ -1,6 +1,7 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { emitMicheline, Parser } from "@taquito/michel-codec";
-import { TokenSchema } from "@taquito/michelson-encoder";
+import { TokenSchema, ParameterSchema } from "@taquito/michelson-encoder";
+import { MichelsonMap } from "@taquito/taquito";
 import { char2Bytes, validateContractAddress } from "@taquito/utils";
 import {
   ErrorMessage,
@@ -90,31 +91,34 @@ function makeForm(
     let keys = Object.keys(item.schema);
     let isArray = !Number.isNaN(Number(keys[0]));
     if (isArray) {
+      let fields = Object.entries(item.schema).map(([field, value]) => {
+        let f = makeForm(value, field);
+        return {
+          type: "field",
+          name: field,
+          placeholder: value.__michelsonType,
+          init: f.init,
+          fields: f,
+          mapValue: (x: any) => {
+            return x;
+          },
+        };
+      });
       let res = {
         type: "array",
         name: parent,
-        fields: Object.entries(item.schema).map(([field, value]) => {
-          let f = makeForm(value, field);
-          return {
-            type: "field",
-            name: field,
-            placeholder: value.__michelsonType,
-            init: f.init,
-            fields: f,
-            mapValue: (x: any) => {
-              return x;
-            },
-          };
-        }),
+        fields,
       };
       return wrap({
         ...res,
+        meta: "pair",
         init: Object.fromEntries(res.fields.map(x => [x.name, x.init])),
       } as form & { init: any });
     } else {
       let res = {
         type: "record",
         name: parent,
+        meta: "pair",
         fields: Object.entries(item.schema).map(([field, value]) => {
           let f = makeForm(value, field);
           return {
@@ -130,6 +134,7 @@ function makeForm(
       };
       return wrap({
         ...res,
+        meta: "pair",
         init: Object.fromEntries(res.fields.map(x => [x.name, x.init])),
       } as form & { init: any });
     }
@@ -145,13 +150,16 @@ function makeForm(
     "map" == item?.__michelsonType ||
     "big_map" == item?.__michelsonType
   ) {
+    let key = makeForm(item.schema.key, "key");
+    let value = makeForm(item.schema.value, "value");
     return wrap({
       type: "list",
       name: parent,
-      init: [],
+      init: { map: [] },
       fields: {
         name: "map",
         type: "array",
+        init: { [key.name]: key.init, [value.name]: value.init },
         fields: [
           makeForm(item.schema.key, "key"),
           makeForm(item.schema.value, "value"),
@@ -160,7 +168,7 @@ function makeForm(
       mapValue: (x: any[]) => {
         return x.reduce((acc, x) => ({ ...acc, ...x }), {});
       },
-    });
+    } as any);
   } else if ("bool" === item?.__michelsonType) {
     return wrap({
       type: "select",
@@ -295,6 +303,7 @@ function RenderItem({
       parent.length && parent[parent.length - 1] === item.name
         ? parent.join(".")
         : makeName(parent, item.name);
+    fieldName = item.fields.name === "map" ? fieldName + ".map" : fieldName;
     if (!getFieldProps(fieldName).value) {
       setTimeout(() => {
         setFieldValue(fieldName, []);
@@ -325,11 +334,18 @@ function RenderItem({
                         className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
                       >
                         <RenderItem
-                          parent={[...parent, item.name]}
-                          item={{
-                            ...item.fields,
-                            name: idx.toString(),
-                          }}
+                          parent={
+                            item.fields.name === "map"
+                              ? [...parent, item.name, "map"]
+                              : [...parent, item.name]
+                          }
+                          item={
+                            {
+                              ...item.fields,
+                              name: idx.toString(),
+                              meta: item.fields.name === "map" ? "map" : "",
+                            } as any
+                          }
                         />
                       </div>
                     );
@@ -357,7 +373,7 @@ function RenderItem({
                     let field =
                       item.fields.type === "select"
                         ? { kind: item.fields.fields[0].name }
-                        : "";
+                        : (item.fields as any).init;
                     push(field);
                   }}
                 >
@@ -375,7 +391,12 @@ function RenderItem({
       parent.length > 1 &&
       parent[parent.length - 1] === parent[parent.length - 2]
         ? parent.slice(0, -1).concat([item.name]).join(".")
-        : parent[parent.length - 1] !== item.name
+        : Array.isArray(getFieldProps(parent.join(".")).value) ||
+          (getFieldProps(parent.join(".")).value &&
+            Object.entries(getFieldProps(parent.join(".")).value).every(
+              ([k, _]) => !isNaN(Number(k))
+            )) ||
+          parent[parent.length - 1] !== item.name
         ? makeName(parent, item.name)
         : parent.join(".");
     return (
@@ -479,12 +500,12 @@ function Basic({
       initialValues={initialState}
       validate={async values => {
         let errors: any = {};
-        if (validateContractAddress(values.walletAddress) !== 3) {
+        if (validateContractAddress(values.walletAddress.trim()) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
         }
         let exists = await (async () => {
           try {
-            await state.connection.contract.at(values.walletAddress);
+            await state.connection.contract.at(values.walletAddress.trim());
             return true;
           } catch (e) {
             return false;
@@ -501,7 +522,10 @@ function Basic({
         return errors;
       }}
       onSubmit={async values => {
-        setFormState({ address: values.walletAddress, amount: values.amount });
+        setFormState({
+          address: values.walletAddress.trim(),
+          amount: values.amount,
+        });
       }}
     >
       {({ setFieldValue }) => (
@@ -540,7 +564,9 @@ function Basic({
                   setTerms={({ payload, term: _ }) => {
                     setFieldValue("walletAddress", payload);
                   }}
-                  filter={x => validateContractAddress(x as string) === 3}
+                  filter={x =>
+                    validateContractAddress((x as string).trim()) === 3
+                  }
                   byAddrToo={true}
                   as="input"
                   name={`walletAddress`}
@@ -616,6 +642,28 @@ function ExecuteForm(
       })();
     }
   }, [address, loading, props.shape]);
+  let init =
+    props.shape?.form && typeof props.shape.form.init == "object"
+      ? props.shape.form.type === "select"
+        ? Object.fromEntries(
+            props.shape.form.fields.map((x: any) => [x.name, x.init])
+          )
+        : {
+            [typeof props.shape.form.init === "object" &&
+            "kind" in props.shape.form.init
+              ? props.shape.form.init.kind
+              : "default"]:
+              typeof props.shape.form.init === "object" &&
+              "init" in props.shape.form.init
+                ? props.shape.form.init.init
+                : props.shape.form.init,
+          }
+      : ({
+          entrypoint: {
+            default: props.shape.form?.init || "",
+            kind: "default",
+          },
+        } as any);
 
   return (
     <div className="w-full text-white">
@@ -625,14 +673,7 @@ function ExecuteForm(
           props.shape?.form && typeof props.shape.form.init == "object"
             ? {
                 entrypoint: {
-                  [typeof props.shape.form.init === "object" &&
-                  "kind" in props.shape.form.init
-                    ? props.shape.form.init.kind
-                    : "default"]:
-                    typeof props.shape.form.init === "object" &&
-                    "init" in props.shape.form.init
-                      ? props.shape.form.init.init
-                      : props.shape.form.init,
+                  ...init,
                   kind:
                     typeof props.shape.form.init === "object" &&
                     "kind" in props.shape.form.init
@@ -666,6 +707,7 @@ function ExecuteForm(
         }}
         onSubmit={async values => {
           props.setLoading(true);
+          let isMap: boolean = false;
           try {
             function merge(x: form, v: any): any {
               if (x.type === "select") {
@@ -685,6 +727,7 @@ function ExecuteForm(
               }
               if (x.type === "array") {
                 if (x.name === "map") {
+                  isMap = true;
                   return {
                     [merge(x.fields.find(y => y.name === "key")!, v.key)]:
                       merge(x.fields.find(y => y.name === "value")!, v.value),
@@ -702,7 +745,10 @@ function ExecuteForm(
                         k,
                         merge(
                           f,
-                          typeof v === "object" && unwrap && f.name in v
+                          typeof v === "object" &&
+                            unwrap &&
+                            !Array.isArray(v) &&
+                            f.name in v
                             ? v[f.name]
                             : v
                         ),
@@ -739,9 +785,9 @@ function ExecuteForm(
                 }
                 return res;
               }
-              if (x.type === "list") {
-                let li = !!v ? v.map((y: any) => merge(x.fields, y)) : [];
 
+              if (x.type === "list" && Array.isArray(v)) {
+                let li = !!v ? v.map((y: any) => merge(x.fields, y)) : [];
                 return x.mapValue(
                   li.map((x: any) =>
                     typeof x === "object" && "entrypoint" in x
@@ -750,11 +796,43 @@ function ExecuteForm(
                   )
                 );
               }
+              if (x.type === "list" && !Array.isArray(v)) {
+                v =
+                  typeof v === "object" && "map" in v
+                    ? v.map
+                        .map((y: any) => merge(x.fields, y))
+                        .map((x: any) =>
+                          typeof x === "object" && "entrypoint" in x
+                            ? x.entrypoint
+                            : x
+                        )
+                    : v;
+                return x.mapValue(v);
+              }
               if (x.type === "field") {
+                if (typeof x.fields == "object" && x.fields.type === "list") {
+                  v =
+                    typeof v == "object" && !Array.isArray(v)
+                      ? x.fields.name in v || x.name in v
+                        ? v[x.fields.name] || v
+                        : v[x.name] || v
+                      : v;
+                  v =
+                    typeof v === "object" && !Array.isArray(v) && "map" in v
+                      ? v.map
+                      : v;
+                  let res = x.fields.mapValue(
+                    Array.isArray(v)
+                      ? v.map((y: any) => merge((x.fields as any).fields, y))
+                      : v
+                  );
+
+                  return res;
+                }
                 let res = merge(
                   x.fields,
                   typeof v == "object"
-                    ? x.fields.name in v || x.name in v
+                    ? (x.fields.name in v || x.name in v) && !Array.isArray(v)
                       ? v[x.fields.name] || v
                       : v[x.name] || v
                     : v
@@ -766,7 +844,11 @@ function ExecuteForm(
               }
             }
             let res = merge(props.shape.form, values.entrypoint);
-            res = "entrypoint" in res ? res.entrypoint : res;
+            res =
+              typeof res === "object" && "entrypoint" in res
+                ? res.entrypoint
+                : res;
+
             const unwrap = (x: object | any): any => {
               if (
                 typeof x === "object" &&
@@ -779,18 +861,45 @@ function ExecuteForm(
               return x;
             };
             res = unwrap(res);
+
+            res =
+              typeof res === "object" &&
+              values.entrypoint.kind in res &&
+              typeof res[values.entrypoint.kind] === "object" &&
+              !Array.isArray(res[values.entrypoint.kind]) &&
+              !isMap &&
+              Object.entries(res[values.entrypoint.kind]).every(
+                x => !isNaN(Number(x[0]))
+              )
+                ? {
+                    [values.entrypoint.kind]: Object.fromEntries(
+                      Object.entries(res[values.entrypoint.kind])
+                        .sort((a: any, b: any) => a[0] - b[0])
+                        .map((x, i) => [i, x[1]])
+                    ),
+                  }
+                : res;
+
+            res = Array.isArray(res)
+              ? res.map(x =>
+                  typeof x == "object" && "entrypoint" in x ? x.entrypoint : x
+                )
+              : res;
             let p = new Parser();
             let param;
+            let rawParam;
             let typ;
+            let typer: any;
+
             const allEqual = (arr: string[]) => arr.every(v => v === arr[0]);
             if (typeof res === "object" && "default" in res) {
+              rawParam = res.default;
               param = emitMicheline(
-                props.shape.schema.methods[values.entrypoint!.kind](
-                  res.default
+                props.shape.schema.methodsObject[values.entrypoint!.kind](
+                  rawParam
                 ).toTransferParams().parameter.value
               );
-              let typer = props.shape.schema.parameterSchema
-                .isMultipleEntryPoint
+              typer = props.shape.schema.parameterSchema.isMultipleEntryPoint
                 ? props.shape.schema.entrypoints.entrypoints[
                     values.entrypoint!.kind
                   ]
@@ -809,15 +918,16 @@ function ExecuteForm(
                 )
               )
             ) {
+              rawParam =
+                typeof res === "object" && values!.entrypoint!.kind in res
+                  ? res[values!.entrypoint!.kind]
+                  : res;
               param = emitMicheline(
-                props.shape.schema.methods[values.entrypoint!.kind](
-                  typeof res === "object" && values!.entrypoint!.kind in res
-                    ? res[values!.entrypoint!.kind]
-                    : res
+                props.shape.schema.methodsObject[values.entrypoint!.kind](
+                  rawParam
                 ).toTransferParams().parameter.value
               );
-              let typer = props.shape.schema.parameterSchema
-                .isMultipleEntryPoint
+              typer = props.shape.schema.parameterSchema.isMultipleEntryPoint
                 ? props.shape.schema.entrypoints.entrypoints[
                     values.entrypoint!.kind
                   ]
@@ -827,8 +937,7 @@ function ExecuteForm(
                 newline: "",
               });
             } else {
-              let typer = props.shape.schema.parameterSchema
-                .isMultipleEntryPoint
+              typer = props.shape.schema.parameterSchema.isMultipleEntryPoint
                 ? props.shape.schema.entrypoints.entrypoints[
                     values.entrypoint!.kind
                   ]
@@ -837,29 +946,74 @@ function ExecuteForm(
                 indent: "",
                 newline: "",
               });
-
+              rawParam =
+                typeof res === "object" && values!.entrypoint!.kind in res
+                  ? res[values!.entrypoint!.kind]
+                  : res;
               param = emitMicheline(
-                props.shape.schema.methods[values.entrypoint!.kind](
-                  typeof res === "object" && values!.entrypoint!.kind in res
-                    ? res[values!.entrypoint!.kind]
-                    : res
+                props.shape.schema.methodsObject[values.entrypoint!.kind](
+                  rawParam
                 ).toTransferParams().parameter.value
               );
             }
             let entry =
               values.entrypoint!.kind !== "default"
-                ? `%${values.entrypoint!.kind}`
+                ? `%${values.entrypoint!.kind} `
                 : "";
+            let pp;
+            if (isMap && typer.prim === "big_map") {
+              let lol = Object.entries(rawParam);
+              let k = emitMicheline(p.parseJSON(typer.args[0]), {
+                indent: "",
+                newline: "",
+              });
+              let key = new ParameterSchema(typer.args[0]);
+              let v = emitMicheline(p.parseJSON(typer.args[1]), {
+                indent: "",
+                newline: "",
+              });
+              let value = new ParameterSchema(typer.args[1]);
+              let big_map = `
+            EMPTY_BIG_MAP ${k} ${v};
+            `;
+              pp = lol
+                .map(
+                  ([k, v]) =>
+                    `PUSH ${emitMicheline(p.parseJSON((typer as any).args[1]), {
+                      indent: "",
+                      newline: "",
+                    })} ${emitMicheline(p.parseJSON(value.Encode(v)), {
+                      indent: "",
+                      newline: "",
+                    })};
+            SOME;
+            PUSH ${emitMicheline(p.parseJSON(typer.args[0]), {
+              indent: "",
+              newline: "",
+            })} ${emitMicheline(p.parseJSON(key.Encode(k)), {
+                      indent: "",
+                      newline: "",
+                    })};
+          UPDATE;
+          `
+                )
+                .join("");
+              pp = big_map + pp;
+            }
             let lambda = `
-            {
-              DROP;
+          {
+            DROP;
               PUSH address "${props.address}";
               CONTRACT ${entry} ${typ};
-              IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
-              PUSH mutez ${props.amount} ;
-              PUSH ${typ} ${param} ;
-              TRANSFER_TOKENS
-            }`;
+              IF_NONE { PUSH string "contract dosen't exist"; FAILWITH } { };
+              PUSH mutez ${props.amount};
+              ${
+                typer.prim === "big_map" && isMap
+                  ? pp
+                  : `PUSH ${typ} ${param} ;`
+              }
+            TRANSFER_TOKENS
+        } `;
             props.setField(
               lambda,
               JSON.stringify(
