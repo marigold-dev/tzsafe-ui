@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  sandbox:
+    container_name: sandbox
+    image: oxheadalpha/flextesa:20230313
+    command: mumbaibox start
+    environment:
+      flextesa_node_cors_origin: "*"
+      block_time: 3
+    ports:
+      - 127.0.0.1:8732:20000
+
+  sandbox-db:
+    container_name: sandbox-db
+    restart: always
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tzkt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qwerty}
+      POSTGRES_DB: ${POSTGRES_DB:-tzkt_db}
+    ports:
+      - 127.0.0.1:5433:5432
+
+  sandbox-api:
+    container_name: sandbox-api
+    restart: always
+    image: bakingbad/tzkt-api:1.12.0
+    depends_on:
+      - sandbox-db
+    environment:
+      ConnectionStrings__DefaultConnection: host=sandbox-db;port=5432;database=${POSTGRES_DB:-tzkt_db};username=${POSTGRES_USER:-tzkt};password=${POSTGRES_PASSWORD:-qwerty};command timeout=${COMMAND_TIMEOUT:-600};
+      Kestrel__Endpoints__Http__Url: http://0.0.0.0:5000
+    ports:
+      - 127.0.0.1:5010:5000
+
+  sandbox-sync:
+    container_name: sandbox-sync
+    restart: always
+    image: bakingbad/tzkt-sync:1.12.0
+    environment:
+      ConnectionStrings__DefaultConnection: host=sandbox-db;port=5432;database=${POSTGRES_DB:-tzkt_db};username=${POSTGRES_USER:-tzkt};password=${POSTGRES_PASSWORD:-qwerty};command timeout=${COMMAND_TIMEOUT:-600};
+      Kestrel__Endpoints__Http__Url: http://0.0.0.0:5001
+      TezosNode__Endpoint: http://sandbox:20000
+    depends_on:
+      - sandbox-db
+    ports:
+      - 0.0.0.0:5011:5001
