@@ -1339,6 +1339,7 @@ function TransferForm(
                         e.preventDefault();
                         push({
                           type: "transfer",
+                          key: values.transfers.length,
                           ...Versioned.transferForm(props.contract),
                         });
                       }}
@@ -1352,6 +1353,7 @@ function TransferForm(
                         e.preventDefault();
                         push({
                           type: "fa2",
+                          key: values.transfers.length,
                           ...Versioned.fa2(props.contract),
                         });
                       }}
@@ -1365,6 +1367,7 @@ function TransferForm(
                         e.preventDefault();
                         push({
                           type: "contract",
+                          key: values.transfers.length,
                           ...Versioned.lambdaForm(props.contract),
                         });
                       }}
@@ -1389,7 +1392,11 @@ function TransferForm(
                     values.transfers.map((transfer, index) => {
                       if (transfer.type === "contract") {
                         return ReactDOM.createPortal(
-                          <div className="flex flex-col space-x-4 md:flex-row">
+                          <div
+                            className="flex flex-col space-x-4 md:flex-row"
+                            key={JSON.stringify(transfer)}
+                            id={index.toString()}
+                          >
                             <ExecuteContractForm
                               key={index}
                               getFieldProps={() =>
@@ -1418,13 +1425,15 @@ function TransferForm(
                               }
                               onClick={e => {
                                 e.preventDefault();
+                                console.log(values.transfers, index);
                                 remove(index);
                               }}
                             >
                               Remove
                             </button>
                           </div>,
-                          document.getElementById("top")!
+                          document.getElementById("top")!,
+                          JSON.stringify(transfer)
                         );
                       }
                       const withTextArea = transfer.fields.find(
@@ -1531,6 +1540,7 @@ function TransferForm(
                               }
                               onClick={e => {
                                 e.preventDefault();
+
                                 remove(index);
                               }}
                             >
