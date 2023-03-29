@@ -1399,7 +1399,7 @@ function TransferForm(
                             id={(transfer as any).key.toString()}
                           >
                             <ExecuteContractForm
-                              key={index}
+                              key={(transfer as any).key.toString()}
                               getFieldProps={() =>
                                 getFieldProps(
                                   `transfers.${index}.values.metadata`
