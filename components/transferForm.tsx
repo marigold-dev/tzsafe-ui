@@ -14,6 +14,7 @@ import {
 import { useRouter } from "next/router";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { transferableAbortController } from "util";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
@@ -1394,8 +1395,8 @@ function TransferForm(
                         return ReactDOM.createPortal(
                           <div
                             className="flex flex-col space-x-4 md:flex-row"
-                            key={JSON.stringify(transfer)}
-                            id={index.toString()}
+                            key={(transfer as any).key.toString()}
+                            id={(transfer as any).key.toString()}
                           >
                             <ExecuteContractForm
                               key={index}
@@ -1425,7 +1426,6 @@ function TransferForm(
                               }
                               onClick={e => {
                                 e.preventDefault();
-                                console.log(values.transfers, index);
                                 remove(index);
                               }}
                             >
@@ -1433,7 +1433,7 @@ function TransferForm(
                             </button>
                           </div>,
                           document.getElementById("top")!,
-                          JSON.stringify(transfer)
+                          (transfer as any).key.toString()
                         );
                       }
                       const withTextArea = transfer.fields.find(
