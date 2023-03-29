@@ -317,7 +317,9 @@ function RenderItem({
           return (
             <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
-                <p className="text-white"></p>
+                <p className="text-white">
+                  {item.fields.name === "map" ? "map" : item.type}
+                </p>
               ) : (
                 <p className="text-white">
                   {item.type}: {item.fields.type}
