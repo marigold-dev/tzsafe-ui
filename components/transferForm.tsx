@@ -12,8 +12,15 @@ import {
   useFormikContext,
 } from "formik";
 import { useRouter } from "next/router";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
+import { transferableAbortController } from "util";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
@@ -316,7 +323,12 @@ function RenderItem({
           return (
             <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
-                <p className="text-white"></p>
+                <p className="text-white">
+                  {Number.isNaN(Number(item.name))
+                    ? capitalizeFirstLetter(item.name) + ": "
+                    : ""}
+                  {item.fields.name === "map" ? "map" : item.type}
+                </p>
               ) : (
                 <p className="text-white">
                   {item.type}: {item.fields.type}
@@ -1169,6 +1181,7 @@ function TransferForm(
 ) {
   const state = useContext(AppStateContext)!;
   const router = useRouter();
+  let portalIdx = useRef(0);
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
@@ -1280,7 +1293,6 @@ function TransferForm(
   } = {
     transfers: [],
   };
-
   return (
     <Formik
       initialValues={initialProps}
@@ -1339,6 +1351,7 @@ function TransferForm(
                         e.preventDefault();
                         push({
                           type: "transfer",
+                          key: values.transfers.length,
                           ...Versioned.transferForm(props.contract),
                         });
                       }}
@@ -1363,8 +1376,11 @@ function TransferForm(
                       className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
+                        let idx = portalIdx.current;
+                        portalIdx.current += 1;
                         push({
                           type: "contract",
+                          key: idx,
                           ...Versioned.lambdaForm(props.contract),
                         });
                       }}
@@ -1389,9 +1405,12 @@ function TransferForm(
                     values.transfers.map((transfer, index) => {
                       if (transfer.type === "contract") {
                         return ReactDOM.createPortal(
-                          <div className="flex flex-col space-x-4 md:flex-row">
+                          <div
+                            className="flex flex-col space-x-4 md:flex-row"
+                            key={(transfer as any).key.toString()}
+                            id={(transfer as any).key.toString()}
+                          >
                             <ExecuteContractForm
-                              key={index}
                               getFieldProps={() =>
                                 getFieldProps(
                                   `transfers.${index}.values.metadata`
@@ -1424,7 +1443,8 @@ function TransferForm(
                               Remove
                             </button>
                           </div>,
-                          document.getElementById("top")!
+                          document.getElementById("top")!,
+                          (transfer as any).key.toString()
                         );
                       }
                       const withTextArea = transfer.fields.find(
@@ -1531,6 +1551,7 @@ function TransferForm(
                               }
                               onClick={e => {
                                 e.preventDefault();
+
                                 remove(index);
                               }}
                             >
