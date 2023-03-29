@@ -324,6 +324,9 @@ function RenderItem({
             <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
               {isNaN(Number(item.name)) ? (
                 <p className="text-white">
+                  {capitalizeFirstLetter(
+                    !Number.isNaN(Number(item.name)) ? item.name : ""
+                  ) + ": "}
                   {item.fields.name === "map" ? "map" : item.type}
                 </p>
               ) : (
