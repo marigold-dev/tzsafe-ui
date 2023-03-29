@@ -12,7 +12,13 @@ import {
   useFormikContext,
 } from "formik";
 import { useRouter } from "next/router";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ReactDOM from "react-dom";
 import { transferableAbortController } from "util";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
@@ -1172,6 +1178,7 @@ function TransferForm(
 ) {
   const state = useContext(AppStateContext)!;
   const router = useRouter();
+  let portalIdx = useRef(0);
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
@@ -1283,7 +1290,6 @@ function TransferForm(
   } = {
     transfers: [],
   };
-
   return (
     <Formik
       initialValues={initialProps}
@@ -1356,7 +1362,6 @@ function TransferForm(
                         e.preventDefault();
                         push({
                           type: "fa2",
-                          key: values.transfers.length,
                           ...Versioned.fa2(props.contract),
                         });
                       }}
@@ -1368,9 +1373,11 @@ function TransferForm(
                       className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
+                        let idx = portalIdx.current;
+                        portalIdx.current += 1;
                         push({
                           type: "contract",
-                          key: values.transfers.length,
+                          key: idx,
                           ...Versioned.lambdaForm(props.contract),
                         });
                       }}
@@ -1401,7 +1408,6 @@ function TransferForm(
                             id={(transfer as any).key.toString()}
                           >
                             <ExecuteContractForm
-                              key={(transfer as any).key.toString()}
                               getFieldProps={() =>
                                 getFieldProps(
                                   `transfers.${index}.values.metadata`
