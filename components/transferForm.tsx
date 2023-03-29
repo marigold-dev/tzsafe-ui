@@ -26,6 +26,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
+import ExecuteForm from "./ContractExecution";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
@@ -243,6 +244,7 @@ function RenderItem({
   parent: parent,
 }: React.PropsWithoutRef<{ item: form; parent: (string | number)[] }>) {
   const { values, setFieldValue, getFieldProps } = useFormikContext<any>();
+  console.log(values);
   if ("select" == item?.type) {
     return (
       <div className="flex w-full flex-col rounded border-2 p-4">
@@ -676,7 +678,6 @@ function ExecuteForm(
             kind: "default",
           },
         } as any);
-
   return (
     <div className="w-full text-white">
       <Formik
@@ -718,6 +719,7 @@ function ExecuteForm(
           return errors;
         }}
         onSubmit={async values => {
+          console.log("raw_values", values);
           props.setLoading(true);
           let isMap: boolean = false;
           try {
@@ -856,6 +858,7 @@ function ExecuteForm(
               }
             }
             let res = merge(props.shape.form, values.entrypoint);
+            console.log("merge res:", res);
             res =
               typeof res === "object" && "entrypoint" in res
                 ? res.entrypoint
@@ -934,6 +937,8 @@ function ExecuteForm(
                 typeof res === "object" && values!.entrypoint!.kind in res
                   ? res[values!.entrypoint!.kind]
                   : res;
+              console.log("res", rawParam);
+
               param = emitMicheline(
                 props.shape.schema.methodsObject[values.entrypoint!.kind](
                   rawParam
@@ -1134,7 +1139,7 @@ function ExecuteContractForm(
           <span className="font-light">Mutez amount:</span> {data.mutez_amount}
         </p>
         <p>
-          <span className="font-light">Entrypoint:</span> {data.entrypoint}
+          <span className="font-light">Entrypoint :</span> {data.entrypoint}
         </p>
         <p>
           <span className="font-light">Params:</span> {data.payload}
@@ -1585,3 +1590,4 @@ function TransferForm(
 }
 
 export default TransferForm;
+export type { form };

@@ -1,0 +1,570 @@
+import assertNever from "assert-never";
+import {
+  ErrorMessage,
+  Field,
+  FieldArray,
+  FieldInputProps,
+  Form,
+  Formik,
+  useFormikContext,
+} from "formik";
+import React, { useContext, useEffect, useState } from "react";
+import { AppStateContext } from "../context/state";
+import {
+  parseSchema,
+  genLambda,
+  getFieldName,
+  showName,
+  allocateNewTokenCounter,
+  token,
+  tokenValueType,
+  tokenMap,
+} from "../utils/contractParam";
+
+function capitalizeFirstLetter(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function renderError(message: string) {
+  return <p className="mt-2 italic text-red-600">{message}</p>;
+}
+
+function RenderItem({
+  token: token,
+  showTitle: showTitle,
+}: React.PropsWithoutRef<{
+  token: token;
+  showTitle: boolean;
+}>) {
+  const { setFieldValue, getFieldProps } =
+    useFormikContext<Record<string, tokenValueType>>();
+  const counter: number = getFieldProps("counter").value;
+  const fieldName = getFieldName(token.counter);
+  const fieldValue: tokenValueType = getFieldProps(fieldName).value;
+  switch (token.type) {
+    case "bls12_381_fr":
+    case "bls12_381_g1":
+    case "bls12_381_g2":
+    case "chain_id":
+    case "key_hash":
+    case "key":
+    case "bytes":
+    case "address":
+    case "signature":
+    case "string":
+    case "contract":
+    case "int":
+    case "nat":
+    case "mutez":
+    case "timestamp":
+    case "sapling_transaction_deprecated":
+    case "sapling_transaction":
+    case "sapling_state":
+      return RenderInputField(token, fieldName, showTitle);
+    case "never":
+    case "unit":
+      return RenderConstant(token, showTitle);
+    case "bool":
+      return RenderCheckbox(token, fieldName, fieldValue, showTitle);
+    case "or":
+      return RenderSelection(token, fieldName, fieldValue, showTitle);
+    case "set":
+    case "list":
+      return RenderArray(
+        token,
+        fieldName,
+        fieldValue,
+        showTitle,
+        counter,
+        setFieldValue
+      );
+    case "pair":
+      return RenderPair(token, showTitle);
+    case "map":
+      return RenderMap(
+        token,
+        fieldName,
+        fieldValue,
+        showTitle,
+        counter,
+        setFieldValue
+      );
+    case "option":
+      return RenderOption(token, fieldName, fieldValue, showTitle);
+    case "lambda":
+      return RenderLambda(token, fieldName, showTitle);
+    case "ticket_deprecated":
+    case "ticket":
+    case "operation":
+    case "chest":
+    case "chest_key":
+    case "tx_rollup_l2_address":
+    case "constant":
+    case "big_map":
+      return RenderNonsupport(token);
+    default:
+      return assertNever(token.type);
+  }
+}
+
+function RenderNonsupport(token: token) {
+  return (
+    <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+      {`Type, ${token.type}, isn't supported as a user input`}
+    </div>
+  );
+}
+
+function RenderLambda(token: token, fieldName: string, showTitle: boolean) {
+  {
+    return (
+      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <Field
+          as="textarea"
+          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-black"
+          placeholder={token.placeholder}
+          rows={10}
+          name={fieldName}
+          validate={token.validate}
+        />
+        <ErrorMessage name={fieldName} render={renderError} />
+      </div>
+    );
+  }
+}
+
+function RenderOption(
+  token: token,
+  fieldName: string,
+  value: tokenValueType,
+  showTitle: boolean
+) {
+  {
+    if (typeof value !== "string") {
+      throw new Error("internal: the value of option is incorrect");
+    }
+    return (
+      <div className="flex w-full flex-col gap-2 rounded p-4">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <Field
+          className="rounded p-2 text-left text-black"
+          name={fieldName}
+          as="select"
+        >
+          <option className="text-black" key="1" value="none">
+            None
+          </option>
+          <option className="text-black" key="2" value="some">
+            Some
+          </option>
+        </Field>
+        {value == "some" ? (
+          <RenderItem token={token.children[0]} showTitle={true} />
+        ) : (
+          <div></div>
+        )}
+      </div>
+    );
+  }
+}
+
+function RenderMap(
+  token: token,
+  fieldName: string,
+  elements: tokenValueType,
+  showTitle: boolean,
+  counter: number,
+  setFieldValue: (
+    field: string,
+    value: tokenValueType,
+    shouldValidate?: boolean | undefined
+  ) => void
+) {
+  {
+    if (!Array.isArray(elements)) {
+      throw new Error("internal: the value of array is incorrect");
+    }
+    return (
+      <div className="flex w-full flex-col gap-2 rounded p-4">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <FieldArray name={fieldName}>
+          {({ push, pop }) => {
+            return (
+              <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+                {elements &&
+                  elements.map((element, idx) => {
+                    if ("counter" in element) {
+                      throw new Error(
+                        "internal: the value of array is incorrect"
+                      );
+                    }
+                    return (
+                      <div
+                        key={idx}
+                        className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
+                      >
+                        <RenderItem token={element.key} showTitle={true} />
+                        <RenderItem token={element.value} showTitle={true} />
+                      </div>
+                    );
+                  })}
+                <div className="mt-2 flex flex-col md:flex-row">
+                  {elements && elements.length > 0 && (
+                    <button
+                      type="button"
+                      className={
+                        "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                      }
+                      onClick={e => {
+                        e.preventDefault();
+                        pop();
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    onClick={e => {
+                      e.preventDefault();
+
+                      let new_counter = allocateNewTokenCounter(
+                        token,
+                        counter,
+                        setFieldValue
+                      );
+                      const child: tokenMap = {
+                        key: token.children[0],
+                        value: token.children[1],
+                      };
+                      push(child);
+                      setFieldValue("counter", new_counter);
+                    }}
+                  >
+                    Add item
+                  </button>
+                </div>
+              </div>
+            );
+          }}
+        </FieldArray>
+      </div>
+    );
+  }
+}
+
+function RenderPair(token: token, showTitle: boolean) {
+  return (
+    <div className="flex w-full flex-col gap-2 rounded p-4">
+      <label className="text-white">
+        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+      </label>
+      {
+        <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+          {token.children.map((v, idx) => {
+            return (
+              <div
+                key={idx}
+                className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
+              >
+                <RenderItem token={v} showTitle={true} />
+              </div>
+            );
+          })}
+        </div>
+      }
+    </div>
+  );
+}
+
+function RenderArray(
+  token: token,
+  fieldName: string,
+  elements: tokenValueType,
+  showTitle: boolean,
+  counter: number,
+  setFieldValue: (
+    field: string,
+    value: tokenValueType,
+    shouldValidate?: boolean | undefined
+  ) => void
+) {
+  {
+    if (!Array.isArray(elements)) {
+      throw new Error("internal: the value of array is incorrect");
+    }
+    return (
+      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <FieldArray name={fieldName}>
+          {({ push, pop }) => {
+            return (
+              <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+                {elements &&
+                  elements.map((v, idx) => {
+                    if (!("counter" in v)) {
+                      throw new Error(
+                        "internal: the value of array is incorrect"
+                      );
+                    }
+                    return (
+                      <div
+                        key={idx}
+                        className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
+                      >
+                        <RenderItem token={v} showTitle={false} />
+                      </div>
+                    );
+                  })}
+                <div className="mt-2 flex flex-col md:flex-row">
+                  {elements && elements.length > 0 && (
+                    <button
+                      type="button"
+                      className={
+                        "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                      }
+                      onClick={e => {
+                        e.preventDefault();
+                        pop();
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    onClick={e => {
+                      e.preventDefault();
+                      let new_counter = allocateNewTokenCounter(
+                        token,
+                        counter,
+                        setFieldValue
+                      );
+                      setFieldValue("counter", new_counter);
+                      push(token.children[0]);
+                    }}
+                  >
+                    Add item
+                  </button>
+                </div>
+              </div>
+            );
+          }}
+        </FieldArray>
+      </div>
+    );
+  }
+}
+
+function RenderSelection(
+  token: token,
+  fieldName: string,
+  selected: tokenValueType,
+  showTitle: boolean
+) {
+  {
+    let defaultChildToken =
+      token.children.length > 0 ? token.children[0] : undefined;
+    let childToken =
+      token.children.find(x => {
+        return selected && x.name == selected;
+      }) || defaultChildToken;
+    return (
+      <div className="flex w-full flex-col gap-2 rounded p-4">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <Field
+          className="rounded p-2 text-left text-black"
+          name={fieldName}
+          as="select"
+        >
+          {Object.entries(token.children).map(([k, v]) => {
+            return (
+              <option className="text-black" key={k} value={v.name}>
+                {v.name}
+              </option>
+            );
+          })}
+        </Field>
+        {childToken ? (
+          <RenderItem token={childToken} showTitle={false} />
+        ) : (
+          <div></div>
+        )}
+      </div>
+    );
+  }
+}
+
+function RenderCheckbox(
+  token: token,
+  fieldName: string,
+  values: tokenValueType,
+  showTitle: boolean
+) {
+  if (typeof values !== "boolean") {
+    throw new Error("internal: the value of bool is incorrect");
+  } else {
+    return (
+      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+        <label className="text-white">
+          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        </label>
+        <div>
+          <Field
+            className="rounded p-2 text-left text-black"
+            name={fieldName}
+            type="checkbox"
+          />{" "}
+          {capitalizeFirstLetter(`${values}`)}
+        </div>
+      </div>
+    );
+  }
+}
+
+function RenderConstant(token: token, showTitle: boolean) {
+  return (
+    <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+      <label className="text-white">
+        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+      </label>
+      <div className="md:text-md text-while relative h-fit min-h-fit w-full rounded p-2">
+        <p>{capitalizeFirstLetter(token.type)}</p>
+      </div>
+    </div>
+  );
+}
+
+function RenderInputField(token: token, fieldName: string, showTitle: boolean) {
+  return (
+    <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+      <label className="text-white">
+        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+      </label>
+      <Field
+        as="input"
+        className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-black"
+        placeholder={token.placeholder}
+        rows={10}
+        name={fieldName}
+        validate={token.validate}
+      />
+      <ErrorMessage name={fieldName} render={renderError} />
+    </div>
+  );
+}
+
+function ExecuteForm(
+  props: React.PropsWithoutRef<{
+    address: string;
+    amount: number;
+    shape: any;
+    reset: () => void;
+    setField: (lambda: string, metadata: string) => void;
+    setLoading: (x: boolean) => void;
+    setState: (shape: any) => void;
+    loading: boolean;
+  }>
+) {
+  const state = useContext(AppStateContext)!;
+  const [submitError, setSubmitError] = useState<undefined | string>(undefined);
+
+  let address = props.address;
+  let conn = state.connection;
+  let setLoading = props.setLoading;
+  let loading = props.loading;
+
+  useEffect(() => {
+    if (!Object.keys(props.shape).length && !loading) {
+      (async () => {
+        try {
+          setLoading(true);
+          let c = await conn.contract.at(address);
+          let initTokenTable: Record<string, tokenValueType> = {};
+          let [token, counter] = parseSchema(
+            0,
+            c.parameterSchema.generateSchema(),
+            initTokenTable,
+            "entrypoint"
+          );
+          initTokenTable["counter"] = counter;
+
+          props.setState({
+            init: initTokenTable,
+            token: token,
+            contract: c,
+          });
+          setLoading(false);
+        } catch (e) {
+          console.log(e);
+          setLoading(false);
+        }
+      })();
+    }
+  }, [address, loading, props.shape]);
+  return (
+    <div className="w-full text-white">
+      <Formik
+        enableReinitialize
+        initialValues={props.shape.init}
+        onSubmit={async values => {
+          try {
+            let { lambda, param } = genLambda(props, values);
+          } catch (e) {
+            console.log(e);
+            setSubmitError((e as Error).message);
+            props.setLoading(false);
+          }
+        }}
+      >
+        {({ resetForm }) => (
+          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+            <div className="mb-2 self-center text-2xl font-medium text-white">
+              Add items below
+            </div>
+            <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
+              {!!props.shape.token && (
+                <RenderItem token={props.shape.token} showTitle={false} />
+              )}
+            </div>
+            {!!submitError ? (
+              <span className="text-red-600">{submitError}</span>
+            ) : null}
+            <ErrorMessage name="entrypoint.kind" render={renderError} />
+            <div className="mt-4 flex flex-row justify-around md:w-1/3">
+              <button
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                onClick={e => {
+                  e.preventDefault();
+                  props.reset();
+                }}
+              >
+                Reset
+              </button>
+              <button
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                type="submit"
+              >
+                Confirm
+              </button>
+            </div>
+          </Form>
+        )}
+      </Formik>
+    </div>
+  );
+}
+export default ExecuteForm;
