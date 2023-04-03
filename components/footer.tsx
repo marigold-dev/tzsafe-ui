@@ -26,6 +26,13 @@ const Footer = ({
           >
             Contact
           </a>
+          <a
+            href="https://docs.tzsafe.marigold.dev/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Documentation
+          </a>
         </div>
         <a href="https://tzkt.io/" target="_blank" rel="noreferrer">
           Powered by TzKT API

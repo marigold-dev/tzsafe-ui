@@ -27,12 +27,13 @@ import "../styles/globals.css";
 import Proposals from "./proposals";
 
 export default function App({ Component, pageProps }: AppProps) {
-  let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
+  const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
     reducer,
     emptyState()
   );
 
   const [hasSidebar, setHasSidebar] = useState(false);
+  const [hasBanner, setHasBanner] = useState(true);
 
   const path = usePathname();
   const router = useRouter();
@@ -96,6 +97,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          {/* <Banner isVisible={hasBanner} onHide={() => setHasBanner(false)}> */}
           <Banner>
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET
@@ -109,7 +111,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <div
             className={`pt-20 pb-28 ${
               Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
-            }`}
+            } ${state.hasBanner ? "mt-12" : ""}`}
           >
             <button
               className="ml-4 mt-4 flex items-center space-x-2 text-zinc-500 md:hidden"

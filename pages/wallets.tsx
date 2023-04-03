@@ -17,8 +17,8 @@ function Home() {
           </h1>
         </div>
       </div>
-      <main className="h-full min-h-fit grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
+      <main className="min-h-fit grow">
+        <div className="mx-auto min-h-full max-w-7xl py-6 sm:px-6 lg:px-8">
           <div className="h-full min-h-full px-4 py-6 sm:px-0">
             <div className="grid-rows-auto md:grid-cols-auto grid h-full min-h-full overflow-y-auto  p-2 md:auto-rows-max">
               {state?.contracts &&

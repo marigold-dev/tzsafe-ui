@@ -24,6 +24,7 @@ type tezosState = {
   aliases: { [address: string]: string };
   favouriteContract: string | null;
   aliasTrie: Trie<string>;
+  hasBanner: boolean;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -57,6 +58,7 @@ let emptyState = () => {
     connection,
     favouriteContract: null,
     aliasTrie: new Trie<string>(),
+    hasBanner: true,
   };
 };
 
@@ -96,6 +98,10 @@ type action =
         aliases: { address: string; name: string }[];
         keepOld: boolean;
       };
+    }
+  | {
+      type: "setBanner";
+      payload: boolean;
     };
 
 function reducer(state: tezosState, action: action): tezosState {
@@ -253,6 +259,11 @@ function reducer(state: tezosState, action: action): tezosState {
         favouriteContract: action.address,
       };
     }
+    case "setBanner":
+      return {
+        ...state,
+        hasBanner: action.payload,
+      };
     default: {
       throw "notImplemented";
     }
