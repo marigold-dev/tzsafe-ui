@@ -26,10 +26,10 @@ function get(
   }
 }
 function Home() {
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
-  let byAddress = state.aliases;
-  let byName = Object.fromEntries(
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+
+  const byName = Object.fromEntries(
     Object.entries(state.aliases).map(([k, v]) => [v, k])
   );
   const initialProps: {
