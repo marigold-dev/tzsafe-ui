@@ -1,6 +1,7 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 import { proposalContent } from "../types/display";
+import { crop } from "../utils/strings";
 import Alias from "./Alias";
 import Tooltip from "./Tooltip";
 
@@ -142,10 +143,13 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: `${amount} mutez`,
+        amount: !!amount ? `${amount} mutez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
-        params: arg,
+        params:
+          typeof arg === "object" || Array.isArray(arg)
+            ? JSON.stringify(arg)
+            : arg,
       };
     }
   }
@@ -214,9 +218,10 @@ export const RenderProposalContent = ({
           className={`${
             !data.entrypoints ? "text-zinc-500" : ""
           } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
+          title={data.entrypoints}
         >
           <p className="text-zinc-500 lg:hidden">Entrypoint</p>
-          {data.entrypoints ?? "-"}
+          {!!data.entrypoints ? crop(data.entrypoints, 18) : "-"}
         </span>
         <span
           className={`${
