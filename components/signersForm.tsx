@@ -20,6 +20,7 @@ import { adaptiveTime } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
+import renderError from "./renderError";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -56,10 +57,6 @@ const SignersForm: FC<{
       setResult(undefined);
     }, MODAL_TIMEOUT);
   }, [result, loading]);
-
-  const renderError = (message: string) => {
-    return <p className="mt-2 italic text-red-600">{message}</p>;
-  };
 
   const initialProps: {
     validators: { name: string; address: string }[];
@@ -317,7 +314,7 @@ const SignersForm: FC<{
                       values.validators.map((validator, index) => {
                         return (
                           <div
-                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 px-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
                             key={index}
                           >
                             <div className="flex w-full flex-col md:w-auto">
@@ -444,29 +441,31 @@ const SignersForm: FC<{
               </Field>
               <ErrorMessage name={`requiredSignatures`} render={renderError} />
             </div>
-            {!!values.effectivePeriod && (
-              <div className="mt-4 flex w-full flex-col md:grow">
-                <label className="mr-4 text-white">
-                  Proposal duration (in seconds)
-                </label>
-                <Field
-                  disabled={props.disabled}
-                  className="mt-2 w-full rounded p-2 text-black"
-                  as="select"
-                  component="input"
-                  name="effectivePeriod"
-                  placeholder={props.contract.effectivePeriod}
-                ></Field>
-                <p className="mt-2 text-lg text-white">
-                  {adaptiveTime(values.effectivePeriod.toString())}
-                </p>
-                <ErrorMessage name={`effectivePeriod`} render={renderError} />
-              </div>
-            )}
+
+            <div className="mt-4 flex w-full flex-col md:grow">
+              <label className="mr-4 text-white">
+                Proposal duration (in seconds)
+              </label>
+              <Field
+                disabled={props.disabled}
+                className="mt-2 w-full rounded p-2 text-black"
+                as="select"
+                component="input"
+                name="effectivePeriod"
+                placeholder={props.contract.effectivePeriod}
+              ></Field>
+              <p className="mt-2 text-lg text-white">
+                {adaptiveTime(values.effectivePeriod?.toString() ?? "")}
+              </p>
+              <ErrorMessage name={`effectivePeriod`} render={renderError} />
+            </div>
+
             <div className="flex w-full justify-center">
               <button
                 className={`${
-                  (props.disabled ?? false) || hasNoChange
+                  (props.disabled ?? false) ||
+                  hasNoChange ||
+                  Object.values(errors).find(v => !!v)
                     ? "pointer-events-none opacity-50"
                     : ""
                 } my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500`}

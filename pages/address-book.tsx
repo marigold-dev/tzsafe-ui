@@ -9,11 +9,9 @@ import {
 } from "formik";
 import { useContext } from "react";
 import Meta from "../components/meta";
+import renderError from "../components/renderError";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
-const renderError = (message: string) => {
-  return <p className="italic text-red-600">{message}</p>;
-};
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
 ): boolean {

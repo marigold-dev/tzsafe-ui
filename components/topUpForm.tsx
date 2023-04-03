@@ -10,6 +10,7 @@ import {
 } from "../context/state";
 import { toStorage } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
+import renderError from "./renderError";
 
 function TopUp(props: {
   address: string;
@@ -17,13 +18,11 @@ function TopUp(props: {
 }) {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
+
   async function transfer(amount: number) {
-    let op = await state.connection.wallet
+    const op = await state.connection.wallet
       .transfer({ to: props.address, amount, mutez: false })
       .send();
     await op.transactionOperation();
