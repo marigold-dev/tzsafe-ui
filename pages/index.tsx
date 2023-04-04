@@ -14,7 +14,7 @@ function Home() {
             </h1>
           </div>
         </div>
-        <main className="h-full grow">
+        <main className="grow">
           <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
               <div className="grid min-h-fit grid-rows-2 gap-8 p-2 md:h-96 md:grid-cols-2 md:grid-rows-1">

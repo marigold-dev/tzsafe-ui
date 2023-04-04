@@ -9,10 +9,7 @@ import fetchVersion from "../../context/metadata";
 import { AppStateContext } from "../../context/state";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
-
-const renderError = (message: string) => (
-  <p className="mt-1 italic text-red-600">{message}</p>
-);
+import renderError from "../renderError";
 
 function Basic() {
   const [isLoading, setIsLoading] = useState(false);

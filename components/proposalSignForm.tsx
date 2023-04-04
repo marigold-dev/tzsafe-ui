@@ -10,6 +10,7 @@ import { VersionedApi } from "../versioned/apis";
 import { RenderProposalContent } from "./ProposalCard";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
+import renderError from "./renderError";
 
 function ProposalSignForm({
   address,
@@ -37,9 +38,6 @@ function ProposalSignForm({
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
 
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
   async function sign(
     proposal: number,
     prop: any,

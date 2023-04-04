@@ -12,6 +12,7 @@ import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
 import { adaptiveTime } from "../../utils/adaptiveTime";
+import renderError from "../renderError";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -30,10 +31,8 @@ function Aliases() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext);
-  const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
-  };
-  let byName = Object.fromEntries(
+
+  const byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
   );
   const initialProps: {

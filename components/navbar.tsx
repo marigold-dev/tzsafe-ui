@@ -24,9 +24,9 @@ const NavBar = (_: React.PropsWithChildren) => {
 
   return (
     <nav
-      className={`${
-        menuOpen ? "h-auto" : "h-20"
-      } fixed top-0 left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
+      className={`${menuOpen ? "h-auto" : "h-20"} fixed ${
+        state?.hasBanner ? "top-12" : "top-0"
+      } left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
       <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">
@@ -34,9 +34,13 @@ const NavBar = (_: React.PropsWithChildren) => {
             <div className="flex-shrink-0">
               <Link
                 href={"/"}
-                className="text-xl font-bold tracking-wider text-white"
+                className="flex items-center text-xl font-bold tracking-wider text-white"
               >
-                <span>TZSAFE</span>
+                <img
+                  src="/tzsafe.svg"
+                  alt="Tzsafe logo"
+                  className="h-16 w-auto"
+                />
                 <span className="ml-4 text-xs">BETA</span>
               </Link>
             </div>

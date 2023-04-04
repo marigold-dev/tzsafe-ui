@@ -9,11 +9,9 @@ import {
 } from "formik";
 import { useContext } from "react";
 import Meta from "../components/meta";
+import renderError from "../components/renderError";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
-const renderError = (message: string) => {
-  return <p className="italic text-red-600">{message}</p>;
-};
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
 ): boolean {
@@ -28,10 +26,10 @@ function get(
   }
 }
 function Home() {
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
-  let byAddress = state.aliases;
-  let byName = Object.fromEntries(
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+
+  const byName = Object.fromEntries(
     Object.entries(state.aliases).map(([k, v]) => [v, k])
   );
   const initialProps: {

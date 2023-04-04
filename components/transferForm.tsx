@@ -26,6 +26,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
+import renderError from "./renderError";
 import TextInputWithCompletion from "./textInputWithComplete";
 
 function capitalizeFirstLetter(s: string): string {
@@ -499,9 +500,7 @@ function Basic({
   setFormState: (x: { address: string; amount: number }) => void;
 }>) {
   const state = useContext(AppStateContext)!;
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
+
   let initialState = {
     amount: 0,
     walletAddress: "",
@@ -1169,9 +1168,7 @@ function ExecuteContractForm(
     );
   }
 }
-function renderError(message: string) {
-  return <p className="mt-2 italic text-red-600">{message}</p>;
-}
+
 function TransferForm(
   props: React.PropsWithoutRef<{
     address: string;

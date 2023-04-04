@@ -13,6 +13,7 @@ import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
 import { adaptiveTime } from "../../utils/adaptiveTime";
+import renderError from "../renderError";
 import TextInputWithCompletion from "../textInputWithComplete";
 
 function get(
@@ -39,9 +40,7 @@ function Aliases() {
   if (state?.address == null) {
     return null;
   }
-  const renderError = (message: string) => {
-    return <p className="mt-2 italic text-red-600">{message}</p>;
-  };
+
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
