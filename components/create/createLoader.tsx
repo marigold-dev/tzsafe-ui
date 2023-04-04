@@ -6,6 +6,7 @@ import fetchVersion from "../../context/metadata";
 import { fromIpfs } from "../../context/metadata_blob";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import contract from "../../context/unitContract";
+import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {
@@ -28,7 +29,13 @@ function Success() {
                 proposals: [],
                 owners: formState!.validators.map(x => x.address),
                 threshold: formState!.requiredSignatures,
-                effective_period: formState!.effectivePeriod,
+                effective_period: Math.ceil(
+                  durationOfDaysHoursMinutes(
+                    formState?.days,
+                    formState?.hours,
+                    formState?.minutes
+                  ).toMillis() / 1000
+                ),
                 ...metablob,
               },
             })
