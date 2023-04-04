@@ -167,7 +167,7 @@ function Aliases() {
                         <div
                           className={`${
                             index > 0 ? "-mt-8" : ""
-                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
+                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-0 md:flex-row md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
@@ -252,7 +252,7 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex w-full grow flex-col p-2">
+          <div className="flex w-full grow flex-col">
             <label className="mr-4 text-white">Threshold </label>
             <Field
               component="select"
