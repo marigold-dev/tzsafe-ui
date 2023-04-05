@@ -150,13 +150,25 @@ const Proposals = () => {
                       id={x[0]}
                       key={x[0]}
                       status={
-                        hasDeadlinePassed
-                          ? "Expired"
-                          : shouldResolve
-                          ? "Waiting for resolution"
-                          : hasSigned
-                          ? "Waiting for signers"
-                          : x[1].ui.status
+                        hasDeadlinePassed ? (
+                          "Expired"
+                        ) : shouldResolve ? (
+                          <span>
+                            <span className="hidden md:visible">
+                              Waiting for resolution
+                            </span>
+                            <span className="md:hidden">Pending</span>
+                          </span>
+                        ) : hasSigned ? (
+                          <span>
+                            <span className="hidden md:visible">
+                              Waiting for signers
+                            </span>
+                            <span className="md:hidden">Pending</span>
+                          </span>
+                        ) : (
+                          x[1].ui.status
+                        )
                       }
                       date={deadline}
                       activities={x[1].ui.signatures.map(

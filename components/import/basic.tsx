@@ -115,7 +115,7 @@ function Basic() {
         <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter imported wallet name and address below
         </div>
-        <div className="mt-4 flex w-full flex-col justify-center space-x-4 md:flex-row">
+        <div className="md:items-inherit mt-4 flex w-full flex-col items-center justify-center space-y-4 md:flex-row md:space-y-0 md:space-x-4">
           <div className="flex w-1/2 flex-col">
             <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet name</label>

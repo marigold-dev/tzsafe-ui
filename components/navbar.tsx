@@ -22,6 +22,8 @@ const NavBar = (_: React.PropsWithChildren) => {
     router.replace("/");
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <nav
       className={`${menuOpen ? "h-auto" : "h-20"} fixed ${
@@ -178,10 +180,24 @@ const NavBar = (_: React.PropsWithChildren) => {
       </div>
 
       <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
-        <div className={`space-y-1 px-2 pt-2 pb-3 sm:px-3 md:hidden`}>
-          <LinkComponent path="/address-book" text={"Address book"} />
-          <LinkComponent path="/new-wallet" text={"New wallet"} />
-          <LinkComponent path="/import-wallet" text={"Import wallet"} />
+        <div
+          className={`space-y-1 px-2 pt-2 pb-3 text-center sm:px-3 md:hidden`}
+        >
+          <LinkComponent
+            onClick={closeMenu}
+            path="/address-book"
+            text={"Address book"}
+          />
+          <LinkComponent
+            onClick={closeMenu}
+            path="/new-wallet"
+            text={"New wallet"}
+          />
+          <LinkComponent
+            onClick={closeMenu}
+            path="/import-wallet"
+            text={"Import wallet"}
+          />
         </div>
         {state?.address == null ? (
           <div className="mx-2 flex items-center justify-center pb-2">

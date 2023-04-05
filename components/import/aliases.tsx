@@ -96,17 +96,24 @@ function Aliases() {
           <div className="mb-2 mt-4 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {() => (
-                <div className="min-w-full">
+                <div className="min-w-full space-y-4 md:space-y-0">
                   {values.validators.length > 0 &&
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-x-4 md:flex-row md:rounded-none md:border-none`}
+                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="flex flex-col">
                             <label className="text-white">
-                              {index === 0 ? "Owner Name" : ""}
+                              <span className="md:hidden">Owner name</span>
+                              {index === 0 ? (
+                                <span className="hidden md:visible">
+                                  Owner Name
+                                </span>
+                              ) : (
+                                ""
+                              )}
                             </label>
                             <Field
                               name={`validators.${index}.name`}
@@ -123,7 +130,14 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              {index === 0 ? "Owner Address" : ""}
+                              <span className="md:hidden">Owner Address</span>
+                              {index === 0 ? (
+                                <span className="hidden md:visible">
+                                  Owner Address
+                                </span>
+                              ) : (
+                                ""
+                              )}
                             </label>
                             <Field
                               disabled

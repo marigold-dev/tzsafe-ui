@@ -127,7 +127,7 @@ export const RenderProposalContent = ({
           token_id,
         }),
       };
-    } else {
+    } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
         const contractData = JSON.parse(metadata.meta);
 
@@ -137,6 +137,28 @@ export const RenderProposalContent = ({
           contractData.contract_addr,
           contractData.entrypoint ?? "default",
           contractData.payload ?? "Unit",
+        ];
+      })();
+
+      data = {
+        label: "Execute contract",
+        metadata: meta,
+        amount: !!amount ? `${amount} mutez` : undefined,
+        addresses: [address],
+        entrypoints: entrypoint,
+        params:
+          typeof arg === "object" || Array.isArray(arg)
+            ? JSON.stringify(arg)
+            : arg,
+      };
+    } else {
+      const [meta, amount, address, entrypoint, arg] = (() => {
+        return [
+          undefined,
+          metadata.mutez_amount,
+          metadata.contract_address,
+          metadata.entrypoint ?? "default",
+          metadata.payload ?? "Unit",
         ];
       })();
 
@@ -281,7 +303,7 @@ const labelOfProposalContent = (content: proposalContent) => {
 
 type ProposalCardProps = {
   id: number;
-  status: string;
+  status: React.ReactNode;
   date: Date;
   activities: { signer: string; hasApproved: boolean }[];
   content: proposalContent[];

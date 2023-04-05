@@ -320,7 +320,13 @@ const SignersForm: FC<{
                             <div className="flex w-full flex-col md:w-auto">
                               <label className="text-white">
                                 <span className="md:hidden">Owner name</span>
-                                {index === 0 ? "Owner Name" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:visible">
+                                    Owner Name
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
@@ -339,7 +345,13 @@ const SignersForm: FC<{
                                 htmlFor={`validators.${index}.address`}
                               >
                                 <span className="md:hidden">Owner address</span>
-                                {index === 0 ? "Owner Address" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:visible">
+                                    Owner address
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
