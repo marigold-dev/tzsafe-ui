@@ -38,7 +38,7 @@ function Basic() {
         <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter your wallet name below
         </div>
-        <div className="mt-4 flex flex-col items-start">
+        <div className="mt-4 flex w-full flex-col items-start md:w-auto">
           <label className="font-medium text-white">Wallet name</label>
           <Field
             name="walletName"

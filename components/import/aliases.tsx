@@ -104,7 +104,7 @@ function Aliases() {
                           className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
-                          <div className="flex flex-col">
+                          <div className="flex w-full flex-col md:w-auto">
                             <label className="text-white">
                               <span className="md:hidden">Owner name</span>
                               {index === 0 ? (

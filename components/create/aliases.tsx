@@ -130,10 +130,10 @@ function Aliases() {
                         <div
                           className={`${
                             index > 0 ? "-mt-8" : ""
-                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
+                          } md:p-none flex min-w-full flex-col items-start justify-start px-2 md:flex-row md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
+                          <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto">
                             <label className="text-white">
                               {index === 0 ? "Owner Name" : ""}
                             </label>
@@ -149,7 +149,7 @@ function Aliases() {
                                 });
                               }}
                               name={`validators.${index}.name`}
-                              className="md:text-md rounded p-2 text-sm"
+                              className="md:text-md w-full rounded p-2 text-sm"
                               placeholder={validator.name || "Owner Name"}
                             />
                             <ErrorMessage
@@ -157,7 +157,7 @@ function Aliases() {
                               render={renderError}
                             />
                           </div>
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3 md:grow">
+                          <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto md:grow">
                             <label
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
@@ -176,8 +176,8 @@ function Aliases() {
                               render={renderError}
                             />
                           </div>
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
-                            <span></span>
+                          <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto">
+                            <span className="hidden md:inline"></span>
                             <button
                               type="button"
                               className={
@@ -203,7 +203,7 @@ function Aliases() {
                     })}
                   <button
                     type="button"
-                    className="mx-auto mt-4 block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
+                    className="mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white md:mt-4 "
                     onClick={e => {
                       e.preventDefault();
                       push({ name: "", address: "" });
