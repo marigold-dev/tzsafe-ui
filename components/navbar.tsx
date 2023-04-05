@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
+import tzSafeLogo from "../assets/images/TzSafe.svg";
 import { PREFERED_NETWORK } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import LinkComponent from "./links";
@@ -36,8 +38,8 @@ const NavBar = (_: React.PropsWithChildren) => {
                 href={"/"}
                 className="flex items-center text-xl font-bold tracking-wider text-white"
               >
-                <img
-                  src="/tzsafe.svg"
+                <Image
+                  src={tzSafeLogo}
                   alt="Tzsafe logo"
                   className="h-16 w-auto"
                 />
