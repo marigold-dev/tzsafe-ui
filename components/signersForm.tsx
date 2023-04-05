@@ -321,7 +321,7 @@ const SignersForm: FC<{
                               <label className="text-white">
                                 <span className="md:hidden">Owner name</span>
                                 {index === 0 ? (
-                                  <span className="hidden md:visible">
+                                  <span className="hidden md:inline">
                                     Owner Name
                                   </span>
                                 ) : (
@@ -346,7 +346,7 @@ const SignersForm: FC<{
                               >
                                 <span className="md:hidden">Owner address</span>
                                 {index === 0 ? (
-                                  <span className="hidden md:visible">
+                                  <span className="hidden md:inline">
                                     Owner address
                                   </span>
                                 ) : (

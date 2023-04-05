@@ -108,7 +108,7 @@ function Aliases() {
                             <label className="text-white">
                               <span className="md:hidden">Owner name</span>
                               {index === 0 ? (
-                                <span className="hidden md:visible">
+                                <span className="hidden md:inline">
                                   Owner Name
                                 </span>
                               ) : (
@@ -132,7 +132,7 @@ function Aliases() {
                             >
                               <span className="md:hidden">Owner Address</span>
                               {index === 0 ? (
-                                <span className="hidden md:visible">
+                                <span className="hidden md:inline">
                                   Owner Address
                                 </span>
                               ) : (

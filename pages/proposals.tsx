@@ -154,14 +154,14 @@ const Proposals = () => {
                           "Expired"
                         ) : shouldResolve ? (
                           <span>
-                            <span className="hidden md:visible">
+                            <span className="hidden md:inline">
                               Waiting for resolution
                             </span>
                             <span className="md:hidden">Pending</span>
                           </span>
                         ) : hasSigned ? (
                           <span>
-                            <span className="hidden md:visible">
+                            <span className="hidden md:inline">
                               Waiting for signers
                             </span>
                             <span className="md:hidden">Pending</span>
