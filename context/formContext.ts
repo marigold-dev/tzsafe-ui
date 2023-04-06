@@ -8,7 +8,9 @@ const FormContext = createContext<null | {
       validators?: { address: string; name: string }[];
       requiredSignatures: number;
       walletName?: string;
-      effectivePeriod: number;
+      days: string | undefined;
+      hours: string | undefined;
+      minutes: string | undefined;
     } | null>
   >;
   formState: {
@@ -16,7 +18,9 @@ const FormContext = createContext<null | {
     requiredSignatures: number;
     walletName?: string;
     walletAddress?: string;
-    effectivePeriod: number;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
   } | null;
   formStatus: string;
   setFormStatus: React.Dispatch<React.SetStateAction<string>>;

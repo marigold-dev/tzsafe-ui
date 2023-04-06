@@ -7,6 +7,7 @@ import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fetchVersion from "../../context/metadata";
 import { AppStateContext } from "../../context/state";
+import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
 import renderError from "../renderError";
@@ -94,12 +95,16 @@ function Basic() {
             name: state.aliases[x] || "",
           }));
 
+          const duration = secondsToDuration(
+            storage.effective_period.toNumber()
+          );
+
           const data = {
             ...formState,
             ...values,
+            ...duration.toObject(),
             validators,
             requiredSignatures: storage.threshold.toNumber(),
-            effectivePeriod: storage.effective_period.toNumber(),
           };
           setFormState(data as any);
           setActiveStepIndex(activeStepIndex + 1);

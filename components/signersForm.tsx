@@ -9,14 +9,17 @@ import {
   FormikErrors,
 } from "formik";
 import { useRouter } from "next/router";
-import { FC, useContext, useEffect, useState } from "react";
+import { FC, useContext, useEffect, useMemo, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { adaptiveTime } from "../utils/adaptiveTime";
+import {
+  durationOfDaysHoursMinutes,
+  secondsToDuration,
+} from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
@@ -50,6 +53,17 @@ const SignersForm: FC<{
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
 
+  const duration = useMemo(() => {
+    if (
+      ["0.0.6", "0.0.8", "0.0.9", "unknown version"].includes(
+        props.contract.version
+      )
+    )
+      return undefined;
+
+    return secondsToDuration(props.contract.effective_period).toObject();
+  }, [props.contract]);
+
   useEffect(() => {
     if (loading || result === undefined) return;
 
@@ -61,17 +75,18 @@ const SignersForm: FC<{
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
-    effectivePeriod: number | undefined;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
     validatorsError?: string;
   } = {
     validators: signers(props.contract).map(x => ({
       address: x,
       name: state.aliases[x] || "",
     })),
-    effectivePeriod:
-      props.contract.version >= "0.0.10"
-        ? props.contract.effective_period
-        : undefined,
+    days: duration?.days?.toString(),
+    hours: duration?.hours?.toString(),
+    minutes: duration?.minutes?.toString(),
     requiredSignatures: props.contract.threshold,
   };
 
@@ -212,7 +227,10 @@ const SignersForm: FC<{
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
           validatorsError?: string;
-          effectivePeriod?: string;
+          days?: string;
+          hours?: string;
+          minutes?: string;
+          proposalDuration?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -242,11 +260,41 @@ const SignersForm: FC<{
           errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
-        const parsedNumber = Number(values.effectivePeriod);
-        if (isNaN(parsedNumber) || parsedNumber <= 0) {
-          errors.effectivePeriod = "Invalid duration";
-          return errors;
+        const parsedDays = Number(values.days);
+        if (
+          !!values.days &&
+          (isNaN(parsedDays) ||
+            !Number.isInteger(parsedDays) ||
+            parsedDays <= 0)
+        ) {
+          errors.days = "Invalid days";
         }
+
+        const parsedHours = Number(values.hours);
+        if (
+          !!values.hours &&
+          (isNaN(parsedHours) ||
+            !Number.isInteger(parsedHours) ||
+            parsedHours <= 0)
+        ) {
+          errors.hours = "Invalid hours";
+        }
+
+        const parsedMinutes = Number(values.minutes);
+        if (
+          !!values.minutes &&
+          (isNaN(parsedMinutes) ||
+            !Number.isInteger(parsedMinutes) ||
+            parsedMinutes <= 0)
+        ) {
+          errors.minutes = "Invalid minutes";
+        }
+
+        if (!values.days && !values.hours && !values.minutes) {
+          errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (Object.values(errors).length > 1) return errors;
 
         if (
           result.every(x => x.address === "" && x.name === "") &&
@@ -267,7 +315,13 @@ const SignersForm: FC<{
             getOps(
               values.validators,
               values.requiredSignatures,
-              values.effectivePeriod
+              Math.ceil(
+                durationOfDaysHoursMinutes(
+                  values.days,
+                  values.hours,
+                  values.minutes
+                ).toMillis() / 1000
+              )
             )
           );
           setResult(true);
@@ -293,11 +347,32 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => {
+        console.log(
+          getOps(
+            values.validators,
+            values.requiredSignatures,
+            Math.ceil(
+              durationOfDaysHoursMinutes(
+                values.days,
+                values.hours,
+                values.minutes
+              ).toMillis() / 1000
+            )
+          ),
+          errors
+        );
+
         const hasNoChange =
           getOps(
             values.validators,
             values.requiredSignatures,
-            values.effectivePeriod
+            Math.ceil(
+              durationOfDaysHoursMinutes(
+                values.days,
+                values.hours,
+                values.minutes
+              ).toMillis() / 1000
+            )
           ).length === 0;
 
         return (
@@ -314,7 +389,7 @@ const SignersForm: FC<{
                       values.validators.map((validator, index) => {
                         return (
                           <div
-                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4"
                             key={index}
                           >
                             <div className="flex w-full flex-col md:w-auto">
@@ -454,25 +529,47 @@ const SignersForm: FC<{
               <ErrorMessage name={`requiredSignatures`} render={renderError} />
             </div>
 
-            <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">
-                Proposal duration (in seconds)
-              </label>
-              <Field
-                disabled={props.disabled}
-                className="mt-2 w-full rounded p-2 text-black"
-                as="select"
-                component="input"
-                name="effectivePeriod"
-                placeholder={props.contract.effectivePeriod}
-              ></Field>
-              <p className="mt-2 text-lg text-white">
-                {adaptiveTime(values.effectivePeriod?.toString() ?? "")}
-              </p>
-              <ErrorMessage name={`effectivePeriod`} render={renderError} />
+            <div className="mt-4 w-full">
+              <h3 className="text-lg text-white">Proposal duration</h3>
+              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Days</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="days"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="days" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Hours</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="hours"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="hours" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Minutes</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="minutes"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="minutes" render={renderError} />
+                </div>
+              </div>
+              {/* @ts-ignore*/}
+              {!!errors.proposalDuration &&
+                // @ts-ignore
+                renderError(errors.proposalDuration)}
             </div>
 
-            <div className="flex w-full justify-center">
+            <div className="mt-6 flex w-full justify-center">
               <button
                 className={`${
                   (props.disabled ?? false) ||

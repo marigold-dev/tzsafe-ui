@@ -38,18 +38,30 @@ function Aliases() {
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
   } = {
     validators: formState?.validators!,
     requiredSignatures: formState?.requiredSignatures!,
+    days: formState?.days,
+    hours: formState?.hours,
+    minutes: formState?.minutes,
   };
 
   return (
     <Formik
       initialValues={initialProps}
       validate={values => {
-        const errors: { validators: { address: string; name: string }[] } = {
-          validators: [],
-        };
+        const errors: {
+          validators: { address: string; name: string }[];
+          requiredSignatures?: any;
+          validatorsError?: string;
+          days?: string;
+          hours?: string;
+          minutes?: string;
+          proposalDuration?: string;
+        } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
 
@@ -180,24 +192,38 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          {!!formState?.effectivePeriod && (
-            <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">
-                Proposal duration (in seconds)
-              </label>
-              <Field
-                disabled
-                component="input"
-                name="effectivePeriod"
-                value={formState.effectivePeriod}
-                className="mt-2 w-full rounded p-2"
-              />
-              <p className="mt-2 text-lg text-white">
-                {adaptiveTime(formState.effectivePeriod.toString())}
-              </p>
-              <ErrorMessage name={`effectivePeriod`} render={renderError} />
+          <div className="mt-4 w-full">
+            <h3 className="text-lg text-white">Proposal duration</h3>
+            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Days</label>
+                <Field
+                  disabled
+                  name="days"
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Hours</label>
+                <Field
+                  name="hours"
+                  disabled
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Minutes</label>
+                <Field
+                  name="minutes"
+                  disabled
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
             </div>
-          )}
+          </div>
           <div className="mt-8 flex space-x-6">
             <Link
               type="button"

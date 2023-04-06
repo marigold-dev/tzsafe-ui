@@ -8,7 +8,8 @@
     "start": "next start --port 80",
     "lint": "next lint",
     "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "vitest"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/luxon": "^3.2.0",
+    "@vitejs/plugin-react": "^3.1.0",
     "autoprefixer": "^10.4.13",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.3",
@@ -43,6 +45,7 @@
     "postcss": "^8.4.19",
     "prettier": "^2.8.4",
     "prettier-plugin-tailwindcss": "^0.2.3",
-    "tailwindcss": "^3.2.4"
+    "tailwindcss": "^3.2.4",
+    "vitest": "^0.29.8"
   }
 }
