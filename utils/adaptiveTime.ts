@@ -82,7 +82,9 @@ export function countdown(x: string, createdOn: string): string {
 export const parseIntOr = <T>(
   value: string | undefined,
   defaultValue: T
-): number | T => (isNaN(Number(value)) ? defaultValue : Number(value));
+): number | T =>
+  // The double number allows to only return an int and not a float
+  isNaN(Number(value)) ? defaultValue : Math.floor(Number(value));
 
 export const durationOfDaysHoursMinutes = (
   days: string | undefined,
@@ -93,7 +95,9 @@ export const durationOfDaysHoursMinutes = (
     days: parseIntOr(days, undefined),
     hours: parseIntOr(hours, undefined),
     minutes: parseIntOr(minutes, undefined),
-  });
+  })
+    .normalize()
+    .rescale();
 
 export const secondsToDuration = (seconds: number): Duration => {
   const duration = Duration.fromMillis(seconds * 1000)
