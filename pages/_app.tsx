@@ -33,7 +33,6 @@ export default function App({ Component, pageProps }: AppProps) {
   );
 
   const [hasSidebar, setHasSidebar] = useState(false);
-  const [hasBanner, setHasBanner] = useState(true);
 
   const path = usePathname();
   const router = useRouter();

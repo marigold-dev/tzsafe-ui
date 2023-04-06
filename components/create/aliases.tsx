@@ -12,7 +12,6 @@ import React from "react";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
-import { adaptiveTime } from "../../utils/adaptiveTime";
 import renderError from "../renderError";
 import TextInputWithCompletion from "../textInputWithComplete";
 
@@ -44,14 +43,18 @@ function Aliases() {
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
-    effectivePeriod: number;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
     validatorsError?: string;
   } = {
     validators: [
       { address: state.address!, name: state.aliases[state.address!] || "" },
     ],
     requiredSignatures: 1,
-    effectivePeriod: 86_400 * 7,
+    days: "1",
+    hours: undefined,
+    minutes: undefined,
     validatorsError: "",
   };
   return (
@@ -60,8 +63,12 @@ function Aliases() {
       validate={values => {
         const errors: {
           validators: { address: string; name: string }[];
+          requiredSignatures?: any;
           validatorsError?: string;
-          effectivePeriod?: string;
+          days?: string;
+          hours?: string;
+          minutes?: string;
+          proposalDuration?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -92,11 +99,41 @@ function Aliases() {
           return err;
         });
 
-        const parsedNumber = Number(values.effectivePeriod);
-        if (isNaN(parsedNumber) || parsedNumber <= 0) {
-          errors.effectivePeriod = "Invalid duration";
-          return errors;
+        const parsedDays = Number(values.days);
+        if (
+          !!values.days &&
+          (isNaN(parsedDays) ||
+            !Number.isInteger(parsedDays) ||
+            parsedDays <= 0)
+        ) {
+          errors.days = "Invalid days";
         }
+
+        const parsedHours = Number(values.hours);
+        if (
+          !!values.hours &&
+          (isNaN(parsedHours) ||
+            !Number.isInteger(parsedHours) ||
+            parsedHours <= 0)
+        ) {
+          errors.hours = "Invalid hours";
+        }
+
+        const parsedMinutes = Number(values.minutes);
+        if (
+          !!values.minutes &&
+          (isNaN(parsedMinutes) ||
+            !Number.isInteger(parsedMinutes) ||
+            parsedMinutes <= 0)
+        ) {
+          errors.minutes = "Invalid minutes";
+        }
+
+        if (!values.days && !values.hours && !values.minutes) {
+          errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (Object.values(errors).length > 1) return errors;
 
         if (
           result.every(x => x.address === "" && x.name === "") &&
@@ -130,7 +167,7 @@ function Aliases() {
                         <div
                           className={`${
                             index > 0 ? "-mt-8" : ""
-                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-4 px-2 md:flex-row md:rounded-none md:border-none`}
+                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-0 md:flex-row md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
@@ -215,7 +252,7 @@ function Aliases() {
               )}
             </FieldArray>
           </div>
-          <div className="flex w-full grow flex-col p-2">
+          <div className="flex w-full grow flex-col">
             <label className="mr-4 text-white">Threshold </label>
             <Field
               component="select"
@@ -234,20 +271,41 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          <div className="flex w-full grow flex-col p-2">
-            <label className="mr-4 text-white">
-              Proposal duration (in seconds)
-            </label>
-            <Field
-              component="input"
-              className="mt-2 rounded p-2 text-black"
-              name="effectivePeriod"
-              values={values.requiredSignatures}
-            />
-            <p className="mt-2 text-lg text-white">
-              {adaptiveTime(values.effectivePeriod.toString())}
-            </p>
-            <ErrorMessage name={`effectivePeriod`} render={renderError} />
+          <div className="mt-4 w-full">
+            <h3 className="text-lg text-white">Proposal duration</h3>
+            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Days</label>
+                <Field
+                  name="days"
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+                <ErrorMessage name="days" render={renderError} />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Hours</label>
+                <Field
+                  name="hours"
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+                <ErrorMessage name="hours" render={renderError} />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Minutes</label>
+                <Field
+                  name="minutes"
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+                <ErrorMessage name="minutes" render={renderError} />
+              </div>
+            </div>
+            {/* @ts-ignore*/}
+            {!!errors.proposalDuration &&
+              // @ts-ignore
+              renderError(errors.proposalDuration)}
           </div>
           <div className="mt-8 mb-8 flex space-x-6">
             <Link
