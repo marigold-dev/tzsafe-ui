@@ -18,6 +18,7 @@ import {
 } from "../context/state";
 import {
   durationOfDaysHoursMinutes,
+  parseIntOr,
   secondsToDuration,
 } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
@@ -240,16 +241,16 @@ const SignersForm: FC<{
         let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
-            err.address = "already exists";
+            err.address = "Please enter each account only once";
           } else {
             dedup.add(x.address);
             err.address =
               validateAddress(x.address) !== 3
-                ? `invalid address ${x.address}`
+                ? `Invalid address ${x.address}`
                 : "";
           }
           if (!!x.name && dedupName.has(x.name)) {
-            err.name = "already exists";
+            err.name = "Alias already exists";
           } else {
             dedupName.add(x.name);
           }
@@ -257,15 +258,13 @@ const SignersForm: FC<{
         });
         errors.validators = result;
         if (values.requiredSignatures > values.validators.length) {
-          errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
+          errors.requiredSignatures = `Threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
         const parsedDays = Number(values.days);
         if (
           !!values.days &&
-          (isNaN(parsedDays) ||
-            !Number.isInteger(parsedDays) ||
-            parsedDays <= 0)
+          (isNaN(parsedDays) || !Number.isInteger(parsedDays) || parsedDays < 0)
         ) {
           errors.days = "Invalid days";
         }
@@ -275,7 +274,7 @@ const SignersForm: FC<{
           !!values.hours &&
           (isNaN(parsedHours) ||
             !Number.isInteger(parsedHours) ||
-            parsedHours <= 0)
+            parsedHours < 0)
         ) {
           errors.hours = "Invalid hours";
         }
@@ -285,13 +284,22 @@ const SignersForm: FC<{
           !!values.minutes &&
           (isNaN(parsedMinutes) ||
             !Number.isInteger(parsedMinutes) ||
-            parsedMinutes <= 0)
+            parsedMinutes < 0)
         ) {
           errors.minutes = "Invalid minutes";
         }
 
         if (!values.days && !values.hours && !values.minutes) {
           errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (
+          [values.days, values.hours, values.minutes].every(v => {
+            const parsed = parseIntOr(v, undefined);
+            return parsed === 0 || parsed === undefined;
+          })
+        ) {
+          errors.proposalDuration = "One value must at least be more than 0";
         }
 
         if (Object.values(errors).length > 1) return errors;

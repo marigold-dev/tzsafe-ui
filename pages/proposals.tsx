@@ -154,17 +154,17 @@ const Proposals = () => {
                           "Expired"
                         ) : shouldResolve ? (
                           <span>
-                            <span className="hidden md:inline">
+                            <span className="hidden lg:inline">
                               Waiting for resolution
                             </span>
-                            <span className="md:hidden">Pending</span>
+                            <span className="lg:hidden">Pending</span>
                           </span>
                         ) : hasSigned ? (
                           <span>
-                            <span className="hidden md:inline">
+                            <span className="hidden lg:inline">
                               Waiting for signers
                             </span>
-                            <span className="md:hidden">Pending</span>
+                            <span className="lg:hidden">Pending</span>
                           </span>
                         ) : (
                           x[1].ui.status

@@ -12,6 +12,7 @@ import React from "react";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
+import { parseIntOr } from "../../utils/adaptiveTime";
 import renderError from "../renderError";
 import TextInputWithCompletion from "../textInputWithComplete";
 
@@ -78,12 +79,12 @@ function Aliases() {
         let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
-            err.address = "already exists";
+            err.address = "Please enter each account only once";
           } else {
             dedup.add(x.address);
             err.address =
               validateAddress(x.address) !== 3
-                ? `invalid address ${x.address}`
+                ? `Invalid address ${x.address}`
                 : "";
           }
 
@@ -92,7 +93,7 @@ function Aliases() {
             (dedupName.has(x.name) ||
               (!!byName[x.name] && byName[x.name] !== x.address))
           ) {
-            err.name = "alias already exists";
+            err.name = "Alias already exists";
           } else {
             dedupName.add(x.name);
           }
@@ -102,9 +103,7 @@ function Aliases() {
         const parsedDays = Number(values.days);
         if (
           !!values.days &&
-          (isNaN(parsedDays) ||
-            !Number.isInteger(parsedDays) ||
-            parsedDays <= 0)
+          (isNaN(parsedDays) || !Number.isInteger(parsedDays) || parsedDays < 0)
         ) {
           errors.days = "Invalid days";
         }
@@ -114,7 +113,7 @@ function Aliases() {
           !!values.hours &&
           (isNaN(parsedHours) ||
             !Number.isInteger(parsedHours) ||
-            parsedHours <= 0)
+            parsedHours < 0)
         ) {
           errors.hours = "Invalid hours";
         }
@@ -124,13 +123,22 @@ function Aliases() {
           !!values.minutes &&
           (isNaN(parsedMinutes) ||
             !Number.isInteger(parsedMinutes) ||
-            parsedMinutes <= 0)
+            parsedMinutes < 0)
         ) {
           errors.minutes = "Invalid minutes";
         }
 
         if (!values.days && !values.hours && !values.minutes) {
           errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (
+          [values.days, values.hours, values.minutes].every(v => {
+            const parsed = parseIntOr(v, undefined);
+            return parsed === 0 || parsed === undefined;
+          })
+        ) {
+          errors.proposalDuration = "One value must at least be more than 0";
         }
 
         if (Object.values(errors).length > 1) return errors;

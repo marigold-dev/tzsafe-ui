@@ -113,7 +113,7 @@ export default function App({ Component, pageProps }: AppProps) {
             } ${state.hasBanner ? "mt-12" : ""}`}
           >
             <button
-              className="ml-4 mt-4 flex items-center space-x-2 text-zinc-500 md:hidden"
+              className="ml-6 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
               onClick={() => {
                 setHasSidebar(true);
               }}
