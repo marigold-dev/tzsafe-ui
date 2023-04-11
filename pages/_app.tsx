@@ -91,6 +91,10 @@ export default function App({ Component, pageProps }: AppProps) {
     })();
   }, [state, dispatch]);
 
+  useEffect(() => {
+    setHasSidebar(false);
+  }, [path]);
+
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>

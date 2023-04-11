@@ -29,7 +29,7 @@ const NavBar = (_: React.PropsWithChildren) => {
     <nav
       className={`${menuOpen ? "h-auto" : "h-20"} fixed ${
         state?.hasBanner ? "top-12" : "top-0"
-      } left-0 right-0 z-10 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
+      } left-0 right-0 z-50 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
       <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">
@@ -132,8 +132,27 @@ const NavBar = (_: React.PropsWithChildren) => {
               )}
             </div>
           </div>
+
           {state && state.contracts && (
-            <div className={`-mr-2  flex md:hidden`}>
+            <div className={`-mr-2 flex space-x-4 md:hidden`}>
+              {state?.address == null ? (
+                <div className="mx-2 flex items-center justify-center pb-2">
+                  <LoginButton />
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <div className="md:ml-3">
+                    <div className="text-base font-medium leading-none text-white">
+                      {state?.address.slice(0, 3) +
+                        "..." +
+                        state?.address.slice(33)}
+                    </div>
+                    <div className="text-right text-sm font-medium leading-none text-white">
+                      {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}
+                    </div>
+                  </div>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -201,48 +220,6 @@ const NavBar = (_: React.PropsWithChildren) => {
             text={"Import wallet"}
           />
         </div>
-        {state?.address == null ? (
-          <div className="mx-2 flex items-center justify-center pb-2">
-            <LoginButton />
-          </div>
-        ) : (
-          <div className="flex w-full items-center justify-start space-y-1 px-5 pt-2 pb-3 sm:px-3">
-            <div className="flex items-center">
-              <div className="md:ml-3">
-                <div className="text-base font-medium leading-none text-white">
-                  {state?.address.slice(0, 3) +
-                    "..." +
-                    state?.address.slice(33)}
-                </div>
-                <div className="text-sm font-medium leading-none text-white">
-                  {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => console.log("todo")}
-              type="button"
-              className="ml-auto hidden flex-shrink-0 rounded-full bg-zinc-800 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-zinc-800"
-            >
-              <span className="sr-only">View notifications</span>
-              <svg
-                className="h-6 w-6 fill-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="white"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                />
-              </svg>
-            </button>
-          </div>
-        )}
 
         <div className="-mt-1 space-y-1 px-2">
           <button
