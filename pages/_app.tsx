@@ -116,15 +116,18 @@ export default function App({ Component, pageProps }: AppProps) {
               Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
             } ${state.hasBanner ? "mt-12" : ""}`}
           >
-            <button
-              className="ml-6 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
-              onClick={() => {
-                setHasSidebar(true);
-              }}
-            >
-              <span className="text-xs">Open sidebar</span>
-              <ArrowRightIcon className="h-4 w-4" />
-            </button>
+            {Object.entries(state.contracts).length > 0 && (
+              <button
+                className="ml-6 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
+                onClick={() => {
+                  setHasSidebar(true);
+                }}
+              >
+                <span className="text-xs">Open sidebar</span>
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            )}
+
             {path === "/" && !!state.currentContract ? (
               <Proposals />
             ) : (

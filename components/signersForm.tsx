@@ -355,21 +355,6 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => {
-        console.log(
-          getOps(
-            values.validators,
-            values.requiredSignatures,
-            Math.ceil(
-              durationOfDaysHoursMinutes(
-                values.days,
-                values.hours,
-                values.minutes
-              ).toMillis() / 1000
-            )
-          ),
-          errors
-        );
-
         const hasNoChange =
           getOps(
             values.validators,
