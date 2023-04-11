@@ -144,13 +144,13 @@ function ProposalSignForm({
   return (
     <Formik
       initialValues={{
-        flag: typeof modalState === "undefined" ? "1" : "0",
+        flag: false,
       }}
       onSubmit={async values => {
         setLoading(true);
 
         try {
-          await sign(id, proposal.og, modalState, values.flag === "1");
+          await sign(id, proposal.og, modalState, values.flag);
           onSuccess?.();
           setResult(true);
           setLoading(false);
@@ -205,16 +205,13 @@ function ProposalSignForm({
             : proposal.ui.signatures.length + 1 >= threshold && (
                 <div className="mb-2 flex w-full flex-col justify-between md:flex-row md:items-center ">
                   <label className="font-medium text-white">
-                    Try to resolve immediately?:
+                    Try to resolve immediately:
                   </label>
                   <Field
                     name="flag"
-                    as="select"
+                    type="checkbox"
                     className="mt-2 rounded-md p-2 md:mt-0"
-                  >
-                    <option value="1">Yes</option>
-                    <option value="0">No</option>
-                  </Field>
+                  />
                 </div>
               ))}
         <ErrorMessage name="flag" render={renderError} />
