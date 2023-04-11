@@ -10,7 +10,6 @@ import LoginButton from "./loginButton";
 
 const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
-  let [loginOpen, setLoginOpen] = useState(false);
 
   const router = useRouter();
   const state = useContext(AppStateContext);
@@ -181,10 +180,11 @@ const NavBar = (_: React.PropsWithChildren) => {
         </div>
       </div>
 
-      <div className={`${menuOpen ? "" : "hidden"} md:hidden`} id="mobile-menu">
-        <div
-          className={`space-y-1 px-2 pt-2 pb-3 text-center sm:px-3 md:hidden`}
-        >
+      <div
+        className={`${menuOpen ? "" : "hidden"} w-full md:hidden`}
+        id="mobile-menu"
+      >
+        <div className={`w-full space-y-1 px-2 pt-2 pb-3 text-left sm:px-3`}>
           <LinkComponent
             onClick={closeMenu}
             path="/address-book"
@@ -206,17 +206,9 @@ const NavBar = (_: React.PropsWithChildren) => {
             <LoginButton />
           </div>
         ) : (
-          <div className="flex items-center px-5 pb-2">
-            <div
-              className="flex items-center"
-              onClick={() =>
-                loginOpen ? setLoginOpen(false) : setLoginOpen(true)
-              }
-            >
-              <div className="flex-shrink-0">
-                <div className="font-xs relative h-14 w-14 items-center rounded-full bg-red-500 text-center font-bold"></div>
-              </div>
-              <div className="ml-3">
+          <div className="flex w-full items-center justify-start space-y-1 px-5 pt-2 pb-3 sm:px-3">
+            <div className="flex items-center">
+              <div className="md:ml-3">
                 <div className="text-base font-medium leading-none text-white">
                   {state?.address.slice(0, 3) +
                     "..." +
@@ -252,10 +244,7 @@ const NavBar = (_: React.PropsWithChildren) => {
           </div>
         )}
 
-        <div
-          id={`${loginOpen}`}
-          className={`mt-3 space-y-1 px-2 ${loginOpen ? "block" : "hidden"}`}
-        >
+        <div className="-mt-1 space-y-1 px-2">
           <button
             onClick={async e => {
               e.preventDefault();
