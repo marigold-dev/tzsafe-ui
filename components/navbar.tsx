@@ -5,6 +5,7 @@ import React, { useContext, useState } from "react";
 import tzSafeLogo from "../assets/images/TzSafe.svg";
 import { PREFERED_NETWORK } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import Alias from "./Alias";
 import LinkComponent from "./links";
 import LoginButton from "./loginButton";
 
@@ -143,9 +144,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <div className="flex items-center">
                   <div className="md:ml-3">
                     <div className="text-base font-medium leading-none text-white">
-                      {state?.address.slice(0, 3) +
-                        "..." +
-                        state?.address.slice(33)}
+                      <Alias address={state.address} length={3} />
                     </div>
                     <div className="text-right text-sm font-medium leading-none text-white">
                       {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}

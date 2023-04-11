@@ -177,11 +177,11 @@ export const RenderProposalContent = ({
   }
 
   return (
-    <div className="after:content[''] relative w-full after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 lg:after:hidden">
+    <div className="after:content[''] relative w-full text-sm after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
         className={`${
           !data.params ? "cursor-default" : ""
-        } grid w-full grid-cols-3 gap-4 text-left lg:grid-cols-6`}
+        } grid w-full grid-cols-2 gap-4 text-left lg:grid-cols-6`}
         onClick={() => {
           if (!data.params) return;
 
@@ -193,15 +193,15 @@ export const RenderProposalContent = ({
         <span
           className={`${!data.label ? "text-zinc-500" : ""} justify-self-start`}
         >
-          <p className="text-zinc-500 lg:hidden">Function</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Function</p>
           {data.label ?? "-"}
         </span>
         <span
           className={`${
             !data.metadata ? "text-zinc-500" : ""
-          } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
+          } w-auto justify-self-end text-right lg:w-full lg:w-auto lg:justify-self-start lg:text-left`}
         >
-          <p className="flex justify-center text-zinc-500 lg:hidden">
+          <p className="flex justify-center font-medium text-zinc-500 lg:hidden">
             Metadata
             <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
               <InfoCircledIcon className="ml-2 h-4 w-4" />
@@ -212,23 +212,23 @@ export const RenderProposalContent = ({
         <span
           className={`${
             !data.amount ? "text-zinc-500" : ""
-          } justify-self-end text-right lg:justify-self-center`}
+          } justify-self-start text-left lg:justify-self-center lg:text-right`}
         >
-          <p className="text-zinc-500 lg:hidden">Amount</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Amount</p>
           {!data.amount ? "-" : `${data.amount}`}
         </span>
         {!data.addresses ? (
-          <span className="justify-self-start text-zinc-500 lg:justify-self-center">
-            <p className="text-zinc-500 lg:hidden">Address</p>-
+          <span className="lg:text-auto justify-self-end text-right text-zinc-500 lg:justify-self-center">
+            <p className="font-medium text-zinc-500 lg:hidden">Address</p>-
           </span>
         ) : data.addresses.length === 1 ? (
-          <span className="justify-self-start lg:justify-self-center">
-            <p className="text-zinc-500 lg:hidden">Address</p>
+          <span className="lg:text-auto justify-self-end text-right lg:justify-self-center">
+            <p className="font-medium text-zinc-500 lg:hidden">Address</p>
             <Alias address={data.addresses[0]} />
           </span>
         ) : (
-          <ul className="justify-self-start lg:justify-self-center">
-            <li className="text-zinc-500 lg:hidden">Addresses</li>
+          <ul className="lg:text-auto justify-self-end text-right lg:justify-self-center">
+            <li className="font-medium text-zinc-500 lg:hidden">Addresses</li>
             {data.addresses.map((address, i) => (
               <li key={i}>
                 <Alias address={address} />
@@ -239,10 +239,10 @@ export const RenderProposalContent = ({
         <span
           className={`${
             !data.entrypoints ? "text-zinc-500" : ""
-          } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
+          } justify-self-left w-full text-left lg:w-auto lg:justify-self-end lg:text-center`}
           title={data.entrypoints}
         >
-          <p className="text-zinc-500 lg:hidden">Entrypoint</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Entrypoint</p>
           {!!data.entrypoints ? crop(data.entrypoints, 18) : "-"}
         </span>
         <span
@@ -250,7 +250,7 @@ export const RenderProposalContent = ({
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="text-zinc-500 lg:hidden">Params</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params</p>
           <div>
             {!!data.params
               ? `${
@@ -442,7 +442,7 @@ const ProposalCard = ({
             ))}
           </div>
         </section>
-        <section>
+        <section className="text-sm md:text-base">
           <span className="text-xl font-bold">Activity</span>
           {isSignable && (
             <p className="mt-2 font-light lg:hidden">
