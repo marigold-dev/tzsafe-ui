@@ -12,7 +12,7 @@ import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
 import { adaptiveTime } from "../../utils/adaptiveTime";
-import renderError from "../renderError";
+import renderError from "../formUtils";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>

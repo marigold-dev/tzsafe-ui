@@ -10,7 +10,11 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useMemo, useState } from "react";
-import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import {
+  MODAL_TIMEOUT,
+  PREFERED_NETWORK,
+  PROPOSAL_DURATION_WARNING,
+} from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -24,7 +28,7 @@ import {
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError, { renderWarning } from "./formUtils";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -355,17 +359,17 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => {
+        const currentDuration = durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis();
+
         const hasNoChange =
           getOps(
             values.validators,
             values.requiredSignatures,
-            Math.ceil(
-              durationOfDaysHoursMinutes(
-                values.days,
-                values.hours,
-                values.minutes
-              ).toMillis() / 1000
-            )
+            Math.ceil(currentDuration / 1000)
           ).length === 0;
 
         return (
@@ -476,6 +480,12 @@ const SignersForm: FC<{
                           </div>
                         );
                       })}
+                    {values.validators.length > 0 &&
+                      !values.validators.find(
+                        v => v.address === state.address
+                      ) &&
+                      renderWarning("Your address is not in the owners")}
+
                     <button
                       type="button"
                       className={`${
@@ -557,9 +567,14 @@ const SignersForm: FC<{
                 </div>
               </div>
               {/* @ts-ignore*/}
-              {!!errors.proposalDuration &&
-                // @ts-ignore
-                renderError(errors.proposalDuration)}
+              {!!errors.proposalDuration
+                ? // @ts-ignore
+                  renderError(errors.proposalDuration)
+                : currentDuration < PROPOSAL_DURATION_WARNING
+                ? renderWarning(
+                    "Proposal duration is low, you may not be able to resolve proposals"
+                  )
+                : null}
             </div>
 
             <div className="mt-6 flex w-full justify-center">

@@ -10,7 +10,7 @@ import { VersionedApi } from "../versioned/apis";
 import { RenderProposalContent } from "./ProposalCard";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError from "./formUtils";
 
 function ProposalSignForm({
   address,

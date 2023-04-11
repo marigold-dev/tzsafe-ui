@@ -10,7 +10,7 @@ import {
 } from "../context/state";
 import { toStorage } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError from "./formUtils";
 
 function TopUp(props: {
   address: string;

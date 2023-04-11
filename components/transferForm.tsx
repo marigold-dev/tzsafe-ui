@@ -26,7 +26,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
 
 function capitalizeFirstLetter(s: string): string {

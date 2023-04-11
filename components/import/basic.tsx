@@ -10,7 +10,7 @@ import { AppStateContext } from "../../context/state";
 import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
-import renderError from "../renderError";
+import renderError from "../formUtils";
 
 function Basic() {
   const [isLoading, setIsLoading] = useState(false);

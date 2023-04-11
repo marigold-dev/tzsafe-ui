@@ -8,8 +8,8 @@ import {
   FormikErrors,
 } from "formik";
 import { useContext } from "react";
+import renderError from "../components/formUtils";
 import Meta from "../components/meta";
-import renderError from "../components/renderError";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 
 function get(
