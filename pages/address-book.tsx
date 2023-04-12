@@ -92,6 +92,7 @@ function Home() {
 
                   return err;
                 });
+
                 if (
                   result.every(x => x.address === "" && x.name === "") &&
                   typeof errors.validatorsError == "undefined"
@@ -99,6 +100,7 @@ function Home() {
                   return;
                 }
                 errors.validators = result;
+
                 return errors;
               }}
               onSubmit={values => {
@@ -114,7 +116,7 @@ function Home() {
                     errors.validators as
                       | { name: string; address: string }[]
                       | undefined
-                  )?.every(v => v.address === "" && v.name === "") ??
+                  )?.every(v => !!v && v.address === "" && v.name === "") ??
                     true) &&
                   (!errors.validators || errors.validatorsError === "");
 

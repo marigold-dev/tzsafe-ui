@@ -334,7 +334,7 @@ function Aliases() {
                   renderError(errors.proposalDuration)
                 : currentDuration < PROPOSAL_DURATION_WARNING
                 ? renderWarning(
-                    "Proposal duration is low, you may not be able to resolve proposals"
+                    "Proposal duration is low, you may not be able to execute the proposals"
                   )
                 : null}
             </div>
