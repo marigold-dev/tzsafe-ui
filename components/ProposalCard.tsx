@@ -461,14 +461,19 @@ const ProposalCard = ({
           <div className="mt-2 space-y-2 font-light">
             <div className="grid grid-cols-3">
               <span className="w-full font-light">
-                {proposalDate.toLocaleDateString()} -{" "}
-                {`${proposalDate
-                  .getHours()
-                  .toString()
-                  .padStart(2, "0")}:${proposalDate
-                  .getMinutes()
-                  .toString()
-                  .padStart(2, "0")}`}
+                <span>
+                  <span>{proposalDate.toLocaleDateString()}</span>
+                  <span className="hidden lg:inline">
+                    -{" "}
+                    {`${proposalDate
+                      .getHours()
+                      .toString()
+                      .padStart(2, "0")}:${proposalDate
+                      .getMinutes()
+                      .toString()
+                      .padStart(2, "0")}`}
+                  </span>
+                </span>
               </span>
               <span className="justify-self-center">
                 <span className="hidden lg:inline">

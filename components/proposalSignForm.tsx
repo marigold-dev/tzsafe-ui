@@ -203,14 +203,14 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="mb-2 flex w-full flex-col justify-between md:flex-row md:items-center ">
+                <div className="mb-2 flex w-full items-center justify-between">
                   <label className="font-medium text-white">
                     Try to resolve immediately:
                   </label>
                   <Field
                     name="flag"
                     type="checkbox"
-                    className="mt-2 rounded-md p-2 md:mt-0"
+                    className="rounded-md p-2"
                   />
                 </div>
               ))}
