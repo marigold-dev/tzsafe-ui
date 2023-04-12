@@ -31,7 +31,7 @@ const Alias = ({
 
   return (
     <Copy value={address} text="Copy address">
-      <span className={className}>{toDisplay}</span>
+      <span className={className}>{formatted}</span>
     </Copy>
   );
 };

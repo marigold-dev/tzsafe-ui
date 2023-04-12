@@ -177,7 +177,7 @@ export const RenderProposalContent = ({
   }
 
   return (
-    <div className="after:content[''] relative w-full text-sm after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
+    <div className="after:content[''] relative w-full text-xs after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
         className={`${
           !data.params ? "cursor-default" : ""
@@ -250,7 +250,7 @@ export const RenderProposalContent = ({
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="font-medium text-zinc-500 lg:hidden">Params</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params/Token</p>
           <div>
             {!!data.params
               ? `${
@@ -442,7 +442,7 @@ const ProposalCard = ({
             ))}
           </div>
         </section>
-        <section className="text-sm md:text-base">
+        <section className="text-xs md:text-base">
           <span className="text-xl font-bold">Activity</span>
           {isSignable && (
             <p className="mt-2 font-light lg:hidden">
@@ -471,7 +471,12 @@ const ProposalCard = ({
                   .padStart(2, "0")}`}
               </span>
               <span className="justify-self-center">
-                <Alias address={proposer.actor} />
+                <span className="hidden lg:inline">
+                  <Alias address={proposer.actor} />
+                </span>
+                <span className="lg:hidden">
+                  <Alias address={proposer.actor} length={3} />
+                </span>
               </span>
               <span className="justify-self-end">Proposed</span>
             </div>
@@ -481,7 +486,12 @@ const ProposalCard = ({
                   -
                 </span>
                 <span className="justify-self-center">
-                  <Alias address={signer} />
+                  <span className="hidden lg:inline">
+                    <Alias address={signer} />
+                  </span>
+                  <span className="lg:hidden">
+                    <Alias address={signer} length={3} />
+                  </span>
                 </span>
                 <span className="justify-self-end">
                   {hasApproved ? "Approved" : "Rejected"}
@@ -501,7 +511,12 @@ const ProposalCard = ({
                     .padStart(2, "0")}`}
                 </span>
                 <span className="justify-self-center">
-                  <Alias address={resolver.actor} />
+                  <span className="hidden lg:inline">
+                    <Alias address={resolver.actor} />
+                  </span>
+                  <span className="lg:hidden">
+                    <Alias address={resolver.actor} length={3} />
+                  </span>
                 </span>
                 <span className="justify-self-end">Resolved</span>
               </div>

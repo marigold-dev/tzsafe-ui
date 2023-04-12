@@ -137,7 +137,7 @@ const NavBar = (_: React.PropsWithChildren) => {
           {state && state.contracts && (
             <div className={`-mr-2 flex space-x-4 md:hidden`}>
               {state?.address == null ? (
-                <div className="mx-2 flex items-center justify-center pb-2">
+                <div className="mx-2 flex items-center justify-center">
                   <LoginButton />
                 </div>
               ) : (
@@ -219,18 +219,19 @@ const NavBar = (_: React.PropsWithChildren) => {
             text={"Import wallet"}
           />
         </div>
-
-        <div className="-mt-1 space-y-1 px-2">
-          <button
-            onClick={async e => {
-              e.preventDefault();
-              await disconnectWallet();
-            }}
-            className="block rounded-md px-3 py-2 text-base font-medium  text-white hover:bg-zinc-700 hover:text-white"
-          >
-            Sign out
-          </button>
-        </div>
+        {!!state?.address && (
+          <div className="-mt-1 space-y-1 px-2">
+            <button
+              onClick={async e => {
+                e.preventDefault();
+                await disconnectWallet();
+              }}
+              className="block rounded-md px-3 py-2 text-base font-medium  text-white hover:bg-zinc-700 hover:text-white"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );
