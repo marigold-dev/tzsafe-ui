@@ -150,7 +150,12 @@ function ProposalSignForm({
         setLoading(true);
 
         try {
-          await sign(id, proposal.og, modalState, values.flag);
+          await sign(
+            id,
+            proposal.og,
+            modalState,
+            typeof modalState === "undefined" ? true : values.flag
+          );
           onSuccess?.();
           setResult(true);
           setLoading(false);
