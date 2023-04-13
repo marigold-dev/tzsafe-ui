@@ -288,7 +288,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/fund-wallet"
-          className={linkClass(path === "/fund-wallet")}
+          className={linkClass(path === "/fund-wallet", !state.address)}
           onClick={onClose}
         >
           <svg

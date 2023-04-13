@@ -158,7 +158,7 @@ const SignersForm: FC<{
           , and if it is, {"it'll"} appear in the proposals
         </p>
         <div></div>
-        <div className="mt-8 w-full space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {

@@ -25,6 +25,7 @@ import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
+import Alias from "./Alias";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
@@ -1124,7 +1125,10 @@ function ExecuteContractForm(
         <p className="text-lg text-white">Execute Contract</p>
         <p>
           <span className="font-light">Contract address:</span>{" "}
-          {data.contract_addr}
+          <span className="md:hidden">
+            <Alias address={data.contract_addr} />
+          </span>
+          <span className="hidden md:inline">{data.contract_addr}</span>
         </p>
         <p>
           <span className="font-light">Mutez amount:</span> {data.mutez_amount}
