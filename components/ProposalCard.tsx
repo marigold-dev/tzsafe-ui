@@ -127,6 +127,7 @@ export const RenderProposalContent = ({
           token_id,
         }),
       };
+      // This condition handles some legacy code so old wallets don't crash
     } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
         const contractData = JSON.parse(metadata.meta);
