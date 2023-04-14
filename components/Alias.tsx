@@ -5,16 +5,20 @@ import Copy from "./Copy";
 const Alias = ({
   address,
   className,
+  length = 5,
 }: {
   address: string;
   className?: string;
+  length?: number;
 }) => {
   const state = useContext(AppStateContext)!;
 
   const formatted = useMemo(
     () =>
-      `${address.substring(0, 5)}...${address.substring(address.length - 5)}`,
-    [address]
+      `${address.substring(0, length)}...${address.substring(
+        address.length - length
+      )}`,
+    [address, length]
   );
 
   const toDisplay = useMemo(
@@ -27,7 +31,7 @@ const Alias = ({
 
   return (
     <Copy value={address} text="Copy address">
-      <span className={className}>{toDisplay}</span>
+      <span className={className}>{formatted}</span>
     </Copy>
   );
 };

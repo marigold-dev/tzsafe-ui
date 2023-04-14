@@ -25,8 +25,9 @@ import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
+import Alias from "./Alias";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
 
 function capitalizeFirstLetter(s: string): string {
@@ -363,7 +364,7 @@ function RenderItem({
                       </div>
                     );
                   })}
-              <div className="mt-2 flex flex-col md:flex-row">
+              <div className="mt-2 flex flex-col space-y-4 md:flex-row md:space-y-0">
                 {path && path.length > 0 && (
                   <button
                     type="button"
@@ -542,7 +543,7 @@ function Basic({
       {({ setFieldValue }) => (
         <Form className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
           <div className="flex w-full flex-col justify-center md:flex-col ">
-            <div className="flex w-full flex-col pr-2 md:pr-0">
+            <div className="flex w-full flex-col">
               <div className="mb-2 flex w-full flex-col items-start">
                 <label className="font-medium text-white">
                   Amount in mutez
@@ -1060,7 +1061,7 @@ function ExecuteForm(
               <span className="text-red-600">{submitError}</span>
             ) : null}
             <ErrorMessage name="entrypoint.kind" render={renderError} />
-            <div className="mt-4 flex flex-row justify-around md:w-1/3">
+            <div className="mt-4 flex flex-row justify-around space-x-4 md:w-1/3">
               <button
                 className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 onClick={e => {
@@ -1124,7 +1125,10 @@ function ExecuteContractForm(
         <p className="text-lg text-white">Execute Contract</p>
         <p>
           <span className="font-light">Contract address:</span>{" "}
-          {data.contract_addr}
+          <span className="md:hidden">
+            <Alias address={data.contract_addr} />
+          </span>
+          <span className="hidden md:inline">{data.contract_addr}</span>
         </p>
         <p>
           <span className="font-light">Mutez amount:</span> {data.mutez_amount}
@@ -1340,7 +1344,7 @@ function TransferForm(
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
                 <div className="flex h-fit min-w-full flex-col " id="top">
-                  <div className="mb-8 flex flex-col md:flex-row">
+                  <div className="mb-8 flex flex-col sm:flex-row">
                     <button
                       type="button"
                       className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
@@ -1403,7 +1407,7 @@ function TransferForm(
                       if (transfer.type === "contract") {
                         return ReactDOM.createPortal(
                           <div
-                            className="flex flex-col space-x-4 md:flex-row"
+                            className="flex flex-col md:flex-row md:space-x-4"
                             key={(transfer as any).key.toString()}
                             id={(transfer as any).key.toString()}
                           >
@@ -1430,7 +1434,7 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                                " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
                               }
                               onClick={e => {
                                 e.preventDefault();
@@ -1460,7 +1464,7 @@ function TransferForm(
                           <div
                             className={
                               withTextArea +
-                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around md:flex-row md:space-x-4  md:rounded-none md:border-none"
+                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
                             }
                             key={index}
                           >
@@ -1489,10 +1493,12 @@ function TransferForm(
 
                               return (
                                 <div
-                                  className={classn + width + withTextArea}
+                                  className={`${
+                                    classn + width + withTextArea
+                                  } w-full md:w-auto`}
                                   key={idx}
                                 >
-                                  <label className="text-white">
+                                  <label className="mb-1 text-white">
                                     {value.label}
                                   </label>
                                   {!!value.kind &&
@@ -1523,7 +1529,7 @@ function TransferForm(
                                       component={value.kind}
                                       name={`transfers.${index}.values.${value.field}`}
                                       className={
-                                        "md:text-md relative h-fit min-h-fit rounded p-2 text-sm " +
+                                        "md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto " +
                                         withTextArea
                                       }
                                       placeholder={value.placeholder}
@@ -1544,7 +1550,7 @@ function TransferForm(
                                 (errors.transfers && errors.transfers[index]
                                   ? "my-auto"
                                   : "") +
-                                "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                                " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
                               }
                               onClick={e => {
                                 e.preventDefault();
@@ -1565,7 +1571,7 @@ function TransferForm(
           <div className="flex flex-row justify-around md:w-1/3">
             {values.transfers.length > 0 && (
               <button
-                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 type="submit"
               >
                 Submit

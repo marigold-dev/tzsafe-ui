@@ -15,9 +15,9 @@ function Home() {
           </div>
         </div>
         <main className="grow">
-          <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-            <div className="px-4 py-6 sm:px-0">
-              <div className="grid min-h-fit grid-rows-2 gap-8 p-2 md:h-96 md:grid-cols-2 md:grid-rows-1">
+          <div className="mx-auto max-w-7xl pb-6 sm:px-6 lg:px-8">
+            <div className="md:py-6">
+              <div className="grid min-h-fit grid-rows-2 gap-8 p-4 md:h-96 md:grid-cols-2 md:grid-rows-1 md:p-0">
                 <div className="grid min-h-max grid-rows-5 rounded bg-graybg p-4">
                   <div className="row-span-6">
                     <h2 className="text-xl font-extrabold text-white md:text-2xl">
@@ -32,7 +32,7 @@ function Home() {
                     type="button"
                     href={{ pathname: "/new-wallet" }}
                     className={
-                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:py-1.5 md:px-1 md:text-2xl "
+                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:py-1.5 md:px-1 md:text-2xl "
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -55,7 +55,7 @@ function Home() {
                     type="button"
                     href={{ pathname: "/import-wallet" }}
                     className={
-                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1.5 md:px-1 md:text-2xl "
+                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1.5 md:px-1 md:text-2xl "
                     }
                     id="user-menu-button"
                     aria-expanded="false"

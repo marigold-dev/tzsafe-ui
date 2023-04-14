@@ -172,10 +172,10 @@ const Sidebar = ({
         state.hasBanner ? "top-32" : "top-20"
       } z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } md:-translate-x-0`}
+      } overflow-y-auto md:-translate-x-0`}
     >
       <button
-        className="mb-8 flex w-full items-center justify-end space-x-2 text-zinc-500 md:hidden"
+        className="mb-8 flex w-full items-center justify-end space-x-2 text-zinc-300 md:hidden"
         onClick={onClose}
       >
         <span className="text-xs">Close sidebar</span>
@@ -288,7 +288,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/fund-wallet"
-          className={linkClass(path === "/fund-wallet")}
+          className={linkClass(path === "/fund-wallet", !state.address)}
           onClick={onClose}
         >
           <svg

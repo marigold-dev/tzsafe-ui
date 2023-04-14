@@ -13,3 +13,5 @@ export const PREFERED_NETWORK =
 
 export const DEFAULT_TIMEOUT = 60000;
 export const MODAL_TIMEOUT = 2000;
+// 10 minutes
+export const PROPOSAL_DURATION_WARNING = 600000;

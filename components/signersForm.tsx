@@ -10,7 +10,11 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useMemo, useState } from "react";
-import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import {
+  MODAL_TIMEOUT,
+  PREFERED_NETWORK,
+  PROPOSAL_DURATION_WARNING,
+} from "../context/config";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -18,12 +22,13 @@ import {
 } from "../context/state";
 import {
   durationOfDaysHoursMinutes,
+  parseIntOr,
   secondsToDuration,
 } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
-import renderError from "./renderError";
+import renderError, { renderWarning } from "./formUtils";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -153,7 +158,7 @@ const SignersForm: FC<{
           , and if it is, {"it'll"} appear in the proposals
         </p>
         <div></div>
-        <div className="mt-8 w-full space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -240,16 +245,16 @@ const SignersForm: FC<{
         let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
-            err.address = "already exists";
+            err.address = "Please enter each account only once";
           } else {
             dedup.add(x.address);
             err.address =
               validateAddress(x.address) !== 3
-                ? `invalid address ${x.address}`
+                ? `Invalid address ${x.address}`
                 : "";
           }
           if (!!x.name && dedupName.has(x.name)) {
-            err.name = "already exists";
+            err.name = "Alias already exists";
           } else {
             dedupName.add(x.name);
           }
@@ -257,15 +262,13 @@ const SignersForm: FC<{
         });
         errors.validators = result;
         if (values.requiredSignatures > values.validators.length) {
-          errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
+          errors.requiredSignatures = `Threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
         const parsedDays = Number(values.days);
         if (
           !!values.days &&
-          (isNaN(parsedDays) ||
-            !Number.isInteger(parsedDays) ||
-            parsedDays <= 0)
+          (isNaN(parsedDays) || !Number.isInteger(parsedDays) || parsedDays < 0)
         ) {
           errors.days = "Invalid days";
         }
@@ -275,7 +278,7 @@ const SignersForm: FC<{
           !!values.hours &&
           (isNaN(parsedHours) ||
             !Number.isInteger(parsedHours) ||
-            parsedHours <= 0)
+            parsedHours < 0)
         ) {
           errors.hours = "Invalid hours";
         }
@@ -285,13 +288,22 @@ const SignersForm: FC<{
           !!values.minutes &&
           (isNaN(parsedMinutes) ||
             !Number.isInteger(parsedMinutes) ||
-            parsedMinutes <= 0)
+            parsedMinutes < 0)
         ) {
           errors.minutes = "Invalid minutes";
         }
 
         if (!values.days && !values.hours && !values.minutes) {
           errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (
+          [values.days, values.hours, values.minutes].every(v => {
+            const parsed = parseIntOr(v, undefined);
+            return parsed === 0 || parsed === undefined;
+          })
+        ) {
+          errors.proposalDuration = "One value must at least be more than 0";
         }
 
         if (Object.values(errors).length > 1) return errors;
@@ -347,32 +359,17 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => {
-        console.log(
-          getOps(
-            values.validators,
-            values.requiredSignatures,
-            Math.ceil(
-              durationOfDaysHoursMinutes(
-                values.days,
-                values.hours,
-                values.minutes
-              ).toMillis() / 1000
-            )
-          ),
-          errors
-        );
+        const currentDuration = durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis();
 
         const hasNoChange =
           getOps(
             values.validators,
             values.requiredSignatures,
-            Math.ceil(
-              durationOfDaysHoursMinutes(
-                values.days,
-                values.hours,
-                values.minutes
-              ).toMillis() / 1000
-            )
+            Math.ceil(currentDuration / 1000)
           ).length === 0;
 
         return (
@@ -395,7 +392,13 @@ const SignersForm: FC<{
                             <div className="flex w-full flex-col md:w-auto">
                               <label className="text-white">
                                 <span className="md:hidden">Owner name</span>
-                                {index === 0 ? "Owner Name" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:inline">
+                                    Owner Name
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
@@ -414,7 +417,13 @@ const SignersForm: FC<{
                                 htmlFor={`validators.${index}.address`}
                               >
                                 <span className="md:hidden">Owner address</span>
-                                {index === 0 ? "Owner Address" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:inline">
+                                    Owner address
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
@@ -471,6 +480,12 @@ const SignersForm: FC<{
                           </div>
                         );
                       })}
+                    {values.validators.length > 0 &&
+                      !values.validators.find(
+                        v => v.address === state.address
+                      ) &&
+                      renderWarning("Your address is not in the owners")}
+
                     <button
                       type="button"
                       className={`${
@@ -552,9 +567,14 @@ const SignersForm: FC<{
                 </div>
               </div>
               {/* @ts-ignore*/}
-              {!!errors.proposalDuration &&
-                // @ts-ignore
-                renderError(errors.proposalDuration)}
+              {!!errors.proposalDuration
+                ? // @ts-ignore
+                  renderError(errors.proposalDuration)
+                : currentDuration < PROPOSAL_DURATION_WARNING
+                ? renderWarning(
+                    "Proposal duration is low, you may not be able to execute the proposals"
+                  )
+                : null}
             </div>
 
             <div className="mt-6 flex w-full justify-center">

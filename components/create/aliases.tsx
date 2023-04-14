@@ -10,9 +10,14 @@ import {
 import Link from "next/link";
 import React from "react";
 import { useContext } from "react";
+import { PROPOSAL_DURATION_WARNING } from "../../context/config";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
-import renderError from "../renderError";
+import {
+  durationOfDaysHoursMinutes,
+  parseIntOr,
+} from "../../utils/adaptiveTime";
+import renderError, { renderWarning } from "../formUtils";
 import TextInputWithCompletion from "../textInputWithComplete";
 
 function get(
@@ -78,12 +83,12 @@ function Aliases() {
         let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
-            err.address = "already exists";
+            err.address = "Please enter each account only once";
           } else {
             dedup.add(x.address);
             err.address =
               validateAddress(x.address) !== 3
-                ? `invalid address ${x.address}`
+                ? `Invalid address ${x.address}`
                 : "";
           }
 
@@ -92,7 +97,7 @@ function Aliases() {
             (dedupName.has(x.name) ||
               (!!byName[x.name] && byName[x.name] !== x.address))
           ) {
-            err.name = "alias already exists";
+            err.name = "Alias already exists";
           } else {
             dedupName.add(x.name);
           }
@@ -102,9 +107,7 @@ function Aliases() {
         const parsedDays = Number(values.days);
         if (
           !!values.days &&
-          (isNaN(parsedDays) ||
-            !Number.isInteger(parsedDays) ||
-            parsedDays <= 0)
+          (isNaN(parsedDays) || !Number.isInteger(parsedDays) || parsedDays < 0)
         ) {
           errors.days = "Invalid days";
         }
@@ -114,7 +117,7 @@ function Aliases() {
           !!values.hours &&
           (isNaN(parsedHours) ||
             !Number.isInteger(parsedHours) ||
-            parsedHours <= 0)
+            parsedHours < 0)
         ) {
           errors.hours = "Invalid hours";
         }
@@ -124,13 +127,22 @@ function Aliases() {
           !!values.minutes &&
           (isNaN(parsedMinutes) ||
             !Number.isInteger(parsedMinutes) ||
-            parsedMinutes <= 0)
+            parsedMinutes < 0)
         ) {
           errors.minutes = "Invalid minutes";
         }
 
         if (!values.days && !values.hours && !values.minutes) {
           errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (
+          [values.days, values.hours, values.minutes].every(v => {
+            const parsed = parseIntOr(v, undefined);
+            return parsed === 0 || parsed === undefined;
+          })
+        ) {
+          errors.proposalDuration = "One value must at least be more than 0";
         }
 
         if (Object.values(errors).length > 1) return errors;
@@ -151,179 +163,199 @@ function Aliases() {
         setActiveStepIndex(activeStepIndex + 1);
       }}
     >
-      {({ values, errors, validateForm, setTouched }) => (
-        <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-          <div className="mb-2 self-center text-2xl font-medium text-white">
-            Add wallet participants below
-          </div>
-          <ErrorMessage name={`validatorsError`} render={renderError} />
-          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
-            <FieldArray name="validators">
-              {({ remove, push, replace }) => (
-                <div className="min-w-full">
-                  {values.validators.length > 0 &&
-                    values.validators.map((validator, index) => {
-                      return (
-                        <div
-                          className={`${
-                            index > 0 ? "-mt-8" : ""
-                          } md:p-none flex min-w-full flex-col items-start justify-start space-x-0 md:flex-row md:space-x-4 md:rounded-none md:border-none`}
-                          key={index}
-                        >
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
-                            <label className="text-white">
-                              {index === 0 ? "Owner Name" : ""}
-                            </label>
+      {({ values, errors, validateForm, setTouched }) => {
+        const currentDuration = durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis();
 
-                            <TextInputWithCompletion
-                              byAddrToo={false}
-                              filter={() => true}
-                              setTerms={({ payload, term }) => {
-                                replace(index, {
-                                  ...validator,
-                                  name: term,
-                                  address: payload,
-                                });
-                              }}
-                              name={`validators.${index}.name`}
-                              className="md:text-md rounded p-2 text-sm"
-                              placeholder={validator.name || "Owner Name"}
-                            />
-                            <ErrorMessage
-                              name={`validators.${index}.name`}
-                              render={renderError}
-                            />
-                          </div>
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3 md:grow">
-                            <label
-                              className="text-white"
-                              htmlFor={`validators.${index}.address`}
-                            >
-                              {index === 0 ? "Owner Address" : ""}
-                            </label>
-
-                            <Field
-                              name={`validators.${index}.address`}
-                              className="md:text-md w-full rounded p-2 text-sm"
-                              placeholder={validator.address || "Owner address"}
-                              default={validator.address}
-                            />
-                            <ErrorMessage
-                              name={`validators.${index}.address`}
-                              render={renderError}
-                            />
-                          </div>
-                          <div className="grid grid-flow-col grid-cols-1 grid-rows-3">
-                            <span></span>
-                            <button
-                              type="button"
-                              className={
-                                (errors.validators &&
-                                errors.validators[index] &&
-                                get(errors.validators[index])
-                                  ? "my-auto"
-                                  : "") +
-                                " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
-                              }
-                              onClick={async e => {
-                                e.preventDefault();
-                                setTouched({ validatorsError: true }, true);
-                                validateForm();
-                                remove(index);
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  <button
-                    type="button"
-                    className="mx-auto mt-4 block self-center justify-self-center rounded bg-primary p-2 font-medium text-white "
-                    onClick={e => {
-                      e.preventDefault();
-                      push({ name: "", address: "" });
-                    }}
-                  >
-                    Add owner
-                  </button>
-                </div>
-              )}
-            </FieldArray>
-          </div>
-          <div className="flex w-full grow flex-col">
-            <label className="mr-4 text-white">Threshold </label>
-            <Field
-              component="select"
-              name="requiredSignatures"
-              className="mt-2 w-full rounded p-2 text-center text-black"
-              values={values.requiredSignatures}
-            >
-              {values.validators.map((_, idx) => (
-                <option
-                  key={idx + values.validators.length}
-                  label={`${idx + 1}/${values.validators.length}`}
-                  value={idx + 1}
-                >
-                  {idx + 1}/{values.validators.length}
-                </option>
-              ))}
-            </Field>
-          </div>
-          <div className="mt-4 w-full">
-            <h3 className="text-lg text-white">Proposal duration</h3>
-            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-              <div className="flex w-full grow flex-col md:w-auto">
-                <label className="text-white">Days</label>
-                <Field
-                  name="days"
-                  className="md:text-md mt-1 rounded p-2 text-sm"
-                  placeholder="0"
-                />
-                <ErrorMessage name="days" render={renderError} />
-              </div>
-              <div className="flex w-full grow flex-col md:w-auto">
-                <label className="text-white">Hours</label>
-                <Field
-                  name="hours"
-                  className="md:text-md mt-1 rounded p-2 text-sm"
-                  placeholder="0"
-                />
-                <ErrorMessage name="hours" render={renderError} />
-              </div>
-              <div className="flex w-full grow flex-col md:w-auto">
-                <label className="text-white">Minutes</label>
-                <Field
-                  name="minutes"
-                  className="md:text-md mt-1 rounded p-2 text-sm"
-                  placeholder="0"
-                />
-                <ErrorMessage name="minutes" render={renderError} />
-              </div>
+        return (
+          <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
+            <div className="mb-2 self-center text-2xl font-medium text-white">
+              Add wallet participants below
             </div>
-            {/* @ts-ignore*/}
-            {!!errors.proposalDuration &&
-              // @ts-ignore
-              renderError(errors.proposalDuration)}
-          </div>
-          <div className="mt-8 mb-8 flex space-x-6">
-            <Link
-              type="button"
-              href="/"
-              className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
-            >
-              Cancel
-            </Link>
-            <button
-              className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
-              type="submit"
-            >
-              Continue
-            </button>
-          </div>
-        </Form>
-      )}
+            <ErrorMessage name={`validatorsError`} render={renderError} />
+            <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
+              <FieldArray name="validators">
+                {({ remove, push, replace }) => (
+                  <div className="min-w-full">
+                    {values.validators.length > 0 &&
+                      values.validators.map((validator, index) => {
+                        return (
+                          <div
+                            className={`${
+                              index > 0 ? "-mt-8" : ""
+                            } md:p-none flex min-w-full flex-col items-start justify-start md:flex-row md:space-x-4 md:rounded-none md:border-none`}
+                            key={index}
+                          >
+                            <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto">
+                              <label className="text-white">
+                                {index === 0 ? "Owner Name" : ""}
+                              </label>
+
+                              <TextInputWithCompletion
+                                byAddrToo={false}
+                                filter={() => true}
+                                setTerms={({ payload, term }) => {
+                                  replace(index, {
+                                    ...validator,
+                                    name: term,
+                                    address: payload,
+                                  });
+                                }}
+                                name={`validators.${index}.name`}
+                                className="md:text-md w-full rounded p-2 text-sm"
+                                placeholder={validator.name || "Owner Name"}
+                              />
+                              <ErrorMessage
+                                name={`validators.${index}.name`}
+                                render={renderError}
+                              />
+                            </div>
+                            <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto md:grow">
+                              <label
+                                className="text-white"
+                                htmlFor={`validators.${index}.address`}
+                              >
+                                {index === 0 ? "Owner Address" : ""}
+                              </label>
+
+                              <Field
+                                name={`validators.${index}.address`}
+                                className="md:text-md w-full rounded p-2 text-sm"
+                                placeholder={
+                                  validator.address || "Owner address"
+                                }
+                                default={validator.address}
+                              />
+                              <ErrorMessage
+                                name={`validators.${index}.address`}
+                                render={renderError}
+                              />
+                            </div>
+                            <div className="grid w-full grid-flow-col grid-cols-1 grid-rows-3 md:w-auto">
+                              <span className="hidden md:inline"></span>
+                              <button
+                                type="button"
+                                className={
+                                  (errors.validators &&
+                                  errors.validators[index] &&
+                                  get(errors.validators[index])
+                                    ? "my-auto"
+                                    : "") +
+                                  " mx-none block self-center justify-self-center rounded bg-primary p-1.5 font-medium text-white md:mx-auto md:self-center "
+                                }
+                                onClick={async e => {
+                                  e.preventDefault();
+                                  setTouched({ validatorsError: true }, true);
+                                  validateForm();
+                                  remove(index);
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    {values.validators.length > 0 &&
+                      !values.validators.find(
+                        v => v.address === state.address
+                      ) &&
+                      renderWarning("Your address is not in the owners")}
+                    <button
+                      type="button"
+                      className="mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white md:mt-4 "
+                      onClick={e => {
+                        e.preventDefault();
+                        push({ name: "", address: "" });
+                      }}
+                    >
+                      Add owner
+                    </button>
+                  </div>
+                )}
+              </FieldArray>
+            </div>
+            <div className="flex w-full grow flex-col">
+              <label className="mr-4 text-white">Threshold </label>
+              <Field
+                component="select"
+                name="requiredSignatures"
+                className="mt-2 w-full rounded p-2 text-center text-black"
+                values={values.requiredSignatures}
+              >
+                {values.validators.map((_, idx) => (
+                  <option
+                    key={idx + values.validators.length}
+                    label={`${idx + 1}/${values.validators.length}`}
+                    value={idx + 1}
+                  >
+                    {idx + 1}/{values.validators.length}
+                  </option>
+                ))}
+              </Field>
+            </div>
+            <div className="mt-4 w-full">
+              <h3 className="text-lg text-white">Proposal duration</h3>
+              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Days</label>
+                  <Field
+                    name="days"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="days" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Hours</label>
+                  <Field
+                    name="hours"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="hours" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Minutes</label>
+                  <Field
+                    name="minutes"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="minutes" render={renderError} />
+                </div>
+              </div>
+              {/* @ts-ignore*/}
+              {!!errors.proposalDuration
+                ? // @ts-ignore
+                  renderError(errors.proposalDuration)
+                : currentDuration < PROPOSAL_DURATION_WARNING
+                ? renderWarning(
+                    "Proposal duration is low, you may not be able to execute the proposals"
+                  )
+                : null}
+            </div>
+            <div className="mt-8 mb-8 flex space-x-6">
+              <Link
+                type="button"
+                href="/"
+                className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+              >
+                Cancel
+              </Link>
+              <button
+                className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
+                type="submit"
+              >
+                Continue
+              </button>
+            </div>
+          </Form>
+        );
+      }}
     </Formik>
   );
 }

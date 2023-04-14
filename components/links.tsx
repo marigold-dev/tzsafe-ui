@@ -2,11 +2,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { FC } from "react";
 
-const LinkComponent: FC<{ path: any; text: String }> = props => {
-  let route = usePathname();
+const LinkComponent: FC<{
+  path: any;
+  text: String;
+  onClick?: () => void;
+}> = props => {
+  const route = usePathname();
+
   return (
     <Link
       href={props.path}
+      onClick={props.onClick}
       className={`${
         route?.toString == props.path
           ? "bg-zinc-900"
