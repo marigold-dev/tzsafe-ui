@@ -582,7 +582,7 @@ function genLambda(
       {
         contract_addr: props.address,
         mutez_amount: props.amount,
-        entrypoint: values,
+        entrypoint,
         payload: param,
       },
       null,
