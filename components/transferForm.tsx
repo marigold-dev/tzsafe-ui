@@ -393,14 +393,18 @@ function TransferForm(
     >
       {({ values, errors, setFieldValue, getFieldProps }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-          <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
+          <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
               {({ remove, push, replace }) => (
-                <div className="flex h-fit min-w-full flex-col " id="top">
-                  <div className="mb-8 flex flex-col sm:flex-row">
+                <div
+                  className="flex h-fit min-w-full flex-row-reverse "
+                  id="top"
+                >
+                  <div className="sticky top-24 inline-block w-1/5 space-y-4 self-start rounded bg-zinc-700 p-4">
+                    <h4 className="text-white">Add a ? to the proposal</h4>
                     <button
                       type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -414,7 +418,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         push({
@@ -427,7 +431,7 @@ function TransferForm(
                     </button>
                     <button
                       type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={e => {
                         e.preventDefault();
                         let idx = portalIdx.current;
@@ -441,6 +445,10 @@ function TransferForm(
                     >
                       Contract Execution
                     </button>
+                  </div>
+
+                  {/* <div className="mb-8 flex flex-col sm:flex-row">
+                    
                     {/* <button
                       type="button"
                       className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
@@ -453,183 +461,191 @@ function TransferForm(
                       }}
                     >
                       Lambda Execution
-                    </button> */}
-                  </div>
-                  {values.transfers.length > 0 &&
-                    values.transfers.map((transfer, index) => {
-                      if (transfer.type === "contract") {
-                        return ReactDOM.createPortal(
-                          <div
-                            className="flex flex-col md:flex-row md:space-x-4"
-                            key={(transfer as any).key.toString()}
-                            id={(transfer as any).key.toString()}
-                          >
-                            <ExecuteContractForm
-                              getFieldProps={() =>
-                                getFieldProps(
-                                  `transfers.${index}.values.metadata`
-                                ).value
-                              }
-                              setField={(lambda: string, metadata: string) => {
-                                setFieldValue(
-                                  `transfers.${index}.values.lambda`,
-                                  lambda
-                                );
-                                setFieldValue(
-                                  `transfers.${index}.values.metadata`,
-                                  metadata
-                                );
-                              }}
-                            />
-                            <button
-                              type="button"
-                              className={
-                                (errors.transfers && errors.transfers[index]
-                                  ? "my-auto"
-                                  : "") +
-                                " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
-                              }
-                              onClick={e => {
-                                e.preventDefault();
-                                remove(index);
-                              }}
+                    </button> 
+                  </div> */}
+                  <div className="w-4/5 pr-8">
+                    {values.transfers.length > 0 &&
+                      values.transfers.map((transfer, index) => {
+                        if (transfer.type === "contract") {
+                          // return ReactDOM.createPortal(
+                          return (
+                            <div
+                              className="flex flex-col md:flex-row md:space-x-4"
+                              key={(transfer as any).key.toString()}
+                              id={(transfer as any).key.toString()}
                             >
-                              Remove
-                            </button>
-                          </div>,
-                          document.getElementById("top")!,
-                          (transfer as any).key.toString()
-                        );
-                      }
-                      const withTextArea = transfer.fields.find(
-                        x => x?.kind === "textarea"
-                      )
-                        ? " flex-col md:flex-col"
-                        : "";
+                              <ExecuteContractForm
+                                getFieldProps={() =>
+                                  getFieldProps(
+                                    `transfers.${index}.values.metadata`
+                                  ).value
+                                }
+                                setField={(
+                                  lambda: string,
+                                  metadata: string
+                                ) => {
+                                  setFieldValue(
+                                    `transfers.${index}.values.lambda`,
+                                    lambda
+                                  );
+                                  setFieldValue(
+                                    `transfers.${index}.values.metadata`,
+                                    metadata
+                                  );
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className={
+                                  (errors.transfers && errors.transfers[index]
+                                    ? "my-auto"
+                                    : "") +
+                                  " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                }
+                                onClick={e => {
+                                  e.preventDefault();
+                                  remove(index);
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          );
+                          // ,document.getElementById("top")!,
+                          // (transfer as any).key.toString()
+                          // );
+                        }
+                        const withTextArea = transfer.fields.find(
+                          x => x?.kind === "textarea"
+                        )
+                          ? " flex-col md:flex-col"
+                          : "";
 
-                      return (
-                        <>
-                          <p className="text-lg text-white">
-                            {!transfer.fields.find(v => v.kind === "textarea")
-                              ? "Transfer"
-                              : "Execute lambda"}
-                          </p>
-                          <div
-                            className={
-                              withTextArea +
-                              "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
-                            }
-                            key={index}
-                          >
-                            {transfer.fields.map((value, idx, arr) => {
-                              const withTextArea = transfer.fields.find(
-                                x => x?.kind === "textarea"
-                              )
-                                ? " w-full md:w-full "
-                                : "";
-                              let width =
-                                arr.length === 1 &&
-                                !transfer.fields.find(
+                        return (
+                          <>
+                            <p className="text-lg text-white">
+                              {!transfer.fields.find(v => v.kind === "textarea")
+                                ? "Transfer"
+                                : "Execute lambda"}
+                            </p>
+                            <div
+                              className={
+                                withTextArea +
+                                "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
+                              }
+                              key={index}
+                            >
+                              {transfer.fields.map((value, idx, arr) => {
+                                const withTextArea = transfer.fields.find(
                                   x => x?.kind === "textarea"
                                 )
-                                  ? " w-3/4 "
+                                  ? " w-full md:w-full "
                                   : "";
-                              let classn = `${
-                                (idx + 1) % 2 === 0
-                                  ? `relative flex flex-col justify-start`
-                                  : "flex flex-col"
-                              } ${
-                                !!value.kind && value.kind === "input-complete"
-                                  ? "w-full md:grow"
-                                  : ""
-                              }`;
+                                let width =
+                                  arr.length === 1 &&
+                                  !transfer.fields.find(
+                                    x => x?.kind === "textarea"
+                                  )
+                                    ? " w-3/4 "
+                                    : "";
+                                let classn = `${
+                                  (idx + 1) % 2 === 0
+                                    ? `relative flex flex-col justify-start`
+                                    : "flex flex-col"
+                                } ${
+                                  !!value.kind &&
+                                  value.kind === "input-complete"
+                                    ? "w-full md:grow"
+                                    : ""
+                                }`;
 
-                              return (
-                                <div
-                                  className={`${
-                                    classn + width + withTextArea
-                                  } w-full md:w-auto`}
-                                  key={idx}
-                                >
-                                  <label className="mb-1 text-white">
-                                    {value.label}
-                                  </label>
-                                  {!!value.kind &&
-                                  value.kind === "input-complete" ? (
-                                    <TextInputWithCompletion
-                                      setTerms={({ payload, term: _ }) => {
-                                        replace(index, {
-                                          ...values.transfers[index],
-                                          values: {
-                                            ...values.transfers[index].values,
-                                            to: payload,
-                                          },
-                                        });
-                                      }}
-                                      filter={_ => true}
-                                      byAddrToo={true}
-                                      as="input"
+                                return (
+                                  <div
+                                    className={`${
+                                      classn + width + withTextArea
+                                    } w-full md:w-auto`}
+                                    key={idx}
+                                  >
+                                    <label className="mb-1 text-white">
+                                      {value.label}
+                                    </label>
+                                    {!!value.kind &&
+                                    value.kind === "input-complete" ? (
+                                      <TextInputWithCompletion
+                                        setTerms={({ payload, term: _ }) => {
+                                          replace(index, {
+                                            ...values.transfers[index],
+                                            values: {
+                                              ...values.transfers[index].values,
+                                              to: payload,
+                                            },
+                                          });
+                                        }}
+                                        filter={_ => true}
+                                        byAddrToo={true}
+                                        as="input"
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className={
+                                          "md:text-md relative h-fit min-h-fit w-full p-2 text-sm" +
+                                          withTextArea
+                                        }
+                                        placeholder={value.placeholder}
+                                        rows={10}
+                                      />
+                                    ) : (
+                                      <Field
+                                        component={value.kind}
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className={
+                                          "md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto " +
+                                          withTextArea
+                                        }
+                                        placeholder={value.placeholder}
+                                        rows={10}
+                                        validate={value.validate}
+                                      />
+                                    )}
+                                    <ErrorMessage
                                       name={`transfers.${index}.values.${value.field}`}
-                                      className={
-                                        "md:text-md relative h-fit min-h-fit w-full p-2 text-sm" +
-                                        withTextArea
-                                      }
-                                      placeholder={value.placeholder}
-                                      rows={10}
+                                      render={renderError}
                                     />
-                                  ) : (
-                                    <Field
-                                      component={value.kind}
-                                      name={`transfers.${index}.values.${value.field}`}
-                                      className={
-                                        "md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto " +
-                                        withTextArea
-                                      }
-                                      placeholder={value.placeholder}
-                                      rows={10}
-                                      validate={value.validate}
-                                    />
-                                  )}
-                                  <ErrorMessage
-                                    name={`transfers.${index}.values.${value.field}`}
-                                    render={renderError}
-                                  />
-                                </div>
-                              );
-                            })}
-                            <button
-                              type="button"
-                              className={
-                                (errors.transfers && errors.transfers[index]
-                                  ? "my-auto"
-                                  : "") +
-                                " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
-                              }
-                              onClick={e => {
-                                e.preventDefault();
+                                  </div>
+                                );
+                              })}
+                              <button
+                                type="button"
+                                className={
+                                  (errors.transfers && errors.transfers[index]
+                                    ? "my-auto"
+                                    : "") +
+                                  " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                }
+                                onClick={e => {
+                                  e.preventDefault();
 
-                                remove(index);
-                              }}
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </>
-                      );
-                    })}
+                                  remove(index);
+                                }}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })}
+                    <div className="flex flex-row justify-around md:mx-auto md:w-1/3">
+                      {values.transfers.length > 0 && (
+                        <button
+                          className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                          type="submit"
+                        >
+                          Submit
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </FieldArray>
-          </div>
-          <div className="flex flex-row justify-around md:w-1/3">
-            {values.transfers.length > 0 && (
-              <button
-                className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                type="submit"
-              >
-                Submit
-              </button>
-            )}
           </div>
         </Form>
       )}
