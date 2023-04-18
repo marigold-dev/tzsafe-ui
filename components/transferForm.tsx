@@ -1090,10 +1090,10 @@ function ExecuteContractForm(
     getFieldProps: () => string;
   }>
 ) {
-  let [state, setState] = useState({ address: "", amount: 0, shape: {} });
-  let [loading, setLoading] = useState(false);
-  let [done, setDone] = useState(false);
-  let setLoader = useCallback((x: boolean) => {
+  const [state, setState] = useState({ address: "", amount: 0, shape: {} });
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const setLoader = useCallback((x: boolean) => {
     setLoading((prev: boolean) => {
       if (prev == x) {
         return prev;
@@ -1101,7 +1101,7 @@ function ExecuteContractForm(
       return x;
     });
   }, []);
-  let setStater = useCallback(({ shape }: { shape: object }) => {
+  const setStater = useCallback(({ shape }: { shape: object }) => {
     setState((prev: any) => {
       if (Object.keys(prev.shape).length) {
         return prev;
@@ -1172,6 +1172,22 @@ function ExecuteContractForm(
     );
   }
 }
+
+const addNewField = (
+  e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  func: <T>(value: T) => number,
+  type: string,
+  key: number | undefined,
+  rest: any
+) => {
+  e.preventDefault();
+  func({
+    type,
+    key,
+    ...rest,
+  });
+  if (window.scrollY > 200) window.scrollTo(0, 0);
+};
 
 function TransferForm(
   props: React.PropsWithoutRef<{
@@ -1342,7 +1358,7 @@ function TransferForm(
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
-              {({ remove, push, replace }) => (
+              {({ remove, replace, unshift }) => (
                 <div
                   className="flex h-fit min-w-full flex-row-reverse "
                   id="top"
@@ -1353,12 +1369,13 @@ function TransferForm(
                       type="button"
                       className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "transfer",
-                          key: values.transfers.length,
-                          ...Versioned.transferForm(props.contract),
-                        });
+                        addNewField(
+                          e,
+                          unshift,
+                          "transfer",
+                          values.transfers.length,
+                          Versioned.transferForm(props.contract)
+                        );
                       }}
                     >
                       Transfer
@@ -1367,11 +1384,13 @@ function TransferForm(
                       type="button"
                       className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "fa2",
-                          ...Versioned.fa2(props.contract),
-                        });
+                        addNewField(
+                          e,
+                          unshift,
+                          "fa2",
+                          undefined,
+                          Versioned.fa2(props.contract)
+                        );
                       }}
                     >
                       FA2 Transfer
@@ -1383,7 +1402,7 @@ function TransferForm(
                         e.preventDefault();
                         let idx = portalIdx.current;
                         portalIdx.current += 1;
-                        push({
+                        unshift({
                           type: "contract",
                           key: idx,
                           ...Versioned.lambdaForm(props.contract),
@@ -1410,7 +1429,7 @@ function TransferForm(
                       Lambda Execution
                     </button> 
                   </div> */}
-                  <div className="w-4/5 pr-8">
+                  <div className="w-4/5 space-y-6 pr-8">
                     {values.transfers.length > 0 &&
                       values.transfers.map((transfer, index) => {
                         if (transfer.type === "contract") {
@@ -1469,7 +1488,7 @@ function TransferForm(
                           : "";
 
                         return (
-                          <>
+                          <section key={`${transfer.type}:${index}`}>
                             <p className="text-lg text-white">
                               {!transfer.fields.find(v => v.kind === "textarea")
                                 ? "Transfer"
@@ -1478,7 +1497,7 @@ function TransferForm(
                             <div
                               className={
                                 withTextArea +
-                                "md:p-none mt-2 flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
+                                "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
                               }
                               key={index}
                             >
@@ -1576,7 +1595,7 @@ function TransferForm(
                                 Remove
                               </button>
                             </div>
-                          </>
+                          </section>
                         );
                       })}
                     <div className="flex flex-row justify-around md:mx-auto md:w-1/3">
