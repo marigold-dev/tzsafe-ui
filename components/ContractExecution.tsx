@@ -116,24 +116,22 @@ function RenderNonsupport(token: token) {
 }
 
 function RenderLambda(token: token, fieldName: string, showTitle: boolean) {
-  {
-    return (
-      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
-        <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
-        </label>
-        <Field
-          as="textarea"
-          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-black"
-          placeholder={token.placeholder}
-          rows={10}
-          name={fieldName}
-          validate={token.validate}
-        />
-        <ErrorMessage name={fieldName} render={renderError} />
-      </div>
-    );
-  }
+  return (
+    <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+      <label className="text-white">
+        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+      </label>
+      <Field
+        as="textarea"
+        className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-black"
+        placeholder={token.placeholder}
+        rows={10}
+        name={fieldName}
+        validate={token.validate}
+      />
+      <ErrorMessage name={fieldName} render={renderError} />
+    </div>
+  );
 }
 
 function RenderOption(
@@ -236,7 +234,7 @@ function RenderMap(
                     onClick={e => {
                       e.preventDefault();
 
-                      let new_counter = allocateNewTokenCounter(
+                      const new_counter = allocateNewTokenCounter(
                         token,
                         counter,
                         setFieldValue
@@ -346,7 +344,7 @@ function RenderArray(
                     className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
                     onClick={e => {
                       e.preventDefault();
-                      let new_counter = allocateNewTokenCounter(
+                      const new_counter = allocateNewTokenCounter(
                         token,
                         counter,
                         setFieldValue
@@ -373,39 +371,37 @@ function RenderSelection(
   selected: tokenValueType,
   showTitle: boolean
 ) {
-  {
-    let defaultChildToken =
-      token.children.length > 0 ? token.children[0] : undefined;
-    let childToken =
-      token.children.find(x => {
-        return selected && x.name == selected;
-      }) || defaultChildToken;
-    return (
-      <div className="flex w-full flex-col gap-2 rounded p-4">
-        <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
-        </label>
-        <Field
-          className="rounded p-2 text-left text-black"
-          name={fieldName}
-          as="select"
-        >
-          {Object.entries(token.children).map(([k, v]) => {
-            return (
-              <option className="text-black" key={k} value={v.name}>
-                {v.name}
-              </option>
-            );
-          })}
-        </Field>
-        {childToken ? (
-          <RenderItem token={childToken} showTitle={false} />
-        ) : (
-          <div></div>
-        )}
-      </div>
-    );
-  }
+  const defaultChildToken =
+    token.children.length > 0 ? token.children[0] : undefined;
+  const childToken =
+    token.children.find(x => {
+      return selected && x.name == selected;
+    }) || defaultChildToken;
+  return (
+    <div className="flex w-full flex-col gap-2 rounded p-4">
+      <label className="text-white">
+        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+      </label>
+      <Field
+        className="rounded p-2 text-left text-black"
+        name={fieldName}
+        as="select"
+      >
+        {Object.entries(token.children).map(([k, v]) => {
+          return (
+            <option className="text-black" key={k} value={v.name}>
+              {v.name}
+            </option>
+          );
+        })}
+      </Field>
+      {childToken ? (
+        <RenderItem token={childToken} showTitle={false} />
+      ) : (
+        <div></div>
+      )}
+    </div>
+  );
 }
 
 function RenderCheckbox(
@@ -482,19 +478,19 @@ function ExecuteForm(
   const state = useContext(AppStateContext)!;
   const [submitError, setSubmitError] = useState<undefined | string>(undefined);
 
-  let address = props.address;
-  let conn = state.connection;
-  let setLoading = props.setLoading;
-  let loading = props.loading;
+  const address = props.address;
+  const conn = state.connection;
+  const setLoading = props.setLoading;
+  const loading = props.loading;
 
   useEffect(() => {
     if (!Object.keys(props.shape).length && !loading) {
       (async () => {
         try {
           setLoading(true);
-          let c = await conn.contract.at(address);
-          let initTokenTable: Record<string, tokenValueType> = {};
-          let [token, counter] = parseSchema(
+          const c = await conn.contract.at(address);
+          const initTokenTable: Record<string, tokenValueType> = {};
+          const [token, counter] = parseSchema(
             0,
             c.parameterSchema.generateSchema(),
             initTokenTable,
@@ -522,7 +518,7 @@ function ExecuteForm(
         initialValues={props.shape.init}
         onSubmit={async values => {
           try {
-            let { lambda, param } = genLambda(props, values);
+            const { lambda, param } = genLambda(props, values);
           } catch (e) {
             console.log(e);
             setSubmitError((e as Error).message);

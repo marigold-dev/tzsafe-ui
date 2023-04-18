@@ -247,9 +247,9 @@ function parseSchema(
     case "tx_rollup_l2_address":
       throw new Error("can't happen: this type has been disable");
     case "or": {
-      let schemas = Object.entries(token.schema);
+      const schemas = Object.entries(token.schema);
       let new_counter = counter;
-      let children: token[] = [];
+      const children: token[] = [];
       let child: token;
       schemas.forEach(([k, v]) => {
         [child, new_counter] = parseSchema(new_counter + 1, v, init, k);
@@ -270,7 +270,7 @@ function parseSchema(
     case "set":
     case "list": {
       initTokenTable(init, counter, [] as token[]);
-      let [child, new_counter] = parseSchema(counter + 1, token.schema, init);
+      const [child, new_counter] = parseSchema(counter + 1, token.schema, init);
       return [
         {
           counter: counter,
@@ -283,9 +283,9 @@ function parseSchema(
       ];
     }
     case "pair": {
-      let schemas = Object.entries(token.schema);
+      const schemas = Object.entries(token.schema);
       let new_counter = counter;
-      let children: token[] = [];
+      const children: token[] = [];
       let child: token;
       schemas.forEach(([k, v]) => {
         [child, new_counter] = parseSchema(new_counter + 1, v, init, k);
@@ -305,9 +305,9 @@ function parseSchema(
     }
     case "map":
     case "big_map": {
-      let schemas = Object.entries(token.schema);
+      const schemas = Object.entries(token.schema);
       let new_counter = counter;
-      let children: token[] = [];
+      const children: token[] = [];
       let child: token;
       schemas.forEach(([k, v]) => {
         [child, new_counter] = parseSchema(new_counter + 1, v, init, k);
@@ -326,7 +326,7 @@ function parseSchema(
       ];
     }
     case "option": {
-      let [child, new_counter] = parseSchema(counter + 1, token.schema, init);
+      const [child, new_counter] = parseSchema(counter + 1, token.schema, init);
 
       initTokenTable(init, counter, "none");
       return [
@@ -431,17 +431,17 @@ function evalTaquitoParam(
     case "tx_rollup_l2_address":
       throw new Error("can't happen: this type has been disabled");
     case "or": {
-      let key = tableValue[getFieldName(token.counter)];
-      let child = key && token.children.find(x => x.name == key);
+      const key = tableValue[getFieldName(token.counter)];
+      const child = key && token.children.find(x => x.name == key);
       if (!child) {
         throw new Error(`the selection ${key} doesn't exist`);
       }
-      let value = evalTaquitoParam(child, tableValue);
+      const value = evalTaquitoParam(child, tableValue);
       return Object.fromEntries([[key, value]]);
     }
     case "set":
     case "list": {
-      let values = tableValue[getFieldName(token.counter)];
+      const values = tableValue[getFieldName(token.counter)];
       if (!Array.isArray(values)) {
         throw new Error(
           `internal error: the expected type of list or set is incorrect.`
@@ -460,8 +460,8 @@ function evalTaquitoParam(
         .filter(v => v !== undefined);
     }
     case "pair": {
-      let raw: token[] = token.children;
-      let values = raw.map((v, idx) => {
+      const raw: token[] = token.children;
+      const values = raw.map((v, idx) => {
         const check_key = isNaN(Number(v.name));
         return [check_key ? v.name : idx, evalTaquitoParam(v, tableValue)];
       });
@@ -469,7 +469,7 @@ function evalTaquitoParam(
     }
     case "map":
     case "big_map": {
-      let values = tableValue[getFieldName(token.counter)];
+      const values = tableValue[getFieldName(token.counter)];
       if (!Array.isArray(values)) {
         throw new Error(
           `internal error: the expected type of map is incorrect.`
@@ -491,7 +491,7 @@ function evalTaquitoParam(
       return map;
     }
     case "option": {
-      let values = tableValue[getFieldName(token.counter)];
+      const values = tableValue[getFieldName(token.counter)];
       if (typeof values !== "string") {
         throw new Error(
           `internal error: the expected value of option is incorrect.`
@@ -506,7 +506,7 @@ function evalTaquitoParam(
     case "constant":
       throw new Error("can't happen: constant will never be in parameter");
     case "lambda": {
-      let values = tableValue[getFieldName(token.counter)];
+      const values = tableValue[getFieldName(token.counter)];
       if (typeof values !== "string") {
         throw new Error(
           `internal error: the expected value of lambda is incorrect.`
@@ -543,10 +543,10 @@ function genLambda(
   props.setLoading(true);
   let entrypoint = "default";
   let taquitoParam;
-  let taquitoFullParam = evalTaquitoParam(props.shape.token, values);
+  const taquitoFullParam = evalTaquitoParam(props.shape.token, values);
 
   if (props.shape.contract.parameterSchema.isMultipleEntryPoint) {
-    let p = Object.entries(taquitoFullParam);
+    const p = Object.entries(taquitoFullParam);
     if (p.length !== 1) {
       throw new Error("should only one entrypoint is selected");
     }
@@ -555,21 +555,22 @@ function genLambda(
     taquitoParam = taquitoFullParam;
   }
 
-  let param = emitMicheline(
+  const param = emitMicheline(
     props.shape.contract.methodsObject[entrypoint](
       taquitoParam
     ).toTransferParams().parameter.value
   );
 
-  let micheline_type = props.shape.contract.parameterSchema.isMultipleEntryPoint
+  const micheline_type = props.shape.contract.parameterSchema
+    .isMultipleEntryPoint
     ? props.shape.contract.entrypoints.entrypoints[entrypoint]
     : props.shape.contract.parameterSchema.root.val;
-  let p = new Parser();
-  let type = emitMicheline(p.parseJSON(micheline_type), {
+  const p = new Parser();
+  const type = emitMicheline(p.parseJSON(micheline_type), {
     indent: "",
     newline: "",
   });
-  let lambda = makeContractExecution({
+  const lambda = makeContractExecution({
     address: props.address,
     entrypoint,
     type,
