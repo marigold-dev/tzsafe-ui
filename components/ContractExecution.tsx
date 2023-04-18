@@ -145,7 +145,7 @@ function RenderOption(
       throw new Error("internal: the value of option is incorrect");
     }
     return (
-      <div className="flex w-full flex-col gap-2 rounded p-4">
+      <div className="flex w-full flex-col gap-2 rounded">
         <label className="text-white">
           {showTitle && showName(token.type, token.name)}
         </label>
@@ -188,7 +188,7 @@ function RenderMap(
       throw new Error("internal: the value of array is incorrect");
     }
     return (
-      <div className="flex w-full flex-col gap-2 rounded p-4">
+      <div className="flex w-full flex-col gap-2 rounded">
         <label className="text-white">
           {showTitle && showName(token.type, token.name)}
         </label>
@@ -261,7 +261,7 @@ function RenderMap(
 
 function RenderPair(token: token, showTitle: boolean) {
   return (
-    <div className="flex w-full flex-col gap-2 rounded p-4">
+    <div className="flex w-full flex-col gap-2 rounded">
       <label className="text-white">
         {showTitle && showName(token.type, token.name)}
       </label>
