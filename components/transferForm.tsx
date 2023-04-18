@@ -47,11 +47,11 @@ function Basic({
     <Formik
       initialValues={initialState}
       validate={async values => {
-        let errors: any = {};
+        const errors: any = {};
         if (validateContractAddress(values.walletAddress.trim()) !== 3) {
           errors.walletAddress = `Invalid address ${values.walletAddress}`;
         }
-        let exists = await (async () => {
+        const exists = await (async () => {
           try {
             await state.connection.contract.at(values.walletAddress.trim());
             return true;
@@ -143,10 +143,10 @@ function ExecuteContractForm(
     getFieldProps: () => string;
   }>
 ) {
-  let [state, setState] = useState({ address: "", amount: 0, shape: {} });
-  let [loading, setLoading] = useState(false);
-  let [done, setDone] = useState(false);
-  let setLoader = useCallback((x: boolean) => {
+  const [state, setState] = useState({ address: "", amount: 0, shape: {} });
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const setLoader = useCallback((x: boolean) => {
     setLoading((prev: boolean) => {
       if (prev == x) {
         return prev;
@@ -154,7 +154,7 @@ function ExecuteContractForm(
       return x;
     });
   }, []);
-  let setStater = useCallback(({ shape }: { shape: object }) => {
+  const setStater = useCallback(({ shape }: { shape: object }) => {
     setState((prev: any) => {
       if (Object.keys(prev.shape).length) {
         return prev;
@@ -235,7 +235,7 @@ function TransferForm(
 ) {
   const state = useContext(AppStateContext)!;
   const router = useRouter();
-  let portalIdx = useRef(0);
+  const portalIdx = useRef(0);
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);

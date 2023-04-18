@@ -41,69 +41,74 @@ function RenderItem({
   const counter: number = getFieldProps("counter").value;
   const fieldName = getFieldName(token.counter);
   const fieldValue: tokenValueType = getFieldProps(fieldName).value;
-  switch (token.type) {
-    case "bls12_381_fr":
-    case "bls12_381_g1":
-    case "bls12_381_g2":
-    case "chain_id":
-    case "key_hash":
-    case "key":
-    case "bytes":
-    case "address":
-    case "signature":
-    case "string":
-    case "contract":
-    case "int":
-    case "nat":
-    case "mutez":
-    case "timestamp":
-    case "sapling_transaction_deprecated":
-    case "sapling_transaction":
-    case "sapling_state":
-      return RenderInputField(token, fieldName, showTitle);
-    case "never":
-    case "unit":
-      return RenderConstant(token, showTitle);
-    case "bool":
-      return RenderCheckbox(token, fieldName, fieldValue, showTitle);
-    case "or":
-      return RenderSelection(token, fieldName, fieldValue, showTitle);
-    case "set":
-    case "list":
-      return RenderArray(
-        token,
-        fieldName,
-        fieldValue,
-        showTitle,
-        counter,
-        setFieldValue
-      );
-    case "pair":
-      return RenderPair(token, showTitle);
-    case "map":
-      return RenderMap(
-        token,
-        fieldName,
-        fieldValue,
-        showTitle,
-        counter,
-        setFieldValue
-      );
-    case "option":
-      return RenderOption(token, fieldName, fieldValue, showTitle);
-    case "lambda":
-      return RenderLambda(token, fieldName, showTitle);
-    case "ticket_deprecated":
-    case "ticket":
-    case "operation":
-    case "chest":
-    case "chest_key":
-    case "tx_rollup_l2_address":
-    case "constant":
-    case "big_map":
-      return RenderNonsupport(token);
-    default:
-      return assertNever(token.type);
+
+  try {
+    switch (token.type) {
+      case "bls12_381_fr":
+      case "bls12_381_g1":
+      case "bls12_381_g2":
+      case "chain_id":
+      case "key_hash":
+      case "key":
+      case "bytes":
+      case "address":
+      case "signature":
+      case "string":
+      case "contract":
+      case "int":
+      case "nat":
+      case "mutez":
+      case "timestamp":
+      case "sapling_transaction_deprecated":
+      case "sapling_transaction":
+      case "sapling_state":
+        return RenderInputField(token, fieldName, showTitle);
+      case "never":
+      case "unit":
+        return RenderConstant(token, showTitle);
+      case "bool":
+        return RenderCheckbox(token, fieldName, fieldValue, showTitle);
+      case "or":
+        return RenderSelection(token, fieldName, fieldValue, showTitle);
+      case "set":
+      case "list":
+        return RenderArray(
+          token,
+          fieldName,
+          fieldValue,
+          showTitle,
+          counter,
+          setFieldValue
+        );
+      case "pair":
+        return RenderPair(token, showTitle);
+      case "map":
+        return RenderMap(
+          token,
+          fieldName,
+          fieldValue,
+          showTitle,
+          counter,
+          setFieldValue
+        );
+      case "option":
+        return RenderOption(token, fieldName, fieldValue, showTitle);
+      case "lambda":
+        return RenderLambda(token, fieldName, showTitle);
+      case "ticket_deprecated":
+      case "ticket":
+      case "operation":
+      case "chest":
+      case "chest_key":
+      case "tx_rollup_l2_address":
+      case "constant":
+      case "big_map":
+        return RenderNonsupport(token);
+      default:
+        return assertNever(token.type);
+    }
+  } catch (e) {
+    return renderError((e as Error).message);
   }
 }
 
