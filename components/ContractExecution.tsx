@@ -119,7 +119,7 @@ function RenderLambda(token: token, fieldName: string, showTitle: boolean) {
   return (
     <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
       <label className="text-white">
-        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        {showTitle && showName(token.type, token.name)}
       </label>
       <Field
         as="textarea"
@@ -147,7 +147,7 @@ function RenderOption(
     return (
       <div className="flex w-full flex-col gap-2 rounded p-4">
         <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+          {showTitle && showName(token.type, token.name)}
         </label>
         <Field
           className="rounded p-2 text-left text-black"
@@ -190,7 +190,7 @@ function RenderMap(
     return (
       <div className="flex w-full flex-col gap-2 rounded p-4">
         <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+          {showTitle && showName(token.type, token.name)}
         </label>
         <FieldArray name={fieldName}>
           {({ push, pop }) => {
@@ -263,7 +263,7 @@ function RenderPair(token: token, showTitle: boolean) {
   return (
     <div className="flex w-full flex-col gap-2 rounded p-4">
       <label className="text-white">
-        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        {showTitle && showName(token.type, token.name)}
       </label>
       {
         <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
@@ -302,7 +302,7 @@ function RenderArray(
     return (
       <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
         <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+          {showTitle && showName(token.type, token.name)}
         </label>
         <FieldArray name={fieldName}>
           {({ push, pop }) => {
@@ -380,7 +380,7 @@ function RenderSelection(
   return (
     <div className="flex w-full flex-col gap-2 rounded">
       <label className="text-white">
-        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        {showTitle && showName(token.type, token.name)}
       </label>
       <Field
         className="rounded p-2 text-left text-black"
@@ -416,7 +416,7 @@ function RenderCheckbox(
     return (
       <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
         <label className="text-white">
-          {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+          {showTitle && showName(token.type, token.name)}
         </label>
         <div>
           <Field
@@ -435,7 +435,7 @@ function RenderConstant(token: token, showTitle: boolean) {
   return (
     <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
       <label className="text-white">
-        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        {showTitle && showName(token.type, token.name)}
       </label>
       <div className="md:text-md text-while relative h-fit min-h-fit w-full rounded p-2">
         <p>{capitalizeFirstLetter(token.type)}</p>
@@ -448,7 +448,7 @@ function RenderInputField(token: token, fieldName: string, showTitle: boolean) {
   return (
     <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
       <label className="text-white">
-        {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
+        {showTitle && showName(token.type, token.name)}
       </label>
       <Field
         as="input"
