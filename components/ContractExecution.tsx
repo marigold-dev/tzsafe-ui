@@ -378,7 +378,7 @@ function RenderSelection(
       return selected && x.name == selected;
     }) || defaultChildToken;
   return (
-    <div className="flex w-full flex-col gap-2 rounded p-4">
+    <div className="flex w-full flex-col gap-2 rounded">
       <label className="text-white">
         {showTitle && capitalizeFirstLetter(showName(token.type, token.name))}
       </label>
@@ -528,9 +528,6 @@ function ExecuteForm(
       >
         {({ resetForm }) => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-            <div className="mb-2 self-center text-2xl font-medium text-white">
-              Add items below
-            </div>
             <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape.token && (
                 <RenderItem token={props.shape.token} showTitle={false} />
@@ -539,7 +536,6 @@ function ExecuteForm(
             {!!submitError ? (
               <span className="text-red-600">{submitError}</span>
             ) : null}
-            <ErrorMessage name="entrypoint.kind" render={renderError} />
             <div className="mt-4 flex flex-row justify-around md:w-1/3">
               <button
                 className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
