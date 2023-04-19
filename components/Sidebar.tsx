@@ -3,7 +3,6 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  QuestionMarkIcon,
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
 import { tzip16 } from "@taquito/tzip16";
