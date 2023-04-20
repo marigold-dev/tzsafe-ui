@@ -523,7 +523,7 @@ function ExecuteForm(
         initialValues={props.shape.init}
         onSubmit={async values => {
           try {
-            const { lambda, param } = genLambda(props, values);
+            genLambda(props, values);
           } catch (e) {
             console.log(e);
             setSubmitError((e as Error).message);

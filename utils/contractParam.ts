@@ -591,7 +591,6 @@ function genLambda(
     )
   );
   props.setLoading(false);
-  return { lambda, param };
 }
 
 export {
