@@ -13,6 +13,7 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import React, {
+  ChangeEvent,
   useCallback,
   useContext,
   useEffect,
@@ -31,110 +32,128 @@ import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
 
+type Nullable<T> = T | null | undefined;
+
 function Basic({
   setFormState,
 }: React.PropsWithoutRef<{
   setFormState: (x: { address: string; amount: number }) => void;
 }>) {
   const state = useContext(AppStateContext)!;
-
-  let initialState = {
+  const [localFormState, setLocalFormState] = useState({
     amount: 0,
-    walletAddress: "",
+    address: "",
+  });
+
+  const [errors, setErrors] = useState<{
+    amount: Nullable<string>;
+    address: Nullable<string>;
+  }>({ amount: undefined, address: undefined });
+
+  const validate = async (newState: typeof localFormState) => {
+    const newErrors: typeof errors = {
+      amount: undefined,
+      address: undefined,
+    };
+
+    if (
+      newState.address !== "" &&
+      validateContractAddress(newState.address.trim()) !== 3
+    ) {
+      newErrors.address = `Invalid address ${newState.address}`;
+    }
+
+    const exists = await (async () => {
+      try {
+        await state.connection.contract.at(newState.address.trim());
+        return true;
+      } catch (e) {
+        return false;
+      }
+    })();
+
+    if (newState.address !== "" && !exists) {
+      newErrors.address = `Contract does not exist at address ${newState.address}`;
+    }
+
+    if (isNaN(newState.amount) || newState.amount < 0) {
+      newErrors.amount = "Invalid amount " + newState.amount;
+    }
+
+    if (
+      errors.amount === newErrors.amount &&
+      errors.address === newErrors.address
+    )
+      return errors;
+
+    setErrors(newErrors);
+
+    return newErrors;
+  };
+
+  const validateAndSetState = async (newState: typeof localFormState) => {
+    const errors = await validate(newState);
+
+    if (!!errors.address || !!errors.amount) return;
+
+    setLocalFormState(newState);
   };
 
   return (
-    <Formik
-      initialValues={initialState}
-      validate={async values => {
-        const errors: any = {};
-        if (validateContractAddress(values.walletAddress.trim()) !== 3) {
-          errors.walletAddress = `Invalid address ${values.walletAddress}`;
-        }
-        const exists = await (async () => {
-          try {
-            await state.connection.contract.at(values.walletAddress.trim());
-            return true;
-          } catch (e) {
-            return false;
-          }
-        })();
-        if (!exists) {
-          errors.walletAddress = `Contract does not exist at address ${values.walletAddress}`;
-        }
-
-        if (isNaN(Number(values.amount))) {
-          errors.amount = "Invalid amount " + values.amount;
-        }
-
-        return errors;
-      }}
-      onSubmit={async values => {
-        setFormState({
-          address: values.walletAddress.trim(),
-          amount: values.amount,
-        });
-      }}
-    >
-      {({ setFieldValue }) => (
-        <Form className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-          <div className="flex w-full flex-col justify-center md:flex-col ">
-            <div className="flex w-full flex-col">
-              <div className="mb-2 flex w-full flex-col items-start">
-                <label className="font-medium text-white">
-                  Amount in mutez
-                </label>
-                <Field
-                  name="amount"
-                  className=" w-full rounded p-2 text-black"
-                  placeholder="0"
-                  validate={(value: string) => {
-                    let error;
-                    if (isNaN(Number(value))) {
-                      error = `Amount should be a number, got: ${value}`;
-                    }
-                    let num = Number(value);
-                    if (num < 0) {
-                      error = `Amount should be a positive number, got: ${value}`;
-                    }
-                    return error;
-                  }}
-                />
-              </div>
-              <ErrorMessage name="amount" render={renderError} />
-            </div>
-            <div className="flex w-full flex-col ">
-              <div className="mb-2 flex w-full flex-col items-start">
-                <label className="font-medium text-white">
-                  Contract address
-                </label>
-                <TextInputWithCompletion
-                  setTerms={({ payload, term: _ }) => {
-                    setFieldValue("walletAddress", payload);
-                  }}
-                  filter={x =>
-                    validateContractAddress((x as string).trim()) === 3
-                  }
-                  byAddrToo={true}
-                  as="input"
-                  name={`walletAddress`}
-                  className=" w-full p-2 text-black"
-                  placeholder={"contract address"}
-                  rows={10}
-                />
-              </div>
-              <ErrorMessage name="walletAddress" render={renderError} />
-            </div>
+    <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
+      <div className="flex w-full flex-col justify-center md:flex-col ">
+        <div className="flex w-full flex-col">
+          <div className="flex w-full flex-col items-start">
+            <label className="font-medium text-white">Amount in mutez</label>
+            <Field
+              name="amount"
+              className=" w-full rounded p-2 text-black"
+              placeholder="0"
+              onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                await validateAndSetState({
+                  ...localFormState,
+                  amount: Number(e.target.value.trim()),
+                });
+              }}
+            />
           </div>
-          <button
-            className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
-            type="submit"
-          >
-            Continue
-          </button>
-        </Form>
-      )}
-    </Formik>
+          {!!errors.amount && renderError(errors.amount)}
+        </div>
+        <div className="flex w-full flex-col ">
+          <div className="mt-2 flex w-full flex-col items-start">
+            <label className="font-medium text-white">Contract address</label>
+            <TextInputWithCompletion
+              setTerms={({ payload, term: _ }) => {}}
+              onOwnBlur={async (address: string) =>
+                await validateAndSetState({
+                  ...localFormState,
+                  address,
+                })
+              }
+              filter={x => validateContractAddress((x as string).trim()) === 3}
+              byAddrToo={true}
+              as="input"
+              name={`walletAddress`}
+              className=" w-full p-2 text-black"
+              placeholder={"contract address"}
+              rows={10}
+            />
+          </div>
+          {!!errors.address && renderError(errors.address)}
+        </div>
+      </div>
+      <button
+        className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
+        type="button"
+        onClick={async () => {
+          const errors = await validate(localFormState);
+          if (!!errors.amount || !!errors.address) return;
+          setFormState(localFormState);
+        }}
+      >
+        Continue
+      </button>
+    </div>
   );
 }
 function ExecuteContractForm(
@@ -163,6 +182,7 @@ function ExecuteContractForm(
     });
   }, []);
 
+  console.log(state);
   if (loading) {
     return (
       <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
@@ -411,58 +431,72 @@ function TransferForm(
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
-              {({ remove, replace, unshift }) => (
+              {({ remove, replace, unshift, form }) => (
                 <div
                   className="flex h-fit min-w-full flex-row-reverse "
                   id="top"
                 >
-                  <div className="sticky top-24 inline-block w-1/5 space-y-4 self-start rounded bg-zinc-700 p-4">
-                    <h4 className="text-white">Add a ? to the proposal</h4>
+                  <div
+                    className={`sticky ${
+                      state.hasBanner ? "top-36" : "top-24"
+                    } inline-block w-1/5 self-start rounded bg-zinc-700 p-4`}
+                  >
+                    <div className="space-y-4">
+                      <h4 className="text-white">Add a ? to the proposal</h4>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            unshift,
+                            "transfer",
+                            values.transfers.length,
+                            Versioned.transferForm(props.contract)
+                          );
+                        }}
+                      >
+                        Transfer
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            unshift,
+                            "fa2",
+                            undefined,
+                            Versioned.fa2(props.contract)
+                          );
+                        }}
+                      >
+                        FA2 Transfer
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          e.preventDefault();
+                          let idx = portalIdx.current;
+                          portalIdx.current += 1;
+                          unshift({
+                            type: "contract",
+                            key: idx,
+                            ...Versioned.lambdaForm(props.contract),
+                          });
+                        }}
+                      >
+                        Contract Execution
+                      </button>
+                    </div>
+                    <div className="mt-4 h-px w-full bg-zinc-500"></div>
                     <button
                       type="button"
-                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
-                      onClick={e => {
-                        addNewField(
-                          e,
-                          unshift,
-                          "transfer",
-                          values.transfers.length,
-                          Versioned.transferForm(props.contract)
-                        );
-                      }}
+                      className="mt-4 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                      onClick={() => form.resetForm()}
                     >
-                      Transfer
-                    </button>
-                    <button
-                      type="button"
-                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
-                      onClick={e => {
-                        addNewField(
-                          e,
-                          unshift,
-                          "fa2",
-                          undefined,
-                          Versioned.fa2(props.contract)
-                        );
-                      }}
-                    >
-                      FA2 Transfer
-                    </button>
-                    <button
-                      type="button"
-                      className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        let idx = portalIdx.current;
-                        portalIdx.current += 1;
-                        unshift({
-                          type: "contract",
-                          key: idx,
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Contract Execution
+                      Clean all
                     </button>
                   </div>
 
@@ -516,9 +550,10 @@ function TransferForm(
                               <button
                                 type="button"
                                 className={
-                                  (errors.transfers && errors.transfers[index]
-                                    ? "my-auto"
-                                    : "") +
+                                  // (errors.transfers && errors.transfers[index]
+                                  //   ? "my-auto"
+                                  //   : "")
+                                  //+
                                   " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
                                 }
                                 onClick={e => {
@@ -544,7 +579,9 @@ function TransferForm(
                           <section key={`${transfer.type}:${index}`}>
                             <p className="text-lg text-white">
                               {!transfer.fields.find(v => v.kind === "textarea")
-                                ? "Transfer"
+                                ? transfer.type === "fa2"
+                                  ? "Transfer FA2"
+                                  : "Transfer"
                                 : "Execute lambda"}
                             </p>
                             <div
