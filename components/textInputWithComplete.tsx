@@ -12,6 +12,7 @@ const TextInputWithCompletion: FC<
     byAddrToo?: boolean;
     filter: (x: any) => boolean;
     placeholder?: string;
+    onOwnBlur?: (v: string) => any;
   }
 > = props => {
   const [field, _, helpers] = useField(props);
@@ -24,12 +25,13 @@ const TextInputWithCompletion: FC<
   const handleFocus = (e: any) => {
     setVisible(true);
   };
-  const handleBLur = async (e: any) => {
-    let __ = await sleep(250);
-    setVisible(false);
-    field.onBlur(e);
+  const handleBLur = (e: any) => {
+    props.onOwnBlur?.(e.target.value);
+    // let __ = await sleep(250);
+    // setVisible(false);
+    // field.onBlur(e);
   };
-  let shouldShow = visible && field.value.trim().length > 0;
+  // let shouldShow = visible && field.value.trim().length > 0;
   let completions = state.aliasTrie.GetTopkTermsForPrefix(field.value, 10, 0);
   if (props.byAddrToo) {
     let tree = new Trie();

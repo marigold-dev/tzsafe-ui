@@ -521,7 +521,7 @@ function ExecuteForm(
       <Formik
         enableReinitialize
         initialValues={props.shape.init}
-        onSubmit={async values => {
+        onSubmit={values => {
           try {
             genLambda(props, values);
           } catch (e) {
