@@ -598,16 +598,28 @@ function genLambda(
   props.setLoading(false);
 }
 
+/**
+ *
+ * @param contract
+ * @param initTokenTable
+ * @returns token
+ *
+ * Token is parsed the parameter of Michelson in AST.
+ * The returned token is the root of AST and named "entrypoint".
+ * If the parameter of Michelson has multiple entrypoints, the children of the root represent different entrypoints.
+ * Otherwise, the children of the root are the parameter of the "default" entrypoint.
+ */
 function parseContract(
   c: ContractAbstraction<ContractProvider>,
   initTokenTable: Record<string, tokenValueType>
 ) {
   let token: token;
   let counter = 0;
+  // reverse the elements so the order of entrypoints will be in alphabet
   const entryponts = Object.entries(c.entrypoints.entrypoints).reverse();
-  const p = new Parser();
 
   if (entryponts.length == 0) {
+    // handle the case of only "default" entrypoint
     [token, counter] = parseSchema(
       0,
       c.parameterSchema.generateSchema(),
@@ -615,6 +627,7 @@ function parseContract(
       "entrypoint"
     );
   } else {
+    // handle the case of multiple entrypoints
     const childrenToken: token[] = [];
     let childToken;
     let init;
@@ -622,7 +635,14 @@ function parseContract(
     for (let i = 0; i < entryponts.length; i++) {
       const [entrypoint, type] = entryponts[i];
       const schema = new Schema(type).generateSchema();
+      /** If the michelson type is "or", it means it's a nested entrypoint.
+       *  The entrypoint is repeated. Therefore, don't make it as a child.
+       */
       if (schema.__michelsonType !== "or") {
+        /**
+         * Chose default value for selection component.
+         * Pick up the first non-nested entrypoint.
+         */
         if (!setInit) {
           init = entrypoint;
           setInit = true;
