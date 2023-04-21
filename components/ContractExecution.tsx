@@ -144,35 +144,33 @@ function RenderOption(
   value: tokenValueType,
   showTitle: boolean
 ) {
-  {
-    if (typeof value !== "string") {
-      throw new Error("internal error: the value of option is incorrect");
-    }
-    return (
-      <div className="flex w-full flex-col gap-2 rounded">
-        <label className="text-white">
-          {showTitle && showName(token.type, token.name)}
-        </label>
-        <Field
-          className="rounded p-2 text-left text-black"
-          name={fieldName}
-          as="select"
-        >
-          <option className="text-black" key="1" value="none">
-            None
-          </option>
-          <option className="text-black" key="2" value="some">
-            Some
-          </option>
-        </Field>
-        {value == "some" ? (
-          <RenderItem token={token.children[0]} showTitle={true} />
-        ) : (
-          <div></div>
-        )}
-      </div>
-    );
+  if (typeof value !== "string") {
+    throw new Error("internal error: the value of option is incorrect");
   }
+  return (
+    <div className="flex w-full flex-col gap-2 rounded">
+      <label className="text-white">
+        {showTitle && showName(token.type, token.name)}
+      </label>
+      <Field
+        className="rounded p-2 text-left text-black"
+        name={fieldName}
+        as="select"
+      >
+        <option className="text-black" key="1" value="none">
+          None
+        </option>
+        <option className="text-black" key="2" value="some">
+          Some
+        </option>
+      </Field>
+      {value == "some" ? (
+        <RenderItem token={token.children[0]} showTitle={true} />
+      ) : (
+        <div></div>
+      )}
+    </div>
+  );
 }
 
 function RenderMap(
@@ -187,80 +185,78 @@ function RenderMap(
     shouldValidate?: boolean | undefined
   ) => void
 ) {
-  {
-    if (!Array.isArray(elements)) {
-      throw new Error("internal: the value of array is incorrect");
-    }
-    return (
-      <div className="flex w-full flex-col gap-2 rounded">
-        <label className="text-white">
-          {showTitle && showName(token.type, token.name)}
-        </label>
-        <FieldArray name={fieldName}>
-          {({ push, pop }) => {
-            return (
-              <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
-                {elements &&
-                  elements.map((element, idx) => {
-                    if ("counter" in element) {
-                      throw new Error(
-                        "internal error: the value of array is incorrect"
-                      );
-                    }
-                    return (
-                      <div
-                        key={idx}
-                        className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
-                      >
-                        <RenderItem token={element.key} showTitle={true} />
-                        <RenderItem token={element.value} showTitle={true} />
-                      </div>
+  if (!Array.isArray(elements)) {
+    throw new Error("internal: the value of array is incorrect");
+  }
+  return (
+    <div className="flex w-full flex-col gap-2 rounded">
+      <label className="text-white">
+        {showTitle && showName(token.type, token.name)}
+      </label>
+      <FieldArray name={fieldName}>
+        {({ push, pop }) => {
+          return (
+            <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+              {elements &&
+                elements.map((element, idx) => {
+                  if ("counter" in element) {
+                    throw new Error(
+                      "internal error: the value of array is incorrect"
                     );
-                  })}
-                <div className="mt-2 flex flex-col md:flex-row">
-                  {elements && elements.length > 0 && (
-                    <button
-                      type="button"
-                      className={
-                        "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
-                      }
-                      onClick={e => {
-                        e.preventDefault();
-                        pop();
-                      }}
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
                     >
-                      Remove
-                    </button>
-                  )}
+                      <RenderItem token={element.key} showTitle={true} />
+                      <RenderItem token={element.value} showTitle={true} />
+                    </div>
+                  );
+                })}
+              <div className="mt-2 flex flex-col md:flex-row">
+                {elements && elements.length > 0 && (
                   <button
                     type="button"
-                    className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    className={
+                      "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    }
                     onClick={e => {
                       e.preventDefault();
-
-                      const new_counter = allocateNewTokenCounter(
-                        token,
-                        counter,
-                        setFieldValue
-                      );
-                      const child: tokenMap = {
-                        key: token.children[0],
-                        value: token.children[1],
-                      };
-                      push(child);
-                      setFieldValue("counter", new_counter);
+                      pop();
                     }}
                   >
-                    Add item
+                    Remove
                   </button>
-                </div>
+                )}
+                <button
+                  type="button"
+                  className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                  onClick={e => {
+                    e.preventDefault();
+
+                    const new_counter = allocateNewTokenCounter(
+                      token,
+                      counter,
+                      setFieldValue
+                    );
+                    const child: tokenMap = {
+                      key: token.children[0],
+                      value: token.children[1],
+                    };
+                    push(child);
+                    setFieldValue("counter", new_counter);
+                  }}
+                >
+                  Add item
+                </button>
               </div>
-            );
-          }}
-        </FieldArray>
-      </div>
-    );
-  }
+            </div>
+          );
+        }}
+      </FieldArray>
+    </div>
+  );
 }
 
 function RenderPair(token: token, showTitle: boolean) {
@@ -299,74 +295,72 @@ function RenderArray(
     shouldValidate?: boolean | undefined
   ) => void
 ) {
-  {
-    if (!Array.isArray(elements)) {
-      throw new Error("internal error: the value of array is incorrect");
-    }
-    return (
-      <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
-        <label className="text-white">
-          {showTitle && showName(token.type, token.name)}
-        </label>
-        <FieldArray name={fieldName}>
-          {({ push, pop }) => {
-            return (
-              <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
-                {elements &&
-                  elements.map((v, idx) => {
-                    if (!("counter" in v)) {
-                      throw new Error(
-                        "internal error: the value of array is incorrect"
-                      );
-                    }
-                    return (
-                      <div
-                        key={idx}
-                        className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
-                      >
-                        <RenderItem token={v} showTitle={false} />
-                      </div>
+  if (!Array.isArray(elements)) {
+    throw new Error("internal error: the value of array is incorrect");
+  }
+  return (
+    <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
+      <label className="text-white">
+        {showTitle && showName(token.type, token.name)}
+      </label>
+      <FieldArray name={fieldName}>
+        {({ push, pop }) => {
+          return (
+            <div className="flex w-full flex-col gap-2 rounded border-2 p-4">
+              {elements &&
+                elements.map((v, idx) => {
+                  if (!("counter" in v)) {
+                    throw new Error(
+                      "internal error: the value of array is incorrect"
                     );
-                  })}
-                <div className="mt-2 flex flex-col md:flex-row">
-                  {elements && elements.length > 0 && (
-                    <button
-                      type="button"
-                      className={
-                        "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
-                      }
-                      onClick={e => {
-                        e.preventDefault();
-                        pop();
-                      }}
+                  }
+                  return (
+                    <div
+                      key={idx}
+                      className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2"
                     >
-                      Remove
-                    </button>
-                  )}
+                      <RenderItem token={v} showTitle={false} />
+                    </div>
+                  );
+                })}
+              <div className="mt-2 flex flex-col md:flex-row">
+                {elements && elements.length > 0 && (
                   <button
                     type="button"
-                    className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    className={
+                      "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    }
                     onClick={e => {
                       e.preventDefault();
-                      const new_counter = allocateNewTokenCounter(
-                        token,
-                        counter,
-                        setFieldValue
-                      );
-                      setFieldValue("counter", new_counter);
-                      push(token.children[0]);
+                      pop();
                     }}
                   >
-                    Add item
+                    Remove
                   </button>
-                </div>
+                )}
+                <button
+                  type="button"
+                  className="mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                  onClick={e => {
+                    e.preventDefault();
+                    const new_counter = allocateNewTokenCounter(
+                      token,
+                      counter,
+                      setFieldValue
+                    );
+                    setFieldValue("counter", new_counter);
+                    push(token.children[0]);
+                  }}
+                >
+                  Add item
+                </button>
               </div>
-            );
-          }}
-        </FieldArray>
-      </div>
-    );
-  }
+            </div>
+          );
+        }}
+      </FieldArray>
+    </div>
+  );
 }
 
 function RenderSelection(
