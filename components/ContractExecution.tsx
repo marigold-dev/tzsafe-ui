@@ -521,17 +521,9 @@ function ExecuteForm(
       <Formik
         enableReinitialize
         initialValues={props.shape.init}
-        onSubmit={values => {
-          try {
-            genLambda(props, values);
-          } catch (e) {
-            console.log(e);
-            setSubmitError((e as Error).message);
-            props.setLoading(false);
-          }
-        }}
+        onSubmit={() => {}}
       >
-        {({ resetForm }) => (
+        {({ values }) => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
             <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape.token && (
@@ -553,7 +545,16 @@ function ExecuteForm(
               </button>
               <button
                 className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                type="submit"
+                type="button"
+                onClick={() => {
+                  try {
+                    genLambda(props, values);
+                  } catch (e) {
+                    console.log(e);
+                    setSubmitError((e as Error).message);
+                    props.setLoading(false);
+                  }
+                }}
               >
                 Confirm
               </button>
