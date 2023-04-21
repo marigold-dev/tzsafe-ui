@@ -38,8 +38,18 @@ type Nullable<T> = T | null | undefined;
 
 function Basic({
   setFormState,
+  defaultValues,
+  withContinue = true,
+  address,
+  onAmountChange,
+  onAddressChange,
 }: React.PropsWithoutRef<{
   setFormState: (x: { address: string; amount: number }) => void;
+  defaultValues?: { amount: number | undefined; address: string | undefined };
+  withContinue?: boolean;
+  onAmountChange?: (value: number) => any;
+  onAddressChange?: (value: string) => any;
+  address?: string;
 }>) {
   const state = useContext(AppStateContext)!;
   const [localFormState, setLocalFormState] = useState({
@@ -97,14 +107,58 @@ function Basic({
   const validateAndSetState = async (newState: typeof localFormState) => {
     const errors = await validate(newState);
 
-    if (!!errors.address || !!errors.amount) return;
+    if (!!errors.address || !!errors.amount) return true;
 
     setLocalFormState(newState);
+
+    return false;
   };
 
   return (
     <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-      <div className="flex w-full flex-col justify-center md:flex-col ">
+      <div className="flex w-full flex-col justify-center space-y-2 md:flex-col">
+        <div className="flex w-full flex-col ">
+          <div className="flex w-full flex-col items-start">
+            <label className="font-medium text-white">Contract address</label>
+            <div className="relative w-full">
+              {!!address ? (
+                <span className="text-zinc-400">{address}</span>
+              ) : (
+                <>
+                  <TextInputWithCompletion
+                    defaultValue={defaultValues?.address}
+                    setTerms={() => {}}
+                    onOwnChange={(address: string) =>
+                      debounce(async () => {
+                        setContractLoading(true);
+                        const hasError = await validateAndSetState({
+                          ...localFormState,
+                          address,
+                        });
+                        setContractLoading(false);
+                      }, 300)
+                    }
+                    filter={x =>
+                      validateContractAddress((x as string).trim()) === 3
+                    }
+                    byAddrToo={true}
+                    as="input"
+                    name={`walletAddress`}
+                    className=" w-full p-2 text-black"
+                    placeholder={"contract address"}
+                    rows={10}
+                  />
+                  {contractLoading && (
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                      <Spinner />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          {!!errors.address && renderError(errors.address)}
+        </div>
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
             <label className="font-medium text-white">Amount in mutez</label>
@@ -113,62 +167,35 @@ function Basic({
               className=" w-full rounded p-2 text-black"
               placeholder="0"
               onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-                await validateAndSetState({
+                const amount = Number(e.target.value.trim());
+                const hasError = await validateAndSetState({
                   ...localFormState,
-                  amount: Number(e.target.value.trim()),
+                  amount,
                 });
+
+                if (hasError) return;
+
+                onAmountChange?.(amount);
               }}
+              defaultValue={defaultValues?.amount}
             />
           </div>
           {!!errors.amount && renderError(errors.amount)}
         </div>
-        <div className="flex w-full flex-col ">
-          <div className="mt-2 flex w-full flex-col items-start">
-            <label className="font-medium text-white">Contract address</label>
-            <div className="relative w-full">
-              <TextInputWithCompletion
-                setTerms={() => {}}
-                onOwnChange={(address: string) =>
-                  debounce(async () => {
-                    setContractLoading(true);
-                    await validateAndSetState({
-                      ...localFormState,
-                      address,
-                    });
-                    setContractLoading(false);
-                  }, 300)
-                }
-                filter={x =>
-                  validateContractAddress((x as string).trim()) === 3
-                }
-                byAddrToo={true}
-                as="input"
-                name={`walletAddress`}
-                className=" w-full p-2 text-black"
-                placeholder={"contract address"}
-                rows={10}
-              />
-              {contractLoading && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                  <Spinner />
-                </div>
-              )}
-            </div>
-          </div>
-          {!!errors.address && renderError(errors.address)}
-        </div>
       </div>
-      <button
-        className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
-        type="button"
-        onClick={async () => {
-          const errors = await validate(localFormState);
-          if (!!errors.amount || !!errors.address) return;
-          setFormState(localFormState);
-        }}
-      >
-        Continue
-      </button>
+      {withContinue && (
+        <button
+          className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
+          type="button"
+          onClick={async () => {
+            const errors = await validate(localFormState);
+            if (!!errors.amount || !!errors.address) return;
+            onAddressChange?.(localFormState.address);
+          }}
+        >
+          Continue
+        </button>
+      )}
     </div>
   );
 }
@@ -181,14 +208,7 @@ function ExecuteContractForm(
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
-  const setLoader = useCallback((x: boolean) => {
-    setLoading((prev: boolean) => {
-      if (prev == x) {
-        return prev;
-      }
-      return x;
-    });
-  }, []);
+  const setLoader = useCallback((x: boolean) => setLoading(x), []);
   const setStater = useCallback(({ shape }: { shape: object }) => {
     setState((prev: any) => {
       if (Object.keys(prev.shape).length) {
@@ -230,17 +250,26 @@ function ExecuteContractForm(
       </div>
     );
   }
-  if (!state.address) {
-    return (
-      <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute Contract</p>
-        <Basic setFormState={x => setState({ ...x, shape: {} })} />
-      </div>
-    );
-  } else {
-    return (
-      <div className=" w-full text-white">
-        <p className="mt-4 text-lg text-white">Execute Contract</p>
+
+  return (
+    <div className=" w-full text-white">
+      <p className="mt-4 text-lg text-white">Execute Contract</p>
+      <Basic
+        setFormState={x => setState({ ...x, shape: {} })}
+        onAmountChange={amount => {
+          setState({ ...state, amount });
+        }}
+        onAddressChange={address => {
+          setState({ ...state, address });
+        }}
+        defaultValues={{
+          amount: state.amount === 0 ? undefined : state.amount,
+          address: state.address,
+        }}
+        withContinue={!state.address}
+        address={state.address}
+      />
+      {!!state.address && (
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -253,12 +282,11 @@ function ExecuteContractForm(
           amount={state.amount}
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
-            setDone(true);
           }}
         />
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 }
 
 const addNewField = (

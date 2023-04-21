@@ -14,6 +14,7 @@ const TextInputWithCompletion: FC<
     placeholder?: string;
     onOwnBlur?: (v: string) => any;
     onOwnChange?: (v: string) => any;
+    defaultValue?: string;
   }
 > = props => {
   const [field, _, helpers] = useField(props);
@@ -30,7 +31,7 @@ const TextInputWithCompletion: FC<
     props.onOwnBlur?.(e.target.value);
     // let __ = await sleep(250);
     // setVisible(false);
-    // field.onBlur(e);
+    field.onBlur(e);
   };
   // let shouldShow = visible && field.value.trim().length > 0;
   let completions = state.aliasTrie.GetTopkTermsForPrefix(field.value, 10, 0);
@@ -46,15 +47,18 @@ const TextInputWithCompletion: FC<
   return (
     <div className="relative w-full">
       <input
+        {...field}
+        value={undefined}
+        defaultValue={props.defaultValue}
         autoComplete="false"
         className={props.className + " relative rounded"}
-        // {...field}
         onFocus={handleFocus}
         onBlur={handleBLur}
         placeholder={props.placeholder}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          props.onOwnChange?.(e.target.value)
-        }
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          props.onOwnChange?.(e.target.value);
+          field.onChange(e);
+        }}
       />
       {
         //shouldShow && completions.length > 0 && (
