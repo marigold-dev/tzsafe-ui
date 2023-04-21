@@ -29,6 +29,7 @@ import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
+import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
@@ -45,6 +46,7 @@ function Basic({
     amount: 0,
     address: "",
   });
+  const [contractLoading, setContractLoading] = useState(false);
 
   const [errors, setErrors] = useState<{
     amount: Nullable<string>;
@@ -123,24 +125,35 @@ function Basic({
         <div className="flex w-full flex-col ">
           <div className="mt-2 flex w-full flex-col items-start">
             <label className="font-medium text-white">Contract address</label>
-            <TextInputWithCompletion
-              setTerms={() => {}}
-              onOwnChange={(address: string) =>
-                debounce(async () => {
-                  await validateAndSetState({
-                    ...localFormState,
-                    address,
-                  });
-                }, 500)
-              }
-              filter={x => validateContractAddress((x as string).trim()) === 3}
-              byAddrToo={true}
-              as="input"
-              name={`walletAddress`}
-              className=" w-full p-2 text-black"
-              placeholder={"contract address"}
-              rows={10}
-            />
+            <div className="relative w-full">
+              <TextInputWithCompletion
+                setTerms={() => {}}
+                onOwnChange={(address: string) =>
+                  debounce(async () => {
+                    setContractLoading(true);
+                    await validateAndSetState({
+                      ...localFormState,
+                      address,
+                    });
+                    setContractLoading(false);
+                  }, 300)
+                }
+                filter={x =>
+                  validateContractAddress((x as string).trim()) === 3
+                }
+                byAddrToo={true}
+                as="input"
+                name={`walletAddress`}
+                className=" w-full p-2 text-black"
+                placeholder={"contract address"}
+                rows={10}
+              />
+              {contractLoading && (
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <Spinner />
+                </div>
+              )}
+            </div>
           </div>
           {!!errors.address && renderError(errors.address)}
         </div>
