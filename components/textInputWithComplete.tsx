@@ -13,6 +13,7 @@ const TextInputWithCompletion: FC<
     filter: (x: any) => boolean;
     placeholder?: string;
     onOwnBlur?: (v: string) => any;
+    onOwnChange?: (v: string) => any;
   }
 > = props => {
   const [field, _, helpers] = useField(props);
@@ -47,10 +48,13 @@ const TextInputWithCompletion: FC<
       <input
         autoComplete="false"
         className={props.className + " relative rounded"}
-        {...field}
+        // {...field}
         onFocus={handleFocus}
         onBlur={handleBLur}
         placeholder={props.placeholder}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          props.onOwnChange?.(e.target.value)
+        }
       />
       {
         //shouldShow && completions.length > 0 && (

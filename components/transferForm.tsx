@@ -24,6 +24,7 @@ import ReactDOM from "react-dom";
 import { transferableAbortController } from "util";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
+import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
@@ -123,12 +124,14 @@ function Basic({
           <div className="mt-2 flex w-full flex-col items-start">
             <label className="font-medium text-white">Contract address</label>
             <TextInputWithCompletion
-              setTerms={({ payload, term: _ }) => {}}
-              onOwnBlur={async (address: string) =>
-                await validateAndSetState({
-                  ...localFormState,
-                  address,
-                })
+              setTerms={() => {}}
+              onOwnChange={(address: string) =>
+                debounce(async () => {
+                  await validateAndSetState({
+                    ...localFormState,
+                    address,
+                  });
+                }, 500)
               }
               filter={x => validateContractAddress((x as string).trim()) === 3}
               byAddrToo={true}
@@ -182,7 +185,6 @@ function ExecuteContractForm(
     });
   }, []);
 
-  console.log(state);
   if (loading) {
     return (
       <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
