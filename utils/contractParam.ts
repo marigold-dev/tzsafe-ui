@@ -540,7 +540,6 @@ function genLambda(
   },
   values: any
 ) {
-  props.setLoading(true);
   let entrypoint = "default";
   let taquitoParam;
   const taquitoFullParam = evalTaquitoParam(props.shape.token, values);

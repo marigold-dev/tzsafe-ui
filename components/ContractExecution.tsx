@@ -522,6 +522,13 @@ function ExecuteForm(
         enableReinitialize
         initialValues={props.shape.init}
         onSubmit={() => {}}
+        validate={values => {
+          try {
+            genLambda(props, values);
+          } catch (e) {
+            // setSubmitError((e as Error).message);
+          }
+        }}
       >
         {({ values }) => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
@@ -535,28 +542,13 @@ function ExecuteForm(
             ) : null}
             <div className="mt-4 flex flex-row justify-around md:w-1/3">
               <button
-                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                className="rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                 onClick={e => {
                   e.preventDefault();
                   props.reset();
                 }}
               >
                 Reset
-              </button>
-              <button
-                className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                type="button"
-                onClick={() => {
-                  try {
-                    genLambda(props, values);
-                  } catch (e) {
-                    console.log(e);
-                    setSubmitError((e as Error).message);
-                    props.setLoading(false);
-                  }
-                }}
-              >
-                Confirm
               </button>
             </div>
           </Form>

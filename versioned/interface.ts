@@ -248,11 +248,8 @@ abstract class Versioned {
             path: ".to",
             kind: "input-complete",
             placeholder: "destination address",
-            validate: (x: string) => {
-              return validateAddress(x) !== 3
-                ? `invalid address ${x}`
-                : undefined;
-            },
+            validate: (x: string) =>
+              validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
           },
         ],
       };
