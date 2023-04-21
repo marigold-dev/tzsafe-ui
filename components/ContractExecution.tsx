@@ -3,7 +3,6 @@ import {
   ErrorMessage,
   Field,
   FieldArray,
-  FieldInputProps,
   Form,
   Formik,
   useFormikContext,
@@ -11,7 +10,7 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { AppStateContext } from "../context/state";
 import {
-  parseSchema,
+  parseContract,
   genLambda,
   getFieldName,
   showName,
@@ -147,7 +146,7 @@ function RenderOption(
 ) {
   {
     if (typeof value !== "string") {
-      throw new Error("internal: the value of option is incorrect");
+      throw new Error("internal error: the value of option is incorrect");
     }
     return (
       <div className="flex w-full flex-col gap-2 rounded">
@@ -205,7 +204,7 @@ function RenderMap(
                   elements.map((element, idx) => {
                     if ("counter" in element) {
                       throw new Error(
-                        "internal: the value of array is incorrect"
+                        "internal error: the value of array is incorrect"
                       );
                     }
                     return (
@@ -302,7 +301,7 @@ function RenderArray(
 ) {
   {
     if (!Array.isArray(elements)) {
-      throw new Error("internal: the value of array is incorrect");
+      throw new Error("internal error: the value of array is incorrect");
     }
     return (
       <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
@@ -317,7 +316,7 @@ function RenderArray(
                   elements.map((v, idx) => {
                     if (!("counter" in v)) {
                       throw new Error(
-                        "internal: the value of array is incorrect"
+                        "internal error: the value of array is incorrect"
                       );
                     }
                     return (
@@ -416,7 +415,7 @@ function RenderCheckbox(
   showTitle: boolean
 ) {
   if (typeof values !== "boolean") {
-    throw new Error("internal: the value of bool is incorrect");
+    throw new Error("internal error: the value of bool is incorrect");
   } else {
     return (
       <div className="mt-1 grid w-full grid-flow-row grid-cols-1 gap-2">
@@ -495,17 +494,11 @@ function ExecuteForm(
           setLoading(true);
           const c = await conn.contract.at(address);
           const initTokenTable: Record<string, tokenValueType> = {};
-          const [token, counter] = parseSchema(
-            0,
-            c.parameterSchema.generateSchema(),
-            initTokenTable,
-            "entrypoint"
-          );
-          initTokenTable["counter"] = counter;
+          const token: token = parseContract(c, initTokenTable);
 
           props.setState({
             init: initTokenTable,
-            token: token,
+            token,
             contract: c,
           });
           setLoading(false);

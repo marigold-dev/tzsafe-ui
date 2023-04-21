@@ -1,6 +1,10 @@
 import { emitMicheline, Parser } from "@taquito/michel-codec";
-import { TokenSchema } from "@taquito/michelson-encoder";
-import { MichelsonMap } from "@taquito/taquito";
+import { TokenSchema, Schema } from "@taquito/michelson-encoder";
+import {
+  ContractAbstraction,
+  ContractProvider,
+  MichelsonMap,
+} from "@taquito/taquito";
 import { validateAddress } from "@taquito/utils";
 import { assertNever } from "assert-never";
 import { makeContractExecution } from "../context/contractExecution";
@@ -413,7 +417,9 @@ function evalTaquitoParam(
     case "timestamp": {
       const value = tableValue[getFieldName(token.counter)];
       if (!value) {
-        throw new Error(`Incorrect value, ${showName(token.type, token.name)}`);
+        throw new Error(
+          `Incorrect or empty value, ${showName(token.type, token.name)}`
+        );
       }
       return Number(value);
     }
@@ -554,7 +560,6 @@ function genLambda(
   } else {
     taquitoParam = taquitoFullParam;
   }
-
   const param = emitMicheline(
     props.shape.contract.methodsObject[entrypoint](
       taquitoParam
@@ -593,11 +598,69 @@ function genLambda(
   props.setLoading(false);
 }
 
+function parseContract(
+  c: ContractAbstraction<ContractProvider>,
+  initTokenTable: Record<string, tokenValueType>
+) {
+  let token: token;
+  let counter = 0;
+  const entryponts = Object.entries(c.entrypoints.entrypoints).reverse();
+  const p = new Parser();
+
+  if (entryponts.length == 0) {
+    [token, counter] = parseSchema(
+      0,
+      c.parameterSchema.generateSchema(),
+      initTokenTable,
+      "entrypoint"
+    );
+  } else {
+    const childrenToken: token[] = [];
+    let childToken;
+    let init;
+    let setInit = false;
+    for (let i = 0; i < entryponts.length; i++) {
+      const [entrypoint, type] = entryponts[i];
+      const schema = new Schema(type).generateSchema();
+      if (schema.__michelsonType !== "or") {
+        if (!setInit) {
+          init = entrypoint;
+          setInit = true;
+        }
+        let new_counter;
+        [childToken, new_counter] = parseSchema(
+          counter,
+          schema,
+          initTokenTable,
+          entrypoint
+        );
+        counter = new_counter + 1;
+        childrenToken.push(childToken);
+      }
+    }
+    counter = counter + 1;
+    if (typeof init === "undefined")
+      throw new Error("internal error: initial entrypoint is undefined");
+    token = {
+      counter,
+      name: "entrypoint",
+      type: "or",
+      children: childrenToken,
+      initValue: init,
+    };
+    initTokenTable[getFieldName(token.counter)] = token.initValue;
+  }
+
+  initTokenTable["counter"] = counter;
+  return token;
+}
+
 export {
   parseSchema,
   genLambda,
   getFieldName,
   allocateNewTokenCounter,
   showName,
+  parseContract,
 };
 export type { token, tokenMap, tokenValueType };
