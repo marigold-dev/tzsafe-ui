@@ -20,14 +20,14 @@ COPY --from=deps /app/node_modules ./node_modules
 
 COPY . .
 
-RUN npm run build
-
 RUN \
   if [ "$ENV" = "prod" ]; then \
     echo -en "NEXT_PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=mainnet" > .env.local; \
   else \
     echo -en "NEXT_PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.ghostnet.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=ghostnet" > .env.local; \
   fi
+
+RUN npm run build
 
 EXPOSE 80
 
