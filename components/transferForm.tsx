@@ -1,4 +1,5 @@
 import { NetworkType } from "@airgap/beacon-sdk";
+import { Cross1Icon, HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { emitMicheline, Parser } from "@taquito/michel-codec";
 import { TokenSchema, ParameterSchema } from "@taquito/michelson-encoder";
 import { MichelsonMap } from "@taquito/taquito";
@@ -333,6 +334,7 @@ function TransferForm(
   const router = useRouter();
   const portalIdx = useRef(0);
 
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<boolean | undefined>(undefined);
@@ -480,15 +482,30 @@ function TransferForm(
             <FieldArray name="transfers">
               {({ remove, replace, unshift, form }) => (
                 <div
-                  className="flex h-fit min-w-full flex-row-reverse "
+                  className="flex h-fit min-w-full flex-col lg:flex-row-reverse"
                   id="top"
                 >
                   <div
-                    className={`sticky ${
+                    className={`sticky z-10 ${
                       state.hasBanner ? "top-36" : "top-24"
-                    } inline-block w-1/5 self-start rounded bg-zinc-700 p-4`}
+                    } ${
+                      isMenuOpen ? "w-full" : "ml-auto h-8 w-8 overflow-hidden"
+                    } inline-block w-full self-start rounded bg-zinc-700 p-4 lg:h-auto lg:w-1/5`}
                   >
-                    <div className="space-y-4">
+                    <button
+                      type="button"
+                      className={`absolute ${
+                        isMenuOpen ? "right-4 top-4" : "right-2 top-2"
+                      } text-white lg:hidden`}
+                      onClick={() => setIsMenuOpen(v => !v)}
+                    >
+                      {isMenuOpen ? <Cross1Icon /> : <HamburgerMenuIcon />}
+                    </button>
+                    <div
+                      className={`${
+                        isMenuOpen ? "" : "hidden lg:block"
+                      } space-y-4`}
+                    >
                       <h4 className="text-white">Add a ? to the proposal</h4>
                       <button
                         type="button"
@@ -524,14 +541,15 @@ function TransferForm(
                         type="button"
                         className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                         onClick={e => {
-                          e.preventDefault();
-                          let idx = portalIdx.current;
+                          addNewField(
+                            e,
+                            unshift,
+                            "contract",
+                            portalIdx.current,
+                            Versioned.lambdaForm(props.contract)
+                          );
+
                           portalIdx.current += 1;
-                          unshift({
-                            type: "contract",
-                            key: idx,
-                            ...Versioned.lambdaForm(props.contract),
-                          });
                         }}
                       >
                         Contract Execution
@@ -547,7 +565,7 @@ function TransferForm(
                     </button>
                   </div>
 
-                  <div className="w-4/5 space-y-6 pr-8">
+                  <div className="mt-6 w-full space-y-6 lg:mt-0 lg:w-4/5 lg:pr-8">
                     {values.transfers.length > 0 &&
                       values.transfers.map((transfer, index) => {
                         if (transfer.type === "contract") {
