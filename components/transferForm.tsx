@@ -581,7 +581,10 @@ function TransferForm(
                       className={`${
                         isMenuOpen ? "" : "hidden lg:block"
                       } mt-4 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500`}
-                      onClick={() => form.resetForm()}
+                      onClick={() => {
+                        setFormState(initialProps);
+                        form.resetForm({ values: initialProps });
+                      }}
                     >
                       Remove all
                     </button>
@@ -591,7 +594,6 @@ function TransferForm(
                     {values.transfers.length > 0 &&
                       values.transfers.map((transfer, index) => {
                         if (transfer.type === "contract") {
-                          console.log("HERE:", transfer);
                           return (
                             <div
                               className="flex flex-col md:flex-row md:space-x-4"
