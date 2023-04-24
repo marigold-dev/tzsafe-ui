@@ -252,8 +252,8 @@ function ExecuteContractForm(
   }
 
   return (
-    <div className=" w-full text-white">
-      <p className="mt-4 text-lg text-white">Execute Contract</p>
+    <div className="w-full text-white">
+      <p className="text-lg text-white">Execute Contract</p>
       <Basic
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
@@ -305,6 +305,23 @@ const addNewField = (
   if (window.scrollY > 200) window.scrollTo(0, 0);
 };
 
+const initialProps: {
+  transfers: {
+    type: "lambda" | "transfer" | "contract" | "fa2";
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      kind?: "textarea" | "input-complete";
+      path: string;
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  }[];
+} = {
+  transfers: [],
+};
+
 function TransferForm(
   props: React.PropsWithoutRef<{
     address: string;
@@ -319,6 +336,7 @@ function TransferForm(
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<boolean | undefined>(undefined);
+  const [formState, setFormState] = useState(() => initialProps);
 
   if (state?.address == null) {
     return null;
@@ -410,25 +428,9 @@ function TransferForm(
     );
   }
 
-  const initialProps: {
-    transfers: {
-      type: "lambda" | "transfer" | "contract" | "fa2";
-      values: { [key: string]: string };
-      fields: {
-        field: string;
-        label: string;
-        kind?: "textarea" | "input-complete";
-        path: string;
-        placeholder: string;
-        validate: (p: string) => string | undefined;
-      }[];
-    }[];
-  } = {
-    transfers: [],
-  };
   return (
     <Formik
-      initialValues={initialProps}
+      initialValues={formState}
       validate={values => {
         const errors: {
           transfers: { values: { [key: string]: string } }[];
@@ -451,6 +453,7 @@ function TransferForm(
         return errors.transfers.length === 0 ? undefined : errors;
       }}
       onSubmit={async values => {
+        setFormState(values);
         setLoading(true);
         try {
           let cc = await state.connection.contract.at(props.address);
@@ -460,6 +463,7 @@ function TransferForm(
             await versioned.submitTxProposals(cc, state.connection, values)
           );
           setResult(true);
+          setFormState(initialProps);
         } catch (e) {
           console.log(e);
           setResult(false);
@@ -543,27 +547,11 @@ function TransferForm(
                     </button>
                   </div>
 
-                  {/* <div className="mb-8 flex flex-col sm:flex-row">
-                    
-                    {/* <button
-                      type="button"
-                      className="my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={e => {
-                        e.preventDefault();
-                        push({
-                          type: "lambda",
-                          ...Versioned.lambdaForm(props.contract),
-                        });
-                      }}
-                    >
-                      Lambda Execution
-                    </button> 
-                  </div> */}
                   <div className="w-4/5 space-y-6 pr-8">
                     {values.transfers.length > 0 &&
                       values.transfers.map((transfer, index) => {
                         if (transfer.type === "contract") {
-                          // return ReactDOM.createPortal(
+                          console.log("HERE:", transfer);
                           return (
                             <div
                               className="flex flex-col md:flex-row md:space-x-4"
@@ -593,11 +581,7 @@ function TransferForm(
                               <button
                                 type="button"
                                 className={
-                                  // (errors.transfers && errors.transfers[index]
-                                  //   ? "my-auto"
-                                  //   : "")
-                                  //+
-                                  " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                  "mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
                                 }
                                 onClick={e => {
                                   e.preventDefault();
@@ -608,9 +592,6 @@ function TransferForm(
                               </button>
                             </div>
                           );
-                          // ,document.getElementById("top")!,
-                          // (transfer as any).key.toString()
-                          // );
                         }
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"
