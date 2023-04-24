@@ -1,5 +1,10 @@
 import { NetworkType } from "@airgap/beacon-sdk";
-import { Cross1Icon, HamburgerMenuIcon } from "@radix-ui/react-icons";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Cross1Icon,
+  HamburgerMenuIcon,
+} from "@radix-ui/react-icons";
 import { emitMicheline, Parser } from "@taquito/michel-codec";
 import { TokenSchema, ParameterSchema } from "@taquito/michelson-encoder";
 import { MichelsonMap } from "@taquito/taquito";
@@ -489,22 +494,33 @@ function TransferForm(
                     className={`sticky z-10 ${
                       state.hasBanner ? "top-36" : "top-24"
                     } ${
-                      isMenuOpen ? "w-full" : "ml-auto h-8 w-8 overflow-hidden"
+                      isMenuOpen
+                        ? "w-full"
+                        : "ml-auto h-12 w-full overflow-hidden"
                     } inline-block w-full self-start rounded bg-zinc-700 p-4 lg:h-auto lg:w-1/5`}
                   >
                     <button
                       type="button"
                       className={`absolute ${
-                        isMenuOpen ? "right-4 top-4" : "right-2 top-2"
-                      } text-white lg:hidden`}
+                        isMenuOpen
+                          ? "right-2 top-4 justify-end"
+                          : "right-2 top-2 justify-between"
+                      } -mt-1 flex w-full items-center py-2 px-6 text-white lg:hidden`}
                       onClick={() => setIsMenuOpen(v => !v)}
                     >
-                      {isMenuOpen ? <Cross1Icon /> : <HamburgerMenuIcon />}
+                      {isMenuOpen ? (
+                        <ChevronUpIcon />
+                      ) : (
+                        <>
+                          <h4 className="mr-4">Add a transaction</h4>
+                          <ChevronDownIcon />
+                        </>
+                      )}
                     </button>
                     <div
                       className={`${
                         isMenuOpen ? "" : "hidden lg:block"
-                      } space-y-4`}
+                      } -mt-1 space-y-4`}
                     >
                       <h4 className="text-white">Add a transaction</h4>
                       <button
@@ -555,10 +571,16 @@ function TransferForm(
                         Contract Execution
                       </button>
                     </div>
-                    <div className="mt-4 h-px w-full bg-zinc-500"></div>
+                    <div
+                      className={`${
+                        isMenuOpen ? "" : "hidden lg:block"
+                      } mt-4 h-px w-full bg-zinc-500`}
+                    ></div>
                     <button
                       type="button"
-                      className="mt-4 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                      className={`${
+                        isMenuOpen ? "" : "hidden lg:block"
+                      } mt-4 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500`}
                       onClick={() => form.resetForm()}
                     >
                       Remove all
