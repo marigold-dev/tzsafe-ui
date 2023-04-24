@@ -506,7 +506,7 @@ function TransferForm(
                         isMenuOpen ? "" : "hidden lg:block"
                       } space-y-4`}
                     >
-                      <h4 className="text-white">Add a ? to the proposal</h4>
+                      <h4 className="text-white">Add a transaction</h4>
                       <button
                         type="button"
                         className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
@@ -561,7 +561,7 @@ function TransferForm(
                       className="mt-4 w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                       onClick={() => form.resetForm()}
                     >
-                      Clean all
+                      Remove all
                     </button>
                   </div>
 
