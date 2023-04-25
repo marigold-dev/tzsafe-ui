@@ -1,6 +1,6 @@
 import { Parser } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
-import { validateAddress } from "@taquito/utils";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
@@ -214,7 +214,9 @@ abstract class Versioned {
             kind: "input-complete",
             placeholder: "Destination address",
             validate: (x: string) =>
-              validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+              validateAddress(x) !== ValidationResult.VALID
+                ? `Invalid address ${x}`
+                : undefined,
           },
         ],
       };
@@ -249,7 +251,9 @@ abstract class Versioned {
             kind: "input-complete",
             placeholder: "Destination address",
             validate: (x: string) =>
-              validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+              validateAddress(x) !== ValidationResult.VALID
+                ? `Invalid address ${x}`
+                : undefined,
           },
         ],
       };
@@ -287,7 +291,9 @@ abstract class Versioned {
           kind: "input-complete",
           placeholder: "Fa2 address",
           validate: (x: string) =>
-            validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
         },
         {
           field: "tokenId",
@@ -319,7 +325,9 @@ abstract class Versioned {
           kind: "input-complete",
           placeholder: "Destination address",
           validate: (x: string) =>
-            validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
         },
       ],
     };
