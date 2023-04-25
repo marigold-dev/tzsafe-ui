@@ -209,6 +209,7 @@ function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
     getFieldProps: () => string;
+    id: string;
   }>
 ) {
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
@@ -236,7 +237,10 @@ function ExecuteContractForm(
 
     return (
       <div className="mt-8 w-full rounded border-2 border-white p-4 text-white">
-        <p className="text-lg text-white">Execute Contract</p>
+        <p className="text-lg text-white">
+          <span className="mr-2 text-zinc-500">#{props.id}</span>
+          Execute Contract
+        </p>
         <p>
           <span className="font-light">Contract address:</span>{" "}
           <span className="md:hidden">
@@ -259,7 +263,10 @@ function ExecuteContractForm(
 
   return (
     <div className="w-full text-white">
-      <p className="text-lg text-white">Execute Contract</p>
+      <p className="text-lg text-white">
+        <span className="mr-2 text-zinc-500">#{props.id}</span>
+        Execute Contract
+      </p>
       <Basic
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
@@ -297,7 +304,7 @@ function ExecuteContractForm(
 
 const addNewField = (
   e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-  func: <T>(value: T) => number,
+  func: <T>(value: T) => any,
   type: string,
   key: number | undefined,
   rest: any
@@ -485,7 +492,7 @@ function TransferForm(
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
-              {({ remove, replace, unshift, form }) => (
+              {({ remove, replace, unshift, push, form }) => (
                 <div
                   className="flex h-fit min-w-full flex-col lg:flex-row-reverse"
                   id="top"
@@ -529,7 +536,7 @@ function TransferForm(
                         onClick={e => {
                           addNewField(
                             e,
-                            unshift,
+                            push,
                             "transfer",
                             values.transfers.length,
                             Versioned.transferForm(props.contract)
@@ -544,7 +551,7 @@ function TransferForm(
                         onClick={e => {
                           addNewField(
                             e,
-                            unshift,
+                            push,
                             "fa2",
                             undefined,
                             Versioned.fa2(props.contract)
@@ -559,7 +566,7 @@ function TransferForm(
                         onClick={e => {
                           addNewField(
                             e,
-                            unshift,
+                            push,
                             "contract",
                             portalIdx.current,
                             Versioned.lambdaForm(props.contract)
@@ -590,7 +597,7 @@ function TransferForm(
                     </button>
                   </div>
 
-                  <div className="mt-6 w-full space-y-6 lg:mt-0 lg:w-4/5 lg:pr-8">
+                  <div className="mt-6 flex w-full flex-col-reverse space-y-6 space-y-reverse lg:mt-0 lg:w-4/5 lg:pr-8">
                     {values.transfers.length > 0 &&
                       values.transfers.map((transfer, index) => {
                         if (transfer.type === "contract") {
@@ -601,6 +608,7 @@ function TransferForm(
                               id={(transfer as any).key.toString()}
                             >
                               <ExecuteContractForm
+                                id={(index + 1).toString().padStart(2, "0")}
                                 getFieldProps={() =>
                                   getFieldProps(
                                     `transfers.${index}.values.metadata`
@@ -644,6 +652,9 @@ function TransferForm(
                         return (
                           <section key={`${transfer.type}:${index}`}>
                             <p className="text-lg text-white">
+                              <span className="mr-2 text-zinc-500">
+                                #{(index + 1).toString().padStart(2, "0")}
+                              </span>
                               {!transfer.fields.find(v => v.kind === "textarea")
                                 ? transfer.type === "fa2"
                                   ? "Transfer FA2"
@@ -754,7 +765,7 @@ function TransferForm(
                           </section>
                         );
                       })}
-                    <div className="flex flex-row justify-around md:mx-auto md:w-1/3">
+                    <div className="order-first mb-auto flex flex-row justify-around md:mx-auto md:w-1/3">
                       {values.transfers.length > 0 && (
                         <button
                           className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
