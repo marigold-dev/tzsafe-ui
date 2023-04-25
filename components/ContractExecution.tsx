@@ -513,7 +513,7 @@ function ExecuteForm(
           try {
             genLambda(props, values);
           } catch (e) {
-            // setSubmitError((e as Error).message);
+            setSubmitError((e as Error).message);
           }
         }}
       >

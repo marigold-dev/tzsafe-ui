@@ -12,38 +12,39 @@ const TextInputWithCompletion: FC<
     byAddrToo?: boolean;
     filter: (x: any) => boolean;
     placeholder?: string;
-    onOwnBlur?: (v: string) => any;
-    onOwnChange?: (v: string) => any;
+    onOwnBlur?: (v: string) => void;
+    onOwnChange?: (v: string) => void;
     defaultValue?: string;
   }
 > = props => {
   const [field, _, helpers] = useField(props);
-  const state = useContext(AppStateContext)!;
+  // const state = useContext(AppStateContext)!;
   // Show inline feedback if EITHER
   // - the input is focused AND value is longer than 2 characters
   // - or, the has been visited (touched === true)
-  const [visible, setVisible] = React.useState(false);
+  // const [visible, setVisible] = React.useState(false);
 
-  const handleFocus = (e: any) => {
-    setVisible(true);
-  };
-  const handleBLur = (e: any) => {
+  // const handleFocus = (e: any) => {
+  //   setVisible(true);
+  // };
+  const handleBlur = (e: any) => {
     props.onOwnBlur?.(e.target.value);
-    // let __ = await sleep(250);
-    // setVisible(false);
     field.onBlur(e);
   };
+
   // let shouldShow = visible && field.value.trim().length > 0;
-  let completions = state.aliasTrie.GetTopkTermsForPrefix(field.value, 10, 0);
-  if (props.byAddrToo) {
-    let tree = new Trie();
-    Object.entries(state.aliases).forEach(([k, v]) => tree.addTerm(k, v));
-    let compl = tree.GetTopkTermsForPrefix(field.value, 10, 0) as any;
-    completions = completions.concat(
-      compl.map((x: any) => ({ term: x.payload, payload: x.term }))
-    );
-  }
-  completions = completions.filter(x => props.filter(x.payload));
+  // let completions = state.aliasTrie.GetTopkTermsForPrefix(field.value, 10, 0);
+  // if (props.byAddrToo) {
+  //   const tree = new Trie();
+  //   Object.entries(state.aliases).forEach(([k, v]) => tree.addTerm(k, v));
+  //   const compl = tree.GetTopkTermsForPrefix(field.value, 10, 0) as any;
+  //   completions = completions.concat(
+  //     compl.map((x: any) => ({ term: x.payload, payload: x.term }))
+  //   );
+  // }
+
+  // completions = completions.filter(x => props.filter(x.payload));
+
   return (
     <div className="relative w-full">
       <input
@@ -57,8 +58,7 @@ const TextInputWithCompletion: FC<
             })}
         autoComplete="false"
         className={props.className + " relative rounded"}
-        onFocus={handleFocus}
-        onBlur={handleBLur}
+        onBlur={handleBlur}
         placeholder={props.placeholder}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           props.onOwnChange?.(e.target.value);
