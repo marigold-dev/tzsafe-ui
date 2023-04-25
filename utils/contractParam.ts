@@ -1,6 +1,10 @@
 import { emitMicheline, Parser } from "@taquito/michel-codec";
-import { TokenSchema } from "@taquito/michelson-encoder";
-import { MichelsonMap } from "@taquito/taquito";
+import { TokenSchema, Schema } from "@taquito/michelson-encoder";
+import {
+  ContractAbstraction,
+  ContractProvider,
+  MichelsonMap,
+} from "@taquito/taquito";
 import { validateAddress } from "@taquito/utils";
 import { assertNever } from "assert-never";
 import { makeContractExecution } from "../context/contractExecution";
@@ -413,7 +417,9 @@ function evalTaquitoParam(
     case "timestamp": {
       const value = tableValue[getFieldName(token.counter)];
       if (!value) {
-        throw new Error(`Incorrect value, ${showName(token.type, token.name)}`);
+        throw new Error(
+          `Incorrect or empty value, ${showName(token.type, token.name)}`
+        );
       }
       return Number(value);
     }
@@ -553,7 +559,6 @@ function genLambda(
   } else {
     taquitoParam = taquitoFullParam;
   }
-
   const param = emitMicheline(
     props.shape.contract.methodsObject[entrypoint](
       taquitoParam
@@ -592,11 +597,89 @@ function genLambda(
   props.setLoading(false);
 }
 
+/**
+ *
+ * @param contract
+ * @param initTokenTable
+ * @returns token
+ *
+ * Token is parsed the parameter of Michelson in AST.
+ * The returned token is the root of AST and named "entrypoint".
+ * If the parameter of Michelson has multiple entrypoints, the children of the root represent different entrypoints.
+ * Otherwise, the children of the root are the parameter of the "default" entrypoint.
+ */
+function parseContract(
+  c: ContractAbstraction<ContractProvider>,
+  initTokenTable: Record<string, tokenValueType>
+) {
+  let token: token;
+  let counter = 0;
+  // reverse the elements so the order of entrypoints will be in alphabet
+  const entryponts = Object.entries(c.entrypoints.entrypoints).reverse();
+
+  if (entryponts.length == 0) {
+    // handle the case of only "default" entrypoint
+    [token, counter] = parseSchema(
+      0,
+      c.parameterSchema.generateSchema(),
+      initTokenTable,
+      "entrypoint"
+    );
+  } else {
+    // handle the case of multiple entrypoints
+    const childrenToken: token[] = [];
+    let childToken;
+    let init;
+    let setInit = false;
+    for (let i = 0; i < entryponts.length; i++) {
+      const [entrypoint, type] = entryponts[i];
+      const schema = new Schema(type).generateSchema();
+      /** If the michelson type is "or", it means it's a nested entrypoint.
+       *  The entrypoint is repeated. Therefore, don't make it as a child.
+       */
+      if (schema.__michelsonType !== "or") {
+        /**
+         * Chose default value for selection component.
+         * Pick up the first non-nested entrypoint.
+         */
+        if (!setInit) {
+          init = entrypoint;
+          setInit = true;
+        }
+        let new_counter;
+        [childToken, new_counter] = parseSchema(
+          counter,
+          schema,
+          initTokenTable,
+          entrypoint
+        );
+        counter = new_counter + 1;
+        childrenToken.push(childToken);
+      }
+    }
+    counter = counter + 1;
+    if (typeof init === "undefined")
+      throw new Error("internal error: initial entrypoint is undefined");
+    token = {
+      counter,
+      name: "entrypoint",
+      type: "or",
+      children: childrenToken,
+      initValue: init,
+    };
+    initTokenTable[getFieldName(token.counter)] = token.initValue;
+  }
+
+  initTokenTable["counter"] = counter;
+  return token;
+}
+
 export {
   parseSchema,
   genLambda,
   getFieldName,
   allocateNewTokenCounter,
   showName,
+  parseContract,
 };
 export type { token, tokenMap, tokenValueType };

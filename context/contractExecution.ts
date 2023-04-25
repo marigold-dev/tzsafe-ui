@@ -12,12 +12,18 @@ export const makeContractExecution = ({
   type,
   amount,
   param,
-}: makeContractExecutionParam) => `{
+}: makeContractExecutionParam) => {
+  let michelson_entrypoint = "";
+  if (entrypoint !== "default") {
+    michelson_entrypoint = `%${entrypoint}`;
+  }
+  return `{
       DROP;
       PUSH address "${address}";
-      CONTRACT %${entrypoint} ${type};
+      CONTRACT ${michelson_entrypoint} ${type};
       IF_NONE { PUSH string "contract dosen't exist"; FAILWITH } { };
       PUSH mutez ${amount};
       PUSH ${type} ${param} ;
       TRANSFER_TOKENS
   }`;
+};
