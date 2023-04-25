@@ -212,7 +212,7 @@ abstract class Versioned {
             label: "Transfer to",
             path: ".to",
             kind: "input-complete",
-            placeholder: "destination address",
+            placeholder: "Destination address",
             validate: (x: string) =>
               validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
           },
@@ -247,7 +247,7 @@ abstract class Versioned {
             label: "Transfer to",
             path: ".to",
             kind: "input-complete",
-            placeholder: "destination address",
+            placeholder: "Destination address",
             validate: (x: string) =>
               validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
           },

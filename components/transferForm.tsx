@@ -1,39 +1,20 @@
 import { NetworkType } from "@airgap/beacon-sdk";
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  Cross1Icon,
-  HamburgerMenuIcon,
-} from "@radix-ui/react-icons";
-import { emitMicheline, Parser } from "@taquito/michel-codec";
-import { TokenSchema, ParameterSchema } from "@taquito/michelson-encoder";
-import { MichelsonMap } from "@taquito/taquito";
-import { char2Bytes, validateContractAddress } from "@taquito/utils";
-import {
-  ErrorMessage,
-  Field,
-  FieldArray,
-  Form,
-  Formik,
-  useFormikContext,
-} from "formik";
+import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
+import { validateContractAddress, ValidationResult } from "@taquito/utils";
+import { ErrorMessage, Field, FieldArray, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, {
   ChangeEvent,
   useCallback,
   useContext,
-  useEffect,
   useRef,
   useState,
 } from "react";
-import ReactDOM from "react-dom";
-import { transferableAbortController } from "util";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
-import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
@@ -77,7 +58,8 @@ function Basic({
 
     if (
       newState.address !== "" &&
-      validateContractAddress(newState.address.trim()) !== 3
+      validateContractAddress(newState.address.trim()) !==
+        ValidationResult.VALID
     ) {
       newErrors.address = `Invalid address ${newState.address}`;
     }
@@ -137,7 +119,7 @@ function Basic({
                     onOwnChange={(address: string) =>
                       debounce(async () => {
                         setContractLoading(true);
-                        const hasError = await validateAndSetState({
+                        await validateAndSetState({
                           ...localFormState,
                           address,
                         });
@@ -214,7 +196,6 @@ function ExecuteContractForm(
 ) {
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
   const setLoader = useCallback((x: boolean) => setLoading(x), []);
   const setStater = useCallback(({ shape }: { shape: object }) => {
     setState((prev: any) => {
@@ -229,34 +210,6 @@ function ExecuteContractForm(
     return (
       <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
         <ContractLoader loading={loading}></ContractLoader>
-      </div>
-    );
-  }
-  if (done) {
-    const data = JSON.parse(props.getFieldProps());
-
-    return (
-      <div className="mt-8 w-full rounded border-2 border-white p-4 text-white">
-        <p className="text-lg text-white">
-          <span className="mr-2 text-zinc-500">#{props.id}</span>
-          Execute Contract
-        </p>
-        <p>
-          <span className="font-light">Contract address:</span>{" "}
-          <span className="md:hidden">
-            <Alias address={data.contract_addr} />
-          </span>
-          <span className="hidden md:inline">{data.contract_addr}</span>
-        </p>
-        <p>
-          <span className="font-light">Mutez amount:</span> {data.mutez_amount}
-        </p>
-        <p>
-          <span className="font-light">Entrypoint :</span> {data.entrypoint}
-        </p>
-        <p>
-          <span className="font-light">Params:</span> {data.payload}
-        </p>
       </div>
     );
   }

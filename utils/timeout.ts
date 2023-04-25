@@ -9,7 +9,7 @@ export function promiseWithTimeout<T>(promise: Promise<T>, time: number) {
 }
 
 let previousId = -1;
-export function debounce(func: () => any, time: number) {
+export function debounce(func: () => void, time: number) {
   window.clearTimeout(previousId);
   previousId = window.setTimeout(func, time);
 }
