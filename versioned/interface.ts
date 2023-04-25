@@ -174,7 +174,7 @@ abstract class Versioned {
       return { fields: [], values: {} };
     }
     let _: never = c.version;
-    throw new Error("invalid version");
+    throw new Error("Invalid version");
   }
 
   static transferForm(c: contractStorage): {
@@ -203,7 +203,7 @@ abstract class Versioned {
             validate: (x: string) => {
               const amount = Number.parseInt(x);
               if (isNaN(amount) || amount <= 0) {
-                return `invalid amount ${x}`;
+                return `Invalid amount ${x}`;
               }
             },
           },
@@ -240,7 +240,7 @@ abstract class Versioned {
             validate: (x: string) => {
               const amount = Number.parseInt(x);
               if (isNaN(amount) || amount <= 0) {
-                return `invalid amount ${x}`;
+                return `Invalid amount ${x}`;
               }
             },
           },
@@ -302,7 +302,7 @@ abstract class Versioned {
           placeholder: "0",
           validate: (x: string) => {
             if (isNaN(parseInt(x))) {
-              return `invalid id ${x}`;
+              return `Invalid id ${x}`;
             }
           },
         },
@@ -314,7 +314,7 @@ abstract class Versioned {
           validate: (x: string) => {
             const amount = parseInt(x);
             if (isNaN(amount) || amount <= 0) {
-              return `invalid amount ${x}`;
+              return `Invalid amount ${x}`;
             }
           },
         },
