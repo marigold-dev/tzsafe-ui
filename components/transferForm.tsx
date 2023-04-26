@@ -57,6 +57,10 @@ function Basic({
       address: undefined,
     };
 
+    if (newState.address === "") {
+      newErrors.address = "Address can't be empty";
+    }
+
     if (
       newState.address !== "" &&
       validateContractAddress(newState.address.trim()) !==
@@ -138,6 +142,16 @@ function Basic({
                     className=" w-full p-2 text-black"
                     placeholder={"contract address"}
                     rows={10}
+                    validate={async address => {
+                      const hasError = await validateAndSetState({
+                        ...localFormState,
+                        address,
+                      });
+
+                      // The returned value doesn't matter
+                      // Having one allows to prevent Formik to submit the form
+                      return hasError ? "ohno" : undefined;
+                    }}
                   />
                   {contractLoading && (
                     <div className="absolute right-0 top-1/2 -translate-y-1/2">
@@ -196,6 +210,7 @@ function ExecuteContractForm(
     setField: (lambda: string, metadata: string) => void;
     getFieldProps: () => string;
     id: string;
+    onReset: () => void;
   }>
 ) {
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
@@ -253,6 +268,7 @@ function ExecuteContractForm(
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
           }}
+          onReset={props.onReset}
         />
       )}
     </div>
@@ -583,6 +599,9 @@ function TransferForm(
                                     `transfers.${index}.values.metadata`,
                                     metadata
                                   );
+                                }}
+                                onReset={() => {
+                                  setFieldValue("walletAddress", "");
                                 }}
                               />
                               <button

@@ -470,6 +470,7 @@ function ExecuteForm(
     setField: (lambda: string, metadata: string) => void;
     setLoading: (x: boolean) => void;
     setState: (shape: any) => void;
+    onReset?: () => void;
     loading: boolean;
   }>
 ) {
@@ -513,11 +514,11 @@ function ExecuteForm(
           try {
             genLambda(props, values);
           } catch (e) {
-            setSubmitError((e as Error).message);
+            // setSubmitError((e as Error).message);
           }
         }}
       >
-        {({ values }) => (
+        {({ setFieldValue }) => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
             <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape.token && (
@@ -533,6 +534,7 @@ function ExecuteForm(
                 onClick={e => {
                   e.preventDefault();
                   props.reset();
+                  props.onReset?.();
                 }}
               >
                 Reset
