@@ -3,6 +3,7 @@ import {
   ErrorMessage,
   Field,
   FieldArray,
+  FieldProps,
   Form,
   Formik,
   useFormikContext,
@@ -19,13 +20,10 @@ import {
   tokenValueType,
   tokenMap,
 } from "../utils/contractParam";
+import renderError from "./formUtils";
 
 function capitalizeFirstLetter(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function renderError(message: string) {
-  return <p className="mt-2 italic text-red-600">{message}</p>;
 }
 
 function RenderItem({
@@ -369,29 +367,42 @@ function RenderSelection(
   selected: tokenValueType,
   showTitle: boolean
 ) {
+  const { setFieldValue, setFieldError } = useFormikContext();
+
   const defaultChildToken =
     token.children.length > 0 ? token.children[0] : undefined;
   const childToken =
     token.children.find(x => {
       return selected && x.name == selected;
     }) || defaultChildToken;
+
   return (
     <div className="flex w-full flex-col gap-2 rounded">
       <label className="text-white">
         {showTitle && showName(token.type, token.name)}
       </label>
-      <Field
-        className="rounded p-2 text-left text-black"
-        name={fieldName}
-        as="select"
-      >
-        {Object.entries(token.children).map(([k, v]) => {
-          return (
-            <option className="text-black" key={k} value={v.name}>
-              {v.name}
-            </option>
-          );
-        })}
+      <Field name={fieldName}>
+        {({ field }: FieldProps) => (
+          <select
+            {...field}
+            className="rounded p-2 text-left text-black"
+            onChange={e => {
+              field.onChange(e);
+              if (!childToken) return;
+
+              setFieldValue(getFieldName(childToken.counter), undefined);
+              setFieldError(getFieldName(childToken.counter), undefined);
+            }}
+          >
+            {Object.entries(token.children).map(([k, v]) => {
+              return (
+                <option className="text-black" key={k} value={v.name}>
+                  {v.name}
+                </option>
+              );
+            })}
+          </select>
+        )}
       </Field>
       {childToken ? (
         <RenderItem token={childToken} showTitle={false} />
