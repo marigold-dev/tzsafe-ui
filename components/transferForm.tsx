@@ -15,6 +15,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
+import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
@@ -104,13 +105,15 @@ function Basic({
 
   return (
     <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-      <div className="flex w-full flex-col justify-center space-y-2 md:flex-col">
-        <div className="flex w-full flex-col ">
+      <div className="flex w-full flex-col justify-center space-y-2 space-x-0 md:flex-row md:space-x-4 md:space-y-0">
+        <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
             <label className="font-medium text-white">Contract address</label>
             <div className="relative w-full">
               {!!address ? (
-                <span className="text-zinc-400">{address}</span>
+                <span className="text-zinc-400">
+                  <Alias address={address} length={10} />
+                </span>
               ) : (
                 <>
                   <TextInputWithCompletion
@@ -173,7 +176,7 @@ function Basic({
       </div>
       {withContinue && (
         <button
-          className="my-2 rounded bg-primary p-2 font-medium text-white  hover:outline-none "
+          className="mt-4 rounded bg-primary p-2 font-medium text-white hover:outline-none"
           type="button"
           onClick={async () => {
             const errors = await validate(localFormState);
@@ -187,6 +190,7 @@ function Basic({
     </div>
   );
 }
+
 function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
@@ -588,6 +592,7 @@ function TransferForm(
                                 }
                                 onClick={e => {
                                   e.preventDefault();
+                                  setFieldValue("walletAddress", "");
                                   remove(index);
                                 }}
                               >
