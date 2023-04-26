@@ -189,7 +189,7 @@ function parseSchema(
           placeholder: token.__michelsonType,
           validate(value: string): string | undefined {
             if (value && isNaN(Number(value))) {
-              return `Should be a number, got: ${value}`;
+              return `Invalid number, got: ${value}`;
             }
           },
           initValue: "",
@@ -209,10 +209,10 @@ function parseSchema(
           validate(value: string): string | undefined {
             const n = Number(value);
             if (isNaN(n)) {
-              return `Should be a number, got: ${value}`;
+              return `Invalid number, got: ${value}`;
             }
             if (n < 0) {
-              return `Should be greater or equal to 0, got ${value}`;
+              return `Number should be greater or equal to 0, got ${value}`;
             }
           },
           initValue: "",
