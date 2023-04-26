@@ -1,7 +1,14 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
 import { validateContractAddress, ValidationResult } from "@taquito/utils";
-import { ErrorMessage, Field, FieldArray, Form, Formik } from "formik";
+import {
+  ErrorMessage,
+  Field,
+  FieldArray,
+  Form,
+  Formik,
+  useFormikContext,
+} from "formik";
 import { useRouter } from "next/router";
 import React, {
   ChangeEvent,
@@ -25,6 +32,7 @@ import TextInputWithCompletion from "./textInputWithComplete";
 type Nullable<T> = T | null | undefined;
 
 function Basic({
+  id,
   setFormState,
   defaultValues,
   withContinue = true,
@@ -32,6 +40,7 @@ function Basic({
   onAmountChange,
   onAddressChange,
 }: React.PropsWithoutRef<{
+  id: number;
   setFormState: (x: { address: string; amount: number }) => void;
   defaultValues?: { amount: number | undefined; address: string | undefined };
   withContinue?: boolean;
@@ -39,9 +48,13 @@ function Basic({
   onAddressChange?: (value: string) => any;
   address?: string;
 }>) {
+  const { getFieldProps } = useFormikContext();
   const state = useContext(AppStateContext)!;
-  const [localFormState, setLocalFormState] = useState({
-    amount: 0,
+  const [localFormState, setLocalFormState] = useState<{
+    amount: number | undefined;
+    address: string;
+  }>({
+    amount: undefined,
     address: "",
   });
   const [contractLoading, setContractLoading] = useState(false);
@@ -57,12 +70,12 @@ function Basic({
       address: undefined,
     };
 
-    if (newState.address === "") {
+    if (!newState.address) {
       newErrors.address = "Address can't be empty";
     }
 
     if (
-      newState.address !== "" &&
+      !!newState.address &&
       validateContractAddress(newState.address.trim()) !==
         ValidationResult.VALID
     ) {
@@ -78,12 +91,19 @@ function Basic({
       }
     })();
 
-    if (newState.address !== "" && !exists) {
+    if (newState.address !== "" && !exists && !newErrors.address) {
       newErrors.address = `Contract does not exist at address ${newState.address}`;
     }
 
-    if (isNaN(newState.amount) || newState.amount < 0) {
-      newErrors.amount = "Invalid amount " + newState.amount;
+    if (!!address) {
+      newErrors.address = undefined;
+    }
+
+    if (isNaN(newState.amount ?? NaN) || (newState.amount ?? -1) < 0) {
+      newErrors.amount =
+        newState.amount === undefined
+          ? ""
+          : "Invalid amount " + newState.amount;
     }
 
     if (
@@ -100,11 +120,9 @@ function Basic({
   const validateAndSetState = async (newState: typeof localFormState) => {
     const errors = await validate(newState);
 
-    if (!!errors.address || !!errors.amount) return true;
-
     setLocalFormState(newState);
 
-    return false;
+    return !!errors.address || !!errors.amount;
   };
 
   return (
@@ -138,7 +156,7 @@ function Basic({
                     }
                     byAddrToo={true}
                     as="input"
-                    name={`walletAddress`}
+                    name={`transfers.${id}.walletAddress`}
                     className=" w-full p-2 text-black"
                     placeholder={"contract address"}
                     rows={10}
@@ -168,7 +186,7 @@ function Basic({
           <div className="flex w-full flex-col items-start">
             <label className="font-medium text-white">Amount in mutez</label>
             <Field
-              name="amount"
+              name={`transfers.${id}.amount`}
               className=" w-full rounded p-2 text-black"
               placeholder="0"
               onChange={async (e: ChangeEvent<HTMLInputElement>) => {
@@ -193,9 +211,21 @@ function Basic({
           className="mt-4 rounded bg-primary p-2 font-medium text-white hover:outline-none"
           type="button"
           onClick={async () => {
-            const errors = await validate(localFormState);
+            const address = getFieldProps(
+              `transfers.${id}.walletAddress`
+            ).value;
+
+            let toValidate = localFormState;
+
+            if (!!address && !localFormState.address) {
+              toValidate = { ...localFormState, address };
+              setLocalFormState(toValidate);
+            }
+
+            const errors = await validate(toValidate);
+
             if (!!errors.amount || !!errors.address) return;
-            onAddressChange?.(localFormState.address);
+            onAddressChange?.(toValidate.address);
           }}
         >
           Continue
@@ -209,10 +239,11 @@ function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
     getFieldProps: () => string;
-    id: string;
+    id: number;
     onReset: () => void;
   }>
 ) {
+  const hasValidatedRef = useRef(false);
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
   const [loading, setLoading] = useState(false);
   const setLoader = useCallback((x: boolean) => setLoading(x), []);
@@ -236,20 +267,19 @@ function ExecuteContractForm(
   return (
     <div className="w-full text-white">
       <p className="text-lg text-white">
-        <span className="mr-2 text-zinc-500">#{props.id}</span>
+        <span className="mr-2 text-zinc-500">
+          #{(props.id + 1).toString().padStart(2, "0")}
+        </span>
         Execute Contract
       </p>
       <Basic
+        id={props.id}
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
           setState({ ...state, amount });
         }}
         onAddressChange={address => {
           setState({ ...state, address });
-        }}
-        defaultValues={{
-          amount: state.amount === 0 ? undefined : state.amount,
-          address: state.address,
         }}
         withContinue={!state.address}
         address={state.address}
@@ -260,7 +290,7 @@ function ExecuteContractForm(
           setLoading={setLoader}
           shape={state.shape}
           setState={shape => {
-            setStater({ shape: shape });
+            setStater({ shape });
           }}
           reset={() => setState({ address: "", amount: 0, shape: {} })}
           address={state.address}
@@ -268,9 +298,34 @@ function ExecuteContractForm(
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
           }}
-          onReset={props.onReset}
+          onReset={() => {
+            setState({ address: "", amount: 0, shape: {} });
+            props.onReset();
+            hasValidatedRef.current = false;
+          }}
         />
       )}
+      <Field
+        name={`transfers.${props.id}.values.lambda`}
+        className="hidden"
+        validate={(v: string) => {
+          if (!!v) return;
+
+          console.log("Please fill contract");
+          // Returning a value to prevent submition
+          return true;
+        }}
+      />
+      <Field
+        name={`transfers.${props.id}.values.metadata`}
+        className="hidden"
+        validate={(v: string) => {
+          if (!!v) return;
+
+          // Returning a value to prevent submition
+          return true;
+        }}
+      />
     </div>
   );
 }
@@ -424,6 +479,7 @@ function TransferForm(
         } = {
           transfers: [],
         };
+
         values.transfers.forEach((element, idx) => {
           Object.entries(element.values).forEach(([labl, value]) => {
             let field = element.fields.find(x => x.field === labl);
@@ -437,6 +493,7 @@ function TransferForm(
             }
           });
         });
+
         return errors.transfers.length === 0 ? undefined : errors;
       }}
       onSubmit={async values => {
@@ -461,7 +518,7 @@ function TransferForm(
         }, MODAL_TIMEOUT);
       }}
     >
-      {({ values, errors, setFieldValue, getFieldProps }) => (
+      {({ values, errors, setFieldValue, getFieldProps, setFieldError }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
@@ -581,7 +638,7 @@ function TransferForm(
                               id={(transfer as any).key.toString()}
                             >
                               <ExecuteContractForm
-                                id={(index + 1).toString().padStart(2, "0")}
+                                id={index}
                                 getFieldProps={() =>
                                   getFieldProps(
                                     `transfers.${index}.values.metadata`
@@ -601,7 +658,18 @@ function TransferForm(
                                   );
                                 }}
                                 onReset={() => {
-                                  setFieldValue("walletAddress", "");
+                                  setFieldValue(
+                                    `transfers.${index}.walletAddress`,
+                                    ""
+                                  );
+                                  setFieldValue(
+                                    `transfers.${index}.values.lambda`,
+                                    ""
+                                  );
+                                  setFieldValue(
+                                    `transfers.${index}.values.metadata`,
+                                    ""
+                                  );
                                 }}
                               />
                               <button
