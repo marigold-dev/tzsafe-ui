@@ -49,6 +49,7 @@ function Basic({
   address?: string;
 }>) {
   const { getFieldProps } = useFormikContext();
+
   const state = useContext(AppStateContext)!;
   const [localFormState, setLocalFormState] = useState<{
     amount: number | undefined;
@@ -243,10 +244,15 @@ function ExecuteContractForm(
     onReset: () => void;
   }>
 ) {
-  const hasValidatedRef = useRef(false);
+  const { submitCount } = useFormikContext();
+  const submitCountRef = useRef(submitCount);
+
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const setLoader = useCallback((x: boolean) => setLoading(x), []);
+
   const setStater = useCallback(({ shape }: { shape: object }) => {
     setState((prev: any) => {
       if (Object.keys(prev.shape).length) {
@@ -301,7 +307,6 @@ function ExecuteContractForm(
           onReset={() => {
             setState({ address: "", amount: 0, shape: {} });
             props.onReset();
-            hasValidatedRef.current = false;
           }}
         />
       )}
@@ -309,9 +314,19 @@ function ExecuteContractForm(
         name={`transfers.${props.id}.values.lambda`}
         className="hidden"
         validate={(v: string) => {
-          if (!!v) return;
+          // This is a tricky way to detect when the submition happened
+          // We want this message to show only on submit, not on every change
+          if (!!v) {
+            submitCountRef.current = submitCount;
+            setError("");
+            return;
+          }
 
-          console.log("Please fill contract");
+          if (submitCountRef.current === submitCount - 1) {
+            setError("Please fill contract");
+            submitCountRef.current += 1;
+          }
+
           // Returning a value to prevent submition
           return true;
         }}
@@ -326,6 +341,7 @@ function ExecuteContractForm(
           return true;
         }}
       />
+      {!!error && renderError(error)}
     </div>
   );
 }
