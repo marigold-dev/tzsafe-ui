@@ -9,7 +9,7 @@ import {
   FormikErrors,
 } from "formik";
 import { useRouter } from "next/router";
-import { FC, useContext, useEffect, useMemo, useState } from "react";
+import { FC, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   MODAL_TIMEOUT,
   PREFERED_NETWORK,
@@ -49,6 +49,36 @@ function get(
   }
 }
 
+// This components only allows to fetch the delegator
+// And update the form data
+const DelegatorHelper = ({
+  address,
+  setFieldValue,
+  bakerAddressRef,
+}: {
+  address: string | null;
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void;
+  bakerAddressRef: React.MutableRefObject<null | string>;
+}) => {
+  const state = useContext(AppStateContext)!;
+
+  useEffect(() => {
+    if (!address) return;
+
+    state.connection.tz
+      .getDelegate(address)
+      .then(bakerAddress => {
+        bakerAddressRef.current = bakerAddress;
+        setFieldValue("bakerAddress", bakerAddress);
+      })
+      .catch(() => {
+        setFieldValue("bakerAddress", undefined);
+      });
+  }, []);
+
+  return null;
+};
+
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
@@ -58,6 +88,7 @@ const SignersForm: FC<{
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
   const router = useRouter();
+  const bakerAddressRef = useRef<null | string>(null);
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
@@ -90,7 +121,6 @@ const SignersForm: FC<{
       .then(payload => dispatch({ type: "setDelegatorAddresses", payload }));
   }, [state.delegatorAddresses]);
 
-  console.log(props.contract);
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
@@ -263,6 +293,26 @@ const SignersForm: FC<{
       </div>
     );
   }
+
+  const getOpsHelper = (values: typeof initialProps) =>
+    getOps(
+      values.validators,
+      values.requiredSignatures,
+      Math.ceil(
+        durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis() / 1000
+      ),
+      // If it's the same value it means there's no change so we ignore it
+      // The other check is the same but checks for the null & empty string case
+      bakerAddressRef.current === values.bakerAddress ||
+        (!bakerAddressRef.current && !values.bakerAddress)
+        ? undefined
+        : values.bakerAddress
+    );
+
   return (
     <Formik
       enableReinitialize={true}
@@ -371,35 +421,7 @@ const SignersForm: FC<{
 
         setLoading(true);
         try {
-          console.log(
-            "OPS:",
-            getOps(
-              values.validators,
-              values.requiredSignatures,
-              Math.ceil(
-                durationOfDaysHoursMinutes(
-                  values.days,
-                  values.hours,
-                  values.minutes
-                ).toMillis() / 1000
-              ),
-              values.bakerAddress
-            )
-          );
-          await updateSettings(
-            getOps(
-              values.validators,
-              values.requiredSignatures,
-              Math.ceil(
-                durationOfDaysHoursMinutes(
-                  values.days,
-                  values.hours,
-                  values.minutes
-                ).toMillis() / 1000
-              ),
-              values.bakerAddress
-            )
-          );
+          await updateSettings(getOpsHelper(values));
           setResult(true);
           dispatch!({
             type: "updateAliases",
@@ -429,16 +451,15 @@ const SignersForm: FC<{
           values.minutes
         ).toMillis();
 
-        const hasNoChange =
-          getOps(
-            values.validators,
-            values.requiredSignatures,
-            Math.ceil(currentDuration / 1000),
-            values.bakerAddress
-          ).length === 0;
+        const hasNoChange = getOpsHelper(values).length === 0;
 
         return (
           <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
+            <DelegatorHelper
+              address={"KT1Fn4AHYNZK52kRcZDUZKcojdSNu4pmq1RQ"}
+              setFieldValue={setFieldValue}
+              bakerAddressRef={bakerAddressRef}
+            />
             <div className="mb-2 self-center text-2xl font-medium text-white">
               Change wallet participants below
             </div>
