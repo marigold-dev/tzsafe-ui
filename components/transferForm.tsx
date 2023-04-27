@@ -289,6 +289,10 @@ function ExecuteContractForm(
         }}
         withContinue={!state.address}
         address={state.address}
+        defaultValues={{
+          amount: state.amount,
+          address: undefined,
+        }}
       />
       {!!state.address && (
         <ExecuteForm

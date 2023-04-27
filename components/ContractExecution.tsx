@@ -33,7 +33,6 @@ function RenderItem({
   token: token;
   showTitle: boolean;
 }>) {
-  console.log(token);
   const { setFieldValue, getFieldProps } =
     useFormikContext<Record<string, tokenValueType>>();
   const counter: number = getFieldProps("counter").value;
@@ -294,7 +293,6 @@ function RenderArray(
     shouldValidate?: boolean | undefined
   ) => void
 ) {
-  console.log("RenderArray:", fieldName, elements);
   if (!Array.isArray(elements)) {
     throw new Error("internal error: the value of array is incorrect");
   }
@@ -487,7 +485,6 @@ function ExecuteForm(
   }>
 ) {
   const state = useContext(AppStateContext)!;
-  const [submitError, setSubmitError] = useState<undefined | string>(undefined);
 
   const address = props.address;
   const conn = state.connection;
@@ -516,14 +513,15 @@ function ExecuteForm(
       })();
     }
   }, [address, loading, props.shape]);
+
   return (
     <div className="w-full text-white">
       <Formik
         enableReinitialize
         initialValues={props.shape.init}
         onSubmit={() => {}}
+        validateOnMount={true}
         validate={values => {
-          console.log(values);
           try {
             genLambda(props, values);
           } catch (e) {
@@ -531,16 +529,13 @@ function ExecuteForm(
           }
         }}
       >
-        {({ setFieldValue }) => (
+        {_ => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
             <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape.token && (
                 <RenderItem token={props.shape.token} showTitle={false} />
               )}
             </div>
-            {!!submitError ? (
-              <span className="text-red-600">{submitError}</span>
-            ) : null}
             <div className="mt-4 flex flex-row justify-around md:w-1/3">
               <button
                 className="rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
