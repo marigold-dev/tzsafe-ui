@@ -4,5 +4,7 @@ type ownersForm =
     }
   | { removeOwners: string[] }
   | { changeThreshold: number }
-  | { adjustEffectivePeriod: number };
+  | { adjustEffectivePeriod: number }
+  | { execute_lambda: { metadata?: string; lambda: string } };
+
 export { type ownersForm };

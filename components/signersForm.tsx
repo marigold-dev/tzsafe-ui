@@ -1,5 +1,5 @@
 import { NetworkType } from "@airgap/beacon-sdk";
-import { validateAddress } from "@taquito/utils";
+import { validateAddress, ValidationResult, char2Bytes } from "@taquito/utils";
 import {
   ErrorMessage,
   Field,
@@ -15,6 +15,11 @@ import {
   PREFERED_NETWORK,
   PROPOSAL_DURATION_WARNING,
 } from "../context/config";
+import { API_URL } from "../context/config";
+import {
+  makeDelegateMichelson,
+  makeUndelegateMichelson,
+} from "../context/delegate";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -77,6 +82,15 @@ const SignersForm: FC<{
     }, MODAL_TIMEOUT);
   }, [result, loading]);
 
+  useEffect(() => {
+    if (!!state.delegatorAddresses) return;
+
+    fetch(`${API_URL}/v1/delegates?select.values=address`)
+      .then(res => res.json())
+      .then(payload => dispatch({ type: "setDelegatorAddresses", payload }));
+  }, [state.delegatorAddresses]);
+
+  console.log(props.contract);
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
@@ -84,6 +98,7 @@ const SignersForm: FC<{
     hours: string | undefined;
     minutes: string | undefined;
     validatorsError?: string;
+    bakerAddress: string | undefined;
   } = {
     validators: signers(props.contract).map(x => ({
       address: x,
@@ -93,12 +108,14 @@ const SignersForm: FC<{
     hours: duration?.hours?.toString(),
     minutes: duration?.minutes?.toString(),
     requiredSignatures: props.contract.threshold,
+    bakerAddress: undefined,
   };
 
   function getOps(
     txs: { name: string; address: string }[],
     requiredSignatures: number,
-    effectivePeriod: number | undefined
+    effectivePeriod: number | undefined,
+    bakerAddress: string | undefined
   ) {
     let initialSigners = new Set(signers(props.contract));
     let input = new Set(txs.map(x => x.address));
@@ -126,6 +143,29 @@ const SignersForm: FC<{
     }
     if (props.contract.threshold !== requiredSignatures) {
       ops.push({ changeThreshold: requiredSignatures });
+    }
+    if (!!bakerAddress) {
+      ops.push({
+        execute_lambda: {
+          metadata: char2Bytes(
+            JSON.stringify({
+              baker_address: bakerAddress,
+            })
+          ),
+          lambda: makeDelegateMichelson({ bakerAddress }),
+        },
+      });
+    } else if (bakerAddress === "") {
+      ops.push({
+        execute_lambda: {
+          metadata: char2Bytes(
+            JSON.stringify({
+              baker_address: "",
+            })
+          ),
+          lambda: makeUndelegateMichelson(),
+        },
+      });
     }
 
     return ops;
@@ -236,6 +276,7 @@ const SignersForm: FC<{
           hours?: string;
           minutes?: string;
           proposalDuration?: string;
+          bakerAddress?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -249,7 +290,7 @@ const SignersForm: FC<{
           } else {
             dedup.add(x.address);
             err.address =
-              validateAddress(x.address) !== 3
+              validateAddress(x.address) !== ValidationResult.VALID
                 ? `Invalid address ${x.address}`
                 : "";
           }
@@ -306,6 +347,13 @@ const SignersForm: FC<{
           errors.proposalDuration = "One value must at least be more than 0";
         }
 
+        if (!!values.bakerAddress) {
+          if (validateAddress(values.bakerAddress) !== ValidationResult.VALID)
+            errors.bakerAddress = `Invalid address ${values.bakerAddress}`;
+          else if (!state.delegatorAddresses?.includes(values.bakerAddress))
+            errors.bakerAddress = "This address is not a baker";
+        }
+
         if (Object.values(errors).length > 1) return errors;
 
         if (
@@ -323,6 +371,21 @@ const SignersForm: FC<{
 
         setLoading(true);
         try {
+          console.log(
+            "OPS:",
+            getOps(
+              values.validators,
+              values.requiredSignatures,
+              Math.ceil(
+                durationOfDaysHoursMinutes(
+                  values.days,
+                  values.hours,
+                  values.minutes
+                ).toMillis() / 1000
+              ),
+              values.bakerAddress
+            )
+          );
           await updateSettings(
             getOps(
               values.validators,
@@ -333,7 +396,8 @@ const SignersForm: FC<{
                   values.hours,
                   values.minutes
                 ).toMillis() / 1000
-              )
+              ),
+              values.bakerAddress
             )
           );
           setResult(true);
@@ -369,7 +433,8 @@ const SignersForm: FC<{
           getOps(
             values.validators,
             values.requiredSignatures,
-            Math.ceil(currentDuration / 1000)
+            Math.ceil(currentDuration / 1000),
+            values.bakerAddress
           ).length === 0;
 
         return (
@@ -575,6 +640,16 @@ const SignersForm: FC<{
                     "Proposal duration is low, you may not be able to execute the proposals"
                   )
                 : null}
+            </div>
+            <div className="mt-4 w-full">
+              <label className="block text-white">Delegate wallet</label>
+              <Field
+                disabled={props.disabled}
+                name="bakerAddress"
+                className="md:text-md mt-1 w-full rounded p-2 text-sm"
+                placeholder="Baker address"
+              />
+              <ErrorMessage name="bakerAddress" render={renderError} />
             </div>
 
             <div className="mt-6 flex w-full justify-center">
