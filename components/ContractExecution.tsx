@@ -33,6 +33,7 @@ function RenderItem({
   token: token;
   showTitle: boolean;
 }>) {
+  console.log(token);
   const { setFieldValue, getFieldProps } =
     useFormikContext<Record<string, tokenValueType>>();
   const counter: number = getFieldProps("counter").value;
@@ -293,6 +294,7 @@ function RenderArray(
     shouldValidate?: boolean | undefined
   ) => void
 ) {
+  console.log("RenderArray:", fieldName, elements);
   if (!Array.isArray(elements)) {
     throw new Error("internal error: the value of array is incorrect");
   }
@@ -390,7 +392,6 @@ function RenderSelection(
               field.onChange(e);
               if (!childToken) return;
 
-              setFieldValue(getFieldName(childToken.counter), undefined);
               setFieldError(getFieldName(childToken.counter), undefined);
             }}
           >
@@ -522,6 +523,7 @@ function ExecuteForm(
         initialValues={props.shape.init}
         onSubmit={() => {}}
         validate={values => {
+          console.log(values);
           try {
             genLambda(props, values);
           } catch (e) {
