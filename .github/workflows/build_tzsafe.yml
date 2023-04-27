@@ -3,9 +3,9 @@ name: Automatic build and push
 on:
   push:
     branches:
-      - '*'
+      - "*"
   pull_request:
-    
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -60,7 +60,7 @@ jobs:
             ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ENV=prod
+          build-args: ENV=dev
       - name: Build and push release version
         if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/release' }}
         uses: docker/build-push-action@v4
@@ -72,4 +72,4 @@ jobs:
             ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}-release
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ENV=dev
+          build-args: ENV=prod
