@@ -186,8 +186,10 @@ class Version011 extends Versioned {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
           return { adjust_threshold: Number(v.changeThreshold) };
-        } else {
+        } else if ("adjustEffectivePeriod" in v) {
           return { adjust_effective_period: v.adjustEffectivePeriod };
+        } else {
+          return v;
         }
       })
       .filter(x => !!x);
