@@ -82,7 +82,8 @@ export const RenderProposalContent = ({
 
     if (
       !metadata?.contract_address &&
-      !metadata?.meta?.includes("contract_addr")
+      !metadata?.meta?.includes("contract_addr") &&
+      !metadata?.meta?.includes("baker_address")
     ) {
       data = {
         ...data,
@@ -127,6 +128,24 @@ export const RenderProposalContent = ({
           token_id,
         }),
       };
+    } else if (metadata?.meta?.includes("baker_address")) {
+      const contractData = JSON.parse(metadata.meta);
+
+      const isCancelling = !!contractData.old_baker_address;
+
+      data = {
+        label: isCancelling ? "Undelegate" : "Delegate",
+        metadata: undefined,
+        amount: undefined,
+        addresses: [
+          isCancelling
+            ? contractData.old_baker_address
+            : contractData.baker_address,
+        ],
+        entrypoints: undefined,
+        params: undefined,
+      };
+
       // This condition handles some legacy code so old wallets don't crash
     } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -295,6 +314,10 @@ const labelOfProposalContent = (content: proposalContent) => {
       isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
+      : !!metadata.meta && metadata.meta.includes("old_baker_address")
+      ? "Undelegate"
+      : !!metadata.meta && metadata.meta.includes("baker_address")
+      ? "Delegate"
       : metadata.contract_address ||
         (!!metadata.meta && metadata.meta?.includes("contract_addr"))
       ? "Execute contract"
