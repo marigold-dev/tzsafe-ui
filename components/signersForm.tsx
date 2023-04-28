@@ -145,7 +145,10 @@ const SignersForm: FC<{
     txs: { name: string; address: string }[],
     requiredSignatures: number,
     effectivePeriod: number | undefined,
-    bakerAddress: string | undefined
+    {
+      bakerAddress,
+      oldBakerAddress,
+    }: { bakerAddress: string | undefined; oldBakerAddress: string | undefined }
   ) {
     let initialSigners = new Set(signers(props.contract));
     let input = new Set(txs.map(x => x.address));
@@ -185,12 +188,12 @@ const SignersForm: FC<{
           lambda: makeDelegateMichelson({ bakerAddress }),
         },
       });
-    } else if (bakerAddress === "") {
+    } else if (bakerAddress === "" && !!oldBakerAddress) {
       ops.push({
         execute_lambda: {
           metadata: char2Bytes(
             JSON.stringify({
-              baker_address: "",
+              old_baker_address: oldBakerAddress,
             })
           ),
           lambda: makeUndelegateMichelson(),
@@ -307,10 +310,14 @@ const SignersForm: FC<{
       ),
       // If it's the same value it means there's no change so we ignore it
       // The other check is the same but checks for the null & empty string case
-      bakerAddressRef.current === values.bakerAddress ||
-        (!bakerAddressRef.current && !values.bakerAddress)
-        ? undefined
-        : values.bakerAddress
+      {
+        bakerAddress:
+          bakerAddressRef.current === values.bakerAddress ||
+          (!bakerAddressRef.current && !values.bakerAddress)
+            ? undefined
+            : values.bakerAddress,
+        oldBakerAddress: bakerAddressRef.current ?? undefined,
+      }
     );
 
   return (
@@ -456,7 +463,7 @@ const SignersForm: FC<{
         return (
           <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
             <DelegatorHelper
-              address={"KT1Fn4AHYNZK52kRcZDUZKcojdSNu4pmq1RQ"}
+              address={state.currentContract}
               setFieldValue={setFieldValue}
               bakerAddressRef={bakerAddressRef}
             />
