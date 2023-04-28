@@ -8,6 +8,6 @@ export const makeDelegateMichelson = ({
 }: {
   bakerAddress: string;
 }) => `DROP ;
-PUSH key_hash ${bakerAddress} ;
+PUSH key_hash "${bakerAddress}" ;
 SOME ;
 SET_DELEGATE ;`;
