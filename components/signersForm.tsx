@@ -1,4 +1,5 @@
 import { NetworkType } from "@airgap/beacon-sdk";
+import { Parser } from "@taquito/michel-codec";
 import { validateAddress, ValidationResult, char2Bytes } from "@taquito/utils";
 import {
   ErrorMessage,
@@ -34,6 +35,8 @@ import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
 import renderError, { renderWarning } from "./formUtils";
+
+const parser = new Parser();
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -177,7 +180,10 @@ const SignersForm: FC<{
     if (props.contract.threshold !== requiredSignatures) {
       ops.push({ changeThreshold: requiredSignatures });
     }
-    if (!!bakerAddress) {
+    if (!!bakerAddress && bakerAddress !== oldBakerAddress) {
+      const lambda = parser.parseMichelineExpression(
+        makeDelegateMichelson({ bakerAddress })
+      );
       ops.push({
         execute_lambda: {
           metadata: char2Bytes(
@@ -185,10 +191,12 @@ const SignersForm: FC<{
               baker_address: bakerAddress,
             })
           ),
-          lambda: makeDelegateMichelson({ bakerAddress }),
+          lambda,
         },
       });
     } else if (bakerAddress === "" && !!oldBakerAddress) {
+      const lambda = parser.parseMichelineExpression(makeUndelegateMichelson());
+
       ops.push({
         execute_lambda: {
           metadata: char2Bytes(
@@ -196,7 +204,7 @@ const SignersForm: FC<{
               old_baker_address: oldBakerAddress,
             })
           ),
-          lambda: makeUndelegateMichelson(),
+          lambda,
         },
       });
     }
@@ -324,7 +332,7 @@ const SignersForm: FC<{
     <Formik
       enableReinitialize={true}
       initialValues={initialProps}
-      validate={values => {
+      validate={async values => {
         const errors: {
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
@@ -407,8 +415,18 @@ const SignersForm: FC<{
         if (!!values.bakerAddress) {
           if (validateAddress(values.bakerAddress) !== ValidationResult.VALID)
             errors.bakerAddress = `Invalid address ${values.bakerAddress}`;
-          else if (!state.delegatorAddresses?.includes(values.bakerAddress))
-            errors.bakerAddress = "This address is not a baker";
+          else {
+            try {
+              const account = await fetch(
+                `https://api.ghostnet.tzkt.io/v1/accounts/${values.bakerAddress}`
+              ).then(res => res.json());
+
+              if (account.type !== "delegate" || !account.activationLevel)
+                errors.bakerAddress = "This address is not a baker";
+            } catch (e) {
+              errors.bakerAddress = "Failed to verify if address is a baker";
+            }
+          }
         }
 
         if (Object.values(errors).length > 1) return errors;
