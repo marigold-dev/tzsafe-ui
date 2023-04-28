@@ -7,7 +7,9 @@ export const makeDelegateMichelson = ({
   bakerAddress,
 }: {
   bakerAddress: string;
-}) => `DROP ;
-PUSH key_hash "${bakerAddress}" ;
-SOME ;
-SET_DELEGATE ;`;
+}) => `{
+  DROP ;
+  PUSH key_hash "${bakerAddress}" ;
+  SOME ;
+  SET_DELEGATE ;
+}`;
