@@ -488,7 +488,7 @@ const SignersForm: FC<{
               bakerAddressRef={bakerAddressRef}
             />
             <div className="mb-2 self-start text-left text-lg text-white">
-              Change wallet participants below
+              Wallet participants
             </div>
             <ErrorMessage name={`validatorsError`} render={renderError} />
             <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
