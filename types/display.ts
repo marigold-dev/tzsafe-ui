@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 
-export type lambda = { executeLambda: { metadata?: string; content?: string } };
+type lambda = { executeLambda: { metadata?: string; content?: string } };
 type execute = { execute: string };
 type transfer = { transfer: { amount: number; destination: string } };
 type removeOwners = { removeOwners: string[] };
