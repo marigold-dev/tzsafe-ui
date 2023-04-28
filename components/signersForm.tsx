@@ -418,11 +418,13 @@ const SignersForm: FC<{
           else {
             try {
               const account = await fetch(
-                `https://api.ghostnet.tzkt.io/v1/accounts/${values.bakerAddress}`
+                `${API_URL}/v1/accounts/${values.bakerAddress}`
               ).then(res => res.json());
 
               if (account.type !== "delegate" || !account.activationLevel)
                 errors.bakerAddress = "This address is not a baker";
+              else if (!!account.deactivationLevel)
+                errors.bakerAddress = "This baker is inactive";
             } catch (e) {
               errors.bakerAddress = "Failed to verify if address is a baker";
             }
@@ -688,7 +690,9 @@ const SignersForm: FC<{
                 : null}
             </div>
             <div className="mt-4 w-full">
-              <label className="block text-white">Delegate wallet</label>
+              <label className="block text-lg text-white">
+                Delegate wallet
+              </label>
               <Field
                 disabled={props.disabled}
                 name="bakerAddress"
