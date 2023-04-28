@@ -487,7 +487,7 @@ const SignersForm: FC<{
               setFieldValue={setFieldValue}
               bakerAddressRef={bakerAddressRef}
             />
-            <div className="mb-2 self-center text-2xl font-medium text-white">
+            <div className="mb-2 self-start text-left text-lg text-white">
               Change wallet participants below
             </div>
             <ErrorMessage name={`validatorsError`} render={renderError} />
@@ -618,7 +618,7 @@ const SignersForm: FC<{
               </FieldArray>
             </div>
             <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">Threshold </label>
+              <label className="mr-4 text-lg text-white">Threshold </label>
               <Field
                 disabled={props.disabled}
                 className="mt-2 w-full rounded p-2 text-center"
