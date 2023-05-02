@@ -10,6 +10,7 @@ import { VersionedApi } from "../versioned/apis";
 import { RenderProposalContent } from "./ProposalCard";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
+import renderError from "./formUtils";
 
 function ProposalSignForm({
   address,
@@ -37,9 +38,6 @@ function ProposalSignForm({
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
 
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
   async function sign(
     proposal: number,
     prop: any,
@@ -146,13 +144,18 @@ function ProposalSignForm({
   return (
     <Formik
       initialValues={{
-        flag: typeof modalState === "undefined" ? "1" : "0",
+        flag: false,
       }}
       onSubmit={async values => {
         setLoading(true);
 
         try {
-          await sign(id, proposal.og, modalState, values.flag === "1");
+          await sign(
+            id,
+            proposal.og,
+            modalState,
+            typeof modalState === "undefined" ? true : values.flag
+          );
           onSuccess?.();
           setResult(true);
           setLoading(false);
@@ -205,18 +208,15 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="mb-2 flex w-full flex-col justify-between md:flex-row md:items-center ">
+                <div className="mb-2 flex w-full items-center justify-between">
                   <label className="font-medium text-white">
-                    Try to resolve immediately?:
+                    Try to resolve immediately:
                   </label>
                   <Field
                     name="flag"
-                    as="select"
-                    className="mt-2 rounded-md p-2 md:mt-0"
-                  >
-                    <option value="1">Yes</option>
-                    <option value="0">No</option>
-                  </Field>
+                    type="checkbox"
+                    className="rounded-md p-2"
+                  />
                 </div>
               ))}
         <ErrorMessage name="flag" render={renderError} />

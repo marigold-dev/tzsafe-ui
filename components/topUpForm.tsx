@@ -10,6 +10,7 @@ import {
 } from "../context/state";
 import { toStorage } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
+import renderError from "./formUtils";
 
 function TopUp(props: {
   address: string;
@@ -17,13 +18,11 @@ function TopUp(props: {
 }) {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
-  let [loading, setLoading] = useState(false);
-  let [result, setResult] = useState<undefined | boolean>(undefined);
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<undefined | boolean>(undefined);
+
   async function transfer(amount: number) {
-    let op = await state.connection.wallet
+    const op = await state.connection.wallet
       .transfer({ to: props.address, amount, mutez: false })
       .send();
     await op.transactionOperation();
@@ -103,20 +102,20 @@ function TopUp(props: {
             </ContractLoader>
           </div>
         )}
-        <div className="mb-2 flex w-full flex-col items-center justify-between">
+        <div className="mb-2 flex w-full flex-col justify-between md:items-center">
           <label className="font-medium text-white">
             Amount of xtz to transfer
           </label>
           <Field
             name="amount"
-            className="mt-2 rounded-md p-2"
+            className="mt-2 w-full rounded-md p-2 md:w-auto"
             placeholder="1"
           />
         </div>
         <ErrorMessage name="amount" render={renderError} />
         <div className="mt-4 flex w-full justify-center">
           <button
-            className="my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+            className="my-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
             type="submit"
           >
             Fund

@@ -186,8 +186,10 @@ class Version011 extends Versioned {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
           return { adjust_threshold: Number(v.changeThreshold) };
-        } else {
+        } else if ("adjustEffectivePeriod" in v) {
           return { adjust_effective_period: v.adjustEffectivePeriod };
+        } else {
+          return v;
         }
       })
       .filter(x => !!x);
@@ -224,22 +226,19 @@ class Version011 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
-      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
           metadata: !!content.execute_lambda.lambda
             ? JSON.stringify(
-                !!!meta
-                  ? {
-                      status: "Cant parse lambda",
-                      meta: content.execute_lambda.metadata
-                        ? bytes2Char(content.execute_lambda.metadata)
-                        : "No meta supplied",
-                      lambda: emitMicheline(
-                        JSON.parse(content.execute_lambda.lambda)
-                      ),
-                    }
-                  : meta,
+                {
+                  status: "Non-executed;",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                  lambda: emitMicheline(
+                    JSON.parse(content.execute_lambda.lambda)
+                  ),
+                },
                 null,
                 2
               )

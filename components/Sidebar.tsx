@@ -168,12 +168,14 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`fixed left-0 bottom-0 top-20 z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
+      className={`fixed left-0 bottom-0 ${
+        state.hasBanner ? "top-32" : "top-20"
+      } z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } md:-translate-x-0`}
+      } overflow-y-auto md:-translate-x-0`}
     >
       <button
-        className="mb-8 flex w-full items-center justify-end space-x-2 text-zinc-500 md:hidden"
+        className="mb-8 flex w-full items-center justify-end space-x-2 text-zinc-300 md:hidden"
         onClick={onClose}
       >
         <span className="text-xs">Close sidebar</span>
@@ -286,7 +288,7 @@ const Sidebar = ({
         </Link>
         <Link
           href="/fund-wallet"
-          className={linkClass(path === "/fund-wallet")}
+          className={linkClass(path === "/fund-wallet", !state.address)}
           onClick={onClose}
         >
           <svg
@@ -461,6 +463,29 @@ const Sidebar = ({
           </svg>
           <span>History</span>
         </Link>
+        <a
+          href="https://docs.tzsafe.marigold.dev"
+          target="_blank"
+          rel="noreferrer"
+          className={linkClass(false)}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="scale-150"
+          >
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Help</span>
+        </a>
       </div>
     </aside>
   );

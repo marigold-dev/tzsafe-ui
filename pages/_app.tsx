@@ -27,7 +27,7 @@ import "../styles/globals.css";
 import Proposals from "./proposals";
 
 export default function App({ Component, pageProps }: AppProps) {
-  let [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
+  const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
     reducer,
     emptyState()
   );
@@ -91,11 +91,16 @@ export default function App({ Component, pageProps }: AppProps) {
     })();
   }, [state, dispatch]);
 
+  useEffect(() => {
+    setHasSidebar(false);
+  }, [path]);
+
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          {/* <Banner isVisible={hasBanner} onHide={() => setHasBanner(false)}> */}
           <Banner>
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET
@@ -109,17 +114,20 @@ export default function App({ Component, pageProps }: AppProps) {
           <div
             className={`pt-20 pb-28 ${
               Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
-            }`}
+            } ${state.hasBanner ? "mt-12" : ""}`}
           >
-            <button
-              className="ml-4 mt-4 flex items-center space-x-2 text-zinc-500 md:hidden"
-              onClick={() => {
-                setHasSidebar(true);
-              }}
-            >
-              <span className="text-xs">Open sidebar</span>
-              <ArrowRightIcon className="h-4 w-4" />
-            </button>
+            {Object.entries(state.contracts).length > 0 && (
+              <button
+                className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
+                onClick={() => {
+                  setHasSidebar(true);
+                }}
+              >
+                <span className="text-xs">Open sidebar</span>
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            )}
+
             {path === "/" && !!state.currentContract ? (
               <Proposals />
             ) : (

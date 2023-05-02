@@ -8,15 +8,14 @@ const Footer = ({
       } lg:text-left`}
     >
       <div className="flex flex-col items-center justify-center space-y-2 p-4 text-center text-white">
-        <div className="space-x-6">
+        <div className="flex flex-col items-center space-y-2 md:block md:space-x-6 md:space-y-0">
           <a
             href="https://www.marigold.dev/"
             target="_blank"
             rel="noreferrer"
             className="text-zinc-400"
           >
-            <span>©{new Date().getFullYear()} Copyright </span>
-            Marigold
+            ©{new Date().getFullYear()} Copyright Marigold
           </a>
 
           <a
@@ -25,6 +24,13 @@ const Footer = ({
             rel="noreferrer"
           >
             Contact
+          </a>
+          <a
+            href="https://docs.tzsafe.marigold.dev/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Documentation
           </a>
         </div>
         <a href="https://tzkt.io/" target="_blank" rel="noreferrer">

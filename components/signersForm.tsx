@@ -1,5 +1,6 @@
 import { NetworkType } from "@airgap/beacon-sdk";
-import { validateAddress } from "@taquito/utils";
+import { Parser } from "@taquito/michel-codec";
+import { validateAddress, ValidationResult, char2Bytes } from "@taquito/utils";
 import {
   ErrorMessage,
   Field,
@@ -9,17 +10,33 @@ import {
   FormikErrors,
 } from "formik";
 import { useRouter } from "next/router";
-import { FC, useContext, useEffect, useState } from "react";
-import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import { FC, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  MODAL_TIMEOUT,
+  PREFERED_NETWORK,
+  PROPOSAL_DURATION_WARNING,
+} from "../context/config";
+import { API_URL } from "../context/config";
+import {
+  makeDelegateMichelson,
+  makeUndelegateMichelson,
+} from "../context/delegate";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { adaptiveTime } from "../utils/adaptiveTime";
+import {
+  durationOfDaysHoursMinutes,
+  parseIntOr,
+  secondsToDuration,
+} from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
+import renderError, { renderWarning } from "./formUtils";
+
+const parser = new Parser();
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -35,6 +52,36 @@ function get(
   }
 }
 
+// This components only allows to fetch the delegator
+// And update the form data
+const DelegatorHelper = ({
+  address,
+  setFieldValue,
+  bakerAddressRef,
+}: {
+  address: string | null;
+  setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void;
+  bakerAddressRef: React.MutableRefObject<null | string>;
+}) => {
+  const state = useContext(AppStateContext)!;
+
+  useEffect(() => {
+    if (!address) return;
+
+    state.connection.tz
+      .getDelegate(address)
+      .then(bakerAddress => {
+        bakerAddressRef.current = bakerAddress;
+        setFieldValue("bakerAddress", bakerAddress);
+      })
+      .catch(() => {
+        setFieldValue("bakerAddress", undefined);
+      });
+  }, []);
+
+  return null;
+};
+
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
@@ -44,10 +91,22 @@ const SignersForm: FC<{
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
   const router = useRouter();
+  const bakerAddressRef = useRef<null | string>(null);
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
+
+  const duration = useMemo(() => {
+    if (
+      ["0.0.6", "0.0.8", "0.0.9", "unknown version"].includes(
+        props.contract.version
+      )
+    )
+      return undefined;
+
+    return secondsToDuration(props.contract.effective_period).toObject();
+  }, [props.contract]);
 
   useEffect(() => {
     if (loading || result === undefined) return;
@@ -57,31 +116,42 @@ const SignersForm: FC<{
     }, MODAL_TIMEOUT);
   }, [result, loading]);
 
-  const renderError = (message: string) => {
-    return <p className="mt-2 italic text-red-600">{message}</p>;
-  };
+  useEffect(() => {
+    if (!!state.delegatorAddresses) return;
+
+    fetch(`${API_URL}/v1/delegates?select.values=address`)
+      .then(res => res.json())
+      .then(payload => dispatch({ type: "setDelegatorAddresses", payload }));
+  }, [state.delegatorAddresses]);
 
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
-    effectivePeriod: number | undefined;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
     validatorsError?: string;
+    bakerAddress: string | undefined;
   } = {
     validators: signers(props.contract).map(x => ({
       address: x,
       name: state.aliases[x] || "",
     })),
-    effectivePeriod:
-      props.contract.version >= "0.0.10"
-        ? props.contract.effective_period
-        : undefined,
+    days: duration?.days?.toString(),
+    hours: duration?.hours?.toString(),
+    minutes: duration?.minutes?.toString(),
     requiredSignatures: props.contract.threshold,
+    bakerAddress: undefined,
   };
 
   function getOps(
     txs: { name: string; address: string }[],
     requiredSignatures: number,
-    effectivePeriod: number | undefined
+    effectivePeriod: number | undefined,
+    {
+      bakerAddress,
+      oldBakerAddress,
+    }: { bakerAddress: string | undefined; oldBakerAddress: string | undefined }
   ) {
     let initialSigners = new Set(signers(props.contract));
     let input = new Set(txs.map(x => x.address));
@@ -109,6 +179,34 @@ const SignersForm: FC<{
     }
     if (props.contract.threshold !== requiredSignatures) {
       ops.push({ changeThreshold: requiredSignatures });
+    }
+    if (!!bakerAddress && bakerAddress !== oldBakerAddress) {
+      const lambda = parser.parseMichelineExpression(
+        makeDelegateMichelson({ bakerAddress })
+      );
+      ops.push({
+        execute_lambda: {
+          metadata: char2Bytes(
+            JSON.stringify({
+              baker_address: bakerAddress,
+            })
+          ),
+          lambda,
+        },
+      });
+    } else if (bakerAddress === "" && !!oldBakerAddress) {
+      const lambda = parser.parseMichelineExpression(makeUndelegateMichelson());
+
+      ops.push({
+        execute_lambda: {
+          metadata: char2Bytes(
+            JSON.stringify({
+              old_baker_address: oldBakerAddress,
+            })
+          ),
+          lambda,
+        },
+      });
     }
 
     return ops;
@@ -141,7 +239,7 @@ const SignersForm: FC<{
           , and if it is, {"it'll"} appear in the proposals
         </p>
         <div></div>
-        <div className="mt-8 w-full space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -206,16 +304,44 @@ const SignersForm: FC<{
       </div>
     );
   }
+
+  const getOpsHelper = (values: typeof initialProps) =>
+    getOps(
+      values.validators,
+      values.requiredSignatures,
+      Math.ceil(
+        durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis() / 1000
+      ),
+      // If it's the same value it means there's no change so we ignore it
+      // The other check is the same but checks for the null & empty string case
+      {
+        bakerAddress:
+          bakerAddressRef.current === values.bakerAddress ||
+          (!bakerAddressRef.current && !values.bakerAddress)
+            ? undefined
+            : values.bakerAddress,
+        oldBakerAddress: bakerAddressRef.current ?? undefined,
+      }
+    );
+
   return (
     <Formik
       enableReinitialize={true}
       initialValues={initialProps}
-      validate={values => {
+      validate={async values => {
         const errors: {
           validators: { address: string; name: string }[];
           requiredSignatures?: any;
           validatorsError?: string;
-          effectivePeriod?: string;
+          days?: string;
+          hours?: string;
+          minutes?: string;
+          proposalDuration?: string;
+          bakerAddress?: string;
         } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
@@ -225,16 +351,16 @@ const SignersForm: FC<{
         let result = values.validators.map(x => {
           let err = { address: "", name: "" };
           if (dedup.has(x.address)) {
-            err.address = "already exists";
+            err.address = "Please enter each account only once";
           } else {
             dedup.add(x.address);
             err.address =
-              validateAddress(x.address) !== 3
-                ? `invalid address ${x.address}`
+              validateAddress(x.address) !== ValidationResult.VALID
+                ? `Invalid address ${x.address}`
                 : "";
           }
           if (!!x.name && dedupName.has(x.name)) {
-            err.name = "already exists";
+            err.name = "Alias already exists";
           } else {
             dedupName.add(x.name);
           }
@@ -242,14 +368,70 @@ const SignersForm: FC<{
         });
         errors.validators = result;
         if (values.requiredSignatures > values.validators.length) {
-          errors.requiredSignatures = `threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
+          errors.requiredSignatures = `Threshold too high. required number of signatures: ${values.requiredSignatures}, total amount of signers: ${values.validators.length}`;
         }
 
-        const parsedNumber = Number(values.effectivePeriod);
-        if (isNaN(parsedNumber) || parsedNumber <= 0) {
-          errors.effectivePeriod = "Invalid duration";
-          return errors;
+        const parsedDays = Number(values.days);
+        if (
+          !!values.days &&
+          (isNaN(parsedDays) || !Number.isInteger(parsedDays) || parsedDays < 0)
+        ) {
+          errors.days = "Invalid days";
         }
+
+        const parsedHours = Number(values.hours);
+        if (
+          !!values.hours &&
+          (isNaN(parsedHours) ||
+            !Number.isInteger(parsedHours) ||
+            parsedHours < 0)
+        ) {
+          errors.hours = "Invalid hours";
+        }
+
+        const parsedMinutes = Number(values.minutes);
+        if (
+          !!values.minutes &&
+          (isNaN(parsedMinutes) ||
+            !Number.isInteger(parsedMinutes) ||
+            parsedMinutes < 0)
+        ) {
+          errors.minutes = "Invalid minutes";
+        }
+
+        if (!values.days && !values.hours && !values.minutes) {
+          errors.proposalDuration = "Please fill at least one field";
+        }
+
+        if (
+          [values.days, values.hours, values.minutes].every(v => {
+            const parsed = parseIntOr(v, undefined);
+            return parsed === 0 || parsed === undefined;
+          })
+        ) {
+          errors.proposalDuration = "One value must at least be more than 0";
+        }
+
+        if (!!values.bakerAddress) {
+          if (validateAddress(values.bakerAddress) !== ValidationResult.VALID)
+            errors.bakerAddress = `Invalid address ${values.bakerAddress}`;
+          else {
+            try {
+              const account = await fetch(
+                `${API_URL}/v1/accounts/${values.bakerAddress}`
+              ).then(res => res.json());
+
+              if (account.type !== "delegate" || !account.activationLevel)
+                errors.bakerAddress = "This address is not a baker";
+              else if (!!account.deactivationLevel)
+                errors.bakerAddress = "This baker is inactive";
+            } catch (e) {
+              errors.bakerAddress = "Failed to verify if address is a baker";
+            }
+          }
+        }
+
+        if (Object.values(errors).length > 1) return errors;
 
         if (
           result.every(x => x.address === "" && x.name === "") &&
@@ -266,13 +448,7 @@ const SignersForm: FC<{
 
         setLoading(true);
         try {
-          await updateSettings(
-            getOps(
-              values.validators,
-              values.requiredSignatures,
-              values.effectivePeriod
-            )
-          );
+          await updateSettings(getOpsHelper(values));
           setResult(true);
           dispatch!({
             type: "updateAliases",
@@ -296,17 +472,23 @@ const SignersForm: FC<{
         setTouched,
         validateForm,
       }) => {
-        const hasNoChange =
-          getOps(
-            values.validators,
-            values.requiredSignatures,
-            values.effectivePeriod
-          ).length === 0;
+        const currentDuration = durationOfDaysHoursMinutes(
+          values.days,
+          values.hours,
+          values.minutes
+        ).toMillis();
+
+        const hasNoChange = getOpsHelper(values).length === 0;
 
         return (
           <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
-            <div className="mb-2 self-center text-2xl font-medium text-white">
-              Change wallet participants below
+            <DelegatorHelper
+              address={state.currentContract}
+              setFieldValue={setFieldValue}
+              bakerAddressRef={bakerAddressRef}
+            />
+            <div className="mb-2 self-start text-left text-lg text-white">
+              Wallet participants
             </div>
             <ErrorMessage name={`validatorsError`} render={renderError} />
             <div className="mb-2 grid w-full grid-flow-row items-start gap-4">
@@ -317,13 +499,19 @@ const SignersForm: FC<{
                       values.validators.map((validator, index) => {
                         return (
                           <div
-                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 px-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none"
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4"
                             key={index}
                           >
                             <div className="flex w-full flex-col md:w-auto">
                               <label className="text-white">
                                 <span className="md:hidden">Owner name</span>
-                                {index === 0 ? "Owner Name" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:inline">
+                                    Owner Name
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
@@ -342,7 +530,13 @@ const SignersForm: FC<{
                                 htmlFor={`validators.${index}.address`}
                               >
                                 <span className="md:hidden">Owner address</span>
-                                {index === 0 ? "Owner Address" : ""}
+                                {index === 0 ? (
+                                  <span className="hidden md:inline">
+                                    Owner address
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
                               </label>
                               <Field
                                 disabled={props.disabled}
@@ -399,6 +593,12 @@ const SignersForm: FC<{
                           </div>
                         );
                       })}
+                    {values.validators.length > 0 &&
+                      !values.validators.find(
+                        v => v.address === state.address
+                      ) &&
+                      renderWarning("Your address is not in the owners")}
+
                     <button
                       type="button"
                       className={`${
@@ -418,7 +618,7 @@ const SignersForm: FC<{
               </FieldArray>
             </div>
             <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">Threshold </label>
+              <label className="mr-4 text-lg text-white">Threshold </label>
               <Field
                 disabled={props.disabled}
                 className="mt-2 w-full rounded p-2 text-center"
@@ -444,29 +644,70 @@ const SignersForm: FC<{
               </Field>
               <ErrorMessage name={`requiredSignatures`} render={renderError} />
             </div>
-            {!!values.effectivePeriod && (
-              <div className="mt-4 flex w-full flex-col md:grow">
-                <label className="mr-4 text-white">
-                  Proposal duration (in seconds)
-                </label>
-                <Field
-                  disabled={props.disabled}
-                  className="mt-2 w-full rounded p-2 text-black"
-                  as="select"
-                  component="input"
-                  name="effectivePeriod"
-                  placeholder={props.contract.effectivePeriod}
-                ></Field>
-                <p className="mt-2 text-lg text-white">
-                  {adaptiveTime(values.effectivePeriod.toString())}
-                </p>
-                <ErrorMessage name={`effectivePeriod`} render={renderError} />
+
+            <div className="mt-4 w-full">
+              <h3 className="text-lg text-white">Proposal duration</h3>
+              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Days</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="days"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="days" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Hours</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="hours"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="hours" render={renderError} />
+                </div>
+                <div className="flex w-full grow flex-col md:w-auto">
+                  <label className="text-white">Minutes</label>
+                  <Field
+                    disabled={props.disabled}
+                    name="minutes"
+                    className="md:text-md mt-1 rounded p-2 text-sm"
+                    placeholder="0"
+                  />
+                  <ErrorMessage name="minutes" render={renderError} />
+                </div>
               </div>
-            )}
-            <div className="flex w-full justify-center">
+              {/* @ts-ignore*/}
+              {!!errors.proposalDuration
+                ? // @ts-ignore
+                  renderError(errors.proposalDuration)
+                : currentDuration < PROPOSAL_DURATION_WARNING
+                ? renderWarning(
+                    "Proposal duration is low, you may not be able to execute the proposals"
+                  )
+                : null}
+            </div>
+            <div className="mt-4 w-full">
+              <label className="block text-lg text-white">
+                Delegate wallet
+              </label>
+              <Field
+                disabled={props.disabled}
+                name="bakerAddress"
+                className="md:text-md mt-1 w-full rounded p-2 text-sm"
+                placeholder="Baker address"
+              />
+              <ErrorMessage name="bakerAddress" render={renderError} />
+            </div>
+
+            <div className="mt-6 flex w-full justify-center">
               <button
                 className={`${
-                  (props.disabled ?? false) || hasNoChange
+                  (props.disabled ?? false) ||
+                  hasNoChange ||
+                  Object.values(errors).find(v => !!v)
                     ? "pointer-events-none opacity-50"
                     : ""
                 } my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500`}

@@ -24,13 +24,15 @@ type tezosState = {
   aliases: { [address: string]: string };
   favouriteContract: string | null;
   aliasTrie: Trie<string>;
+  hasBanner: boolean;
+  delegatorAddresses: string[] | undefined;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
 };
 
-let emptyState = () => {
+let emptyState = (): tezosState => {
   const connection = new TezosToolkit(RPC_URL);
   const customHandler = new Map<string, Handler>([
     ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
@@ -57,6 +59,8 @@ let emptyState = () => {
     connection,
     favouriteContract: null,
     aliasTrie: new Trie<string>(),
+    hasBanner: true,
+    delegatorAddresses: undefined,
   };
 };
 
@@ -90,12 +94,17 @@ type action =
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
+  | { type: "setDelegatorAddresses"; payload: string[] }
   | {
       type: "updateAliases";
       payload: {
         aliases: { address: string; name: string }[];
         keepOld: boolean;
       };
+    }
+  | {
+      type: "setBanner";
+      payload: boolean;
     };
 
 function reducer(state: tezosState, action: action): tezosState {
@@ -253,6 +262,13 @@ function reducer(state: tezosState, action: action): tezosState {
         favouriteContract: action.address,
       };
     }
+    case "setBanner":
+      return {
+        ...state,
+        hasBanner: action.payload,
+      };
+    case "setDelegatorAddresses":
+      return { ...state, delegatorAddresses: action.payload };
     default: {
       throw "notImplemented";
     }

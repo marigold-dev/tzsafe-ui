@@ -25,8 +25,8 @@ const CreateProposal = () => {
           <h1 className="text-2xl font-extrabold text-white">New proposal</h1>
         </div>
       </div>
-      <main className="h-full min-h-fit grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <main className="min-h-fit grow">
+        <div className="mx-auto min-h-full max-w-7xl px-4 py-2 sm:px-6 lg:py-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar

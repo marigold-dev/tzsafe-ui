@@ -12,6 +12,7 @@ import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
 import { adaptiveTime } from "../../utils/adaptiveTime";
+import renderError from "../formUtils";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -30,27 +31,37 @@ function Aliases() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext);
-  const renderError = (message: string) => {
-    return <p className="italic text-red-600">{message}</p>;
-  };
-  let byName = Object.fromEntries(
+
+  const byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
   );
   const initialProps: {
     validators: { name: string; address: string }[];
     requiredSignatures: number;
+    days: string | undefined;
+    hours: string | undefined;
+    minutes: string | undefined;
   } = {
     validators: formState?.validators!,
     requiredSignatures: formState?.requiredSignatures!,
+    days: formState?.days,
+    hours: formState?.hours,
+    minutes: formState?.minutes,
   };
 
   return (
     <Formik
       initialValues={initialProps}
       validate={values => {
-        const errors: { validators: { address: string; name: string }[] } = {
-          validators: [],
-        };
+        const errors: {
+          validators: { address: string; name: string }[];
+          requiredSignatures?: any;
+          validatorsError?: string;
+          days?: string;
+          hours?: string;
+          minutes?: string;
+          proposalDuration?: string;
+        } = { validators: [] };
         let dedup = new Set();
         let dedupName = new Set();
 
@@ -97,17 +108,24 @@ function Aliases() {
           <div className="mb-2 mt-4 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="validators">
               {() => (
-                <div className="min-w-full">
+                <div className="min-w-full space-y-4 md:space-y-0">
                   {values.validators.length > 0 &&
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-x-4 md:flex-row md:rounded-none md:border-none`}
+                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none`}
                           key={index}
                         >
-                          <div className="flex flex-col">
+                          <div className="flex w-full flex-col md:w-auto">
                             <label className="text-white">
-                              {index === 0 ? "Owner Name" : ""}
+                              <span className="md:hidden">Owner name</span>
+                              {index === 0 ? (
+                                <span className="hidden md:inline">
+                                  Owner Name
+                                </span>
+                              ) : (
+                                ""
+                              )}
                             </label>
                             <Field
                               name={`validators.${index}.name`}
@@ -124,7 +142,14 @@ function Aliases() {
                               className="text-white"
                               htmlFor={`validators.${index}.address`}
                             >
-                              {index === 0 ? "Owner Address" : ""}
+                              <span className="md:hidden">Owner Address</span>
+                              {index === 0 ? (
+                                <span className="hidden md:inline">
+                                  Owner Address
+                                </span>
+                              ) : (
+                                ""
+                              )}
                             </label>
                             <Field
                               disabled
@@ -167,24 +192,38 @@ function Aliases() {
               ))}
             </Field>
           </div>
-          {!!formState?.effectivePeriod && (
-            <div className="mt-4 flex w-full flex-col md:grow">
-              <label className="mr-4 text-white">
-                Proposal duration (in seconds)
-              </label>
-              <Field
-                disabled
-                component="input"
-                name="effectivePeriod"
-                value={formState.effectivePeriod}
-                className="mt-2 w-full rounded p-2"
-              />
-              <p className="mt-2 text-lg text-white">
-                {adaptiveTime(formState.effectivePeriod.toString())}
-              </p>
-              <ErrorMessage name={`effectivePeriod`} render={renderError} />
+          <div className="mt-4 w-full">
+            <h3 className="text-lg text-white">Proposal duration</h3>
+            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Days</label>
+                <Field
+                  disabled
+                  name="days"
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Hours</label>
+                <Field
+                  name="hours"
+                  disabled
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div className="flex w-full grow flex-col md:w-auto">
+                <label className="text-white">Minutes</label>
+                <Field
+                  name="minutes"
+                  disabled
+                  className="md:text-md mt-1 rounded p-2 text-sm"
+                  placeholder="0"
+                />
+              </div>
             </div>
-          )}
+          </div>
           <div className="mt-8 flex space-x-6">
             <Link
               type="button"

@@ -7,12 +7,10 @@ import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fetchVersion from "../../context/metadata";
 import { AppStateContext } from "../../context/state";
+import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
-
-const renderError = (message: string) => (
-  <p className="mt-1 italic text-red-600">{message}</p>
-);
+import renderError from "../formUtils";
 
 function Basic() {
   const [isLoading, setIsLoading] = useState(false);
@@ -97,12 +95,16 @@ function Basic() {
             name: state.aliases[x] || "",
           }));
 
+          const duration = secondsToDuration(
+            storage.effective_period.toNumber()
+          );
+
           const data = {
             ...formState,
             ...values,
+            ...duration.toObject(),
             validators,
             requiredSignatures: storage.threshold.toNumber(),
-            effectivePeriod: storage.effective_period.toNumber(),
           };
           setFormState(data as any);
           setActiveStepIndex(activeStepIndex + 1);
@@ -118,8 +120,8 @@ function Basic() {
         <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter imported wallet name and address below
         </div>
-        <div className="mt-4 flex w-full flex-col justify-center space-x-4 md:flex-row">
-          <div className="flex w-1/2 flex-col">
+        <div className="md:items-inherit mt-4 flex w-full flex-col items-center justify-center space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+          <div className="flex w-full flex-col md:w-1/2">
             <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet name</label>
               <Field
@@ -130,7 +132,7 @@ function Basic() {
             </div>
             <ErrorMessage name="walletName" render={renderError} />
           </div>
-          <div className="flex w-1/2 flex-col ">
+          <div className="flex w-full flex-col md:w-1/2">
             <div className="mb-2 flex w-full flex-col items-start">
               <label className="font-medium text-white">Wallet address</label>
               <Field

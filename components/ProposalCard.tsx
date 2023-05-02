@@ -1,6 +1,7 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 import { proposalContent } from "../types/display";
+import { crop } from "../utils/strings";
 import Alias from "./Alias";
 import Tooltip from "./Tooltip";
 
@@ -79,17 +80,10 @@ export const RenderProposalContent = ({
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    if (metadata.entrypoint === "%transfer")
-      console.log(
-        metadata,
-        metadata.entrypoint === "%transfer",
-        Array.isArray(metadata.payload),
-        isFa2(metadata.payload)
-      );
-
     if (
       !metadata?.contract_address &&
-      !metadata?.meta?.includes("contract_addr")
+      !metadata?.meta?.includes("contract_addr") &&
+      !metadata?.meta?.includes("baker_address")
     ) {
       data = {
         ...data,
@@ -134,63 +128,80 @@ export const RenderProposalContent = ({
           token_id,
         }),
       };
-    } else {
+    } else if (metadata?.meta?.includes("baker_address")) {
+      const contractData = JSON.parse(metadata.meta);
+
+      const isCancelling = !!contractData.old_baker_address;
+
+      data = {
+        label: isCancelling ? "Undelegate" : "Delegate",
+        metadata: undefined,
+        amount: undefined,
+        addresses: [
+          isCancelling
+            ? contractData.old_baker_address
+            : contractData.baker_address,
+        ],
+        entrypoints: undefined,
+        params: undefined,
+      };
+
+      // This condition handles some legacy code so old wallets don't crash
+    } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
-        if (metadata.contract_address) {
-          const data = (() => {
-            const entries = Object.entries(metadata.payload ?? {});
+        const contractData = JSON.parse(metadata.meta);
 
-            if (entries.length === 0) return ["default", "Unit"];
-
-            return entries[0];
-          })();
-
-          return [
-            metadata.meta,
-            metadata.mutez_amount,
-            metadata.contract_address,
-            ...data,
-          ];
-        } else {
-          const contractData = JSON.parse(metadata.meta);
-
-          const data = (() => {
-            if (typeof contractData.payload !== "object")
-              return ["default", contractData?.payload];
-
-            const entries = Object.entries(contractData.payload);
-
-            if (entries.length === 0) return ["default", "{}"];
-
-            return entries[0];
-          })();
-
-          return [
-            undefined,
-            contractData.mutez_amount,
-            contractData.contract_addr,
-            ...data,
-          ];
-        }
+        return [
+          undefined,
+          contractData.mutez_amount,
+          contractData.contract_addr,
+          contractData.entrypoint ?? "default",
+          contractData.payload ?? "Unit",
+        ];
       })();
 
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: `${amount} mutez`,
+        amount: !!amount ? `${amount} mutez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
-        params: JSON.stringify(arg),
+        params:
+          typeof arg === "object" || Array.isArray(arg)
+            ? JSON.stringify(arg)
+            : arg,
+      };
+    } else {
+      const [meta, amount, address, entrypoint, arg] = (() => {
+        return [
+          undefined,
+          metadata.mutez_amount,
+          metadata.contract_address,
+          metadata.entrypoint ?? "default",
+          metadata.payload ?? "Unit",
+        ];
+      })();
+
+      data = {
+        label: "Execute contract",
+        metadata: meta,
+        amount: !!amount ? `${amount} mutez` : undefined,
+        addresses: [address],
+        entrypoints: entrypoint,
+        params:
+          typeof arg === "object" || Array.isArray(arg)
+            ? JSON.stringify(arg)
+            : arg,
       };
     }
   }
 
   return (
-    <div className="after:content[''] relative w-full after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 lg:after:hidden">
+    <div className="after:content[''] relative w-full text-xs after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
         className={`${
           !data.params ? "cursor-default" : ""
-        } grid w-full grid-cols-3 gap-4 text-left lg:grid-cols-6`}
+        } grid w-full grid-cols-2 gap-4 text-left lg:grid-cols-6`}
         onClick={() => {
           if (!data.params) return;
 
@@ -202,15 +213,15 @@ export const RenderProposalContent = ({
         <span
           className={`${!data.label ? "text-zinc-500" : ""} justify-self-start`}
         >
-          <p className="text-zinc-500 lg:hidden">Function</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Function</p>
           {data.label ?? "-"}
         </span>
         <span
           className={`${
             !data.metadata ? "text-zinc-500" : ""
-          } w-full justify-self-center text-center lg:w-auto lg:justify-self-start lg:text-left`}
+          } w-auto justify-self-end text-right lg:w-full lg:w-auto lg:justify-self-start lg:text-left`}
         >
-          <p className="flex justify-center text-zinc-500 lg:hidden">
+          <p className="flex justify-center font-medium text-zinc-500 lg:hidden">
             Metadata
             <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
               <InfoCircledIcon className="ml-2 h-4 w-4" />
@@ -221,23 +232,23 @@ export const RenderProposalContent = ({
         <span
           className={`${
             !data.amount ? "text-zinc-500" : ""
-          } justify-self-end text-right lg:justify-self-center`}
+          } justify-self-start text-left lg:justify-self-center lg:text-right`}
         >
-          <p className="text-zinc-500 lg:hidden">Amount</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Amount</p>
           {!data.amount ? "-" : `${data.amount}`}
         </span>
         {!data.addresses ? (
-          <span className="justify-self-start text-zinc-500 lg:justify-self-center">
-            <p className="text-zinc-500 lg:hidden">Address</p>-
+          <span className="lg:text-auto justify-self-end text-right text-zinc-500 lg:justify-self-center">
+            <p className="font-medium text-zinc-500 lg:hidden">Address</p>-
           </span>
         ) : data.addresses.length === 1 ? (
-          <span className="justify-self-start lg:justify-self-center">
-            <p className="text-zinc-500 lg:hidden">Address</p>
+          <span className="lg:text-auto justify-self-end text-right lg:justify-self-center">
+            <p className="font-medium text-zinc-500 lg:hidden">Address</p>
             <Alias address={data.addresses[0]} />
           </span>
         ) : (
-          <ul className="justify-self-start lg:justify-self-center">
-            <li className="text-zinc-500 lg:hidden">Addresses</li>
+          <ul className="lg:text-auto justify-self-end text-right lg:justify-self-center">
+            <li className="font-medium text-zinc-500 lg:hidden">Addresses</li>
             {data.addresses.map((address, i) => (
               <li key={i}>
                 <Alias address={address} />
@@ -248,17 +259,18 @@ export const RenderProposalContent = ({
         <span
           className={`${
             !data.entrypoints ? "text-zinc-500" : ""
-          } w-full justify-self-center text-center lg:w-auto lg:justify-self-end`}
+          } justify-self-left w-full text-left lg:w-auto lg:justify-self-end lg:text-center`}
+          title={data.entrypoints}
         >
-          <p className="text-zinc-500 lg:hidden">Entrypoint</p>
-          {data.entrypoints ?? "-"}
+          <p className="font-medium text-zinc-500 lg:hidden">Entrypoint</p>
+          {!!data.entrypoints ? crop(data.entrypoints, 18) : "-"}
         </span>
         <span
           className={`${
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="text-zinc-500 lg:hidden">Params</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params/Token</p>
           <div>
             {!!data.params
               ? `${
@@ -302,6 +314,10 @@ const labelOfProposalContent = (content: proposalContent) => {
       isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
+      : !!metadata.meta && metadata.meta.includes("old_baker_address")
+      ? "Undelegate"
+      : !!metadata.meta && metadata.meta.includes("baker_address")
+      ? "Delegate"
       : metadata.contract_address ||
         (!!metadata.meta && metadata.meta?.includes("contract_addr"))
       ? "Execute contract"
@@ -311,7 +327,7 @@ const labelOfProposalContent = (content: proposalContent) => {
 
 type ProposalCardProps = {
   id: number;
-  status: string;
+  status: React.ReactNode;
   date: Date;
   activities: { signer: string; hasApproved: boolean }[];
   content: proposalContent[];
@@ -450,7 +466,7 @@ const ProposalCard = ({
             ))}
           </div>
         </section>
-        <section>
+        <section className="text-xs md:text-base">
           <span className="text-xl font-bold">Activity</span>
           {isSignable && (
             <p className="mt-2 font-light lg:hidden">
@@ -469,17 +485,27 @@ const ProposalCard = ({
           <div className="mt-2 space-y-2 font-light">
             <div className="grid grid-cols-3">
               <span className="w-full font-light">
-                {proposalDate.toLocaleDateString()} -{" "}
-                {`${proposalDate
-                  .getHours()
-                  .toString()
-                  .padStart(2, "0")}:${proposalDate
-                  .getMinutes()
-                  .toString()
-                  .padStart(2, "0")}`}
+                <span>
+                  <span>{proposalDate.toLocaleDateString()}</span>
+                  <span className="hidden lg:inline">
+                    -{" "}
+                    {`${proposalDate
+                      .getHours()
+                      .toString()
+                      .padStart(2, "0")}:${proposalDate
+                      .getMinutes()
+                      .toString()
+                      .padStart(2, "0")}`}
+                  </span>
+                </span>
               </span>
               <span className="justify-self-center">
-                <Alias address={proposer.actor} />
+                <span className="hidden lg:inline">
+                  <Alias address={proposer.actor} />
+                </span>
+                <span className="lg:hidden">
+                  <Alias address={proposer.actor} length={3} />
+                </span>
               </span>
               <span className="justify-self-end">Proposed</span>
             </div>
@@ -489,7 +515,12 @@ const ProposalCard = ({
                   -
                 </span>
                 <span className="justify-self-center">
-                  <Alias address={signer} />
+                  <span className="hidden lg:inline">
+                    <Alias address={signer} />
+                  </span>
+                  <span className="lg:hidden">
+                    <Alias address={signer} length={3} />
+                  </span>
                 </span>
                 <span className="justify-self-end">
                   {hasApproved ? "Approved" : "Rejected"}
@@ -509,7 +540,12 @@ const ProposalCard = ({
                     .padStart(2, "0")}`}
                 </span>
                 <span className="justify-self-center">
-                  <Alias address={resolver.actor} />
+                  <span className="hidden lg:inline">
+                    <Alias address={resolver.actor} />
+                  </span>
+                  <span className="lg:hidden">
+                    <Alias address={resolver.actor} length={3} />
+                  </span>
                 </span>
                 <span className="justify-self-end">Resolved</span>
               </div>

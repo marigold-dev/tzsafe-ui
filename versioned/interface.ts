@@ -1,6 +1,6 @@
 import { Parser } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
-import { validateAddress } from "@taquito/utils";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
@@ -174,7 +174,7 @@ abstract class Versioned {
       return { fields: [], values: {} };
     }
     let _: never = c.version;
-    throw new Error("invalid version");
+    throw new Error("Invalid version");
   }
 
   static transferForm(c: contractStorage): {
@@ -203,7 +203,7 @@ abstract class Versioned {
             validate: (x: string) => {
               const amount = Number.parseInt(x);
               if (isNaN(amount) || amount <= 0) {
-                return `invalid amount ${x}`;
+                return `Invalid amount ${x}`;
               }
             },
           },
@@ -212,9 +212,11 @@ abstract class Versioned {
             label: "Transfer to",
             path: ".to",
             kind: "input-complete",
-            placeholder: "destination address",
+            placeholder: "Destination address",
             validate: (x: string) =>
-              validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+              validateAddress(x) !== ValidationResult.VALID
+                ? `Invalid address ${x}`
+                : undefined,
           },
         ],
       };
@@ -238,7 +240,7 @@ abstract class Versioned {
             validate: (x: string) => {
               const amount = Number.parseInt(x);
               if (isNaN(amount) || amount <= 0) {
-                return `invalid amount ${x}`;
+                return `Invalid amount ${x}`;
               }
             },
           },
@@ -247,12 +249,11 @@ abstract class Versioned {
             label: "Transfer to",
             path: ".to",
             kind: "input-complete",
-            placeholder: "destination address",
-            validate: (x: string) => {
-              return validateAddress(x) !== 3
-                ? `invalid address ${x}`
-                : undefined;
-            },
+            placeholder: "Destination address",
+            validate: (x: string) =>
+              validateAddress(x) !== ValidationResult.VALID
+                ? `Invalid address ${x}`
+                : undefined,
           },
         ],
       };
@@ -290,7 +291,9 @@ abstract class Versioned {
           kind: "input-complete",
           placeholder: "Fa2 address",
           validate: (x: string) =>
-            validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
         },
         {
           field: "tokenId",
@@ -299,7 +302,7 @@ abstract class Versioned {
           placeholder: "0",
           validate: (x: string) => {
             if (isNaN(parseInt(x))) {
-              return `invalid id ${x}`;
+              return `Invalid id ${x}`;
             }
           },
         },
@@ -311,7 +314,7 @@ abstract class Versioned {
           validate: (x: string) => {
             const amount = parseInt(x);
             if (isNaN(amount) || amount <= 0) {
-              return `invalid amount ${x}`;
+              return `Invalid amount ${x}`;
             }
           },
         },
@@ -322,7 +325,9 @@ abstract class Versioned {
           kind: "input-complete",
           placeholder: "Destination address",
           validate: (x: string) =>
-            validateAddress(x) !== 3 ? `invalid address ${x}` : undefined,
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
         },
       ],
     };

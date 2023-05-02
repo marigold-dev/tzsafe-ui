@@ -3,16 +3,14 @@ import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
 import { AppStateContext } from "../../context/state";
+import renderError from "../formUtils";
 
 function Basic() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext)!;
 
-  const renderError = (message: string) => (
-    <p className="italic text-red-600">{message}</p>
-  );
-  let byName = Object.fromEntries(
+  const byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
   );
 
@@ -40,7 +38,7 @@ function Basic() {
         <div className="mb-2 self-center text-2xl font-medium text-white">
           Enter your wallet name below
         </div>
-        <div className="mt-4 flex flex-col items-start">
+        <div className="mt-4 flex w-full flex-col items-start md:w-auto">
           <label className="font-medium text-white">Wallet name</label>
           <Field
             name="walletName"

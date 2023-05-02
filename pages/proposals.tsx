@@ -101,8 +101,8 @@ const Proposals = () => {
           <h1 className="text-2xl font-extrabold text-white">Proposals</h1>
         </div>
       </div>
-      <main className="h-full min-h-fit grow">
-        <div className="mx-auto h-full min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-fit grow">
+        <div className="mx-auto min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
@@ -150,13 +150,25 @@ const Proposals = () => {
                       id={x[0]}
                       key={x[0]}
                       status={
-                        hasDeadlinePassed
-                          ? "Expired"
-                          : shouldResolve
-                          ? "Waiting for resolution"
-                          : hasSigned
-                          ? "Waiting for signers"
-                          : x[1].ui.status
+                        hasDeadlinePassed ? (
+                          "Expired"
+                        ) : shouldResolve ? (
+                          <span>
+                            <span className="hidden lg:inline">
+                              Waiting for resolution
+                            </span>
+                            <span className="lg:hidden">Pending</span>
+                          </span>
+                        ) : hasSigned ? (
+                          <span>
+                            <span className="hidden lg:inline">
+                              Waiting for signers
+                            </span>
+                            <span className="lg:hidden">Pending</span>
+                          </span>
+                        ) : (
+                          x[1].ui.status
+                        )
                       }
                       date={deadline}
                       activities={x[1].ui.signatures.map(
