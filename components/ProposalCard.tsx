@@ -70,7 +70,7 @@ export const RenderProposalContent = ({
       ...data,
       label: "Transfer",
       addresses: [content.transfer.destination],
-      amount: `${mutezToTez(content.transfer.amount)} tez`,
+      amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
   } else if ("execute" in content) {
     data = {
@@ -164,7 +164,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: !!amount ? `${amount} tez` : undefined,
+        amount: !!amount ? `${amount} Tez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
         params:
@@ -186,7 +186,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: !!amount ? `${amount} tez` : undefined,
+        amount: !!amount ? `${amount} Tez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
         params:
@@ -304,7 +304,7 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("removeOwners" in content) {
     return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
   } else if ("transfer" in content) {
-    return `Transfer ${mutezToTez(content.transfer.amount)} tez`;
+    return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {

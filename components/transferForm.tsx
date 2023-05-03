@@ -5,6 +5,7 @@ import {
   ErrorMessage,
   Field,
   FieldArray,
+  FieldProps,
   Form,
   Formik,
   useFormikContext,
@@ -19,6 +20,7 @@ import React, {
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
+import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
@@ -185,24 +187,28 @@ function Basic({
         </div>
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
-            <label className="font-medium text-white">Amount in mutez</label>
-            <Field
-              name={`transfers.${id}.amount`}
-              className=" w-full rounded p-2 text-black"
-              placeholder="0"
-              onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-                const amount = Number(e.target.value.trim());
-                const hasError = await validateAndSetState({
-                  ...localFormState,
-                  amount,
-                });
+            <label className="font-medium text-white">Amount</label>
+            <Field name={`transfers.${id}.amount`}>
+              {({ field }: FieldProps) => (
+                <input
+                  {...field}
+                  className="w-full rounded p-2 text-black"
+                  placeholder="0"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    field.onChange(e);
+                    const amount = Number(e.target.value.trim());
+                    const hasError = await validateAndSetState({
+                      ...localFormState,
+                      amount,
+                    });
 
-                if (hasError) return;
+                    if (hasError) return;
 
-                onAmountChange?.(amount);
-              }}
-              defaultValue={defaultValues?.amount}
-            />
+                    onAmountChange?.(tezToMutez(amount));
+                  }}
+                />
+              )}
+            </Field>
           </div>
           {!!errors.amount && renderError(errors.amount)}
         </div>
@@ -244,7 +250,7 @@ function ExecuteContractForm(
     onReset: () => void;
   }>
 ) {
-  const { submitCount } = useFormikContext();
+  const { submitCount, setFieldValue } = useFormikContext();
   const submitCountRef = useRef(submitCount);
 
   const [state, setState] = useState({ address: "", amount: 0, shape: {} });
@@ -286,6 +292,10 @@ function ExecuteContractForm(
         }}
         onAddressChange={address => {
           setState({ ...state, address });
+          setFieldValue(
+            `transfers.${props.id}.amount`,
+            !!state.amount ? mutezToTez(state.amount) : undefined
+          );
         }}
         withContinue={!state.address}
         address={state.address}
@@ -678,6 +688,10 @@ function TransferForm(
                                   );
                                 }}
                                 onReset={() => {
+                                  setFieldValue(
+                                    `transfers.${index}.amount`,
+                                    ""
+                                  );
                                   setFieldValue(
                                     `transfers.${index}.walletAddress`,
                                     ""
