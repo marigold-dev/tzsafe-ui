@@ -17,6 +17,7 @@ import {
 } from "../types/011Proposal";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
 import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
@@ -51,7 +52,7 @@ class Version011 extends Versioned {
               return {
                 transfer: {
                   target: x.values.to,
-                  amount: x.values.amount,
+                  amount: tezToMutez(Number(x.values.amount)),
                   parameter: {},
                 },
               };
