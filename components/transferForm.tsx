@@ -422,7 +422,7 @@ function TransferForm(
           </a>
           , and if it is, {"it'll"} appear in the proposals
         </p>
-        <div className="mt-8 w-full space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -538,7 +538,7 @@ function TransferForm(
         }, MODAL_TIMEOUT);
       }}
     >
-      {({ values, errors, setFieldValue, getFieldProps, setFieldError }) => (
+      {({ values, errors, setFieldValue, getFieldProps }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">

@@ -212,7 +212,7 @@ function RenderMap(
                     </div>
                   );
                 })}
-              <div className="mt-2 flex flex-col md:flex-row">
+              <div className="mt-2 flex flex-col space-y-4 md:flex-row md:space-y-0">
                 {elements && elements.length > 0 && (
                   <button
                     type="button"
@@ -321,7 +321,7 @@ function RenderArray(
                     </div>
                   );
                 })}
-              <div className="mt-2 flex flex-col md:flex-row">
+              <div className="mt-2 flex flex-col space-y-4 md:flex-row md:space-y-0">
                 {elements && elements.length > 0 && (
                   <button
                     type="button"
