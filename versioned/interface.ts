@@ -197,7 +197,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez",
+            label: "Amount",
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
@@ -234,7 +234,7 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez",
+            label: "Amount",
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
