@@ -313,6 +313,12 @@ function ExecuteContractForm(
           loading={loading}
           setLoading={setLoader}
           shape={state.shape}
+          onShapeChange={shape => {
+            setState({
+              ...state,
+              shape: { ...state.shape, init: shape },
+            });
+          }}
           setState={shape => {
             setStater({ shape });
           }}

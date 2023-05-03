@@ -482,6 +482,7 @@ function ExecuteForm(
     setState: (shape: any) => void;
     onReset?: () => void;
     loading: boolean;
+    onShapeChange: (v: object) => void;
   }>
 ) {
   const state = useContext(AppStateContext)!;
@@ -522,6 +523,7 @@ function ExecuteForm(
         onSubmit={() => {}}
         validateOnMount={true}
         validate={values => {
+          props.onShapeChange(values);
           try {
             genLambda(props, values);
           } catch (e) {
