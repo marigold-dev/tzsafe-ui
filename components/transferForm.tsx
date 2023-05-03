@@ -256,21 +256,12 @@ function ExecuteContractForm(
   const submitCountRef = useRef(submitCount);
 
   const [state, setState] = useState(
-    props.defaultState ?? { address: "", amount: 0, shape: {} }
+    () => props.defaultState ?? { address: "", amount: 0, shape: {} }
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const setLoader = useCallback((x: boolean) => setLoading(x), []);
-
-  const setStater = useCallback(({ shape }: { shape: object }) => {
-    setState((prev: any) => {
-      if (Object.keys(prev.shape).length) {
-        return prev;
-      }
-      return { ...prev, shape };
-    });
-  }, []);
 
   useEffect(() => {
     props.onChange(state);
@@ -314,13 +305,13 @@ function ExecuteContractForm(
           setLoading={setLoader}
           shape={state.shape}
           onShapeChange={shape => {
-            setState({
-              ...state,
-              shape: { ...state.shape, init: shape },
-            });
+            setState(v => ({
+              ...v,
+              shape: { ...v.shape, init: shape },
+            }));
           }}
           setState={shape => {
-            setStater({ shape });
+            setState(v => ({ ...v, shape }));
           }}
           reset={() => setState({ address: "", amount: 0, shape: {} })}
           address={state.address}
@@ -685,6 +676,9 @@ function TransferForm(
                                 id={index}
                                 defaultState={
                                   executeContractStateRef.current[index]
+                                    ?.address === ""
+                                    ? undefined
+                                    : executeContractStateRef.current[index]
                                 }
                                 onChange={formState => {
                                   executeContractStateRef.current[index] =
