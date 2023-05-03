@@ -14,6 +14,7 @@ import React, {
   ChangeEvent,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -236,18 +237,27 @@ function Basic({
   );
 }
 
+type state = {
+  address: string;
+  amount: number;
+  shape: object;
+};
 function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
     getFieldProps: () => string;
     id: number;
+    defaultState?: state;
     onReset: () => void;
+    onChange: (state: state) => void;
   }>
 ) {
   const { submitCount } = useFormikContext();
   const submitCountRef = useRef(submitCount);
 
-  const [state, setState] = useState({ address: "", amount: 0, shape: {} });
+  const [state, setState] = useState(
+    props.defaultState ?? { address: "", amount: 0, shape: {} }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -261,6 +271,10 @@ function ExecuteContractForm(
       return { ...prev, shape };
     });
   }, []);
+
+  useEffect(() => {
+    props.onChange(state);
+  }, [state, props.onChange]);
 
   if (loading) {
     return (
@@ -308,6 +322,9 @@ function ExecuteContractForm(
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
           }}
+          // onChange={shape => {
+          //   setState({ ...state, shape });
+          // }}
           onReset={() => {
             setState({ address: "", amount: 0, shape: {} });
             props.onReset();
@@ -399,6 +416,7 @@ function TransferForm(
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<boolean | undefined>(undefined);
   const [formState, setFormState] = useState(() => initialProps);
+  const executeContractStateRef = useRef<{ [k: number]: state }>({});
 
   if (state?.address == null) {
     return null;
@@ -659,6 +677,13 @@ function TransferForm(
                             >
                               <ExecuteContractForm
                                 id={index}
+                                defaultState={
+                                  executeContractStateRef.current[index]
+                                }
+                                onChange={formState => {
+                                  executeContractStateRef.current[index] =
+                                    formState;
+                                }}
                                 getFieldProps={() =>
                                   getFieldProps(
                                     `transfers.${index}.values.metadata`

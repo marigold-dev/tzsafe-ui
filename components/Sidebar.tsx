@@ -169,7 +169,7 @@ const Sidebar = ({
   return (
     <aside
       className={`fixed left-0 bottom-0 ${
-        state.hasBanner ? "top-32" : "top-20"
+        state.hasBanner ? "top-32" : "top-16"
       } z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } overflow-y-auto md:-translate-x-0`}
