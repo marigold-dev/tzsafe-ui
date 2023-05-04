@@ -97,7 +97,7 @@ function TopUp(props: {
                 </div>
               ) : (
                 <span className="my-auto text-sm font-bold text-white md:text-xl">
-                  Failed to transfer xtz
+                  Failed to transfer Tez
                 </span>
               )}
             </ContractLoader>
@@ -105,7 +105,7 @@ function TopUp(props: {
         )}
         <div className="mb-2 flex w-full flex-col justify-between md:items-center">
           <label className="font-medium text-white">
-            Amount of xtz to transfer
+            Amount of Tez to transfer
           </label>
           <Field
             name="amount"
