@@ -9,7 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/",
     "prepare": "husky install",
-    "test": "vitest"
+    "dev:test": "vitest",
+    "test": "vitest run"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
