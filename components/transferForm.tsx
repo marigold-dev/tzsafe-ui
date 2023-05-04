@@ -319,9 +319,6 @@ function ExecuteContractForm(
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
           }}
-          // onChange={shape => {
-          //   setState({ ...state, shape });
-          // }}
           onReset={() => {
             setState({ address: "", amount: 0, shape: {} });
             props.onReset();
