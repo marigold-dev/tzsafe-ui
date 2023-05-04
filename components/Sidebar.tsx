@@ -68,7 +68,7 @@ const SelectedItem = ({
         </span>
       </Copy>
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-lg">{formattedBalance.toString()}xtz</p>
+        <p className="text-lg">{formattedBalance.toString()} Tez</p>
         <p className="text-xs text-zinc-500">V{version ?? "0.0.0"}</p>
       </div>
     </div>

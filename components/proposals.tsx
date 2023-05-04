@@ -7,6 +7,7 @@ import {
   status,
 } from "../types/display";
 import { adaptiveTime, countdown } from "../utils/adaptiveTime";
+import { mutezToTez } from "../utils/tez";
 import { signers } from "../versioned/apis";
 import ContractLoader from "./contractLoader";
 
@@ -169,7 +170,7 @@ const Transfer: FC<{
     <li className="border-2 border-white p-2">
       <div>
         <p className="font-bold text-white md:inline-block">
-          Transaction: received Mutez{" "}
+          Transaction: received Tez{" "}
         </p>
       </div>
       <div>
@@ -193,9 +194,9 @@ const Transfer: FC<{
         </p>
       </div>
       <div>
-        <p className="font-bold text-white md:inline-block">Amount(Mutez): </p>
+        <p className="font-bold text-white md:inline-block">Amount: </p>
         <p className="md:text-md text-sm font-bold text-white md:inline-block">
-          {prop.amount}
+          {mutezToTez(prop.amount)}
         </p>
       </div>
       <div>
@@ -356,7 +357,7 @@ function renderContent(
   contract: contractStorage
 ): string {
   if ("transfer" in x) {
-    return `${x.transfer.amount} mutez to ${
+    return `${mutezToTez(x.transfer.amount)} Tez to ${
       state.aliases[x.transfer.destination] || x.transfer.destination
     }`;
   }

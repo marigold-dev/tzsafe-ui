@@ -2,6 +2,7 @@ import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
+import { mutezToTez } from "../utils/tez";
 import Alias from "./Alias";
 import Tooltip from "./Tooltip";
 
@@ -69,7 +70,7 @@ export const RenderProposalContent = ({
       ...data,
       label: "Transfer",
       addresses: [content.transfer.destination],
-      amount: `${content.transfer.amount.toString()} mutez`,
+      amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
   } else if ("execute" in content) {
     data = {
@@ -153,7 +154,7 @@ export const RenderProposalContent = ({
 
         return [
           undefined,
-          contractData.mutez_amount,
+          mutezToTez(contractData.mutez_amount),
           contractData.contract_addr,
           contractData.entrypoint ?? "default",
           contractData.payload ?? "Unit",
@@ -163,7 +164,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: !!amount ? `${amount} mutez` : undefined,
+        amount: !!amount ? `${amount} Tez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
         params:
@@ -175,7 +176,7 @@ export const RenderProposalContent = ({
       const [meta, amount, address, entrypoint, arg] = (() => {
         return [
           undefined,
-          metadata.mutez_amount,
+          mutezToTez(metadata.mutez_amount),
           metadata.contract_address,
           metadata.entrypoint ?? "default",
           metadata.payload ?? "Unit",
@@ -185,7 +186,7 @@ export const RenderProposalContent = ({
       data = {
         label: "Execute contract",
         metadata: meta,
-        amount: !!amount ? `${amount} mutez` : undefined,
+        amount: !!amount ? `${amount} Tez` : undefined,
         addresses: [address],
         entrypoints: entrypoint,
         params:
@@ -303,7 +304,7 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("removeOwners" in content) {
     return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
   } else if ("transfer" in content) {
-    return `Transfer ${content.transfer.amount} mutez`;
+    return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {
