@@ -188,7 +188,7 @@ function Basic({
         </div>
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
-            <label className="font-medium text-white">Amount</label>
+            <label className="font-medium text-white">Amount (Tez)</label>
             <Field name={`transfers.${id}.amount`}>
               {({ field }: FieldProps) => (
                 <input
