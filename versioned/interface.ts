@@ -201,7 +201,7 @@ abstract class Versioned {
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
-              const amount = Number.parseInt(x);
+              const amount = Number(x);
               if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
               }
@@ -238,7 +238,7 @@ abstract class Versioned {
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
-              const amount = Number.parseInt(x);
+              const amount = Number(x);
               if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
               }
@@ -312,7 +312,7 @@ abstract class Versioned {
           path: ".amount",
           placeholder: "1",
           validate: (x: string) => {
-            const amount = parseInt(x);
+            const amount = Number(x);
             if (isNaN(amount) || amount <= 0) {
               return `Invalid amount ${x}`;
             }
