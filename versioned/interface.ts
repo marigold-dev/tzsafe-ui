@@ -308,12 +308,12 @@ abstract class Versioned {
         },
         {
           field: "amount",
-          label: "Amount (Tez)",
+          label: "Amount",
           path: ".amount",
           placeholder: "1",
           validate: (x: string) => {
             const amount = Number(x);
-            if (isNaN(amount) || amount <= 0) {
+            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
               return `Invalid amount ${x}`;
             }
           },
