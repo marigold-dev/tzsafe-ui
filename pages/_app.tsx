@@ -9,6 +9,7 @@ import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
+import Autocomplete from "../components/Autocomplete";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
@@ -100,7 +101,6 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
-          {/* <Banner isVisible={hasBanner} onHide={() => setHasBanner(false)}> */}
           <Banner>
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET
