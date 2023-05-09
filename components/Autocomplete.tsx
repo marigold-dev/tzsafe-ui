@@ -5,12 +5,14 @@ import Spinner from "./Spinner";
 type props<T> = {
   label: string;
   onChange: (value: string) => void;
-  options: (T & { id: string; value: string })[];
+  options: (T & { id: string; value: string; label: string })[];
   value?: string;
   defaultValue?: string;
   placeholder?: string;
   loading?: boolean;
-  renderOption?: (option: T & { id: string; value: string }) => React.ReactNode;
+  renderOption?: (
+    option: T & { id: string; value: string; label: string }
+  ) => React.ReactNode;
 };
 
 const Autocomplete = <T,>({
@@ -56,8 +58,8 @@ const Autocomplete = <T,>({
           </div>
         ) : (
           options
-            .filter(({ value }) =>
-              value.toLowerCase().includes(currentValue.toLowerCase())
+            .filter(({ label }) =>
+              label.toLowerCase().includes(currentValue.toLowerCase())
             )
             .map(v => (
               <Ariakit.ComboboxItem
@@ -65,7 +67,7 @@ const Autocomplete = <T,>({
                 className="combobox-item cursor-pointer rounded p-2"
                 value={v.value}
               >
-                {renderOption?.(v) ?? v.value}
+                {renderOption?.(v) ?? v.label}
               </Ariakit.ComboboxItem>
             ))
         )}
