@@ -8,7 +8,6 @@ import Autocomplete from "./Autocomplete";
 
 type props = {
   name: string;
-  value: string;
   setFieldValue: (name: string, value: any) => void;
   placeholder?: string;
 };
@@ -31,14 +30,15 @@ type fa2Token = {
 type option = {
   id: string;
   value: string;
-  name: string;
+  label: string;
   tokenId: string;
   thumbnailHash: string;
   contractAddress: string;
 };
 
-const FA2Input = ({ name, setFieldValue, placeholder, value }: props) => {
+const FA2Input = ({ name, setFieldValue, placeholder }: props) => {
   const state = useContext(AppStateContext)!;
+  const [value, setValue] = useState("");
 
   const [isFetching, setIsFetching] = useState(true);
   const [fa2Tokens, setFa2Tokens] = useState<fa2Token[]>([]);
@@ -58,7 +58,7 @@ const FA2Input = ({ name, setFieldValue, placeholder, value }: props) => {
             id: token.id.toString(),
             tokenId: token.tokenId,
             value: token.id.toString(),
-            name: token.metadata.name,
+            label: token.metadata.name,
             thumbnailHash: token.metadata.thumbnailUri.replace("ipfs://", ""),
             contractAddress: token.contract.address,
           }))
@@ -67,36 +67,40 @@ const FA2Input = ({ name, setFieldValue, placeholder, value }: props) => {
       });
   }, [state.currentContract]);
 
-  console.log(fa2Tokens);
   return (
     <Autocomplete
       label=""
       onChange={newValue => {
-        setFieldValue(name, newValue);
+        const parsedValue = Number(newValue);
+        const currentToken = fa2Tokens.find(
+          ({ token: { id } }) => id === parsedValue
+        );
+
+        if (isNaN(parsedValue) || !currentToken) {
+          setValue(newValue);
+        } else {
+          setCurrentToken(currentToken);
+          setFieldValue(name, currentToken);
+          setValue(currentToken.token.metadata.name);
+        }
       }}
       value={value}
       options={options}
       placeholder={placeholder}
       loading={isFetching}
-      renderOption={({
-        thumbnailHash,
-        value,
-        tokenId,
-        contractAddress,
-        name,
-      }) => {
+      renderOption={({ thumbnailHash, tokenId, contractAddress, label }) => {
         return (
           <div className="flex items-center space-x-2">
             <div className="w-1/5 overflow-hidden rounded">
               <img
                 src={`${THUMBNAIL_URL}/${thumbnailHash}`}
-                alt={name}
+                alt={label}
                 className="h-auto w-full"
               />
             </div>
             <span className="text-xs text-zinc-400">#{tokenId}</span>
-            <p className="w-4/5 truncate text-xs" title={name}>
-              {name}
+            <p className="w-4/5 truncate text-xs" title={label}>
+              {label}
             </p>
             <Alias
               address={contractAddress}
