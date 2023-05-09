@@ -11,6 +11,8 @@ export const PREFERED_NETWORK =
     ? NetworkType.MAINNET
     : NetworkType.GHOSTNET;
 
+export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
+
 export const DEFAULT_TIMEOUT = 60000;
 export const MODAL_TIMEOUT = 2000;
 // 10 minutes

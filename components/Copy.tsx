@@ -23,7 +23,7 @@ const Copy = ({ children, value, disabled = false, text }: copyProps) => {
     <Tooltip
       text={isCopying ? "Copied" : text ?? "Copy"}
       disabled={disabled}
-      visible={isCopying ? true : undefined}
+      visible={isCopying ? true : disabled ? false : undefined}
     >
       <a
         href="#"
