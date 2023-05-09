@@ -1,26 +1,28 @@
 import * as Ariakit from "@ariakit/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Spinner from "./Spinner";
 
-type props = {
+type props<T> = {
   label: string;
   onChange: (value: string) => void;
-  options: { id: string; value: string }[];
+  options: (T & { id: string; value: string })[];
   value?: string;
   defaultValue?: string;
   placeholder?: string;
   loading?: boolean;
+  renderOption?: (option: T & { id: string; value: string }) => React.ReactNode;
 };
 
-const Autocomplete = ({
+const Autocomplete = <T,>({
   label,
   onChange,
   options,
   placeholder,
   value,
   defaultValue,
+  renderOption,
   loading = false,
-}: props) => {
+}: props<T>) => {
   const [currentValue, setCurrentValue] = useState(() => "");
 
   const combobox = Ariakit.useComboboxStore({
@@ -35,13 +37,13 @@ const Autocomplete = ({
   });
 
   return (
-    <div className="px-2 text-white">
+    <div className="relative z-10 w-full text-white">
       <label>
         {label}
         <Ariakit.Combobox
           store={combobox}
           placeholder={placeholder}
-          className="block rounded p-2 text-sm text-zinc-800"
+          className="block w-full rounded p-2 text-sm text-zinc-800"
         />
       </label>
       <Ariakit.ComboboxPopover
@@ -57,13 +59,13 @@ const Autocomplete = ({
             .filter(({ value }) =>
               value.toLowerCase().includes(currentValue.toLowerCase())
             )
-            .map(({ id, value }) => (
+            .map(v => (
               <Ariakit.ComboboxItem
-                key={id}
-                className="combobox-item rounded p-1"
-                value={value}
+                key={v.id}
+                className="combobox-item cursor-pointer rounded p-2"
+                value={v.value}
               >
-                {value}
+                {renderOption?.(v) ?? v.value}
               </Ariakit.ComboboxItem>
             ))
         )}

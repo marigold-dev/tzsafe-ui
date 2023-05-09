@@ -5,11 +5,13 @@ import Copy from "./Copy";
 const Alias = ({
   address,
   className,
+  disabled = false,
   length = 5,
 }: {
   address: string;
   className?: string;
   length?: number;
+  disabled?: boolean;
 }) => {
   const state = useContext(AppStateContext)!;
 
@@ -30,7 +32,7 @@ const Alias = ({
   );
 
   return (
-    <Copy value={address} text="Copy address">
+    <Copy value={address} text="Copy address" disabled={disabled}>
       <span className={className}>{toDisplay}</span>
     </Copy>
   );

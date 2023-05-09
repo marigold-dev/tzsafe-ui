@@ -271,7 +271,7 @@ abstract class Versioned {
       field: string;
       label: string;
       path: string;
-      kind?: "input-complete";
+      kind?: "input-complete" | "autocomplete";
       placeholder: string;
       validate: (p: string) => string | undefined;
     }[];
@@ -288,24 +288,24 @@ abstract class Versioned {
           field: "fa2Address",
           label: "FA2 address",
           path: ".fa2Address",
-          kind: "input-complete",
+          kind: "autocomplete",
           placeholder: "Fa2 address",
           validate: (x: string) =>
             validateAddress(x) !== ValidationResult.VALID
               ? `Invalid address ${x}`
               : undefined,
         },
-        {
-          field: "tokenId",
-          label: "Token Id",
-          path: ".tokenId",
-          placeholder: "0",
-          validate: (x: string) => {
-            if (isNaN(parseInt(x))) {
-              return `Invalid id ${x}`;
-            }
-          },
-        },
+        // {
+        //   field: "tokenId",
+        //   label: "Token Id",
+        //   path: ".tokenId",
+        //   placeholder: "0",
+        //   validate: (x: string) => {
+        //     if (isNaN(parseInt(x))) {
+        //       return `Invalid id ${x}`;
+        //     }
+        //   },
+        // },
         {
           field: "amount",
           label: "Amount",

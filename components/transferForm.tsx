@@ -26,7 +26,9 @@ import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
+import Autocomplete from "./Autocomplete";
 import ExecuteForm from "./ContractExecution";
+import FA2Input from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
@@ -394,7 +396,7 @@ const initialProps: {
     fields: {
       field: string;
       label: string;
-      kind?: "textarea" | "input-complete";
+      kind?: "textarea" | "input-complete" | "autocomplete";
       path: string;
       placeholder: string;
       validate: (p: string) => string | undefined;
@@ -560,7 +562,7 @@ function TransferForm(
         }, MODAL_TIMEOUT);
       }}
     >
-      {({ values, errors, setFieldValue, getFieldProps }) => (
+      {({ values, errors, setFieldValue, getFieldProps, getFieldHelpers }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
@@ -788,7 +790,8 @@ function TransferForm(
                                     : "flex flex-col"
                                 } ${
                                   !!value.kind &&
-                                  value.kind === "input-complete"
+                                  (value.kind === "input-complete" ||
+                                    value.kind === "autocomplete")
                                     ? "w-full md:grow"
                                     : ""
                                 }`;
@@ -826,6 +829,20 @@ function TransferForm(
                                         placeholder={value.placeholder}
                                         rows={10}
                                       />
+                                    ) : value.kind === "autocomplete" ? (
+                                      <Field
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className="w-full md:grow"
+                                      >
+                                        {({ field }: FieldProps) => (
+                                          <FA2Input
+                                            name={`transfers.${index}.values.${value.field}`}
+                                            value={field.value}
+                                            setFieldValue={setFieldValue}
+                                            placeholder={value.placeholder}
+                                          />
+                                        )}
+                                      </Field>
                                     ) : (
                                       <Field
                                         component={value.kind}
