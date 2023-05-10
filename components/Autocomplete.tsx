@@ -49,7 +49,7 @@ const Autocomplete = <T,>({
         <Ariakit.Combobox
           store={combobox}
           placeholder={placeholder}
-          className="block w-full rounded p-2 text-sm text-zinc-800"
+          className="mt-1 block w-full rounded p-2 text-sm text-zinc-800"
         />
       </label>
       <Ariakit.ComboboxPopover

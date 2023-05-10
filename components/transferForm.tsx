@@ -26,9 +26,8 @@ import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
-import Autocomplete from "./Autocomplete";
 import ExecuteForm from "./ContractExecution";
-import FA2Input from "./FA2Transfer";
+import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
@@ -529,6 +528,7 @@ function TransferForm(
             let field = element.fields.find(x => x.field === labl);
             let validate =
               field?.placeholder !== value ? field?.validate(value) : undefined;
+
             if (validate) {
               if (!errors.transfers[idx]) {
                 errors.transfers[idx] = { values: {} };
@@ -745,6 +745,15 @@ function TransferForm(
                               </button>
                             </div>
                           );
+                        } else if (transfer.type === "fa2") {
+                          return (
+                            <FA2Transfer
+                              key={index}
+                              index={index}
+                              setFieldValue={setFieldValue}
+                              remove={remove}
+                            />
+                          );
                         }
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"
@@ -759,9 +768,7 @@ function TransferForm(
                                 #{(index + 1).toString().padStart(2, "0")}
                               </span>
                               {!transfer.fields.find(v => v.kind === "textarea")
-                                ? transfer.type === "fa2"
-                                  ? "Transfer FA2"
-                                  : "Transfer"
+                                ? "Transfer"
                                 : "Execute lambda"}
                             </p>
                             <div
@@ -829,21 +836,22 @@ function TransferForm(
                                         placeholder={value.placeholder}
                                         rows={10}
                                       />
-                                    ) : value.kind === "autocomplete" ? (
-                                      <Field
-                                        name={`transfers.${index}.values.${value.field}`}
-                                        className="w-full md:grow"
-                                      >
-                                        {({ field }: FieldProps) => (
-                                          <FA2Input
-                                            name={`transfers.${index}.values.${value.field}`}
-                                            value={field.value}
-                                            setFieldValue={setFieldValue}
-                                            placeholder={value.placeholder}
-                                          />
-                                        )}
-                                      </Field>
                                     ) : (
+                                      // ) : value.kind === "autocomplete" ? (
+                                      //   <Field
+                                      //     name={`transfers.${index}.values.${value.field}`}
+                                      //     className="w-full md:grow"
+                                      //   >
+                                      //     {({}: FieldProps) => (
+                                      //       <FA2Transfer
+
+                                      //         name={`transfers.${index}.values.${value.field}`}
+                                      //         setFieldValue={setFieldValue}
+                                      //         placeholder={value.placeholder}
+                                      //       />
+                                      //     )}
+                                      //   </Field>
+                                      // ) : (
                                       <Field
                                         component={value.kind}
                                         name={`transfers.${index}.values.${value.field}`}

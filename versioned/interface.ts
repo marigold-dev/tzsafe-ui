@@ -278,34 +278,24 @@ abstract class Versioned {
   } {
     return {
       values: {
-        targetAddress: "",
-        tokenId: "",
+        token: "",
         amount: "",
-        fa2Address: "",
+        targetAddress: "",
       },
       fields: [
         {
-          field: "fa2Address",
-          label: "FA2 address",
-          path: ".fa2Address",
-          kind: "autocomplete",
-          placeholder: "Fa2 address",
-          validate: (x: string) =>
-            validateAddress(x) !== ValidationResult.VALID
-              ? `Invalid address ${x}`
-              : undefined,
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
+          validate: (x: string) => {
+            console.log(
+              "token validate:",
+              !x ? "Please select a token" : undefined
+            );
+            return !x ? "Please select a token" : undefined;
+          },
         },
-        // {
-        //   field: "tokenId",
-        //   label: "Token Id",
-        //   path: ".tokenId",
-        //   placeholder: "0",
-        //   validate: (x: string) => {
-        //     if (isNaN(parseInt(x))) {
-        //       return `Invalid id ${x}`;
-        //     }
-        //   },
-        // },
         {
           field: "amount",
           label: "Amount",
