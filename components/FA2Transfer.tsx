@@ -1,8 +1,7 @@
-import { Field, FieldProps } from "formik";
-import Image from "next/image";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
+import { debounce } from "../utils/timeout";
 import Alias from "./Alias";
 import Autocomplete from "./Autocomplete";
 
@@ -32,44 +31,87 @@ type option = {
   value: string;
   label: string;
   tokenId: string;
-  thumbnailHash: string;
+  thumbnailHash: string | undefined;
   contractAddress: string;
 };
+
+const FETCH_COUNT = 20;
 
 const FA2Input = ({ name, setFieldValue, placeholder }: props) => {
   const state = useContext(AppStateContext)!;
   const [value, setValue] = useState("");
 
   const [isFetching, setIsFetching] = useState(true);
+  const [canSeeMore, setCanSeeMore] = useState(true);
+
   const [fa2Tokens, setFa2Tokens] = useState<fa2Token[]>([]);
   const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
   const [options, setOptions] = useState<option[]>([]);
+  const fetchOffsetRef = useRef(0);
+
+  const fetchTokens = useCallback(
+    (value: string, offset: number) =>
+      fetch(
+        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+      )
+        .then(res => res.json())
+        .then((v: fa2Token[]) => {
+          if (v.length < FETCH_COUNT) setCanSeeMore(false);
+
+          return Promise.resolve(v);
+        }),
+    [state.currentContract]
+  );
 
   useEffect(() => {
     setIsFetching(true);
-    fetch(
-      `${API_URL}/v1/tokens/balances?account=${state.currentContract}&token.metadata.name.as=*`
-    )
-      .then(res => res.json())
-      .then((v: fa2Token[]) => {
-        setFa2Tokens(v);
-        setOptions(
-          v.map(({ token }) => ({
-            id: token.id.toString(),
-            tokenId: token.tokenId,
-            value: token.id.toString(),
-            label: token.metadata.name,
-            thumbnailHash: token.metadata.thumbnailUri.replace("ipfs://", ""),
-            contractAddress: token.contract.address,
-          }))
-        );
-        setIsFetching(false);
-      });
-  }, [state.currentContract]);
+
+    debounce(
+      () =>
+        fetchTokens(value, 0).then((v: fa2Token[]) => {
+          setFa2Tokens(v);
+          setOptions(
+            v.map(({ token }) => ({
+              id: token.id.toString(),
+              tokenId: token.tokenId,
+              value: token.id.toString(),
+              label: token.metadata.name,
+              thumbnailHash: token.metadata.thumbnailUri.replace("ipfs://", ""),
+              contractAddress: token.contract.address,
+            }))
+          );
+          setIsFetching(false);
+        }),
+      150
+    );
+  }, [fetchTokens, value]);
 
   return (
     <Autocomplete
       label=""
+      withSeeMore={canSeeMore}
+      onSeeMore={() => {
+        fetchOffsetRef.current += 20;
+
+        fetchTokens(value, fetchOffsetRef.current).then((v: fa2Token[]) => {
+          setFa2Tokens(current => current.concat(v));
+          setOptions(current =>
+            current.concat(
+              v.map(({ token }) => ({
+                id: token.id.toString(),
+                tokenId: token.tokenId,
+                value: token.id.toString(),
+                label: token.metadata.name,
+                thumbnailHash: token.metadata.thumbnailUri.replace(
+                  "ipfs://",
+                  ""
+                ),
+                contractAddress: token.contract.address,
+              }))
+            )
+          );
+        });
+      }}
       onChange={newValue => {
         const parsedValue = Number(newValue);
         const currentToken = fa2Tokens.find(
@@ -90,23 +132,30 @@ const FA2Input = ({ name, setFieldValue, placeholder }: props) => {
       loading={isFetching}
       renderOption={({ thumbnailHash, tokenId, contractAddress, label }) => {
         return (
-          <div className="flex items-center space-x-2">
-            <div className="w-1/5 overflow-hidden rounded">
-              <img
-                src={`${THUMBNAIL_URL}/${thumbnailHash}`}
-                alt={label}
-                className="h-auto w-full"
+          <div>
+            <div className="flex w-full items-center justify-between">
+              <span className="text-xs text-zinc-400">#{tokenId}</span>
+
+              <Alias
+                address={contractAddress}
+                className="text-xs text-zinc-400"
+                disabled
               />
             </div>
-            <span className="text-xs text-zinc-400">#{tokenId}</span>
-            <p className="w-4/5 truncate text-xs" title={label}>
-              {label}
-            </p>
-            <Alias
-              address={contractAddress}
-              className="text-xs text-zinc-400"
-              disabled
-            />
+            <div className="flex items-center space-x-4">
+              <div className="w-1/6 overflow-hidden rounded">
+                {!!thumbnailHash && (
+                  <img
+                    src={`${THUMBNAIL_URL}/${thumbnailHash}`}
+                    alt={label}
+                    className="h-auto w-full"
+                  />
+                )}
+              </div>
+              <p className="w-4/5 text-xs" title={label}>
+                {label}
+              </p>
+            </div>
           </div>
         );
       }}
