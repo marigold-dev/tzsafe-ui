@@ -6,6 +6,7 @@ import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import Alias from "./Alias";
 import Autocomplete from "./Autocomplete";
+import Select from "./Select";
 import renderError from "./formUtils";
 
 type props = {
@@ -43,11 +44,13 @@ type option = {
   tokenId: string;
   thumbnailHash: string | undefined;
   contractAddress: string;
+  token: fa2Token;
 };
 
 const FETCH_COUNT = 20;
 
-const tokenToOption = ({ token }: fa2Token) => {
+const tokenToOption = (fa2Token: fa2Token) => {
+  const { token } = fa2Token;
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
@@ -59,6 +62,7 @@ const tokenToOption = ({ token }: fa2Token) => {
       ""
     ).replace("ipfs://", ""),
     contractAddress: token.contract.address,
+    token: fa2Token,
   };
 };
 
@@ -69,41 +73,41 @@ const FA2Transfer = ({
   getFieldProps,
 }: props) => {
   const state = useContext(AppStateContext)!;
-  const [value, setValue] = useState("");
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
 
-  const [fa2Tokens, setFa2Tokens] = useState<fa2Token[]>([]);
+  const [filterValue, setFilterValue] = useState<string>("");
   const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
 
   const makeName = (key: string) => `transfers.${index}.values.${key}`;
 
-  const updateValues = ({
-    value,
-    currentToken,
-    tokenId,
-    fa2Address,
-  }: {
-    value: string;
-    currentToken: fa2Token | undefined;
-    tokenId: string;
-    fa2Address: string;
-  }) => {
-    setCurrentToken(currentToken);
-    setFieldValue(makeName("token"), currentToken ?? "");
-    setFieldValue(makeName("tokenId"), tokenId);
-    setFieldValue(makeName("fa2Address"), fa2Address);
-    setValue(value);
+  const updateValues = (newToken: fa2Token) => {
+    setCurrentToken(newToken);
+    setFieldValue(makeName("token"), newToken ?? "");
+    setFieldValue(makeName("tokenId"), newToken?.token.tokenId ?? "");
+    setFieldValue(
+      makeName("fa2Address"),
+      newToken?.token.contract.address ?? ""
+    );
   };
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
       )
+        .catch(e => {
+          console.log(e);
+          return {
+            json() {
+              return Promise.resolve([]);
+            },
+          };
+        })
         .then(res => res.json())
         .then((v: fa2Token[]) => {
           if (v.length < FETCH_COUNT) setCanSeeMore(false);
@@ -118,12 +122,7 @@ const FA2Transfer = ({
 
     if (!value) return;
 
-    updateValues({
-      value: value.token.metadata.name,
-      currentToken: value,
-      tokenId: value.token.tokenId,
-      fa2Address: value.token.contract.address,
-    });
+    updateValues(value);
   }, []);
 
   useEffect(() => {
@@ -131,58 +130,37 @@ const FA2Transfer = ({
 
     debounce(
       () =>
-        fetchTokens(value, 0).then((v: fa2Token[]) => {
-          setFa2Tokens(v);
+        fetchTokens(filterValue, 0).then((v: fa2Token[]) => {
           setOptions(v.map(tokenToOption));
           setIsFetching(false);
         }),
       150
     );
-  }, [fetchTokens, value]);
+  }, [fetchTokens, filterValue]);
 
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
       <div className="w-full md:grow">
         <Field name={makeName("token")} className="w-full">
           {() => (
-            <Autocomplete
+            <Select
               label="FA2 Token"
               withSeeMore={canSeeMore}
               onSeeMore={() => {
                 fetchOffsetRef.current += 20;
 
-                fetchTokens(value, fetchOffsetRef.current).then(
+                fetchTokens(filterValue, fetchOffsetRef.current).then(
                   (v: fa2Token[]) => {
-                    setFa2Tokens(current => current.concat(v));
                     setOptions(current => current.concat(v.map(tokenToOption)));
                   }
                 );
               }}
+              onSearch={setFilterValue}
               onChange={newValue => {
-                const parsedValue = Number(newValue);
-                const currentToken = fa2Tokens.find(
-                  ({ token: { id } }) => id === parsedValue
-                );
-
-                if (isNaN(parsedValue) || !currentToken) {
-                  updateValues({
-                    value: newValue,
-                    currentToken: undefined,
-                    tokenId: "",
-                    fa2Address: "",
-                  });
-                } else {
-                  updateValues({
-                    value: currentToken.token.metadata.name,
-                    currentToken: currentToken,
-                    tokenId: currentToken.token.tokenId,
-                    fa2Address: currentToken.token.contract.address,
-                  });
-                }
+                updateValues(newValue.token);
               }}
-              value={value}
+              value={!!currentToken ? tokenToOption(currentToken) : undefined}
               options={options}
-              placeholder="Search a token"
               loading={isFetching}
               renderOption={({
                 thumbnailHash,
@@ -191,27 +169,38 @@ const FA2Transfer = ({
                 label,
               }) => {
                 return (
-                  <div>
-                    <div className="flex w-full items-center justify-between">
-                      <span className="text-xs text-zinc-400">#{tokenId}</span>
-
-                      <Alias
-                        address={contractAddress}
-                        className="text-xs text-zinc-400"
-                        disabled
-                      />
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      {!!thumbnailHash && (
-                        <div className="w-1/6 overflow-hidden rounded">
-                          <img
-                            src={`${THUMBNAIL_URL}/${thumbnailHash}`}
-                            alt={label}
-                            className="h-auto w-full"
-                          />
-                        </div>
+                  <div className="flex">
+                    <div className="w-1/6 overflow-hidden rounded bg-zinc-500/50">
+                      {!!thumbnailHash ? (
+                        <img
+                          src={`${THUMBNAIL_URL}/${thumbnailHash}`}
+                          alt={label}
+                          className="h-auto w-full"
+                        />
+                      ) : (
+                        <img
+                          src={
+                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
+                          }
+                          alt={label}
+                          className="h-auto w-full bg-zinc-500 p-2 opacity-70"
+                        />
                       )}
-                      <p className="w-4/5 text-xs" title={label}>
+                    </div>
+
+                    <div className="flex w-5/6 flex-col justify-between px-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-zinc-400">
+                          #{tokenId}
+                        </span>
+
+                        <Alias
+                          address={contractAddress}
+                          className="text-xs text-zinc-400"
+                          disabled
+                        />
+                      </div>
+                      <p className="text-left text-xs" title={label}>
                         {label}
                       </p>
                     </div>
@@ -259,7 +248,9 @@ const FA2Transfer = ({
       </div>
       <button
         type="button"
-        className="mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+        className={`${
+          !!currentToken ? "self-center" : "md:self-end"
+        } mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0`}
         onClick={e => {
           e.preventDefault();
 
