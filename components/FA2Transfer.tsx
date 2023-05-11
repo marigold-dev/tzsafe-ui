@@ -24,7 +24,12 @@ type fa2Token = {
   token: {
     id: number;
     contract: { address: string };
-    metadata: { name: string; symbol: string; thumbnailUri: string };
+    metadata: {
+      name: string;
+      symbol: string;
+      thumbnailUri?: string;
+      displayUri?: string;
+    };
     standard: string;
     tokenId: string;
     totalSupply: string;
@@ -41,6 +46,21 @@ type option = {
 };
 
 const FETCH_COUNT = 20;
+
+const tokenToOption = ({ token }: fa2Token) => {
+  return {
+    id: token.id.toString(),
+    tokenId: token.tokenId,
+    value: token.id.toString(),
+    label: token.metadata.name,
+    thumbnailHash: (
+      token.metadata.thumbnailUri ??
+      token.metadata.displayUri ??
+      ""
+    ).replace("ipfs://", ""),
+    contractAddress: token.contract.address,
+  };
+};
 
 const FA2Transfer = ({
   index,
@@ -82,7 +102,8 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        `${API_URL}/v1/tokens/balances?account=${"tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
       )
         .then(res => res.json())
         .then((v: fa2Token[]) => {
@@ -113,16 +134,7 @@ const FA2Transfer = ({
       () =>
         fetchTokens(value, 0).then((v: fa2Token[]) => {
           setFa2Tokens(v);
-          setOptions(
-            v.map(({ token }) => ({
-              id: token.id.toString(),
-              tokenId: token.tokenId,
-              value: token.id.toString(),
-              label: token.metadata.name,
-              thumbnailHash: token.metadata.thumbnailUri.replace("ipfs://", ""),
-              contractAddress: token.contract.address,
-            }))
-          );
+          setOptions(v.map(tokenToOption));
           setIsFetching(false);
         }),
       150
@@ -143,21 +155,7 @@ const FA2Transfer = ({
                 fetchTokens(value, fetchOffsetRef.current).then(
                   (v: fa2Token[]) => {
                     setFa2Tokens(current => current.concat(v));
-                    setOptions(current =>
-                      current.concat(
-                        v.map(({ token }) => ({
-                          id: token.id.toString(),
-                          tokenId: token.tokenId,
-                          value: token.id.toString(),
-                          label: token.metadata.name,
-                          thumbnailHash: token.metadata.thumbnailUri.replace(
-                            "ipfs://",
-                            ""
-                          ),
-                          contractAddress: token.contract.address,
-                        }))
-                      )
-                    );
+                    setOptions(current => current.concat(v.map(tokenToOption)));
                   }
                 );
               }}
@@ -205,15 +203,15 @@ const FA2Transfer = ({
                       />
                     </div>
                     <div className="flex items-center space-x-4">
-                      <div className="w-1/6 overflow-hidden rounded">
-                        {!!thumbnailHash && (
+                      {!!thumbnailHash && (
+                        <div className="w-1/6 overflow-hidden rounded">
                           <img
                             src={`${THUMBNAIL_URL}/${thumbnailHash}`}
                             alt={label}
                             className="h-auto w-full"
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                       <p className="w-4/5 text-xs" title={label}>
                         {label}
                       </p>
