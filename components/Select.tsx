@@ -29,7 +29,7 @@ const Select = <T,>({
   const select = Ariakit.useSelectStore({
     sameWidth: true,
     gutter: 0,
-    value: value?.id,
+    value: value?.id ?? "-1",
     setValue(value) {
       const newToken = options.find(token => token.id === value);
 
