@@ -1,5 +1,5 @@
 import { validateAddress, ValidationResult } from "@taquito/utils";
-import { ErrorMessage, Field } from "formik";
+import { ErrorMessage, Field, FieldInputProps } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
@@ -12,6 +12,7 @@ type props = {
   index: number;
   remove: (index: number) => void;
   setFieldValue: (name: string, value: any) => void;
+  getFieldProps: (name: string) => FieldInputProps<any>;
 };
 
 type fa2Token = {
@@ -41,7 +42,12 @@ type option = {
 
 const FETCH_COUNT = 20;
 
-const FA2Transfer = ({ index, setFieldValue, remove }: props) => {
+const FA2Transfer = ({
+  index,
+  setFieldValue,
+  remove,
+  getFieldProps,
+}: props) => {
   const state = useContext(AppStateContext)!;
   const [value, setValue] = useState("");
 
@@ -54,6 +60,24 @@ const FA2Transfer = ({ index, setFieldValue, remove }: props) => {
   const fetchOffsetRef = useRef(0);
 
   const makeName = (key: string) => `transfers.${index}.values.${key}`;
+
+  const updateValues = ({
+    value,
+    currentToken,
+    tokenId,
+    fa2Address,
+  }: {
+    value: string;
+    currentToken: fa2Token | undefined;
+    tokenId: string;
+    fa2Address: string;
+  }) => {
+    setCurrentToken(currentToken);
+    setFieldValue(makeName("token"), currentToken ?? "");
+    setFieldValue(makeName("tokenId"), tokenId);
+    setFieldValue(makeName("fa2Address"), fa2Address);
+    setValue(value);
+  };
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
@@ -68,6 +92,19 @@ const FA2Transfer = ({ index, setFieldValue, remove }: props) => {
         }),
     [state.currentContract]
   );
+
+  useEffect(() => {
+    const value = getFieldProps(makeName("token")).value as fa2Token | "";
+
+    if (!value) return;
+
+    updateValues({
+      value: value.token.metadata.name,
+      currentToken: value,
+      tokenId: value.token.tokenId,
+      fa2Address: value.token.contract.address,
+    });
+  }, []);
 
   useEffect(() => {
     setIsFetching(true);
@@ -129,24 +166,6 @@ const FA2Transfer = ({ index, setFieldValue, remove }: props) => {
                 const currentToken = fa2Tokens.find(
                   ({ token: { id } }) => id === parsedValue
                 );
-
-                const updateValues = ({
-                  value,
-                  currentToken,
-                  tokenId,
-                  fa2Address,
-                }: {
-                  value: string;
-                  currentToken: fa2Token | undefined;
-                  tokenId: string;
-                  fa2Address: string;
-                }) => {
-                  setCurrentToken(currentToken);
-                  setFieldValue(makeName("token"), currentToken ?? "");
-                  setFieldValue(makeName("tokenId"), tokenId);
-                  setFieldValue(makeName("fa2Address"), fa2Address);
-                  setValue(value);
-                };
 
                 if (isNaN(parsedValue) || !currentToken) {
                   updateValues({
