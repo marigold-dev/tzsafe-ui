@@ -751,6 +751,7 @@ function TransferForm(
                               key={index}
                               index={index}
                               setFieldValue={setFieldValue}
+                              getFieldProps={getFieldProps}
                               remove={remove}
                             />
                           );
