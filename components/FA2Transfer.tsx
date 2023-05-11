@@ -144,7 +144,7 @@ const FA2Transfer = ({
         <Field name={makeName("token")} className="w-full">
           {() => (
             <Select
-              label="FA2 Token"
+              label="FA2 token"
               withSeeMore={canSeeMore}
               onSeeMore={() => {
                 fetchOffsetRef.current += 20;
@@ -183,7 +183,7 @@ const FA2Transfer = ({
                             "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
                           }
                           alt={label}
-                          className="h-auto w-full bg-zinc-500 p-2 opacity-70"
+                          className="h-auto w-full bg-zinc-500 p-2 opacity-90"
                         />
                       )}
                     </div>
