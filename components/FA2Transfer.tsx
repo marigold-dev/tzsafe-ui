@@ -5,7 +5,6 @@ import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import Alias from "./Alias";
-import Autocomplete from "./Autocomplete";
 import Select from "./Select";
 import renderError from "./formUtils";
 
@@ -97,7 +96,8 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
       )
         .catch(e => {
           console.log(e);
@@ -109,7 +109,7 @@ const FA2Transfer = ({
         })
         .then(res => res.json())
         .then((v: fa2Token[]) => {
-          if (v.length < FETCH_COUNT) setCanSeeMore(false);
+          setCanSeeMore(v.length === FETCH_COUNT);
 
           return Promise.resolve(v);
         }),
@@ -140,10 +140,12 @@ const FA2Transfer = ({
   return (
     <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
       <div className="w-full md:grow">
-        <Field name={makeName("token")} className="w-full">
+        <Field name={makeName("token")}>
           {() => (
             <Select
-              label="FA2 token"
+              placeholder="Please select an FA2 token"
+              className={!currentToken ? "md:mt-7" : ""}
+              label=""
               withSeeMore={canSeeMore}
               onSeeMore={() => {
                 fetchOffsetRef.current += 20;
@@ -211,7 +213,9 @@ const FA2Transfer = ({
         </Field>
         <ErrorMessage name={makeName("token")} render={renderError} />
       </div>
-      <div className="flex flex-col">
+      <div
+        className={`flex flex-col ${!!currentToken ? "md:translate-y-1" : ""}`}
+      >
         <label className="mb-1 text-white">Amount</label>
         <Field
           className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
@@ -231,7 +235,11 @@ const FA2Transfer = ({
         />
         <ErrorMessage name={makeName("amount")} render={renderError} />
       </div>
-      <div className="flex w-full flex-col md:grow">
+      <div
+        className={`flex w-full flex-col md:grow ${
+          !!currentToken ? "md:translate-y-1" : ""
+        }`}
+      >
         <label className="mb-1 text-white">Transfer to</label>
         <Field
           className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
@@ -247,9 +255,7 @@ const FA2Transfer = ({
       </div>
       <button
         type="button"
-        className={`${
-          !!currentToken ? "self-center" : "md:self-end"
-        } mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0`}
+        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end`}
         onClick={e => {
           e.preventDefault();
 

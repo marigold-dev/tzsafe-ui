@@ -747,13 +747,21 @@ function TransferForm(
                           );
                         } else if (transfer.type === "fa2") {
                           return (
-                            <FA2Transfer
-                              key={index}
-                              index={index}
-                              setFieldValue={setFieldValue}
-                              getFieldProps={getFieldProps}
-                              remove={remove}
-                            />
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA2 token transfer
+                              </p>
+                              <FA2Transfer
+                                key={index}
+                                index={index}
+                                setFieldValue={setFieldValue}
+                                getFieldProps={getFieldProps}
+                                remove={remove}
+                              />
+                            </section>
                           );
                         }
                         const withTextArea = transfer.fields.find(
