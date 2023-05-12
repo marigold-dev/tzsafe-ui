@@ -24,7 +24,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
-import { Versioned } from "../versioned/interface";
+import { Versioned, proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import FA2Transfer from "./FA2Transfer";
@@ -388,20 +388,7 @@ const addNewField = (
   if (window.scrollY > 200) window.scrollTo(0, 0);
 };
 
-const initialProps: {
-  transfers: {
-    type: "lambda" | "transfer" | "contract" | "fa2";
-    values: { [key: string]: string };
-    fields: {
-      field: string;
-      label: string;
-      kind?: "textarea" | "input-complete" | "autocomplete";
-      path: string;
-      placeholder: string;
-      validate: (p: string) => string | undefined;
-    }[];
-  }[];
-} = {
+const initialProps: proposals = {
   transfers: [],
 };
 
@@ -746,6 +733,7 @@ function TransferForm(
                             </div>
                           );
                         } else if (transfer.type === "fa2") {
+                          console.log(values);
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
@@ -756,7 +744,7 @@ function TransferForm(
                               </p>
                               <FA2Transfer
                                 key={index}
-                                index={index}
+                                proposalIndex={index}
                                 setFieldValue={setFieldValue}
                                 getFieldProps={getFieldProps}
                                 remove={remove}
