@@ -5,6 +5,7 @@ import Spinner from "./Spinner";
 type option<T> = T & { id: string; value: string; label: string };
 type props<T> = {
   label: string;
+  placeholder?: string;
   onChange: (value: T) => void;
   onSearch: (value: string) => void;
   options: option<T>[];
@@ -13,6 +14,7 @@ type props<T> = {
   withSeeMore?: boolean;
   onSeeMore?: () => void;
   renderOption?: (option: option<T>) => React.ReactNode;
+  className?: string;
 };
 
 const Select = <T,>({
@@ -23,6 +25,8 @@ const Select = <T,>({
   value,
   renderOption,
   onSeeMore,
+  className,
+  placeholder,
   loading = false,
   withSeeMore = false,
 }: props<T>) => {
@@ -40,7 +44,7 @@ const Select = <T,>({
   });
 
   return (
-    <div className="relative z-[1] w-full text-white">
+    <div className={`relative z-[1] w-full text-white ${className ?? ""}`}>
       <Ariakit.SelectLabel store={select}>{label}</Ariakit.SelectLabel>
       <Ariakit.Select
         store={select}
@@ -49,7 +53,9 @@ const Select = <T,>({
         {!!value ? (
           renderOption?.(value) ?? <div>{value.label}</div>
         ) : (
-          <div className="text-zinc-300">Please select an item</div>
+          <div className="text-zinc-300">
+            {placeholder ?? "Please select an item"}
+          </div>
         )}
         <Ariakit.SelectArrow />
       </Ariakit.Select>
@@ -98,56 +104,6 @@ const Select = <T,>({
           </div>
         )}
       </Ariakit.SelectPopover>
-
-      {/* <label className="relative">
-        {label}
-        <div className="relative">
-          <Ariakit.Combobox
-            store={combobox}
-            placeholder={placeholder}
-            className="mt-1 block w-full rounded p-2 text-sm text-zinc-800"
-          />
-          {selected && (
-            <CheckIcon className="absolute bottom-1/2 right-2 h-6 w-6 translate-y-1/2 text-green-500" />
-          )}
-        </div>
-      </label>
-      <Ariakit.ComboboxPopover
-        store={combobox}
-        className="mt-1 max-h-52 overflow-y-auto overscroll-contain rounded bg-zinc-700 p-2"
-      >
-        {loading ? (
-          <div className="flex h-full w-full items-center justify-center p-2">
-            <Spinner />
-          </div>
-        ) : (
-          options
-            .filter(({ label }) =>
-              label.toLowerCase().includes(value.toLowerCase())
-            )
-            .map(v => (
-              <Ariakit.ComboboxItem
-                key={v.id}
-                className="combobox-item cursor-pointer rounded p-2"
-                value={v.value}
-                setValueOnClick
-              >
-                {renderOption?.(v) ?? v.label}
-              </Ariakit.ComboboxItem>
-            ))
-        )}
-        {withSeeMore && (
-          <div className="mt-2 flex items-center justify-center">
-            <button
-              onClick={onSeeMore}
-              type="button"
-              className="rounded bg-primary px-2 py-1 text-sm hover:bg-red-600"
-            >
-              More
-            </button>
-          </div>
-        )}
-      </Ariakit.ComboboxPopover> */}
     </div>
   );
 };
