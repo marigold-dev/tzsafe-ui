@@ -1,19 +1,14 @@
+import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { ErrorMessage, Field, FieldInputProps } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { v4 as uuidV4 } from "uuid";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import Alias from "./Alias";
 import Select from "./Select";
 import renderError from "./formUtils";
-
-type props = {
-  index: number;
-  remove: (index: number) => void;
-  setFieldValue: (name: string, value: fa2Token | string) => void;
-  getFieldProps: (name: string) => FieldInputProps<fa2Token | undefined>;
-};
 
 type fa2Token = {
   id: number;
@@ -41,7 +36,7 @@ type option = {
   value: string;
   label: string;
   tokenId: string;
-  thumbnailHash: string | undefined;
+  image: string | undefined;
   contractAddress: string;
   token: fa2Token;
 };
@@ -50,27 +45,41 @@ const FETCH_COUNT = 20;
 
 const tokenToOption = (fa2Token: fa2Token) => {
   const { token } = fa2Token;
+  const imageUri =
+    token.metadata.thumbnailUri ?? token.metadata.displayUri ?? "";
+
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
     label: token.metadata.name,
-    thumbnailHash: (
-      token.metadata.thumbnailUri ??
-      token.metadata.displayUri ??
-      ""
-    ).replace("ipfs://", ""),
+    image: imageUri.includes("http")
+      ? imageUri
+      : imageUri === ""
+      ? undefined
+      : `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`,
     contractAddress: token.contract.address,
     token: fa2Token,
   };
 };
 
+type fa2TransferProps = {
+  localIndex: number;
+  fa2ContractAddress?: string;
+  onTokenChange?: (token: fa2Token) => void;
+  toExclude: number[];
+} & props;
+
 const FA2Transfer = ({
-  index,
+  proposalIndex,
+  localIndex,
   setFieldValue,
   remove,
   getFieldProps,
-}: props) => {
+  onTokenChange,
+  fa2ContractAddress,
+  toExclude,
+}: fa2TransferProps) => {
   const state = useContext(AppStateContext)!;
 
   const [isFetching, setIsFetching] = useState(true);
@@ -81,22 +90,26 @@ const FA2Transfer = ({
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
 
-  const makeName = (key: string) => `transfers.${index}.values.${key}`;
+  const makeName = (key: string) =>
+    `transfers.${proposalIndex}.values.${localIndex}.${key}`;
 
   const updateValues = (newToken: fa2Token) => {
+    onTokenChange?.(newToken);
     setCurrentToken(newToken);
-    setFieldValue(makeName("token"), newToken ?? "");
-    setFieldValue(makeName("tokenId"), newToken?.token.tokenId ?? "");
-    setFieldValue(
-      makeName("fa2Address"),
-      newToken?.token.contract.address ?? ""
-    );
+    setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
+      token: newToken ?? "",
+      tokenId: newToken?.token.tokenId ?? "",
+      fa2Address: newToken?.token.contract.address ?? "",
+    });
   };
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2`
+        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2`
+        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
+          !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""
+        }`
       )
         .catch(e => {
           console.log(e);
@@ -110,13 +123,15 @@ const FA2Transfer = ({
         .then((v: fa2Token[]) => {
           setCanSeeMore(v.length === FETCH_COUNT);
 
-          return Promise.resolve(v);
+          return Promise.resolve(
+            v.filter(token => !toExclude.includes(token.id))
+          );
         }),
     [state.currentContract]
   );
 
   useEffect(() => {
-    const value = getFieldProps(makeName("token")).value;
+    const value = getFieldProps(makeName("token")).value as fa2Token;
 
     if (!value) return;
 
@@ -162,18 +177,13 @@ const FA2Transfer = ({
               value={!!currentToken ? tokenToOption(currentToken) : undefined}
               options={options}
               loading={isFetching}
-              renderOption={({
-                thumbnailHash,
-                tokenId,
-                contractAddress,
-                label,
-              }) => {
+              renderOption={({ image, tokenId, contractAddress, label }) => {
                 return (
                   <div className="flex">
-                    <div className="relative aspect-square w-1/6 overflow-hidden rounded bg-zinc-500/50">
-                      {!!thumbnailHash ? (
+                    <div className="aspect-square w-1/6 overflow-hidden rounded bg-zinc-500/50">
+                      {!!image ? (
                         <img
-                          src={`${THUMBNAIL_URL}/${thumbnailHash}`}
+                          src={image}
                           alt={label}
                           className="h-auto w-full"
                         />
@@ -258,7 +268,7 @@ const FA2Transfer = ({
         onClick={e => {
           e.preventDefault();
 
-          remove(index);
+          remove(proposalIndex);
         }}
       >
         Remove
@@ -267,4 +277,117 @@ const FA2Transfer = ({
   );
 };
 
-export default FA2Transfer;
+type formValue = {
+  token: fa2Token;
+  fa2Address: string;
+  tokenId: string;
+};
+
+type props = {
+  proposalIndex: number;
+  remove: (index: number) => void;
+  setFieldValue: (name: string, value: formValue | formValue[]) => void;
+  getFieldProps: (
+    name: string
+  ) => FieldInputProps<fa2Token | formValue[] | undefined>;
+};
+
+const FA2TransferGroup = ({
+  proposalIndex,
+  remove,
+  setFieldValue,
+  getFieldProps,
+}: props) => {
+  const [selectedTokens, setSelectedTokens] = useState<
+    (fa2Token | undefined)[]
+  >([]);
+  const [additionalTransfers, setAdditionalTransfers] = useState<string[]>([]);
+  const [contractAddress, setContractAddress] = useState("");
+
+  useEffect(() => {
+    const values = [
+      ...((getFieldProps(`transfers.${proposalIndex}.values`)
+        .value as formValue[]) ?? []),
+    ];
+
+    if (values.length <= 1) return;
+
+    setAdditionalTransfers(values.slice(1).map(_ => uuidV4()));
+    setFieldValue(`transfers.${proposalIndex}.values`, values);
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <FA2Transfer
+        proposalIndex={proposalIndex}
+        localIndex={0}
+        remove={remove}
+        setFieldValue={setFieldValue}
+        getFieldProps={getFieldProps}
+        onTokenChange={token => {
+          setFieldValue(`transfers.${proposalIndex}.values`, []);
+          setFieldValue(`transfers.${proposalIndex}.values.0`, {
+            token,
+            fa2Address: token.token.contract.address,
+            tokenId: token.token.tokenId,
+          });
+          setSelectedTokens([token]);
+          setAdditionalTransfers([]);
+          setContractAddress(token.token.contract.address);
+        }}
+        toExclude={[]}
+      />
+      {additionalTransfers.map((uuid, i) => (
+        <FA2Transfer
+          key={uuid}
+          proposalIndex={proposalIndex}
+          localIndex={i + 1}
+          remove={() => {
+            setAdditionalTransfers(curr => curr.filter(v => v !== uuid));
+            setSelectedTokens(curr => {
+              const newTokens = [...curr];
+              newTokens[i + 1] = undefined;
+              return newTokens;
+            });
+          }}
+          setFieldValue={setFieldValue}
+          getFieldProps={getFieldProps}
+          fa2ContractAddress={contractAddress}
+          onTokenChange={token => {
+            setSelectedTokens(curr => {
+              const newTokens = [...curr];
+              newTokens[i + 1] = token;
+              return newTokens;
+            });
+          }}
+          toExclude={(selectedTokens.filter(v => !!v) as fa2Token[]).map(
+            v => v.id
+          )}
+        />
+      ))}
+      <div className="flex w-full items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setAdditionalTransfers(v => v.concat([uuidV4()]))}
+          className="flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white"
+        >
+          <PlusIcon />
+          <span>Add</span>
+        </button>
+        {/* <button
+          type="button"
+          className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mt-0`}
+          onClick={e => {
+            e.preventDefault();
+
+            remove(proposalIndex);
+          }}
+        >
+          Remove
+        </button> */}
+      </div>
+    </div>
+  );
+};
+
+export default FA2TransferGroup;

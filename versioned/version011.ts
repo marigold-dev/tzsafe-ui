@@ -19,9 +19,8 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
-import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
-import { timeoutAndHash, Versioned } from "./interface";
+import { proposals, timeoutAndHash, Versioned } from "./interface";
 
 function convert(x: string): string {
   return char2Bytes(x);
@@ -30,19 +29,7 @@ class Version011 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: {
-      transfers: {
-        type: "transfer" | "lambda" | "contract" | "fa2";
-        values: { [key: string]: string };
-        fields: {
-          field: string;
-          label: string;
-          path: string;
-          placeholder: string;
-          validate: (p: string) => string | undefined;
-        }[];
-      }[];
-    }
+    proposals: proposals
   ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
@@ -84,32 +71,32 @@ class Version011 extends Versioned {
               };
             }
             case "fa2": {
-              const parser = new Parser();
-              const michelsonCode = parser.parseMichelineExpression(
-                makeFa2Michelson({
-                  walletAddress: cc.address,
-                  targetAddress: x.values.targetAddress,
-                  tokenId: Number(x.values.tokenId),
-                  amount: Number(x.values.amount),
-                  fa2Address: x.values.fa2Address,
-                })
-              );
-
-              return {
-                execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      contract_addr: x.values.targetAddress,
-                      payload: {
-                        token_id: Number(x.values.tokenId),
-                        fa2_address: x.values.fa2Address,
-                      },
-                      amount: Number(x.values.amount),
-                    })
-                  ),
-                  lambda: michelsonCode,
-                },
-              };
+              // TODO: HANDLE FA2 ARRAY
+              // const parser = new Parser();
+              // const michelsonCode = parser.parseMichelineExpression(
+              //   makeFa2Michelson({
+              //     walletAddress: cc.address,
+              //     targetAddress: x.values.targetAddress,
+              //     tokenId: Number(x.values.tokenId),
+              //     amount: Number(x.values.amount),
+              //     fa2Address: x.values.fa2Address,
+              //   })
+              // );
+              // return {
+              //   execute_lambda: {
+              //     metadata: convert(
+              //       JSON.stringify({
+              //         contract_addr: x.values.targetAddress,
+              //         payload: {
+              //           token_id: Number(x.values.tokenId),
+              //           fa2_address: x.values.fa2Address,
+              //         },
+              //         amount: Number(x.values.amount),
+              //       })
+              //     ),
+              //     lambda: michelsonCode,
+              //   },
+              // };
             }
             default:
               return {};
