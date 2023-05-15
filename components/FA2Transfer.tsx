@@ -96,8 +96,7 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
-        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
+        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=id`
       )
         .catch(e => {
           console.log(e);
@@ -117,7 +116,7 @@ const FA2Transfer = ({
   );
 
   useEffect(() => {
-    const value = getFieldProps(makeName("token")).value as fa2Token | "";
+    const value = (getFieldProps(makeName("token")).value as fa2Token) ?? "";
 
     if (!value) return;
 
@@ -148,7 +147,7 @@ const FA2Transfer = ({
               label=""
               withSeeMore={canSeeMore}
               onSeeMore={() => {
-                fetchOffsetRef.current += 20;
+                fetchOffsetRef.current += FETCH_COUNT;
 
                 fetchTokens(filterValue, fetchOffsetRef.current).then(
                   (v: fa2Token[]) => {
