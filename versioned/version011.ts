@@ -71,32 +71,35 @@ class Version011 extends Versioned {
               };
             }
             case "fa2": {
-              // TODO: HANDLE FA2 ARRAY
-              // const parser = new Parser();
-              // const michelsonCode = parser.parseMichelineExpression(
-              //   makeFa2Michelson({
-              //     walletAddress: cc.address,
-              //     targetAddress: x.values.targetAddress,
-              //     tokenId: Number(x.values.tokenId),
-              //     amount: Number(x.values.amount),
-              //     fa2Address: x.values.fa2Address,
-              //   })
-              // );
-              // return {
-              //   execute_lambda: {
-              //     metadata: convert(
-              //       JSON.stringify({
-              //         contract_addr: x.values.targetAddress,
-              //         payload: {
-              //           token_id: Number(x.values.tokenId),
-              //           fa2_address: x.values.fa2Address,
-              //         },
-              //         amount: Number(x.values.amount),
-              //       })
-              //     ),
-              //     lambda: michelsonCode,
-              //   },
-              // };
+              const parser = new Parser();
+
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa2Michelson(
+                  x.values.map(value => ({
+                    walletAddress: cc.address,
+                    targetAddress: value.targetAddress,
+                    tokenId: Number(value.tokenId),
+                    amount: Number(value.amount),
+                    fa2Address: value.fa2Address,
+                  }))
+                )
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      contract_addr: x.values[0].targetAddress,
+                      payload: x.values.map(value => ({
+                        token_id: Number(value.tokenId),
+                        fa2_address: value.fa2Address,
+                        amount: Number(value.amount),
+                      })),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
             }
             default:
               return {};

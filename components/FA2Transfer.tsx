@@ -296,6 +296,17 @@ const FA2TransferGroup = ({
   const [additionalTransfers, setAdditionalTransfers] = useState<string[]>([]);
   const [contractAddress, setContractAddress] = useState("");
 
+  useEffect(() => {
+    const values = [
+      ...getFieldProps(`transfers.${proposalIndex}.values`).value,
+    ];
+
+    if (values.length <= 1) return;
+
+    setAdditionalTransfers(values.slice(1).map(_ => uuidV4()));
+    setFieldValue(`transfers.${proposalIndex}.values`, values);
+  }, []);
+
   return (
     <div className="space-y-4">
       <FA2Transfer
@@ -354,7 +365,7 @@ const FA2TransferGroup = ({
           <PlusIcon />
           <span>Add</span>
         </button>
-        <button
+        {/* <button
           type="button"
           className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mt-0`}
           onClick={e => {
@@ -364,7 +375,7 @@ const FA2TransferGroup = ({
           }}
         >
           Remove
-        </button>
+        </button> */}
       </div>
     </div>
   );
