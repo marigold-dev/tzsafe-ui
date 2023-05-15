@@ -12,7 +12,7 @@ type props = {
   index: number;
   remove: (index: number) => void;
   setFieldValue: (name: string, value: any) => void;
-  getFieldProps: (name: string) => FieldInputProps<any>;
+  getFieldProps: (name: string) => FieldInputProps<fa2Token | undefined>;
 };
 
 type fa2Token = {
@@ -116,7 +116,7 @@ const FA2Transfer = ({
   );
 
   useEffect(() => {
-    const value = (getFieldProps(makeName("token")).value as fa2Token) ?? "";
+    const value = getFieldProps(makeName("token")).value ?? "";
 
     if (!value) return;
 
@@ -170,7 +170,7 @@ const FA2Transfer = ({
               }) => {
                 return (
                   <div className="flex">
-                    <div className="w-1/6 overflow-hidden rounded bg-zinc-500/50">
+                    <div className="relative aspect-square w-1/6 overflow-hidden rounded bg-zinc-500/50">
                       {!!thumbnailHash ? (
                         <img
                           src={`${THUMBNAIL_URL}/${thumbnailHash}`}
@@ -183,7 +183,7 @@ const FA2Transfer = ({
                             "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
                           }
                           alt={label}
-                          className="h-auto w-full bg-zinc-500 p-2 opacity-90"
+                          className="h-auto w-full p-2"
                         />
                       )}
                     </div>
