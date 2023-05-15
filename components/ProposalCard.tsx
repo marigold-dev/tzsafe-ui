@@ -95,39 +95,45 @@ export const RenderProposalContent = ({
       };
     } else if (metadata?.meta?.includes("fa2_address")) {
       const contractData = JSON.parse(metadata.meta);
-
       data = {
         label: "Transfer FA2",
         metadata: undefined,
         amount: contractData.amount,
         addresses: [contractData.contract_addr],
         entrypoints: undefined,
-        params: JSON.stringify({
-          fa2_address: contractData.payload.fa2_address,
-          token_id: contractData.payload.token_id.toString(),
-        }),
+        params: JSON.stringify(contractData.payload),
       };
     } else if (
       metadata.entrypoint === "%transfer" &&
       Array.isArray(metadata.payload) &&
       isFa2(metadata.payload)
     ) {
-      const [
-        {
-          txs: [{ to_, token_id, amount }],
-        },
-      ] = metadata.payload;
+      const [{ txs }] = metadata.payload;
 
       data = {
         label: "Transfer FA2",
         metadata: undefined,
-        amount,
-        addresses: [to_],
+        amount: undefined,
+        addresses: [],
         entrypoints: undefined,
-        params: JSON.stringify({
-          fa2_address: metadata.contract_address,
-          token_id,
-        }),
+        params: JSON.stringify(
+          txs.map(
+            ({
+              to_,
+              token_id,
+              amount,
+            }: {
+              to_: string;
+              token_id: number;
+              amount: number;
+            }) => ({
+              fa2_address: metadata.contract_address,
+              token_id,
+              to: to_,
+              amount,
+            })
+          )
+        ),
       };
     } else if (metadata?.meta?.includes("baker_address")) {
       const contractData = JSON.parse(metadata.meta);

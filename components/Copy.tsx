@@ -27,7 +27,9 @@ const Copy = ({ children, value, disabled = false, text }: copyProps) => {
     >
       <a
         href="#"
-        onClick={async () => {
+        onClick={async e => {
+          e.preventDefault();
+          e.stopPropagation();
           if (disabled) return;
 
           setIsCopying(true);
