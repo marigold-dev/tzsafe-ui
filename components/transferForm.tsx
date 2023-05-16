@@ -834,21 +834,6 @@ function TransferForm(
                                         rows={10}
                                       />
                                     ) : (
-                                      // ) : value.kind === "autocomplete" ? (
-                                      //   <Field
-                                      //     name={`transfers.${index}.values.${value.field}`}
-                                      //     className="w-full md:grow"
-                                      //   >
-                                      //     {({}: FieldProps) => (
-                                      //       <FA2Transfer
-
-                                      //         name={`transfers.${index}.values.${value.field}`}
-                                      //         setFieldValue={setFieldValue}
-                                      //         placeholder={value.placeholder}
-                                      //       />
-                                      //     )}
-                                      //   </Field>
-                                      // ) : (
                                       <Field
                                         component={value.kind}
                                         name={`transfers.${index}.values.${value.field}`}

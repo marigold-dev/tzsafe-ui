@@ -106,8 +106,8 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=20&token.metadata.name.as=*${value}*`
-        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=20&token.metadata.name.as=*${value}*${
+        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2`
+        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
           !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""
         }`
       )
@@ -131,7 +131,7 @@ const FA2Transfer = ({
   );
 
   useEffect(() => {
-    const value = getFieldProps(makeName("token")).value as fa2Token | "";
+    const value = getFieldProps(makeName("token")).value as fa2Token;
 
     if (!value) return;
 
@@ -162,7 +162,7 @@ const FA2Transfer = ({
               label=""
               withSeeMore={canSeeMore}
               onSeeMore={() => {
-                fetchOffsetRef.current += 20;
+                fetchOffsetRef.current += FETCH_COUNT;
 
                 fetchTokens(filterValue, fetchOffsetRef.current).then(
                   (v: fa2Token[]) => {
@@ -193,7 +193,7 @@ const FA2Transfer = ({
                             "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
                           }
                           alt={label}
-                          className="h-auto w-full bg-zinc-500 p-2"
+                          className="h-auto w-full p-2"
                         />
                       )}
                     </div>
@@ -277,11 +277,19 @@ const FA2Transfer = ({
   );
 };
 
+type formValue = {
+  token: fa2Token;
+  fa2Address: string;
+  tokenId: string;
+};
+
 type props = {
   proposalIndex: number;
   remove: (index: number) => void;
-  setFieldValue: (name: string, value: any) => void;
-  getFieldProps: (name: string) => FieldInputProps<any>;
+  setFieldValue: (name: string, value: formValue | formValue[]) => void;
+  getFieldProps: (
+    name: string
+  ) => FieldInputProps<fa2Token | formValue[] | undefined>;
 };
 
 const FA2TransferGroup = ({
@@ -298,7 +306,8 @@ const FA2TransferGroup = ({
 
   useEffect(() => {
     const values = [
-      ...getFieldProps(`transfers.${proposalIndex}.values`).value,
+      ...((getFieldProps(`transfers.${proposalIndex}.values`)
+        .value as formValue[]) ?? []),
     ];
 
     if (values.length <= 1) return;
