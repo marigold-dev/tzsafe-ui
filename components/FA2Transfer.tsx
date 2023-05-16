@@ -11,7 +11,7 @@ import renderError from "./formUtils";
 type props = {
   index: number;
   remove: (index: number) => void;
-  setFieldValue: (name: string, value: any) => void;
+  setFieldValue: (name: string, value: fa2Token | string) => void;
   getFieldProps: (name: string) => FieldInputProps<fa2Token | undefined>;
 };
 
@@ -96,7 +96,7 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=id`
+        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2`
       )
         .catch(e => {
           console.log(e);
@@ -116,7 +116,7 @@ const FA2Transfer = ({
   );
 
   useEffect(() => {
-    const value = getFieldProps(makeName("token")).value ?? "";
+    const value = getFieldProps(makeName("token")).value;
 
     if (!value) return;
 
