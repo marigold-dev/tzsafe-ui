@@ -152,13 +152,13 @@ const FA2Transfer = ({
   }, [fetchTokens, filterValue]);
 
   return (
-    <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-      <div className="w-full md:grow">
+    <div className="flex flex-col space-y-6 xl:flex-row xl:space-y-0 xl:space-x-4">
+      <div className="w-full xl:grow">
         <Field name={makeName("token")}>
           {() => (
             <Select
               placeholder="Please select an FA2 token"
-              className={!currentToken ? "md:mt-7" : ""}
+              className={!currentToken ? "xl:mt-7" : ""}
               label=""
               withSeeMore={canSeeMore}
               onSeeMore={() => {
@@ -185,7 +185,12 @@ const FA2Transfer = ({
                         <img
                           src={image}
                           alt={label}
-                          className="h-auto w-full"
+                          className="h-auto w-full p-1"
+                          onError={e => {
+                            // @ts-ignore
+                            e.target.src =
+                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
+                          }}
                         />
                       ) : (
                         <img
@@ -193,7 +198,7 @@ const FA2Transfer = ({
                             "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
                           }
                           alt={label}
-                          className="h-auto w-full p-2"
+                          className="h-auto w-full p-1"
                         />
                       )}
                     </div>
@@ -223,11 +228,11 @@ const FA2Transfer = ({
         <ErrorMessage name={makeName("token")} render={renderError} />
       </div>
       <div
-        className={`flex flex-col ${!!currentToken ? "md:translate-y-1" : ""}`}
+        className={`flex flex-col ${!!currentToken ? "xl:translate-y-1" : ""}`}
       >
         <label className="mb-1 text-white">Amount</label>
         <Field
-          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
+          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
           name={makeName("amount")}
           placeholder="1"
           validate={(x: string) => {
@@ -245,13 +250,13 @@ const FA2Transfer = ({
         <ErrorMessage name={makeName("amount")} render={renderError} />
       </div>
       <div
-        className={`flex w-full flex-col md:grow ${
-          !!currentToken ? "md:translate-y-1" : ""
+        className={`flex w-full flex-col xl:grow ${
+          !!currentToken ? "xl:translate-y-1" : ""
         }`}
       >
         <label className="mb-1 text-white">Transfer to</label>
         <Field
-          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
+          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
           name={makeName("targetAddress")}
           placeholder="Destination address"
           validate={(x: string) =>
@@ -264,7 +269,7 @@ const FA2Transfer = ({
       </div>
       <button
         type="button"
-        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end`}
+        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mx-auto xl:mt-0 xl:self-end`}
         onClick={e => {
           e.preventDefault();
 
@@ -317,7 +322,7 @@ const FA2TransferGroup = ({
   }, []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FA2Transfer
         proposalIndex={proposalIndex}
         localIndex={0}
@@ -325,15 +330,24 @@ const FA2TransferGroup = ({
         setFieldValue={setFieldValue}
         getFieldProps={getFieldProps}
         onTokenChange={token => {
-          setFieldValue(`transfers.${proposalIndex}.values`, []);
           setFieldValue(`transfers.${proposalIndex}.values.0`, {
             token,
             fa2Address: token.token.contract.address,
             tokenId: token.token.tokenId,
           });
-          setSelectedTokens([token]);
-          setAdditionalTransfers([]);
-          setContractAddress(token.token.contract.address);
+
+          if (token.token.contract.address === contractAddress)
+            setSelectedTokens(oldTokens => {
+              const newTokens = [...oldTokens];
+              newTokens[0] = token;
+              return newTokens;
+            });
+          else {
+            setSelectedTokens([token]);
+            setFieldValue(`transfers.${proposalIndex}.values`, []);
+            setAdditionalTransfers([]);
+            setContractAddress(token.token.contract.address);
+          }
         }}
         toExclude={[]}
       />
@@ -369,22 +383,11 @@ const FA2TransferGroup = ({
         <button
           type="button"
           onClick={() => setAdditionalTransfers(v => v.concat([uuidV4()]))}
-          className={`${contractAddress === "" ? "pointer-events-none opacity-70" : ""} flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white`}
+          className="flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white"
         >
           <PlusIcon />
           <span>Add</span>
         </button>
-        {/* <button
-          type="button"
-          className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mt-0`}
-          onClick={e => {
-            e.preventDefault();
-
-            remove(proposalIndex);
-          }}
-        >
-          Remove
-        </button> */}
       </div>
     </div>
   );
