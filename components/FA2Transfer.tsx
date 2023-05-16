@@ -369,7 +369,7 @@ const FA2TransferGroup = ({
         <button
           type="button"
           onClick={() => setAdditionalTransfers(v => v.concat([uuidV4()]))}
-          className="flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white"
+          className={`${contractAddress === "" ? "pointer-events-none opacity-70" : ""} flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white`}
         >
           <PlusIcon />
           <span>Add</span>
