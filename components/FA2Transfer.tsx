@@ -1,6 +1,6 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
-import { ErrorMessage, Field, FieldInputProps } from "formik";
+import { ErrorMessage, Field, FieldInputProps, FieldProps } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
@@ -85,6 +85,8 @@ const FA2Transfer = ({
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
 
+  const [amount, setAmount] = useState<string>("");
+
   const [filterValue, setFilterValue] = useState<string>("");
   const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
   const [options, setOptions] = useState<option[]>([]);
@@ -127,7 +129,7 @@ const FA2Transfer = ({
             v.filter(token => !toExclude.includes(token.id))
           );
         }),
-    [state.currentContract]
+    [state.currentContract, toExclude]
   );
 
   useEffect(() => {
@@ -149,7 +151,7 @@ const FA2Transfer = ({
         }),
       150
     );
-  }, [fetchTokens, filterValue]);
+  }, [fetchTokens, filterValue, toExclude]);
 
   return (
     <div className="flex flex-col space-y-6 xl:flex-row xl:space-y-0 xl:space-x-4">
@@ -231,22 +233,39 @@ const FA2Transfer = ({
         className={`flex flex-col ${!!currentToken ? "xl:translate-y-1" : ""}`}
       >
         <label className="mb-1 text-white">Amount</label>
-        <Field
-          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
-          name={makeName("amount")}
-          placeholder="1"
-          validate={(x: string) => {
-            const amount = Number(x);
-            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
-              return `Invalid amount ${x}`;
-            } else if (
-              !!currentToken &&
-              amount > parseInt(currentToken.balance)
-            ) {
-              return `You only have ${currentToken.balance} tokens`;
-            }
-          }}
-        />
+        <div className="relative w-full">
+          <Field
+            name={makeName("amount")}
+            validate={(x: string) => {
+              const amount = Number(x);
+              if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+                return `Invalid amount ${x}`;
+              } else if (
+                !!currentToken &&
+                amount > parseInt(currentToken.balance)
+              ) {
+                return `You only have ${currentToken.balance} token${
+                  Number(currentToken.balance) <= 1 ? "" : "s"
+                }`;
+              }
+            }}
+          >
+            {({ field }: FieldProps) => (
+              <>
+                <input
+                  {...field}
+                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
+                  placeholder="1"
+                />
+                {!!currentToken && !field.value && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                    Max: {currentToken.balance}
+                  </span>
+                )}
+              </>
+            )}
+          </Field>
+        </div>
         <ErrorMessage name={makeName("amount")} render={renderError} />
       </div>
       <div
