@@ -48,7 +48,9 @@ const Select = <T,>({
       <Ariakit.SelectLabel store={select}>{label}</Ariakit.SelectLabel>
       <Ariakit.Select
         store={select}
-        className="mt-1 flex w-full items-center justify-between rounded bg-zinc-700 p-2 text-sm text-white hover:bg-zinc-600"
+        className={`${
+          !!label ? "mt-1" : ""
+        } flex w-full items-center justify-between rounded bg-zinc-700 p-2 text-sm text-white hover:bg-zinc-600`}
       >
         {!!value ? (
           renderOption?.(value) ?? <div>{value.label}</div>

@@ -68,6 +68,7 @@ type fa2TransferProps = {
   fa2ContractAddress?: string;
   onTokenChange?: (token: fa2Token) => void;
   toExclude: number[];
+  autoSetField?: boolean;
 } & props;
 
 const FA2Transfer = ({
@@ -79,13 +80,12 @@ const FA2Transfer = ({
   onTokenChange,
   fa2ContractAddress,
   toExclude,
+  autoSetField = false,
 }: fa2TransferProps) => {
   const state = useContext(AppStateContext)!;
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
-
-  const [amount, setAmount] = useState<string>("");
 
   const [filterValue, setFilterValue] = useState<string>("");
   const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
@@ -98,11 +98,12 @@ const FA2Transfer = ({
   const updateValues = (newToken: fa2Token) => {
     onTokenChange?.(newToken);
     setCurrentToken(newToken);
-    setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
-      token: newToken ?? "",
-      tokenId: newToken?.token.tokenId ?? "",
-      fa2Address: newToken?.token.contract.address ?? "",
-    });
+    if (autoSetField)
+      setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
+        token: newToken ?? "",
+        tokenId: newToken?.token.tokenId ?? "",
+        fa2Address: newToken?.token.contract.address ?? "",
+      });
   };
 
   const fetchTokens = useCallback(
@@ -141,98 +142,87 @@ const FA2Transfer = ({
   }, []);
 
   useEffect(() => {
-    setIsFetching(true);
-
-    debounce(
-      () =>
-        fetchTokens(filterValue, 0).then((v: fa2Token[]) => {
-          setOptions(v.map(tokenToOption));
-          setIsFetching(false);
-        }),
-      150
-    );
+    debounce(() => {
+      setIsFetching(true);
+      fetchTokens(filterValue, 0).then((v: fa2Token[]) => {
+        setOptions(v.map(tokenToOption));
+        setIsFetching(false);
+      });
+    }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
   return (
-    <div className="flex flex-col space-y-6 xl:flex-row xl:space-y-0 xl:space-x-4">
-      <div className="w-full xl:grow">
-        <Field name={makeName("token")}>
-          {() => (
-            <Select
-              placeholder="Please select an FA2 token"
-              className={!currentToken ? "xl:mt-7" : ""}
-              label=""
-              withSeeMore={canSeeMore}
-              onSeeMore={() => {
-                fetchOffsetRef.current += FETCH_COUNT;
+    <div className="fa2-grid-template grid grid-rows-2 items-end gap-x-4">
+      <Field name={makeName("token")}>
+        {() => (
+          <Select
+            placeholder="Please select an FA2 token"
+            label=""
+            withSeeMore={canSeeMore}
+            onSeeMore={() => {
+              fetchOffsetRef.current += FETCH_COUNT;
 
-                fetchTokens(filterValue, fetchOffsetRef.current).then(
-                  (v: fa2Token[]) => {
-                    setOptions(current => current.concat(v.map(tokenToOption)));
-                  }
-                );
-              }}
-              onSearch={setFilterValue}
-              onChange={newValue => {
-                updateValues(newValue.token);
-              }}
-              value={!!currentToken ? tokenToOption(currentToken) : undefined}
-              options={options}
-              loading={isFetching}
-              renderOption={({ image, tokenId, contractAddress, label }) => {
-                return (
-                  <div className="flex">
-                    <div className="aspect-square w-1/6 overflow-hidden rounded bg-zinc-500/50">
-                      {!!image ? (
-                        <img
-                          src={image}
-                          alt={label}
-                          className="h-auto w-full p-1"
-                          onError={e => {
-                            // @ts-ignore
-                            e.target.src =
-                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={
-                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-                          }
-                          alt={label}
-                          className="h-auto w-full p-1"
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex w-5/6 flex-col justify-between px-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-400">
-                          #{tokenId}
-                        </span>
-
-                        <Alias
-                          address={contractAddress}
-                          className="text-xs text-zinc-400"
-                          disabled
-                        />
-                      </div>
-                      <p className="text-left text-xs" title={label}>
-                        {label}
-                      </p>
-                    </div>
+              fetchTokens(filterValue, fetchOffsetRef.current).then(
+                (v: fa2Token[]) => {
+                  setOptions(current => current.concat(v.map(tokenToOption)));
+                }
+              );
+            }}
+            onSearch={setFilterValue}
+            onChange={newValue => {
+              updateValues(newValue.token);
+            }}
+            value={!!currentToken ? tokenToOption(currentToken) : undefined}
+            options={options}
+            loading={isFetching}
+            renderOption={({ image, tokenId, contractAddress, label }) => {
+              return (
+                <div className="flex">
+                  <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
+                    {!!image ? (
+                      <img
+                        src={image}
+                        alt={label}
+                        className="h-auto w-full p-1"
+                        onError={e => {
+                          // @ts-ignore
+                          e.target.src =
+                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={
+                          "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
+                        }
+                        alt={label}
+                        className="h-auto w-full p-1"
+                      />
+                    )}
                   </div>
-                );
-              }}
-            />
-          )}
-        </Field>
-        <ErrorMessage name={makeName("token")} render={renderError} />
-      </div>
-      <div
-        className={`flex flex-col ${!!currentToken ? "xl:translate-y-1" : ""}`}
-      >
-        <label className="mb-1 text-white">Amount</label>
+
+                  <div className="flex w-5/6 flex-col justify-between px-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-zinc-400">#{tokenId}</span>
+
+                      <Alias
+                        address={contractAddress}
+                        className="text-xs text-zinc-400"
+                        disabled
+                      />
+                    </div>
+                    <p className="text-left text-xs" title={label}>
+                      {label}
+                    </p>
+                  </div>
+                </div>
+              );
+            }}
+          />
+        )}
+      </Field>
+      <div className="w-full">
+        <label className="text-white">Amount</label>
         <div className="relative w-full">
           <Field
             name={makeName("amount")}
@@ -254,28 +244,26 @@ const FA2Transfer = ({
               <>
                 <input
                   {...field}
-                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
+                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
                   placeholder="1"
                 />
                 {!!currentToken && !field.value && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                    Max: {currentToken.balance}
+                    Max:{" "}
+                    {Number(currentToken.balance) > 1000
+                      ? "1000+"
+                      : currentToken.balance}
                   </span>
                 )}
               </>
             )}
           </Field>
         </div>
-        <ErrorMessage name={makeName("amount")} render={renderError} />
       </div>
-      <div
-        className={`flex w-full flex-col xl:grow ${
-          !!currentToken ? "xl:translate-y-1" : ""
-        }`}
-      >
-        <label className="mb-1 text-white">Transfer to</label>
+      <div>
+        <label className="text-white">Transfer to</label>
         <Field
-          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-auto"
+          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
           name={makeName("targetAddress")}
           placeholder="Destination address"
           validate={(x: string) =>
@@ -284,7 +272,6 @@ const FA2Transfer = ({
               : undefined
           }
         />
-        <ErrorMessage name={makeName("targetAddress")} render={renderError} />
       </div>
       <button
         type="button"
@@ -297,6 +284,15 @@ const FA2Transfer = ({
       >
         Remove
       </button>
+      <div className="self-start">
+        <ErrorMessage name={makeName("token")} render={renderError} />
+      </div>
+      <div className="self-start">
+        <ErrorMessage name={makeName("amount")} render={renderError} />
+      </div>
+      <div className="self-start">
+        <ErrorMessage name={makeName("targetAddress")} render={renderError} />
+      </div>
     </div>
   );
 };
@@ -305,6 +301,7 @@ type formValue = {
   token: fa2Token;
   fa2Address: string;
   tokenId: string;
+  amount?: string;
 };
 
 type props = {
@@ -313,7 +310,7 @@ type props = {
   setFieldValue: (name: string, value: formValue | formValue[]) => void;
   getFieldProps: (
     name: string
-  ) => FieldInputProps<fa2Token | formValue[] | undefined>;
+  ) => FieldInputProps<fa2Token | formValue[] | formValue | undefined>;
 };
 
 const FA2TransferGroup = ({
@@ -341,29 +338,35 @@ const FA2TransferGroup = ({
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="mt-4">
       <FA2Transfer
         proposalIndex={proposalIndex}
         localIndex={0}
         remove={remove}
         setFieldValue={setFieldValue}
         getFieldProps={getFieldProps}
+        autoSetField={false}
         onTokenChange={token => {
-          setFieldValue(`transfers.${proposalIndex}.values.0`, {
+          const data = {
             token,
             fa2Address: token.token.contract.address,
             tokenId: token.token.tokenId,
-          });
+            amount: (
+              getFieldProps(`transfers.${proposalIndex}.values.0`)
+                .value as formValue
+            ).amount,
+          };
 
-          if (token.token.contract.address === contractAddress)
+          if (token.token.contract.address === contractAddress) {
+            setFieldValue(`transfers.${proposalIndex}.values.0`, data);
             setSelectedTokens(oldTokens => {
               const newTokens = [...oldTokens];
               newTokens[0] = token;
               return newTokens;
             });
-          else {
+          } else {
             setSelectedTokens([token]);
-            setFieldValue(`transfers.${proposalIndex}.values`, []);
+            setFieldValue(`transfers.${proposalIndex}.values`, [data]);
             setAdditionalTransfers([]);
             setContractAddress(token.token.contract.address);
           }

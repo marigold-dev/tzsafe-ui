@@ -733,7 +733,6 @@ function TransferForm(
                             </div>
                           );
                         } else if (transfer.type === "fa2") {
-                          console.log(values);
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">

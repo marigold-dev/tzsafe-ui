@@ -41,3 +41,7 @@ a {
     background: black;
   }
 } */
+
+.fa2-grid-template {
+  grid-template-columns: 3fr 2fr 3fr 1fr;
+}
