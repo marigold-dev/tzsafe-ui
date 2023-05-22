@@ -98,12 +98,27 @@ const FA2Transfer = ({
   const updateValues = (newToken: fa2Token) => {
     onTokenChange?.(newToken);
     setCurrentToken(newToken);
-    if (autoSetField)
+
+    if (autoSetField) {
+      const previousValue = getFieldProps(
+        `transfers.${proposalIndex}.values.${localIndex}`
+      ).value;
+
+      if (
+        !previousValue ||
+        Array.isArray(previousValue) ||
+        "balance" in previousValue
+      ) {
+        throw new Error("Expect previous value to be formValue");
+      }
+
       setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
+        ...previousValue,
         token: newToken ?? "",
         tokenId: newToken?.token.tokenId ?? "",
         fa2Address: newToken?.token.contract.address ?? "",
       });
+    }
   };
 
   const fetchTokens = useCallback(

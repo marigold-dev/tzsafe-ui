@@ -17,15 +17,15 @@ export const makeFa2Michelson = (params: makeFa2MichelsonParam[]) => {
     PUSH mutez 0 ;
     PUSH (list (pair (address %from_) (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))) {Pair "${
       params[0].walletAddress
-    }" 
+    }" {
       ${params
         .map(
           ({ targetAddress, tokenId, amount }) =>
-            `{Pair "${targetAddress}" (Pair ${tokenId} ${amount})} ;`
+            `Pair "${targetAddress}" (Pair ${tokenId} ${amount}) ;`
         )
         .join("\n")}
       
-    } ;
+    } };
     TRANSFER_TOKENS
   }`;
 };
