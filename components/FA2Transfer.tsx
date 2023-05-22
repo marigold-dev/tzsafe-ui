@@ -124,8 +124,7 @@ const FA2Transfer = ({
     (value: string, offset: number) =>
       fetch(
         `${API_URL}/v1/tokens/balances?account=${
-          // state.currentContract
-          "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+          state.currentContract
         }&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
           !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""
         }`
