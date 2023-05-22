@@ -24,7 +24,7 @@ import { AppStateContext, contractStorage } from "../context/state";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
-import { Versioned } from "../versioned/interface";
+import { Versioned, proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import FA1_2 from "./FA1_2";
@@ -389,26 +389,7 @@ const addNewField = (
   if (window.scrollY > 200) window.scrollTo(0, 0);
 };
 
-const initialProps: {
-  transfers: {
-    type:
-      | "lambda"
-      | "transfer"
-      | "contract"
-      | "fa2"
-      | "fa1.2-transfer"
-      | "fa1.2-approve";
-    values: { [key: string]: string };
-    fields: {
-      field: string;
-      label: string;
-      kind?: "textarea" | "input-complete" | "autocomplete";
-      path: string;
-      placeholder: string;
-      validate: (p: string) => string | undefined;
-    }[];
-  }[];
-} = {
+const initialProps: proposals = {
   transfers: [],
 };
 
@@ -793,7 +774,7 @@ function TransferForm(
                               </p>
                               <FA2Transfer
                                 key={index}
-                                index={index}
+                                proposalIndex={index}
                                 setFieldValue={setFieldValue}
                                 getFieldProps={getFieldProps}
                                 remove={remove}
@@ -816,63 +797,7 @@ function TransferForm(
                                 getFieldProps={getFieldProps}
                                 remove={remove}
                               >
-                                <div
-                                  className={`flex flex-col ${
-                                    !!currentToken ? "md:translate-y-1" : ""
-                                  }`}
-                                >
-                                  <label className="mb-1 text-white">
-                                    Amount
-                                  </label>
-                                  <Field
-                                    className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
-                                    name={makeName("amount")}
-                                    placeholder="1"
-                                    validate={(x: string) => {
-                                      const amount = Number(x);
-                                      if (
-                                        isNaN(amount) ||
-                                        amount <= 0 ||
-                                        !Number.isInteger(amount)
-                                      ) {
-                                        return `Invalid amount ${x}`;
-                                      } else if (
-                                        !!currentToken &&
-                                        amount > parseInt(currentToken.balance)
-                                      ) {
-                                        return `You only have ${currentToken.balance} tokens`;
-                                      }
-                                    }}
-                                  />
-                                  <ErrorMessage
-                                    name={makeName("amount")}
-                                    render={renderError}
-                                  />
-                                </div>
-                                <div
-                                  className={`flex w-full flex-col md:grow ${
-                                    !!currentToken ? "md:translate-y-1" : ""
-                                  }`}
-                                >
-                                  <label className="mb-1 text-white">
-                                    Transfer to
-                                  </label>
-                                  <Field
-                                    className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
-                                    name={makeName("targetAddress")}
-                                    placeholder="Destination address"
-                                    validate={(x: string) =>
-                                      validateAddress(x) !==
-                                      ValidationResult.VALID
-                                        ? `Invalid address ${x ?? ""}`
-                                        : undefined
-                                    }
-                                  />
-                                  <ErrorMessage
-                                    name={makeName("targetAddress")}
-                                    render={renderError}
-                                  />
-                                </div>
+                                <span></span>
                               </FA1_2>
                             </section>
                           );
@@ -885,13 +810,15 @@ function TransferForm(
                                 </span>
                                 FA1.2 Transfer
                               </p>
-                              <FA2Transfer
+                              <FA1_2
                                 key={index}
                                 index={index}
                                 setFieldValue={setFieldValue}
                                 getFieldProps={getFieldProps}
                                 remove={remove}
-                              />
+                              >
+                                <span></span>
+                              </FA1_2>
                             </section>
                           );
                         }

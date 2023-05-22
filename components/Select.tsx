@@ -44,11 +44,13 @@ const Select = <T,>({
   });
 
   return (
-    <div className={`relative z-[1] w-full text-white ${className ?? ""}`}>
+    <div className={`relative w-full text-white ${className ?? ""}`}>
       <Ariakit.SelectLabel store={select}>{label}</Ariakit.SelectLabel>
       <Ariakit.Select
         store={select}
-        className="mt-1 flex w-full items-center justify-between rounded bg-zinc-700 p-2 text-sm text-white hover:bg-zinc-600"
+        className={`${
+          !!label ? "mt-1" : ""
+        } flex w-full items-center justify-between rounded bg-zinc-700 p-2 text-sm text-white hover:bg-zinc-600`}
       >
         {!!value ? (
           renderOption?.(value) ?? <div>{value.label}</div>
@@ -62,6 +64,7 @@ const Select = <T,>({
       <Ariakit.SelectPopover
         store={select}
         className="relative mt-1 max-h-52 space-y-1 overflow-y-auto overscroll-contain rounded bg-zinc-700"
+        style={{ zIndex: 2 }}
       >
         <div className="sticky top-0 z-[1] bg-zinc-700 px-2 pt-2">
           <input
@@ -74,21 +77,25 @@ const Select = <T,>({
           />
         </div>
         {loading ? (
-          <div className="flex h-full w-full items-center justify-center px-2">
+          <div className="flex h-full w-full items-center justify-center p-2">
             <Spinner />
           </div>
         ) : (
           <div className="space-y-2 px-2 pb-2">
-            {options.map(v => (
-              <Ariakit.SelectItem
-                key={v.id}
-                className="combobox-item cursor-pointer rounded p-2"
-                value={v.value}
-                setValueOnClick
-              >
-                {renderOption?.(v) ?? v.label}
-              </Ariakit.SelectItem>
-            ))}
+            {options.length === 0 ? (
+              <p className="py-2 text-center text-zinc-500">No result</p>
+            ) : (
+              options.map(v => (
+                <Ariakit.SelectItem
+                  key={v.id}
+                  className="combobox-item cursor-pointer rounded p-2"
+                  value={v.value}
+                  setValueOnClick
+                >
+                  {renderOption?.(v) ?? v.label}
+                </Ariakit.SelectItem>
+              ))
+            )}
           </div>
         )}
 

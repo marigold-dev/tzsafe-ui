@@ -142,7 +142,7 @@ const FA1_2 = ({
   }, [fetchTokens, filterValue]);
 
   return (
-    <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+    <div className="grid grid-cols-3 grid-rows-2 items-end gap-x-4">
       <div className="w-full md:grow">
         <Field name={makeName("token")}>
           {() => (

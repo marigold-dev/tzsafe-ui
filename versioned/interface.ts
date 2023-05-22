@@ -8,6 +8,35 @@ import { ownersForm } from "./forms";
 
 export type timeoutAndHash = [boolean, string];
 
+type common = {
+  fields: {
+    field: string;
+    label: string;
+    path: string;
+    placeholder: string;
+    kind?: "textarea" | "input-complete" | "autocomplete";
+    validate: (p: string) => string | undefined;
+  }[];
+};
+export type proposals =
+  | {
+      transfers: ({
+        type:
+          | "transfer"
+          | "lambda"
+          | "contract"
+          | "fa1.2-transfer"
+          | "fa1.2-approve";
+        values: { [key: string]: string };
+      } & common)[];
+    }
+  | {
+      transfers: ({
+        type: "fa2";
+        values: { [key: string]: string }[];
+      } & common)[];
+    };
+
 abstract class Versioned {
   readonly version: string;
   readonly contractAddress: string;
@@ -18,25 +47,7 @@ abstract class Versioned {
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: {
-      transfers: {
-        type:
-          | "transfer"
-          | "lambda"
-          | "contract"
-          | "fa2"
-          | "fa1.2-transfer"
-          | "fa1.2-approve";
-        values: { [key: string]: string };
-        fields: {
-          field: string;
-          label: string;
-          path: string;
-          placeholder: string;
-          validate: (p: string) => string | undefined;
-        }[];
-      }[];
-    }
+    proposals: proposals
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(
@@ -272,7 +283,7 @@ abstract class Versioned {
   }
 
   static fa2(c: contractStorage): {
-    values: { [key: string]: string };
+    values: { [key: string]: string }[];
     fields: {
       field: string;
       label: string;
@@ -283,11 +294,13 @@ abstract class Versioned {
     }[];
   } {
     return {
-      values: {
-        token: "",
-        amount: "",
-        targetAddress: "",
-      },
+      values: [
+        {
+          token: "",
+          amount: "",
+          targetAddress: "",
+        },
+      ],
       fields: [
         {
           field: "token",
