@@ -49,7 +49,7 @@ type option = {
   value: string;
   label: string;
   tokenId: string;
-  thumbnailHash: string | undefined;
+  image: string | undefined;
   contractAddress: string;
   token: fa1_2Token;
 };
@@ -58,12 +58,18 @@ const FETCH_COUNT = 20;
 
 const tokenToOption = (fa1_2Token: fa1_2Token) => {
   const { token } = fa1_2Token;
+  const imageUri = token.metadata.thumbnailUri ?? "";
+
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
     label: token.metadata.name,
-    thumbnailHash: (token.metadata.thumbnailUri ?? "").replace("ipfs://", ""),
+    image: imageUri.includes("http")
+      ? imageUri
+      : imageUri === ""
+      ? undefined
+      : `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`,
     contractAddress: token.contract.address,
     token: fa1_2Token,
   };
@@ -101,7 +107,7 @@ const FA1_2 = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
+        `${API_URL}/v1/tokens/balances?account=tz1KrnickNwpLhmLPvwMYQUvo47w39WSzoJV&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
       )
         .catch(e => {
           console.log(e);
@@ -147,7 +153,7 @@ const FA1_2 = ({
         <Field name={makeName("token")}>
           {() => (
             <Select
-              placeholder="Please select an FA2 token"
+              placeholder="Please select an FA1.2 token"
               className={!currentToken ? "md:mt-7" : ""}
               label=""
               withSeeMore={canSeeMore}
@@ -167,20 +173,20 @@ const FA1_2 = ({
               value={!!currentToken ? tokenToOption(currentToken) : undefined}
               options={options}
               loading={isFetching}
-              renderOption={({
-                thumbnailHash,
-                tokenId,
-                contractAddress,
-                label,
-              }) => {
+              renderOption={({ image, tokenId, contractAddress, label }) => {
                 return (
                   <div className="flex">
-                    <div className="relative aspect-square w-1/6 overflow-hidden rounded bg-zinc-500/50">
-                      {!!thumbnailHash ? (
+                    <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
+                      {!!image ? (
                         <img
-                          src={`${THUMBNAIL_URL}/${thumbnailHash}`}
+                          src={image}
                           alt={label}
-                          className="h-auto w-full"
+                          className="h-auto w-full p-1"
+                          onError={e => {
+                            // @ts-ignore
+                            e.target.src =
+                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
+                          }}
                         />
                       ) : (
                         <img
@@ -188,7 +194,7 @@ const FA1_2 = ({
                             "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
                           }
                           alt={label}
-                          className="h-auto w-full p-2"
+                          className="h-auto w-full p-1"
                         />
                       )}
                     </div>

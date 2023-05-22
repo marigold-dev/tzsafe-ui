@@ -629,7 +629,7 @@ function TransferForm(
                           addNewField(
                             e,
                             push,
-                            "fa1.2_transfer",
+                            "fa1.2-transfer",
                             undefined,
                             Versioned.fa2(props.contract)
                           );
@@ -644,7 +644,7 @@ function TransferForm(
                           addNewField(
                             e,
                             push,
-                            "fa1.2_approve",
+                            "fa1.2-approve",
                             undefined,
                             Versioned.fa2(props.contract)
                           );
@@ -822,6 +822,7 @@ function TransferForm(
                             </section>
                           );
                         }
+
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"
                         )
