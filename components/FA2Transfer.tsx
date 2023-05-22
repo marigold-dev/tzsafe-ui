@@ -407,6 +407,17 @@ const FA2TransferGroup = ({
               newTokens[i + 1] = undefined;
               return newTokens;
             });
+            const currentValues = getFieldProps(
+              `transfers.${proposalIndex}.values`
+            ).value;
+
+            if (!Array.isArray(currentValues))
+              throw new Error("currentValue must be formValue[]");
+
+            setFieldValue(
+              `transfers.${proposalIndex}.values`,
+              currentValues.filter((_, ind) => ind !== i + 1)
+            );
           }}
           setFieldValue={setFieldValue}
           getFieldProps={getFieldProps}
