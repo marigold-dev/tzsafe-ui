@@ -10,30 +10,38 @@ import renderError from "./formUtils";
 
 type props = {
   index: number;
+  children: React.ReactNode;
   remove: (index: number) => void;
-  setFieldValue: (name: string, value: fa2Token | string) => void;
-  getFieldProps: (name: string) => FieldInputProps<fa2Token | undefined>;
+  setFieldValue: (name: string, value: fa1_2Token | string) => void;
+  getFieldProps: (name: string) => FieldInputProps<fa1_2Token | undefined>;
 };
 
-type fa2Token = {
+type fa1_2Token = {
   id: number;
-  balance: string;
   account: {
     address: string;
   };
   token: {
     id: number;
-    contract: { address: string };
+    contract: {
+      address: string;
+    };
+    tokenId: "0";
+    standard: "fa1.2";
+    totalSupply: string;
     metadata: {
       name: string;
       symbol: string;
-      thumbnailUri?: string;
-      displayUri?: string;
+      decimals: string;
+      thumbnailUri: string;
     };
-    standard: string;
-    tokenId: string;
-    totalSupply: string;
   };
+  balance: string;
+  transfersCount: number;
+  firstLevel: number;
+  firstTime: string;
+  lastLevel: number;
+  lastTime: string;
 };
 
 type option = {
@@ -43,33 +51,30 @@ type option = {
   tokenId: string;
   thumbnailHash: string | undefined;
   contractAddress: string;
-  token: fa2Token;
+  token: fa1_2Token;
 };
 
 const FETCH_COUNT = 20;
 
-const tokenToOption = (fa2Token: fa2Token) => {
-  const { token } = fa2Token;
+const tokenToOption = (fa1_2Token: fa1_2Token) => {
+  const { token } = fa1_2Token;
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
     label: token.metadata.name,
-    thumbnailHash: (
-      token.metadata.thumbnailUri ??
-      token.metadata.displayUri ??
-      ""
-    ).replace("ipfs://", ""),
+    thumbnailHash: (token.metadata.thumbnailUri ?? "").replace("ipfs://", ""),
     contractAddress: token.contract.address,
-    token: fa2Token,
+    token: fa1_2Token,
   };
 };
 
-const FA2Transfer = ({
+const FA1_2 = ({
   index,
   setFieldValue,
   remove,
   getFieldProps,
+  children,
 }: props) => {
   const state = useContext(AppStateContext)!;
 
@@ -77,13 +82,13 @@ const FA2Transfer = ({
   const [canSeeMore, setCanSeeMore] = useState(true);
 
   const [filterValue, setFilterValue] = useState<string>("");
-  const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
+  const [currentToken, setCurrentToken] = useState<fa1_2Token | undefined>();
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
 
   const makeName = (key: string) => `transfers.${index}.values.${key}`;
 
-  const updateValues = (newToken: fa2Token) => {
+  const updateValues = (newToken: fa1_2Token) => {
     setCurrentToken(newToken);
     setFieldValue(makeName("token"), newToken ?? "");
     setFieldValue(makeName("tokenId"), newToken?.token.tokenId ?? "");
@@ -96,7 +101,7 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1`
+        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
       )
         .catch(e => {
           console.log(e);
@@ -107,7 +112,7 @@ const FA2Transfer = ({
           };
         })
         .then(res => res.json())
-        .then((v: fa2Token[]) => {
+        .then((v: fa1_2Token[]) => {
           setCanSeeMore(v.length === FETCH_COUNT);
 
           return Promise.resolve(v);
@@ -128,7 +133,7 @@ const FA2Transfer = ({
 
     debounce(
       () =>
-        fetchTokens(filterValue, 0).then((v: fa2Token[]) => {
+        fetchTokens(filterValue, 0).then((v: fa1_2Token[]) => {
           setOptions(v.map(tokenToOption));
           setIsFetching(false);
         }),
@@ -150,7 +155,7 @@ const FA2Transfer = ({
                 fetchOffsetRef.current += FETCH_COUNT;
 
                 fetchTokens(filterValue, fetchOffsetRef.current).then(
-                  (v: fa2Token[]) => {
+                  (v: fa1_2Token[]) => {
                     setOptions(current => current.concat(v.map(tokenToOption)));
                   }
                 );
@@ -212,46 +217,7 @@ const FA2Transfer = ({
         </Field>
         <ErrorMessage name={makeName("token")} render={renderError} />
       </div>
-      <div
-        className={`flex flex-col ${!!currentToken ? "md:translate-y-1" : ""}`}
-      >
-        <label className="mb-1 text-white">Amount</label>
-        <Field
-          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
-          name={makeName("amount")}
-          placeholder="1"
-          validate={(x: string) => {
-            const amount = Number(x);
-            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
-              return `Invalid amount ${x}`;
-            } else if (
-              !!currentToken &&
-              amount > parseInt(currentToken.balance)
-            ) {
-              return `You only have ${currentToken.balance} tokens`;
-            }
-          }}
-        />
-        <ErrorMessage name={makeName("amount")} render={renderError} />
-      </div>
-      <div
-        className={`flex w-full flex-col md:grow ${
-          !!currentToken ? "md:translate-y-1" : ""
-        }`}
-      >
-        <label className="mb-1 text-white">Transfer to</label>
-        <Field
-          className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
-          name={makeName("targetAddress")}
-          placeholder="Destination address"
-          validate={(x: string) =>
-            validateAddress(x) !== ValidationResult.VALID
-              ? `Invalid address ${x ?? ""}`
-              : undefined
-          }
-        />
-        <ErrorMessage name={makeName("targetAddress")} render={renderError} />
-      </div>
+      {children}
       <button
         type="button"
         className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end`}
@@ -267,4 +233,4 @@ const FA2Transfer = ({
   );
 };
 
-export default FA2Transfer;
+export default FA1_2;

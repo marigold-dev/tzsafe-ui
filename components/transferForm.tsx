@@ -27,6 +27,7 @@ import { VersionedApi } from "../versioned/apis";
 import { Versioned } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
+import FA1_2 from "./FA1_2";
 import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
@@ -789,6 +790,100 @@ function TransferForm(
                                   #{(index + 1).toString().padStart(2, "0")}
                                 </span>
                                 FA2 token transfer
+                              </p>
+                              <FA2Transfer
+                                key={index}
+                                index={index}
+                                setFieldValue={setFieldValue}
+                                getFieldProps={getFieldProps}
+                                remove={remove}
+                              />
+                            </section>
+                          );
+                        } else if (transfer.type === "fa1.2-approve") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA1.2 Approve
+                              </p>
+                              <FA1_2
+                                key={index}
+                                index={index}
+                                setFieldValue={setFieldValue}
+                                getFieldProps={getFieldProps}
+                                remove={remove}
+                              >
+                                <div
+                                  className={`flex flex-col ${
+                                    !!currentToken ? "md:translate-y-1" : ""
+                                  }`}
+                                >
+                                  <label className="mb-1 text-white">
+                                    Amount
+                                  </label>
+                                  <Field
+                                    className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
+                                    name={makeName("amount")}
+                                    placeholder="1"
+                                    validate={(x: string) => {
+                                      const amount = Number(x);
+                                      if (
+                                        isNaN(amount) ||
+                                        amount <= 0 ||
+                                        !Number.isInteger(amount)
+                                      ) {
+                                        return `Invalid amount ${x}`;
+                                      } else if (
+                                        !!currentToken &&
+                                        amount > parseInt(currentToken.balance)
+                                      ) {
+                                        return `You only have ${currentToken.balance} tokens`;
+                                      }
+                                    }}
+                                  />
+                                  <ErrorMessage
+                                    name={makeName("amount")}
+                                    render={renderError}
+                                  />
+                                </div>
+                                <div
+                                  className={`flex w-full flex-col md:grow ${
+                                    !!currentToken ? "md:translate-y-1" : ""
+                                  }`}
+                                >
+                                  <label className="mb-1 text-white">
+                                    Transfer to
+                                  </label>
+                                  <Field
+                                    className="md:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm md:w-auto"
+                                    name={makeName("targetAddress")}
+                                    placeholder="Destination address"
+                                    validate={(x: string) =>
+                                      validateAddress(x) !==
+                                      ValidationResult.VALID
+                                        ? `Invalid address ${x ?? ""}`
+                                        : undefined
+                                    }
+                                  />
+                                  <ErrorMessage
+                                    name={makeName("targetAddress")}
+                                    render={renderError}
+                                  />
+                                </div>
+                              </FA1_2>
+                            </section>
+                          );
+                        } else if (transfer.type === "fa1.2-transfer") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA1.2 Transfer
                               </p>
                               <FA2Transfer
                                 key={index}
