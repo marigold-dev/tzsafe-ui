@@ -21,7 +21,7 @@ export const makeFa2Michelson = (params: makeFa2MichelsonParam[]) => {
       ${params
         .map(
           ({ targetAddress, tokenId, amount }) =>
-            `(Pair "${targetAddress}" (Pair ${tokenId} ${amount})) ;`
+            `{Pair "${targetAddress}" (Pair ${tokenId} ${amount})} ;`
         )
         .join("\n")}
       
