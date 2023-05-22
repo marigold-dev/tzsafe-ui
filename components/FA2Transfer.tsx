@@ -80,7 +80,7 @@ const FA2Transfer = ({
   onTokenChange,
   fa2ContractAddress,
   toExclude,
-  autoSetField = false,
+  autoSetField = true,
 }: fa2TransferProps) => {
   const state = useContext(AppStateContext)!;
 
@@ -307,7 +307,10 @@ type formValue = {
 type props = {
   proposalIndex: number;
   remove: (index: number) => void;
-  setFieldValue: (name: string, value: formValue | formValue[]) => void;
+  setFieldValue: (
+    name: string,
+    value: formValue | formValue[] | string | fa2Token
+  ) => void;
   getFieldProps: (
     name: string
   ) => FieldInputProps<fa2Token | formValue[] | formValue | undefined>;
