@@ -390,7 +390,13 @@ const addNewField = (
 
 const initialProps: {
   transfers: {
-    type: "lambda" | "transfer" | "contract" | "fa2";
+    type:
+      | "lambda"
+      | "transfer"
+      | "contract"
+      | "fa2"
+      | "fa1.2-transfer"
+      | "fa1.2-approve";
     values: { [key: string]: string };
     fields: {
       field: string;
@@ -633,6 +639,36 @@ function TransferForm(
                         }}
                       >
                         FA2 Transfer
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            push,
+                            "fa1.2_transfer",
+                            undefined,
+                            Versioned.fa2(props.contract)
+                          );
+                        }}
+                      >
+                        FA1.2 Transfer
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            push,
+                            "fa1.2_approve",
+                            undefined,
+                            Versioned.fa2(props.contract)
+                          );
+                        }}
+                      >
+                        FA1.2 Approve
                       </button>
                       <button
                         type="button"
