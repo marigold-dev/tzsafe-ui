@@ -105,15 +105,14 @@ const FA2Transfer = ({
       ).value;
 
       if (
-        !previousValue ||
         Array.isArray(previousValue) ||
-        "balance" in previousValue
+        (!!previousValue && "balance" in previousValue)
       ) {
         throw new Error("Expect previous value to be formValue");
       }
 
       setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
-        ...previousValue,
+        ...(previousValue ?? {}),
         token: newToken ?? "",
         tokenId: newToken?.token.tokenId ?? "",
         fa2Address: newToken?.token.contract.address ?? "",
@@ -124,8 +123,10 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        // `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2`
-        `${API_URL}/v1/tokens/balances?account=tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
+        `${API_URL}/v1/tokens/balances?account=${
+          // state.currentContract
+          "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+        }&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
           !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""
         }`
       )
