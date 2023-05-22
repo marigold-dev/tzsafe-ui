@@ -134,9 +134,7 @@ const FA2Transfer = ({
   );
 
   useEffect(() => {
-    const value = getFieldProps(makeName("token")).value as
-      | fa2Token
-      | undefined;
+    const value = getFieldProps(makeName("token")).value;
 
     if (!value) return;
     if (!("token" in value && "balance" in value)) {
