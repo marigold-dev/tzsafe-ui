@@ -170,75 +170,82 @@ const FA2Transfer = ({
   }, [fetchTokens, filterValue, toExclude]);
 
   return (
-    <div className="fa2-grid-template grid grid-rows-2 items-end gap-x-4">
-      <Field name={makeName("token")}>
-        {() => (
-          <Select
-            placeholder="Please select an FA2 token"
-            label=""
-            withSeeMore={canSeeMore}
-            onSeeMore={() => {
-              fetchOffsetRef.current += FETCH_COUNT;
+    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 lg:grid-rows-1 lg:space-y-0">
+      <div>
+        {!currentToken && <label className="text-transparent">Token</label>}
 
-              fetchTokens(filterValue, fetchOffsetRef.current).then(
-                (v: fa2Token[]) => {
-                  setOptions(current => current.concat(v.map(tokenToOption)));
-                }
-              );
-            }}
-            onSearch={setFilterValue}
-            onChange={newValue => {
-              updateValues(newValue.token);
-            }}
-            value={!!currentToken ? tokenToOption(currentToken) : undefined}
-            options={options}
-            loading={isFetching}
-            renderOption={({ image, tokenId, contractAddress, label }) => {
-              return (
-                <div className="flex">
-                  <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
-                    {!!image ? (
-                      <img
-                        src={image}
-                        alt={label}
-                        className="h-auto w-full p-1"
-                        onError={e => {
-                          // @ts-ignore
-                          e.target.src =
-                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src={
-                          "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-                        }
-                        alt={label}
-                        className="h-auto w-full p-1"
-                      />
-                    )}
-                  </div>
+        <Field name={makeName("token")}>
+          {() => (
+            <Select
+              placeholder="Please select an FA2 token"
+              label=""
+              withSeeMore={canSeeMore}
+              onSeeMore={() => {
+                fetchOffsetRef.current += FETCH_COUNT;
 
-                  <div className="flex w-5/6 flex-col justify-between px-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-zinc-400">#{tokenId}</span>
-
-                      <Alias
-                        address={contractAddress}
-                        className="text-xs text-zinc-400"
-                        disabled
-                      />
+                fetchTokens(filterValue, fetchOffsetRef.current).then(
+                  (v: fa2Token[]) => {
+                    setOptions(current => current.concat(v.map(tokenToOption)));
+                  }
+                );
+              }}
+              onSearch={setFilterValue}
+              onChange={newValue => {
+                updateValues(newValue.token);
+              }}
+              value={!!currentToken ? tokenToOption(currentToken) : undefined}
+              options={options}
+              loading={isFetching}
+              renderOption={({ image, tokenId, contractAddress, label }) => {
+                return (
+                  <div className="flex">
+                    <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
+                      {!!image ? (
+                        <img
+                          src={image}
+                          alt={label}
+                          className="h-auto w-full p-1"
+                          onError={e => {
+                            // @ts-ignore
+                            e.target.src =
+                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={
+                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
+                          }
+                          alt={label}
+                          className="h-auto w-full p-1"
+                        />
+                      )}
                     </div>
-                    <p className="text-left text-xs" title={label}>
-                      {label}
-                    </p>
+
+                    <div className="flex w-5/6 flex-col justify-between px-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-zinc-400">
+                          #{tokenId}
+                        </span>
+
+                        <Alias
+                          address={contractAddress}
+                          className="text-xs text-zinc-400"
+                          disabled
+                        />
+                      </div>
+                      <p className="text-left text-xs" title={label}>
+                        {label}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            }}
-          />
-        )}
-      </Field>
+                );
+              }}
+            />
+          )}
+        </Field>
+        <ErrorMessage name={makeName("token")} render={renderError} />
+      </div>
       <div className="w-full">
         <label className="text-white">Amount</label>
         <div className="relative w-full">
@@ -277,6 +284,7 @@ const FA2Transfer = ({
             )}
           </Field>
         </div>
+        <ErrorMessage name={makeName("amount")} render={renderError} />
       </div>
       <div>
         <label className="text-white">Transfer to</label>
@@ -290,26 +298,23 @@ const FA2Transfer = ({
               : undefined
           }
         />
+        <div className="self-start">
+          <ErrorMessage name={makeName("targetAddress")} render={renderError} />
+        </div>
       </div>
-      <button
-        type="button"
-        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mx-auto xl:mt-0 xl:self-end`}
-        onClick={e => {
-          e.preventDefault();
+      <div className="flex justify-center lg:block">
+        <label className="hidden text-transparent lg:inline">helper</label>
+        <button
+          type="button"
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 lg:mt-4`}
+          onClick={e => {
+            e.preventDefault();
 
-          remove(proposalIndex);
-        }}
-      >
-        Remove
-      </button>
-      <div className="self-start">
-        <ErrorMessage name={makeName("token")} render={renderError} />
-      </div>
-      <div className="self-start">
-        <ErrorMessage name={makeName("amount")} render={renderError} />
-      </div>
-      <div className="self-start">
-        <ErrorMessage name={makeName("targetAddress")} render={renderError} />
+            remove(proposalIndex);
+          }}
+        >
+          Remove
+        </button>
       </div>
     </div>
   );
@@ -359,7 +364,7 @@ const FA2TransferGroup = ({
   }, []);
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 space-y-6">
       <FA2Transfer
         proposalIndex={proposalIndex}
         localIndex={0}
