@@ -43,7 +43,7 @@ a {
 } */
 
 .fa2-grid-template {
-  grid-template-columns: 3fr 2fr 3fr 1fr;
+  grid-template-columns: 3fr 2fr 3fr 70px;
 }
 
 @media (max-width: 1280px) {

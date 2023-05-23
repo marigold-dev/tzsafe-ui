@@ -779,13 +779,14 @@ function TransferForm(
                               <FA2Transfer
                                 key={index}
                                 proposalIndex={index}
-                                setFieldValue={setFieldValue}
-                                getFieldProps={getFieldProps}
                                 remove={remove}
                               />
                             </section>
                           );
                         } else if (transfer.type === "fa1.2-approve") {
+                          // @ts-ignore
+                          const formErrors = errors?.transfers?.[index]?.values;
+
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
@@ -794,13 +795,7 @@ function TransferForm(
                                 </span>
                                 FA1.2 Approve
                               </p>
-                              <FA1_2
-                                key={index}
-                                index={index}
-                                setFieldValue={setFieldValue}
-                                getFieldProps={getFieldProps}
-                                remove={remove}
-                              >
+                              <FA1_2 key={index} index={index} remove={remove}>
                                 {token => (
                                   <>
                                     <div className="w-full">
@@ -811,6 +806,8 @@ function TransferForm(
                                         <Field
                                           name={`transfers.${index}.values.amount`}
                                           validate={(x: string) => {
+                                            if (!x) return "Value is empty";
+
                                             const amount = Number(x);
                                             if (
                                               isNaN(amount) ||
@@ -851,10 +848,8 @@ function TransferForm(
                                           )}
                                         </Field>
                                       </div>
-                                      <ErrorMessage
-                                        name={`transfers.${index}.values.amount`}
-                                        render={renderError}
-                                      />
+
+                                      {renderError(formErrors?.amount)}
                                     </div>
                                     <div>
                                       <label className="text-white">
@@ -871,12 +866,7 @@ function TransferForm(
                                             : undefined
                                         }
                                       />
-                                      <div className="self-start">
-                                        <ErrorMessage
-                                          name={`transfers.${index}.values.spenderAddress`}
-                                          render={renderError}
-                                        />
-                                      </div>
+                                      {renderError(formErrors?.spenderAddress)}
                                     </div>
                                   </>
                                 )}
@@ -884,6 +874,9 @@ function TransferForm(
                             </section>
                           );
                         } else if (transfer.type === "fa1.2-transfer") {
+                          // @ts-ignore
+                          const formErrors = errors?.transfers?.[index]?.values;
+
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
@@ -892,13 +885,7 @@ function TransferForm(
                                 </span>
                                 FA1.2 Transfer
                               </p>
-                              <FA1_2
-                                key={index}
-                                index={index}
-                                setFieldValue={setFieldValue}
-                                getFieldProps={getFieldProps}
-                                remove={remove}
-                              >
+                              <FA1_2 key={index} index={index} remove={remove}>
                                 {token => (
                                   <>
                                     <div className="w-full">
@@ -909,6 +896,8 @@ function TransferForm(
                                         <Field
                                           name={`transfers.${index}.values.amount`}
                                           validate={(x: string) => {
+                                            if (!x) return "Value is empty";
+
                                             const amount = Number(x);
                                             if (
                                               isNaN(amount) ||
@@ -949,18 +938,16 @@ function TransferForm(
                                           )}
                                         </Field>
                                       </div>
-                                      <ErrorMessage
-                                        name={`transfers.${index}.values.amount`}
-                                        render={renderError}
-                                      />
+
+                                      {renderError(formErrors?.amount)}
                                     </div>
                                     <div>
                                       <label className="text-white">
-                                        Spender
+                                        Transfer to
                                       </label>
                                       <Field
                                         className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
-                                        name={`transfers.${index}.values.spenderAddress`}
+                                        name={`transfers.${index}.values.targetAddress`}
                                         placeholder="Destination address"
                                         validate={(x: string) =>
                                           validateAddress(x) !==
@@ -969,12 +956,7 @@ function TransferForm(
                                             : undefined
                                         }
                                       />
-                                      <div className="self-start">
-                                        <ErrorMessage
-                                          name={`transfers.${index}.values.spenderAddress`}
-                                          render={renderError}
-                                        />
-                                      </div>
+                                      {renderError(formErrors?.targetAddress)}
                                     </div>
                                   </>
                                 )}

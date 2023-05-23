@@ -184,24 +184,9 @@ const FA2Transfer = ({
     }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
-  const formErrors = useMemo(() => {
-    const formErrors = errors.transfers?.[proposalIndex];
+  // @ts-ignore
+  const formErrors = errors?.transfers?.[proposalIndex]?.values?.[localIndex];
 
-    if (!formErrors) return {};
-
-    console.log(formErrors);
-    if (typeof formErrors === "string" || !formErrors.values)
-      throw new Error("Wrong type for form errors");
-
-    if (!Array.isArray(formErrors.values))
-      throw new Error("Wrong type for form errors values");
-
-    return (formErrors?.values?.[localIndex] ?? {}) as FormikErrors<{
-      [key: string]: string;
-    }>;
-  }, [errors, proposalIndex, localIndex]);
-
-  console.log(formErrors);
   return (
     <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div>
@@ -283,7 +268,7 @@ const FA2Transfer = ({
           )}
         </Field>
 
-        {renderError(formErrors.token)}
+        {renderError(formErrors?.token)}
       </div>
       <div className="w-full">
         <label className="text-white">Amount</label>
@@ -324,7 +309,7 @@ const FA2Transfer = ({
             )}
           </Field>
         </div>
-        {renderError(formErrors.amount)}
+        {renderError(formErrors?.amount)}
       </div>
       <div>
         <label className="text-white">Transfer to</label>
@@ -338,7 +323,7 @@ const FA2Transfer = ({
               : undefined
           }
         />
-        {renderError(formErrors.targetAddress)}
+        {renderError(formErrors?.targetAddress)}
       </div>
       <div className="flex justify-center xl:block">
         <label className="hidden text-transparent xl:inline">helper</label>
@@ -353,7 +338,7 @@ const FA2Transfer = ({
         >
           Remove
         </button>
-        {renderError("")}
+        {renderError(undefined)}
       </div>
     </div>
   );
@@ -369,21 +354,11 @@ type formValue = {
 type props = {
   proposalIndex: number;
   remove: (index: number) => void;
-  setFieldValue: (
-    name: string,
-    value: formValue | formValue[] | string | fa2Token
-  ) => void;
-  getFieldProps: (
-    name: string
-  ) => FieldInputProps<fa2Token | formValue[] | formValue | undefined>;
 };
 
-const FA2TransferGroup = ({
-  proposalIndex,
-  remove,
-  setFieldValue,
-  getFieldProps,
-}: props) => {
+const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
+  const { setFieldValue, getFieldProps } = useFormikContext();
+
   const [selectedTokens, setSelectedTokens] = useState<
     (fa2Token | undefined)[]
   >([]);
@@ -408,8 +383,6 @@ const FA2TransferGroup = ({
         proposalIndex={proposalIndex}
         localIndex={0}
         remove={remove}
-        setFieldValue={setFieldValue}
-        getFieldProps={getFieldProps}
         autoSetField={false}
         onTokenChange={token => {
           const data = {
@@ -462,8 +435,6 @@ const FA2TransferGroup = ({
               currentValues.filter((_, ind) => ind !== i + 1)
             );
           }}
-          setFieldValue={setFieldValue}
-          getFieldProps={getFieldProps}
           fa2ContractAddress={contractAddress}
           onTokenChange={token => {
             setSelectedTokens(curr => {

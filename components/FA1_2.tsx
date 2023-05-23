@@ -1,8 +1,9 @@
-import { ErrorMessage, Field, FieldInputProps } from "formik";
+import { ErrorMessage, Field, FieldInputProps, useFormikContext } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
+import { proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import Select from "./Select";
 import renderError from "./formUtils";
@@ -11,8 +12,6 @@ type props = {
   index: number;
   children: (token: fa1_2Token | undefined) => React.ReactNode;
   remove: (index: number) => void;
-  setFieldValue: (name: string, value: fa1_2Token | string) => void;
-  getFieldProps: (name: string) => FieldInputProps<fa1_2Token | undefined>;
 };
 
 type fa1_2Token = {
@@ -74,14 +73,10 @@ const tokenToOption = (fa1_2Token: fa1_2Token) => {
   };
 };
 
-const FA1_2 = ({
-  index,
-  setFieldValue,
-  remove,
-  getFieldProps,
-  children,
-}: props) => {
+const FA1_2 = ({ index, remove, children }: props) => {
   const state = useContext(AppStateContext)!;
+  const { setFieldValue, getFieldProps, errors } =
+    useFormikContext<proposals>();
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
@@ -146,8 +141,11 @@ const FA1_2 = ({
     );
   }, [fetchTokens, filterValue]);
 
+  //@ts-ignore
+  const formErrors = errors?.transfers?.[index]?.values;
+
   return (
-    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 lg:grid-rows-1 lg:space-y-0">
+    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div className="w-full md:grow">
         {!currentToken && <label className="text-transparent">Token</label>}
         <Field
@@ -225,14 +223,14 @@ const FA1_2 = ({
             />
           )}
         </Field>
-        <ErrorMessage name={makeName("token")} render={renderError} />
+        {renderError(formErrors?.token)}
       </div>
       {children(currentToken)}
-      <div className="flex justify-center lg:block">
-        <label className="hidden text-transparent lg:inline">helper</label>
+      <div className="flex justify-center xl:block">
+        <label className="hidden text-transparent xl:inline">helper</label>
         <button
           type="button"
-          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 lg:mt-0`}
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0`}
           onClick={e => {
             e.preventDefault();
 
@@ -241,6 +239,7 @@ const FA1_2 = ({
         >
           Remove
         </button>
+        {renderError(undefined)}
       </div>
     </div>
   );
