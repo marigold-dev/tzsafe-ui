@@ -46,7 +46,7 @@ a {
   grid-template-columns: 3fr 2fr 3fr 1fr;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1280px) {
   .fa2-grid-template {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }

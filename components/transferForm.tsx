@@ -1,6 +1,10 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
-import { validateContractAddress, ValidationResult } from "@taquito/utils";
+import {
+  validateContractAddress,
+  ValidationResult,
+  validateAddress,
+} from "@taquito/utils";
 import {
   ErrorMessage,
   Field,
@@ -554,7 +558,7 @@ function TransferForm(
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
-              {({ remove, replace, unshift, push, form }) => (
+              {({ remove, replace, push, form }) => (
                 <div
                   className="flex h-fit min-w-full flex-col lg:flex-row-reverse"
                   id="top"
@@ -797,7 +801,85 @@ function TransferForm(
                                 getFieldProps={getFieldProps}
                                 remove={remove}
                               >
-                                <span></span>
+                                {token => (
+                                  <>
+                                    <div className="w-full">
+                                      <label className="text-white">
+                                        Amount
+                                      </label>
+                                      <div className="relative w-full">
+                                        <Field
+                                          name={`transfers.${index}.values.amount`}
+                                          validate={(x: string) => {
+                                            const amount = Number(x);
+                                            if (
+                                              isNaN(amount) ||
+                                              amount <= 0 ||
+                                              !Number.isInteger(amount)
+                                            ) {
+                                              return `Invalid amount ${x}`;
+                                            } else if (
+                                              !!token &&
+                                              amount > parseInt(token.balance)
+                                            ) {
+                                              return `You only have ${
+                                                token.balance
+                                              } token${
+                                                Number(token.balance) <= 1
+                                                  ? ""
+                                                  : "s"
+                                              }`;
+                                            }
+                                          }}
+                                        >
+                                          {({ field }: FieldProps) => (
+                                            <>
+                                              <input
+                                                {...field}
+                                                className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                placeholder="1"
+                                              />
+                                              {!!token && !field.value && (
+                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                  Max:{" "}
+                                                  {Number(token.balance) > 1000
+                                                    ? "1000+"
+                                                    : token.balance}
+                                                </span>
+                                              )}
+                                            </>
+                                          )}
+                                        </Field>
+                                      </div>
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.amount`}
+                                        render={renderError}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-white">
+                                        Spender
+                                      </label>
+                                      <Field
+                                        className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                        name={`transfers.${index}.values.spenderAddress`}
+                                        placeholder="Destination address"
+                                        validate={(x: string) =>
+                                          validateAddress(x) !==
+                                          ValidationResult.VALID
+                                            ? `Invalid address ${x ?? ""}`
+                                            : undefined
+                                        }
+                                      />
+                                      <div className="self-start">
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                          render={renderError}
+                                        />
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
                               </FA1_2>
                             </section>
                           );
@@ -817,7 +899,85 @@ function TransferForm(
                                 getFieldProps={getFieldProps}
                                 remove={remove}
                               >
-                                <span></span>
+                                {token => (
+                                  <>
+                                    <div className="w-full">
+                                      <label className="text-white">
+                                        Amount
+                                      </label>
+                                      <div className="relative w-full">
+                                        <Field
+                                          name={`transfers.${index}.values.amount`}
+                                          validate={(x: string) => {
+                                            const amount = Number(x);
+                                            if (
+                                              isNaN(amount) ||
+                                              amount <= 0 ||
+                                              !Number.isInteger(amount)
+                                            ) {
+                                              return `Invalid amount ${x}`;
+                                            } else if (
+                                              !!token &&
+                                              amount > parseInt(token.balance)
+                                            ) {
+                                              return `You only have ${
+                                                token.balance
+                                              } token${
+                                                Number(token.balance) <= 1
+                                                  ? ""
+                                                  : "s"
+                                              }`;
+                                            }
+                                          }}
+                                        >
+                                          {({ field }: FieldProps) => (
+                                            <>
+                                              <input
+                                                {...field}
+                                                className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                placeholder="1"
+                                              />
+                                              {!!token && !field.value && (
+                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                  Max:{" "}
+                                                  {Number(token.balance) > 1000
+                                                    ? "1000+"
+                                                    : token.balance}
+                                                </span>
+                                              )}
+                                            </>
+                                          )}
+                                        </Field>
+                                      </div>
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.amount`}
+                                        render={renderError}
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-white">
+                                        Spender
+                                      </label>
+                                      <Field
+                                        className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                        name={`transfers.${index}.values.spenderAddress`}
+                                        placeholder="Destination address"
+                                        validate={(x: string) =>
+                                          validateAddress(x) !==
+                                          ValidationResult.VALID
+                                            ? `Invalid address ${x ?? ""}`
+                                            : undefined
+                                        }
+                                      />
+                                      <div className="self-start">
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                          render={renderError}
+                                        />
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
                               </FA1_2>
                             </section>
                           );

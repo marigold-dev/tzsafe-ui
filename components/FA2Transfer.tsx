@@ -1,11 +1,26 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
-import { ErrorMessage, Field, FieldInputProps, FieldProps } from "formik";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  ErrorMessage,
+  Field,
+  FieldInputProps,
+  FieldProps,
+  FormikErrors,
+  useFormikContext,
+} from "formik";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { v4 as uuidV4 } from "uuid";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
+import { proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import Select from "./Select";
 import renderError from "./formUtils";
@@ -74,15 +89,15 @@ type fa2TransferProps = {
 const FA2Transfer = ({
   proposalIndex,
   localIndex,
-  setFieldValue,
   remove,
-  getFieldProps,
   onTokenChange,
   fa2ContractAddress,
   toExclude,
   autoSetField = true,
 }: fa2TransferProps) => {
   const state = useContext(AppStateContext)!;
+  const { getFieldProps, setFieldValue, errors } =
+    useFormikContext<proposals>();
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
@@ -169,12 +184,35 @@ const FA2Transfer = ({
     }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
+  const formErrors = useMemo(() => {
+    const formErrors = errors.transfers?.[proposalIndex];
+
+    if (!formErrors) return {};
+
+    console.log(formErrors);
+    if (typeof formErrors === "string" || !formErrors.values)
+      throw new Error("Wrong type for form errors");
+
+    if (!Array.isArray(formErrors.values))
+      throw new Error("Wrong type for form errors values");
+
+    return (formErrors?.values?.[localIndex] ?? {}) as FormikErrors<{
+      [key: string]: string;
+    }>;
+  }, [errors, proposalIndex, localIndex]);
+
+  console.log(formErrors);
   return (
-    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 lg:grid-rows-1 lg:space-y-0">
+    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div>
         {!currentToken && <label className="text-transparent">Token</label>}
 
-        <Field name={makeName("token")}>
+        <Field
+          name={makeName("token")}
+          validate={(value: string) =>
+            !value ? "Please select a token" : undefined
+          }
+        >
           {() => (
             <Select
               placeholder="Please select an FA2 token"
@@ -244,7 +282,8 @@ const FA2Transfer = ({
             />
           )}
         </Field>
-        <ErrorMessage name={makeName("token")} render={renderError} />
+
+        {renderError(formErrors.token)}
       </div>
       <div className="w-full">
         <label className="text-white">Amount</label>
@@ -252,6 +291,7 @@ const FA2Transfer = ({
           <Field
             name={makeName("amount")}
             validate={(x: string) => {
+              if (!x) return "Value is empty";
               const amount = Number(x);
               if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
                 return `Invalid amount ${x}`;
@@ -284,7 +324,7 @@ const FA2Transfer = ({
             )}
           </Field>
         </div>
-        <ErrorMessage name={makeName("amount")} render={renderError} />
+        {renderError(formErrors.amount)}
       </div>
       <div>
         <label className="text-white">Transfer to</label>
@@ -298,15 +338,13 @@ const FA2Transfer = ({
               : undefined
           }
         />
-        <div className="self-start">
-          <ErrorMessage name={makeName("targetAddress")} render={renderError} />
-        </div>
+        {renderError(formErrors.targetAddress)}
       </div>
-      <div className="flex justify-center lg:block">
-        <label className="hidden text-transparent lg:inline">helper</label>
+      <div className="flex justify-center xl:block">
+        <label className="hidden text-transparent xl:inline">helper</label>
         <button
           type="button"
-          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 lg:mt-4`}
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0`}
           onClick={e => {
             e.preventDefault();
 
@@ -315,6 +353,7 @@ const FA2Transfer = ({
         >
           Remove
         </button>
+        {renderError("")}
       </div>
     </div>
   );
@@ -364,7 +403,7 @@ const FA2TransferGroup = ({
   }, []);
 
   return (
-    <div className="mt-4 space-y-6">
+    <div className="mt-2 space-y-6">
       <FA2Transfer
         proposalIndex={proposalIndex}
         localIndex={0}

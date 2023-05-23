@@ -1,4 +1,3 @@
-import { validateAddress, ValidationResult } from "@taquito/utils";
 import { ErrorMessage, Field, FieldInputProps } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
@@ -10,7 +9,7 @@ import renderError from "./formUtils";
 
 type props = {
   index: number;
-  children: React.ReactNode;
+  children: (token: fa1_2Token | undefined) => React.ReactNode;
   remove: (index: number) => void;
   setFieldValue: (name: string, value: fa1_2Token | string) => void;
   getFieldProps: (name: string) => FieldInputProps<fa1_2Token | undefined>;
@@ -148,13 +147,18 @@ const FA1_2 = ({
   }, [fetchTokens, filterValue]);
 
   return (
-    <div className="grid grid-cols-3 grid-rows-2 items-end gap-x-4">
+    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 lg:grid-rows-1 lg:space-y-0">
       <div className="w-full md:grow">
-        <Field name={makeName("token")}>
+        {!currentToken && <label className="text-transparent">Token</label>}
+        <Field
+          name={makeName("token")}
+          validate={(x: string) => {
+            return !x ? "Please select a token" : undefined;
+          }}
+        >
           {() => (
             <Select
               placeholder="Please select an FA1.2 token"
-              className={!currentToken ? "md:mt-7" : ""}
               label=""
               withSeeMore={canSeeMore}
               onSeeMore={() => {
@@ -223,18 +227,21 @@ const FA1_2 = ({
         </Field>
         <ErrorMessage name={makeName("token")} render={renderError} />
       </div>
-      {children}
-      <button
-        type="button"
-        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end`}
-        onClick={e => {
-          e.preventDefault();
+      {children(currentToken)}
+      <div className="flex justify-center lg:block">
+        <label className="hidden text-transparent lg:inline">helper</label>
+        <button
+          type="button"
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 lg:mt-0`}
+          onClick={e => {
+            e.preventDefault();
 
-          remove(index);
-        }}
-      >
-        Remove
-      </button>
+            remove(index);
+          }}
+        >
+          Remove
+        </button>
+      </div>
     </div>
   );
 };
