@@ -93,7 +93,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
     setFieldValue(makeName("token"), newToken ?? "");
     setFieldValue(makeName("tokenId"), newToken?.token.tokenId ?? "");
     setFieldValue(
-      makeName("fa2Address"),
+      makeName("fa1_2Address"),
       newToken?.token.contract.address ?? ""
     );
   };

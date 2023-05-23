@@ -9,6 +9,8 @@ import {
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa1_2ApproveMichelson } from "../context/fa1_2";
+import { makeFa1_2TransferMichelson } from "../context/fa1_2";
 import { makeFa2Michelson } from "../context/fa2";
 import {
   content,
@@ -95,6 +97,61 @@ class Version011 extends Versioned {
                         fa2_address: value.fa2Address,
                         amount: Number(value.amount),
                       })),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
+            }
+            case "fa1.2-approve": {
+              const parser = new Parser();
+
+              console.log(x.values);
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa1_2ApproveMichelson({
+                  spenderAddress: x.values.spenderAddress,
+                  amount: Number(x.values.amount),
+                  fa1_2Address: x.values.fa1_2Address,
+                })
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      payload: {
+                        spenderAddress: x.values.spenderAddress,
+                        amount: Number(x.values.amount),
+                        fa1_2Address: x.values.fa1_2Address,
+                      },
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
+            }
+
+            case "fa1.2-transfer": {
+              const parser = new Parser();
+
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa1_2TransferMichelson({
+                  walletAddress: cc.address,
+                  amount: Number(x.values.amount),
+                  fa1_2Address: x.values.fa1_2Address,
+                  targetAddress: x.values.targetAddress,
+                })
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      payload: {
+                        spenderAddress: x.values.spenderAddress,
+                        amount: Number(x.values.amount),
+                        fa1_2Address: x.values.fa1_2Address,
+                      },
                     })
                   ),
                   lambda: michelsonCode,

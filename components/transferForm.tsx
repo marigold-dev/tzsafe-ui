@@ -635,7 +635,7 @@ function TransferForm(
                             push,
                             "fa1.2-transfer",
                             undefined,
-                            Versioned.fa2(props.contract)
+                            Versioned.fa1_2_transfer(props.contract)
                           );
                         }}
                       >
@@ -650,7 +650,7 @@ function TransferForm(
                             push,
                             "fa1.2-approve",
                             undefined,
-                            Versioned.fa2(props.contract)
+                            Versioned.fa1_2_approve(props.contract)
                           );
                         }}
                       >
@@ -874,6 +874,7 @@ function TransferForm(
                             </section>
                           );
                         } else if (transfer.type === "fa1.2-transfer") {
+                          console.log(values);
                           // @ts-ignore
                           const formErrors = errors?.transfers?.[index]?.values;
 
