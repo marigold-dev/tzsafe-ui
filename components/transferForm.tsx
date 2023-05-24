@@ -5,8 +5,8 @@ import {
   ValidationResult,
   validateAddress,
 } from "@taquito/utils";
+import BigNumber from "bignumber.js";
 import {
-  ErrorMessage,
   Field,
   FieldArray,
   FieldProps,
@@ -31,6 +31,7 @@ import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
+import ErrorMessage from "./ErrorMessage";
 import FA1_2 from "./FA1_2";
 import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
@@ -784,9 +785,6 @@ function TransferForm(
                             </section>
                           );
                         } else if (transfer.type === "fa1.2-approve") {
-                          // @ts-ignore
-                          const formErrors = errors?.transfers?.[index]?.values;
-
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
@@ -796,88 +794,98 @@ function TransferForm(
                                 FA1.2 Approve
                               </p>
                               <FA1_2 key={index} index={index} remove={remove}>
-                                {token => (
-                                  <>
-                                    <div className="w-full">
-                                      <label className="text-white">
-                                        Amount
-                                      </label>
-                                      <div className="relative w-full">
-                                        <Field
+                                {token => {
+                                  const balance = !!token
+                                    ? BigNumber(token.balance)
+                                        .div(
+                                          BigNumber(10).pow(
+                                            token.token.metadata.decimals
+                                          )
+                                        )
+                                        .toNumber()
+                                    : undefined;
+
+                                  console.log(balance);
+                                  return (
+                                    <>
+                                      <div className="w-full">
+                                        <label className="text-white">
+                                          Amount
+                                        </label>
+                                        <div className="relative w-full">
+                                          <Field
+                                            name={`transfers.${index}.values.amount`}
+                                            validate={(x: string) => {
+                                              if (!x) return "Value is empty";
+
+                                              const amount = Number(x);
+                                              if (
+                                                isNaN(amount) ||
+                                                amount <= 0 ||
+                                                !Number.isInteger(amount)
+                                              ) {
+                                                return `Invalid amount ${x}`;
+                                              }
+
+                                              if (!balance) return;
+
+                                              if (amount > balance) {
+                                                return `You only have ${balance} token${
+                                                  balance <= 1 ? "" : "s"
+                                                }`;
+                                              }
+                                            }}
+                                          >
+                                            {({ field }: FieldProps) => (
+                                              <>
+                                                <input
+                                                  {...field}
+                                                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                  placeholder="1"
+                                                />
+                                                {!!balance && !field.value && (
+                                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                    Max:{" "}
+                                                    {balance > 1000
+                                                      ? "1000+"
+                                                      : balance}
+                                                  </span>
+                                                )}
+                                              </>
+                                            )}
+                                          </Field>
+                                        </div>
+
+                                        <ErrorMessage
                                           name={`transfers.${index}.values.amount`}
-                                          validate={(x: string) => {
-                                            if (!x) return "Value is empty";
-
-                                            const amount = Number(x);
-                                            if (
-                                              isNaN(amount) ||
-                                              amount <= 0 ||
-                                              !Number.isInteger(amount)
-                                            ) {
-                                              return `Invalid amount ${x}`;
-                                            } else if (
-                                              !!token &&
-                                              amount > parseInt(token.balance)
-                                            ) {
-                                              return `You only have ${
-                                                token.balance
-                                              } token${
-                                                Number(token.balance) <= 1
-                                                  ? ""
-                                                  : "s"
-                                              }`;
-                                            }
-                                          }}
-                                        >
-                                          {({ field }: FieldProps) => (
-                                            <>
-                                              <input
-                                                {...field}
-                                                className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
-                                                placeholder="1"
-                                              />
-                                              {!!token && !field.value && (
-                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                                                  Max:{" "}
-                                                  {Number(token.balance) > 1000
-                                                    ? "1000+"
-                                                    : token.balance}
-                                                </span>
-                                              )}
-                                            </>
-                                          )}
-                                        </Field>
+                                        />
                                       </div>
-
-                                      {renderError(formErrors?.amount)}
-                                    </div>
-                                    <div>
-                                      <label className="text-white">
-                                        Spender
-                                      </label>
-                                      <Field
-                                        className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
-                                        name={`transfers.${index}.values.spenderAddress`}
-                                        placeholder="Destination address"
-                                        validate={(x: string) =>
-                                          validateAddress(x) !==
-                                          ValidationResult.VALID
-                                            ? `Invalid address ${x ?? ""}`
-                                            : undefined
-                                        }
-                                      />
-                                      {renderError(formErrors?.spenderAddress)}
-                                    </div>
-                                  </>
-                                )}
+                                      <div>
+                                        <label className="text-white">
+                                          Spender
+                                        </label>
+                                        <Field
+                                          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                          placeholder="Destination address"
+                                          validate={(x: string) =>
+                                            validateAddress(x) !==
+                                            ValidationResult.VALID
+                                              ? `Invalid address ${x ?? ""}`
+                                              : undefined
+                                          }
+                                        />
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                        />
+                                      </div>
+                                    </>
+                                  );
+                                }}
                               </FA1_2>
                             </section>
                           );
                         } else if (transfer.type === "fa1.2-transfer") {
-                          console.log(values);
-                          // @ts-ignore
-                          const formErrors = errors?.transfers?.[index]?.values;
-
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
@@ -940,7 +948,9 @@ function TransferForm(
                                         </Field>
                                       </div>
 
-                                      {renderError(formErrors?.amount)}
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.amount`}
+                                      />
                                     </div>
                                     <div>
                                       <label className="text-white">
@@ -957,7 +967,9 @@ function TransferForm(
                                             : undefined
                                         }
                                       />
-                                      {renderError(formErrors?.targetAddress)}
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.targetAddress`}
+                                      />
                                     </div>
                                   </>
                                 )}
@@ -1062,27 +1074,31 @@ function TransferForm(
                                     )}
                                     <ErrorMessage
                                       name={`transfers.${index}.values.${value.field}`}
-                                      render={renderError}
                                     />
                                   </div>
                                 );
                               })}
-                              <button
-                                type="button"
-                                className={
-                                  (errors.transfers && errors.transfers[index]
-                                    ? "my-auto"
-                                    : "") +
-                                  " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
-                                }
-                                onClick={e => {
-                                  e.preventDefault();
+                              <div>
+                                <label className="text-transparent">
+                                  Helper
+                                </label>
+                                <button
+                                  type="button"
+                                  className={
+                                    (errors.transfers && errors.transfers[index]
+                                      ? "my-auto"
+                                      : "") +
+                                    " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-1 md:self-end"
+                                  }
+                                  onClick={e => {
+                                    e.preventDefault();
 
-                                  remove(index);
-                                }}
-                              >
-                                Remove
-                              </button>
+                                    remove(index);
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              </div>
                             </div>
                           </section>
                         );

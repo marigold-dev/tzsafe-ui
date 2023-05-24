@@ -1,16 +1,16 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { ErrorMessage, Field, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { VersionedApi } from "../versioned/apis";
+import ErrorMessage from "./ErrorMessage";
 import { RenderProposalContent } from "./ProposalCard";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
-import renderError from "./formUtils";
 
 function ProposalSignForm({
   address,
@@ -219,7 +219,7 @@ function ProposalSignForm({
                   />
                 </div>
               ))}
-        <ErrorMessage name="flag" render={renderError} />
+        <ErrorMessage name="flag" />
         <div className="flex w-2/3 justify-between md:w-1/3">
           <button
             className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"

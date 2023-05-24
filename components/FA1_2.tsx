@@ -1,10 +1,12 @@
-import { ErrorMessage, Field, FieldInputProps, useFormikContext } from "formik";
+import { Field, useFormikContext } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import Alias from "./Alias";
+import ErrorMessage from "./ErrorMessage";
+import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
 import renderError from "./formUtils";
 
@@ -101,7 +103,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=tz1KrnickNwpLhmLPvwMYQUvo47w39WSzoJV&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
+        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
       )
         .catch(e => {
           console.log(e);
@@ -141,9 +143,6 @@ const FA1_2 = ({ index, remove, children }: props) => {
     );
   }, [fetchTokens, filterValue]);
 
-  //@ts-ignore
-  const formErrors = errors?.transfers?.[index]?.values;
-
   return (
     <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div className="w-full md:grow">
@@ -175,62 +174,18 @@ const FA1_2 = ({ index, remove, children }: props) => {
               value={!!currentToken ? tokenToOption(currentToken) : undefined}
               options={options}
               loading={isFetching}
-              renderOption={({ image, tokenId, contractAddress, label }) => {
-                return (
-                  <div className="flex">
-                    <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
-                      {!!image ? (
-                        <img
-                          src={image}
-                          alt={label}
-                          className="h-auto w-full p-1"
-                          onError={e => {
-                            // @ts-ignore
-                            e.target.src =
-                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={
-                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-                          }
-                          alt={label}
-                          className="h-auto w-full p-1"
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex w-5/6 flex-col justify-between px-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-400">
-                          #{tokenId}
-                        </span>
-
-                        <Alias
-                          address={contractAddress}
-                          className="text-xs text-zinc-400"
-                          disabled
-                        />
-                      </div>
-                      <p className="text-left text-xs" title={label}>
-                        {label}
-                      </p>
-                    </div>
-                  </div>
-                );
-              }}
+              renderOption={RenderTokenOption}
             />
           )}
         </Field>
-        {renderError(formErrors?.token)}
+        <ErrorMessage name={makeName("token")} />
       </div>
       {children(currentToken)}
       <div className="flex justify-center xl:block">
         <label className="hidden text-transparent xl:inline">helper</label>
         <button
           type="button"
-          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0`}
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0 xl:mb-1`}
           onClick={e => {
             e.preventDefault();
 

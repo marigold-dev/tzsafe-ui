@@ -1,6 +1,11 @@
-export const renderError = (message: string | undefined) => (
+export const renderError = (
+  message: string | undefined,
+  withMargin: boolean = false
+) => (
   <p
-    className={`mt-1 italic ${!message ? "text-transparent" : "text-red-600"}`}
+    className={`${withMargin ? "mt-1" : ""} inline-block italic ${
+      !message ? "text-transparent" : "text-red-600"
+    }`}
   >
     {!message ? "a" : message}
   </p>

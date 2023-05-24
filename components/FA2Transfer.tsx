@@ -1,13 +1,6 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
-import {
-  ErrorMessage,
-  Field,
-  FieldInputProps,
-  FieldProps,
-  FormikErrors,
-  useFormikContext,
-} from "formik";
+import { Field, FieldProps, useFormikContext } from "formik";
 import {
   useCallback,
   useContext,
@@ -22,8 +15,9 @@ import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import Alias from "./Alias";
+import ErrorMessage from "./ErrorMessage";
+import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
-import renderError from "./formUtils";
 
 type fa2Token = {
   id: number;
@@ -184,9 +178,6 @@ const FA2Transfer = ({
     }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
-  // @ts-ignore
-  const formErrors = errors?.transfers?.[proposalIndex]?.values?.[localIndex];
-
   return (
     <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div>
@@ -219,56 +210,11 @@ const FA2Transfer = ({
               value={!!currentToken ? tokenToOption(currentToken) : undefined}
               options={options}
               loading={isFetching}
-              renderOption={({ image, tokenId, contractAddress, label }) => {
-                return (
-                  <div className="flex">
-                    <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
-                      {!!image ? (
-                        <img
-                          src={image}
-                          alt={label}
-                          className="h-auto w-full p-1"
-                          onError={e => {
-                            // @ts-ignore
-                            e.target.src =
-                              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={
-                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-                          }
-                          alt={label}
-                          className="h-auto w-full p-1"
-                        />
-                      )}
-                    </div>
-
-                    <div className="flex w-5/6 flex-col justify-between px-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-zinc-400">
-                          #{tokenId}
-                        </span>
-
-                        <Alias
-                          address={contractAddress}
-                          className="text-xs text-zinc-400"
-                          disabled
-                        />
-                      </div>
-                      <p className="text-left text-xs" title={label}>
-                        {label}
-                      </p>
-                    </div>
-                  </div>
-                );
-              }}
+              renderOption={RenderTokenOption}
             />
           )}
         </Field>
-
-        {renderError(formErrors?.token)}
+        <ErrorMessage name={makeName("token")} />
       </div>
       <div className="w-full">
         <label className="text-white">Amount</label>
@@ -309,7 +255,7 @@ const FA2Transfer = ({
             )}
           </Field>
         </div>
-        {renderError(formErrors?.amount)}
+        <ErrorMessage name={makeName("amount")} />
       </div>
       <div>
         <label className="text-white">Transfer to</label>
@@ -323,7 +269,7 @@ const FA2Transfer = ({
               : undefined
           }
         />
-        {renderError(formErrors?.targetAddress)}
+        <ErrorMessage name={makeName("targetAddress")} />
       </div>
       <div className="flex justify-center xl:block">
         <label className="hidden text-transparent xl:inline">helper</label>
@@ -338,7 +284,7 @@ const FA2Transfer = ({
         >
           Remove
         </button>
-        {renderError(undefined)}
+        {<ErrorMessage name="empty" />}
       </div>
     </div>
   );
