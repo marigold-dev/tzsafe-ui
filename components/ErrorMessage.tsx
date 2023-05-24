@@ -1,15 +1,22 @@
-import { ErrorMessage as FormikError } from "formik";
+import { ErrorMessage as FormikError, useField } from "formik";
 import renderError from "./formUtils";
 
 type props = {
   name: string;
 };
 
-const ErrorMessage = ({ name }: props) => (
-  <span className="mt-1 inline-block -translate-x-2 text-transparent">
-    i
-    <FormikError name={name} render={renderError} />
-  </span>
-);
+const ErrorMessage = ({ name }: props) => {
+  const [_, { error, touched }, __] = useField(name);
+
+  console.log(error);
+
+  return (
+    <span className="mt-1 inline-block break-words text-transparent">
+      {(!error || !touched) && "i"}
+
+      {touched && renderError(error, false, true)}
+    </span>
+  );
+};
 
 export default ErrorMessage;

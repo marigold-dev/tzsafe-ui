@@ -144,7 +144,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
   }, [fetchTokens, filterValue]);
 
   return (
-    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
+    <div className="fa2-grid-template grid items-start gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div className="w-full md:grow">
         {!currentToken && <label className="text-transparent">Token</label>}
         <Field

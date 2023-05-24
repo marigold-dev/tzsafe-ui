@@ -179,7 +179,7 @@ const FA2Transfer = ({
   }, [fetchTokens, filterValue, toExclude]);
 
   return (
-    <div className="fa2-grid-template grid items-end gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
+    <div className="fa2-grid-template grid items-start gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div>
         {!currentToken && <label className="text-transparent">Token</label>}
 

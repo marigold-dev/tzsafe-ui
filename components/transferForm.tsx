@@ -805,7 +805,6 @@ function TransferForm(
                                         .toNumber()
                                     : undefined;
 
-                                  console.log(balance);
                                   return (
                                     <>
                                       <div className="w-full">
@@ -895,84 +894,93 @@ function TransferForm(
                                 FA1.2 Transfer
                               </p>
                               <FA1_2 key={index} index={index} remove={remove}>
-                                {token => (
-                                  <>
-                                    <div className="w-full">
-                                      <label className="text-white">
-                                        Amount
-                                      </label>
-                                      <div className="relative w-full">
-                                        <Field
+                                {token => {
+                                  const balance = !!token
+                                    ? BigNumber(token.balance)
+                                        .div(
+                                          BigNumber(10).pow(
+                                            token.token.metadata.decimals
+                                          )
+                                        )
+                                        .toNumber()
+                                    : undefined;
+
+                                  return (
+                                    <>
+                                      <div className="w-full">
+                                        <label className="text-white">
+                                          Amount
+                                        </label>
+                                        <div className="relative w-full">
+                                          <Field
+                                            name={`transfers.${index}.values.amount`}
+                                            validate={(x: string) => {
+                                              if (!x) return "Value is empty";
+
+                                              const amount = Number(x);
+                                              if (
+                                                isNaN(amount) ||
+                                                amount <= 0 ||
+                                                !Number.isInteger(amount)
+                                              ) {
+                                                return `Invalid amount ${x}`;
+                                              }
+
+                                              if (!balance) return;
+
+                                              if (amount > balance) {
+                                                return `You only have ${balance} token${
+                                                  balance <= 1 ? "" : "s"
+                                                }`;
+                                              }
+                                            }}
+                                          >
+                                            {({ field }: FieldProps) => (
+                                              <>
+                                                <input
+                                                  {...field}
+                                                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                  placeholder="1"
+                                                />
+                                                {!!balance && !field.value && (
+                                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                    Max:{" "}
+                                                    {balance > 1000
+                                                      ? "1000+"
+                                                      : balance}
+                                                  </span>
+                                                )}
+                                              </>
+                                            )}
+                                          </Field>
+                                        </div>
+
+                                        <ErrorMessage
                                           name={`transfers.${index}.values.amount`}
-                                          validate={(x: string) => {
-                                            if (!x) return "Value is empty";
-
-                                            const amount = Number(x);
-                                            if (
-                                              isNaN(amount) ||
-                                              amount <= 0 ||
-                                              !Number.isInteger(amount)
-                                            ) {
-                                              return `Invalid amount ${x}`;
-                                            } else if (
-                                              !!token &&
-                                              amount > parseInt(token.balance)
-                                            ) {
-                                              return `You only have ${
-                                                token.balance
-                                              } token${
-                                                Number(token.balance) <= 1
-                                                  ? ""
-                                                  : "s"
-                                              }`;
-                                            }
-                                          }}
-                                        >
-                                          {({ field }: FieldProps) => (
-                                            <>
-                                              <input
-                                                {...field}
-                                                className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
-                                                placeholder="1"
-                                              />
-                                              {!!token && !field.value && (
-                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                                                  Max:{" "}
-                                                  {Number(token.balance) > 1000
-                                                    ? "1000+"
-                                                    : token.balance}
-                                                </span>
-                                              )}
-                                            </>
-                                          )}
-                                        </Field>
+                                        />
                                       </div>
-
-                                      <ErrorMessage
-                                        name={`transfers.${index}.values.amount`}
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="text-white">
-                                        Transfer to
-                                      </label>
-                                      <Field
-                                        className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
-                                        name={`transfers.${index}.values.targetAddress`}
-                                        placeholder="Destination address"
-                                        validate={(x: string) =>
-                                          validateAddress(x) !==
-                                          ValidationResult.VALID
-                                            ? `Invalid address ${x ?? ""}`
-                                            : undefined
-                                        }
-                                      />
-                                      <ErrorMessage
-                                        name={`transfers.${index}.values.targetAddress`}
-                                      />
-                                    </div>
-                                  </>
-                                )}
+                                      <div>
+                                        <label className="text-white">
+                                          Transfer to
+                                        </label>
+                                        <Field
+                                          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                          name={`transfers.${index}.values.targetAddress`}
+                                          placeholder="Destination address"
+                                          validate={(x: string) =>
+                                            validateAddress(x) !==
+                                            ValidationResult.VALID
+                                              ? `Invalid address ${x ?? ""}`
+                                              : undefined
+                                          }
+                                        />
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.targetAddress`}
+                                        />
+                                      </div>
+                                    </>
+                                  );
+                                }}
                               </FA1_2>
                             </section>
                           );

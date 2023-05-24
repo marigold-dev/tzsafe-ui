@@ -14,7 +14,7 @@ const RenderTokenOption = ({
   label,
 }: props) => {
   return (
-    <div className="flex">
+    <div className="flex grow">
       <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
         {!!image ? (
           <img
@@ -48,7 +48,10 @@ const RenderTokenOption = ({
             disabled
           />
         </div>
-        <p className="text-left text-xs" title={label}>
+        <p
+          className="max-h-8 w-full overflow-hidden text-ellipsis text-left text-xs"
+          title={label}
+        >
           {label}
         </p>
       </div>

@@ -106,7 +106,6 @@ class Version011 extends Versioned {
             case "fa1.2-approve": {
               const parser = new Parser();
 
-              console.log(x.values);
               const michelsonCode = parser.parseMichelineExpression(
                 makeFa1_2ApproveMichelson({
                   spenderAddress: x.values.spenderAddress,

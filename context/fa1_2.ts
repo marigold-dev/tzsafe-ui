@@ -17,12 +17,12 @@ export const makeFa1_2ApproveMichelson = ({
   amount,
   fa1_2Address,
 }: approve) => `{ 
-    DROP;
-    PUSH address "${fa1_2Address}";
-    CONTRACT %approve (pair (address :spender) (nat :value));
+    DROP ;
+    PUSH address "${fa1_2Address}" ;
+    CONTRACT %approve (pair (address :spender) (nat :value)) ;
     IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
     PUSH mutez 0 ;
-    PUSH (pair (address :spender) (nat :value)) (pair "${spenderAddress}" "${amount}")
+    PUSH (pair (address :spender) (nat :value)) (pair "${spenderAddress}" ${amount}) ;
     TRANSFER_TOKENS
 }`;
 
@@ -32,11 +32,11 @@ export const makeFa1_2TransferMichelson = ({
   amount,
   fa1_2Address,
 }: transfer) => `{ 
-    DROP;
-    PUSH address "${fa1_2Address}";
-    CONTRACT %transfer (pair (address :from) (pair (address :to) (nat :amount)));
+    DROP ;
+    PUSH address "${fa1_2Address}" ;
+    CONTRACT %transfer (pair (address :from) (pair (address :to) (nat :amount))) ;
     IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
     PUSH mutez 0 ;
-    PUSH  (pair (address :from) (pair (address :to) (nat :amount))) (pair "${walletAddress}" (pair "${targetAddress}" "${amount}"))
+    PUSH  (pair (address :from) (pair (address :to) (nat :amount))) (pair "${walletAddress}" (pair "${targetAddress}" ${amount})) ;
     TRANSFER_TOKENS
 }`;
