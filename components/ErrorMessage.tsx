@@ -8,8 +8,6 @@ type props = {
 const ErrorMessage = ({ name }: props) => {
   const [_, { error, touched }, __] = useField(name);
 
-  console.log(error);
-
   return (
     <span className="mt-1 inline-block break-words text-transparent">
       {(!error || !touched) && "i"}

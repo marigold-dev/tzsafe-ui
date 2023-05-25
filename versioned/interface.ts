@@ -372,7 +372,7 @@ abstract class Versioned {
           placeholder: "1",
           validate: (x: string) => {
             const amount = Number(x);
-            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+            if (isNaN(amount) || amount < 0) {
               return `Invalid amount ${x}`;
             }
           },
@@ -426,7 +426,7 @@ abstract class Versioned {
           placeholder: "1",
           validate: (x: string) => {
             const amount = Number(x);
-            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+            if (isNaN(amount) || amount <= 0) {
               return `Invalid amount ${x}`;
             }
           },
