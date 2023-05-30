@@ -210,7 +210,7 @@ const Sidebar = ({
             </Select.Icon>
           </FixedTrigger>
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content className="z-10">
           <Select.ScrollUpButton className="flex items-center justify-center text-zinc-300">
             <ChevronUpIcon />
           </Select.ScrollUpButton>

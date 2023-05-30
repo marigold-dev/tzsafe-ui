@@ -819,11 +819,8 @@ function TransferForm(
                                               if (!x) return "Value is empty";
 
                                               const amount = Number(x);
-                                              if (
-                                                isNaN(amount) ||
-                                                amount <= 0 ||
-                                                !Number.isInteger(amount)
-                                              ) {
+
+                                              if (isNaN(amount) || amount < 0) {
                                                 return `Invalid amount ${x}`;
                                               }
 
