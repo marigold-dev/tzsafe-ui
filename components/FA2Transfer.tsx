@@ -1,5 +1,6 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
+import BigNumber from "bignumber.js";
 import { Field, FieldProps, useFormikContext } from "formik";
 import {
   useCallback,
@@ -14,12 +15,11 @@ import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
-import Alias from "./Alias";
 import ErrorMessage from "./ErrorMessage";
 import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
 
-type fa2Token = {
+export type fa2Token = {
   id: number;
   balance: string;
   account: {
@@ -31,6 +31,7 @@ type fa2Token = {
     metadata: {
       name: string;
       symbol: string;
+      decimals: string;
       thumbnailUri?: string;
       displayUri?: string;
     };
@@ -178,6 +179,16 @@ const FA2Transfer = ({
     }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
+  const tokenAmount = useMemo(() => {
+    if (!currentToken) return;
+
+    return BigNumber(currentToken.balance)
+      .div(BigNumber(10).pow(currentToken.token.metadata.decimals))
+      .toNumber();
+
+    return;
+  }, [currentToken]);
+
   return (
     <div className="fa2-grid-template grid items-start gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
       <div>
@@ -224,12 +235,18 @@ const FA2Transfer = ({
             validate={(x: string) => {
               if (!x) return "Value is empty";
               const amount = Number(x);
-              if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+              if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
-              } else if (
-                !!currentToken &&
-                amount > parseInt(currentToken.balance)
+              }
+
+              if (!currentToken) return;
+
+              if (
+                currentToken.token.metadata.decimals === "0" &&
+                !Number.isInteger(amount)
               ) {
+                return "Amount must be an integer";
+              } else if (amount > parseInt(currentToken.balance)) {
                 return `You only have ${currentToken.balance} token${
                   Number(currentToken.balance) <= 1 ? "" : "s"
                 }`;
@@ -245,10 +262,7 @@ const FA2Transfer = ({
                 />
                 {!!currentToken && !field.value && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                    Max:{" "}
-                    {Number(currentToken.balance) > 1000
-                      ? "1000+"
-                      : currentToken.balance}
+                    Max: {Number(tokenAmount) > 1000 ? "1000+" : tokenAmount}
                   </span>
                 )}
               </>
@@ -311,6 +325,7 @@ const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
   const [additionalTransfers, setAdditionalTransfers] = useState<string[]>([]);
   const [contractAddress, setContractAddress] = useState("");
 
+  console.log(selectedTokens);
   useEffect(() => {
     const values = [
       ...((getFieldProps(`transfers.${proposalIndex}.values`)
@@ -398,7 +413,9 @@ const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
         <button
           type="button"
           onClick={() => setAdditionalTransfers(v => v.concat([uuidV4()]))}
-          className="flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white"
+          className={`${
+            !contractAddress ? "pointer-events-none opacity-70" : ""
+          } flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white`}
         >
           <PlusIcon />
           <span>Add</span>

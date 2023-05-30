@@ -1,3 +1,4 @@
+import { MARIGOLD_LOGO_URL } from "../context/config";
 import Alias from "./Alias";
 
 type props = {
@@ -23,15 +24,12 @@ const RenderTokenOption = ({
             className="h-auto w-full p-1"
             onError={e => {
               // @ts-ignore
-              e.target.src =
-                "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
+              e.target.src = MARIGOLD_LOGO_URL;
             }}
           />
         ) : (
           <img
-            src={
-              "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-            }
+            src={MARIGOLD_LOGO_URL}
             alt={label}
             className="h-auto w-full p-1"
           />

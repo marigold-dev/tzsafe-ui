@@ -8,6 +8,8 @@ import {
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { fa1_2Token } from "../components/FA1_2";
+import { fa2Token } from "../components/FA2Transfer";
 import { DEFAULT_TIMEOUT } from "../context/config";
 import { makeFa1_2ApproveMichelson } from "../context/fa1_2";
 import { makeFa1_2TransferMichelson } from "../context/fa1_2";
@@ -77,13 +79,21 @@ class Version011 extends Versioned {
 
               const michelsonCode = parser.parseMichelineExpression(
                 makeFa2Michelson(
-                  x.values.map(value => ({
-                    walletAddress: cc.address,
-                    targetAddress: value.targetAddress,
-                    tokenId: Number(value.tokenId),
-                    amount: Number(value.amount),
-                    fa2Address: value.fa2Address,
-                  }))
+                  x.values.map(value => {
+                    const token = value.token as unknown as fa2Token;
+
+                    return {
+                      walletAddress: cc.address,
+                      targetAddress: value.targetAddress,
+                      tokenId: Number(value.tokenId),
+                      amount: BigNumber(value.amount)
+                        .multipliedBy(
+                          BigNumber(10).pow(token.token.metadata.decimals)
+                        )
+                        .toNumber(),
+                      fa2Address: value.fa2Address,
+                    };
+                  })
                 )
               );
 
@@ -106,10 +116,16 @@ class Version011 extends Versioned {
             case "fa1.2-approve": {
               const parser = new Parser();
 
+              const token = x.values.token as unknown as fa1_2Token;
+
               const michelsonCode = parser.parseMichelineExpression(
                 makeFa1_2ApproveMichelson({
                   spenderAddress: x.values.spenderAddress,
-                  amount: Number(x.values.amount),
+                  amount: BigNumber(x.values.amount)
+                    .multipliedBy(
+                      BigNumber(10).pow(token.token.metadata.decimals)
+                    )
+                    .toNumber(),
                   fa1_2Address: x.values.fa1_2Address,
                 })
               );
@@ -119,9 +135,10 @@ class Version011 extends Versioned {
                   metadata: convert(
                     JSON.stringify({
                       payload: {
-                        spenderAddress: x.values.spenderAddress,
-                        amount: Number(x.values.amount),
-                        fa1_2Address: x.values.fa1_2Address,
+                        spender_address: x.values.spenderAddress,
+                        amount: x.values.amount,
+                        fa1_2_address: x.values.fa1_2Address,
+                        name: token.token.metadata.name,
                       },
                     })
                   ),
@@ -133,10 +150,16 @@ class Version011 extends Versioned {
             case "fa1.2-transfer": {
               const parser = new Parser();
 
+              const token = x.values.token as unknown as fa1_2Token;
+
               const michelsonCode = parser.parseMichelineExpression(
                 makeFa1_2TransferMichelson({
                   walletAddress: cc.address,
-                  amount: Number(x.values.amount),
+                  amount: BigNumber(x.values.amount)
+                    .multipliedBy(
+                      BigNumber(10).pow(token.token.metadata.decimals)
+                    )
+                    .toNumber(),
                   fa1_2Address: x.values.fa1_2Address,
                   targetAddress: x.values.targetAddress,
                 })
@@ -147,9 +170,10 @@ class Version011 extends Versioned {
                   metadata: convert(
                     JSON.stringify({
                       payload: {
-                        spenderAddress: x.values.spenderAddress,
                         amount: Number(x.values.amount),
-                        fa1_2Address: x.values.fa1_2Address,
+                        fa1_2_address: x.values.fa1_2Address,
+                        to: x.values.targetAddress,
+                        name: token.token.metadata.name,
                       },
                     })
                   ),

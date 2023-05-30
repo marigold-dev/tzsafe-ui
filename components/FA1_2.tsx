@@ -16,7 +16,7 @@ type props = {
   remove: (index: number) => void;
 };
 
-type fa1_2Token = {
+export type fa1_2Token = {
   id: number;
   account: {
     address: string;

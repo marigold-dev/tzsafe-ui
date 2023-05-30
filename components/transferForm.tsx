@@ -619,13 +619,13 @@ function TransferForm(
                           addNewField(
                             e,
                             push,
-                            "fa2",
+                            "fa1.2-approve",
                             undefined,
-                            Versioned.fa2(props.contract)
+                            Versioned.fa1_2_approve(props.contract)
                           );
                         }}
                       >
-                        FA2 Transfer
+                        FA1.2 Approve
                       </button>
                       <button
                         type="button"
@@ -642,6 +642,7 @@ function TransferForm(
                       >
                         FA1.2 Transfer
                       </button>
+
                       <button
                         type="button"
                         className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
@@ -649,13 +650,13 @@ function TransferForm(
                           addNewField(
                             e,
                             push,
-                            "fa1.2-approve",
+                            "fa2",
                             undefined,
-                            Versioned.fa1_2_approve(props.contract)
+                            Versioned.fa2(props.contract)
                           );
                         }}
                       >
-                        FA1.2 Approve
+                        FA2 Transfer
                       </button>
                       <button
                         type="button"
