@@ -82,7 +82,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return c.owners;
     }
@@ -98,7 +99,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return c.owners;
     }
@@ -149,7 +151,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return {
         values: {
@@ -241,7 +244,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return {
         values: {

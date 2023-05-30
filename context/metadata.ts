@@ -13,6 +13,7 @@ const dispatch: { [key: string]: version } = {
   "0.0.9": "0.0.9",
   "0.0.10": "0.0.10",
   "0.0.11": "0.0.11",
+  "0.1.1": "0.1.1",
 };
 
 async function fetchVersion(
