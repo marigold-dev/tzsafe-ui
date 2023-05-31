@@ -9,7 +9,7 @@ export const renderError = (
         !message ? "text-transparent" : "text-red-600"
       }`}
     >
-      {!message ? "a" : message}
+      {!message ? "phantom" : message}
     </span>
   ) : (
     <p
@@ -17,7 +17,7 @@ export const renderError = (
         !message ? "text-transparent" : "text-red-600"
       }`}
     >
-      {!message ? "a" : message}
+      {!message ? "phantom" : message}
     </p>
   );
 
