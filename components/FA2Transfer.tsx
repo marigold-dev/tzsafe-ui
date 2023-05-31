@@ -325,7 +325,6 @@ const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
   const [additionalTransfers, setAdditionalTransfers] = useState<string[]>([]);
   const [contractAddress, setContractAddress] = useState("");
 
-  console.log(selectedTokens);
   useEffect(() => {
     const values = [
       ...((getFieldProps(`transfers.${proposalIndex}.values`)
