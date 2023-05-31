@@ -15,6 +15,7 @@ type props<T> = {
   onSeeMore?: () => void;
   renderOption?: (option: option<T>) => React.ReactNode;
   className?: string;
+  error?: string;
 };
 
 const Select = <T,>({
@@ -27,6 +28,7 @@ const Select = <T,>({
   onSeeMore,
   className,
   placeholder,
+  error,
   loading = false,
   withSeeMore = false,
 }: props<T>) => {
@@ -82,7 +84,9 @@ const Select = <T,>({
           </div>
         ) : (
           <div className="space-y-2 px-2 pb-2">
-            {options.length === 0 ? (
+            {!!error ? (
+              <p className="py-2 text-center text-red-500">{error}</p>
+            ) : options.length === 0 ? (
               <p className="py-2 text-center text-zinc-500">No result</p>
             ) : (
               options.map(v => (

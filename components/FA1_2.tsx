@@ -2,7 +2,7 @@ import { Field, useFormikContext } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
-import { debounce } from "../utils/timeout";
+import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import ErrorMessage from "./ErrorMessage";
@@ -77,11 +77,11 @@ const tokenToOption = (fa1_2Token: fa1_2Token) => {
 
 const FA1_2 = ({ index, remove, children }: props) => {
   const state = useContext(AppStateContext)!;
-  const { setFieldValue, getFieldProps, errors } =
-    useFormikContext<proposals>();
+  const { setFieldValue, getFieldProps } = useFormikContext<proposals>();
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
+  const [selectError, setSelectError] = useState<undefined | string>();
 
   const [filterValue, setFilterValue] = useState<string>("");
   const [currentToken, setCurrentToken] = useState<fa1_2Token | undefined>();
@@ -102,23 +102,31 @@ const FA1_2 = ({ index, remove, children }: props) => {
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
-      fetch(
-        `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
-      )
-        .catch(e => {
-          console.log(e);
-          return {
-            json() {
-              return Promise.resolve([]);
-            },
-          };
-        })
-        .then(res => res.json())
-        .then((v: fa1_2Token[]) => {
-          setCanSeeMore(v.length === FETCH_COUNT);
+      promiseWithTimeout(
+        fetch(
+          `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
+        )
+          .catch(e => {
+            console.log(e);
+            return {
+              json() {
+                return Promise.resolve([]);
+              },
+            };
+          })
+          .then(res => res.json()),
+        5000
+      ).then((v: fa1_2Token[] | number) => {
+        if (typeof v === "number") {
+          setSelectError("Failed to fetch the tokens. Please try again");
+          return Promise.resolve([]);
+        }
 
-          return Promise.resolve(v);
-        }),
+        setSelectError(undefined);
+        setCanSeeMore(v.length === FETCH_COUNT);
+
+        return Promise.resolve(v);
+      }),
     [state.currentContract]
   );
 
@@ -175,6 +183,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
               options={options}
               loading={isFetching}
               renderOption={RenderTokenOption}
+              error={selectError}
             />
           )}
         </Field>
