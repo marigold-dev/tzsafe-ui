@@ -1,6 +1,5 @@
 import assertNever from "assert-never";
 import {
-  ErrorMessage,
   Field,
   FieldArray,
   FieldProps,
@@ -20,6 +19,7 @@ import {
   tokenValueType,
   tokenMap,
 } from "../utils/contractParam";
+import ErrorMessage from "./ErrorMessage";
 import renderError from "./formUtils";
 
 function capitalizeFirstLetter(s: string): string {
@@ -105,7 +105,7 @@ function RenderItem({
         return assertNever(token.type);
     }
   } catch (e) {
-    return renderError((e as Error).message);
+    return renderError((e as Error).message, true);
   }
 }
 
@@ -131,7 +131,7 @@ function RenderLambda(token: token, fieldName: string, showTitle: boolean) {
         name={fieldName}
         validate={token.validate}
       />
-      <ErrorMessage name={fieldName} render={renderError} />
+      <ErrorMessage name={fieldName} />
     </div>
   );
 }
@@ -466,7 +466,7 @@ function RenderInputField(token: token, fieldName: string, showTitle: boolean) {
         name={fieldName}
         validate={token.validate}
       />
-      <ErrorMessage name={fieldName} render={renderError} />
+      <ErrorMessage name={fieldName} />
     </div>
   );
 }

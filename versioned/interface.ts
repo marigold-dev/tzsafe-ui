@@ -21,7 +21,12 @@ type common = {
 export type proposals =
   | {
       transfers: ({
-        type: "transfer" | "lambda" | "contract";
+        type:
+          | "transfer"
+          | "lambda"
+          | "contract"
+          | "fa1.2-transfer"
+          | "fa1.2-approve";
         values: { [key: string]: string };
       } & common)[];
     }
@@ -303,10 +308,6 @@ abstract class Versioned {
           path: ".token",
           placeholder: "Token",
           validate: (x: string) => {
-            console.log(
-              "token validate:",
-              !x ? "Please select a token" : undefined
-            );
             return !x ? "Please select a token" : undefined;
           },
         },
@@ -318,6 +319,114 @@ abstract class Versioned {
           validate: (x: string) => {
             const amount = Number(x);
             if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+              return `Invalid amount ${x}`;
+            }
+          },
+        },
+        {
+          field: "targetAddress",
+          label: "Transfer to",
+          path: ".targetAddress",
+          kind: "input-complete",
+          placeholder: "Destination address",
+          validate: (x: string) =>
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
+        },
+      ],
+    };
+  }
+
+  static fa1_2_approve(c: contractStorage): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      kind?: "input-complete" | "autocomplete";
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    return {
+      values: {
+        token: "",
+        amount: "",
+        targetAddress: "",
+      },
+      fields: [
+        {
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
+          validate: (x: string) => {
+            return !x ? "Please select a token" : undefined;
+          },
+        },
+        {
+          field: "amount",
+          label: "Amount",
+          path: ".amount",
+          placeholder: "1",
+          validate: (x: string) => {
+            const amount = Number(x);
+            if (isNaN(amount) || amount < 0) {
+              return `Invalid amount ${x}`;
+            }
+          },
+        },
+        {
+          field: "spenderAddress",
+          label: "Transfer to",
+          path: ".spenderAddress",
+          kind: "input-complete",
+          placeholder: "Spender address",
+          validate: (x: string) =>
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
+        },
+      ],
+    };
+  }
+
+  static fa1_2_transfer(c: contractStorage): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      kind?: "input-complete" | "autocomplete";
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    return {
+      values: {
+        token: "",
+        amount: "",
+        targetAddress: "",
+      },
+      fields: [
+        {
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
+          validate: (x: string) => {
+            return !x ? "Please select a token" : undefined;
+          },
+        },
+        {
+          field: "amount",
+          label: "Amount",
+          path: ".amount",
+          placeholder: "1",
+          validate: (x: string) => {
+            const amount = Number(x);
+            if (isNaN(amount) || amount <= 0) {
               return `Invalid amount ${x}`;
             }
           },

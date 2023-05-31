@@ -17,8 +17,8 @@ const Alias = ({
 
   const formatted = useMemo(
     () =>
-      `${address.substring(0, length)}...${address.substring(
-        address.length - length
+      `${(address ?? "").substring(0, length)}...${(address ?? "").substring(
+        (address ?? "").length - length
       )}`,
     [address, length]
   );

@@ -1,16 +1,25 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
-import { ErrorMessage, Field, FieldInputProps, FieldProps } from "formik";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import BigNumber from "bignumber.js";
+import { Field, FieldProps, useFormikContext } from "formik";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { v4 as uuidV4 } from "uuid";
 import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
-import Alias from "./Alias";
+import { proposals } from "../versioned/interface";
+import ErrorMessage from "./ErrorMessage";
+import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
-import renderError from "./formUtils";
 
-type fa2Token = {
+export type fa2Token = {
   id: number;
   balance: string;
   account: {
@@ -22,6 +31,7 @@ type fa2Token = {
     metadata: {
       name: string;
       symbol: string;
+      decimals: string;
       thumbnailUri?: string;
       displayUri?: string;
     };
@@ -74,15 +84,15 @@ type fa2TransferProps = {
 const FA2Transfer = ({
   proposalIndex,
   localIndex,
-  setFieldValue,
   remove,
-  getFieldProps,
   onTokenChange,
   fa2ContractAddress,
   toExclude,
   autoSetField = true,
 }: fa2TransferProps) => {
   const state = useContext(AppStateContext)!;
+  const { getFieldProps, setFieldValue, errors } =
+    useFormikContext<proposals>();
 
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
@@ -169,89 +179,74 @@ const FA2Transfer = ({
     }, 150);
   }, [fetchTokens, filterValue, toExclude]);
 
+  const tokenAmount = useMemo(() => {
+    if (!currentToken) return;
+
+    return BigNumber(currentToken.balance)
+      .div(BigNumber(10).pow(currentToken.token.metadata.decimals))
+      .toNumber();
+
+    return;
+  }, [currentToken]);
+
   return (
-    <div className="fa2-grid-template grid grid-rows-2 items-end gap-x-4">
-      <Field name={makeName("token")}>
-        {() => (
-          <Select
-            placeholder="Please select an FA2 token"
-            label=""
-            withSeeMore={canSeeMore}
-            onSeeMore={() => {
-              fetchOffsetRef.current += FETCH_COUNT;
+    <div className="fa2-grid-template grid items-start gap-x-4 space-y-2 xl:grid-rows-1 xl:space-y-0">
+      <div>
+        {!currentToken && <label className="text-transparent">Token</label>}
 
-              fetchTokens(filterValue, fetchOffsetRef.current).then(
-                (v: fa2Token[]) => {
-                  setOptions(current => current.concat(v.map(tokenToOption)));
-                }
-              );
-            }}
-            onSearch={setFilterValue}
-            onChange={newValue => {
-              updateValues(newValue.token);
-            }}
-            value={!!currentToken ? tokenToOption(currentToken) : undefined}
-            options={options}
-            loading={isFetching}
-            renderOption={({ image, tokenId, contractAddress, label }) => {
-              return (
-                <div className="flex">
-                  <div className="aspect-square w-12 overflow-hidden rounded bg-zinc-500/50">
-                    {!!image ? (
-                      <img
-                        src={image}
-                        alt={label}
-                        className="h-auto w-full p-1"
-                        onError={e => {
-                          // @ts-ignore
-                          e.target.src =
-                            "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src={
-                          "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png"
-                        }
-                        alt={label}
-                        className="h-auto w-full p-1"
-                      />
-                    )}
-                  </div>
+        <Field
+          name={makeName("token")}
+          validate={(value: string) =>
+            !value ? "Please select a token" : undefined
+          }
+        >
+          {() => (
+            <Select
+              placeholder="Please select an FA2 token"
+              label=""
+              withSeeMore={canSeeMore}
+              onSeeMore={() => {
+                fetchOffsetRef.current += FETCH_COUNT;
 
-                  <div className="flex w-5/6 flex-col justify-between px-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-zinc-400">#{tokenId}</span>
-
-                      <Alias
-                        address={contractAddress}
-                        className="text-xs text-zinc-400"
-                        disabled
-                      />
-                    </div>
-                    <p className="text-left text-xs" title={label}>
-                      {label}
-                    </p>
-                  </div>
-                </div>
-              );
-            }}
-          />
-        )}
-      </Field>
+                fetchTokens(filterValue, fetchOffsetRef.current).then(
+                  (v: fa2Token[]) => {
+                    setOptions(current => current.concat(v.map(tokenToOption)));
+                  }
+                );
+              }}
+              onSearch={setFilterValue}
+              onChange={newValue => {
+                updateValues(newValue.token);
+              }}
+              value={!!currentToken ? tokenToOption(currentToken) : undefined}
+              options={options}
+              loading={isFetching}
+              renderOption={RenderTokenOption}
+            />
+          )}
+        </Field>
+        <ErrorMessage name={makeName("token")} />
+      </div>
       <div className="w-full">
         <label className="text-white">Amount</label>
         <div className="relative w-full">
           <Field
             name={makeName("amount")}
             validate={(x: string) => {
+              if (!x) return "Value is empty";
               const amount = Number(x);
-              if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+              if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
-              } else if (
-                !!currentToken &&
-                amount > parseInt(currentToken.balance)
+              }
+
+              if (!currentToken) return;
+
+              if (
+                currentToken.token.metadata.decimals === "0" &&
+                !Number.isInteger(amount)
               ) {
+                return "Amount must be an integer";
+              } else if (amount > parseInt(currentToken.balance)) {
                 return `You only have ${currentToken.balance} token${
                   Number(currentToken.balance) <= 1 ? "" : "s"
                 }`;
@@ -267,16 +262,14 @@ const FA2Transfer = ({
                 />
                 {!!currentToken && !field.value && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                    Max:{" "}
-                    {Number(currentToken.balance) > 1000
-                      ? "1000+"
-                      : currentToken.balance}
+                    Max: {Number(tokenAmount) > 1000 ? "1000+" : tokenAmount}
                   </span>
                 )}
               </>
             )}
           </Field>
         </div>
+        <ErrorMessage name={makeName("amount")} />
       </div>
       <div>
         <label className="text-white">Transfer to</label>
@@ -290,26 +283,22 @@ const FA2Transfer = ({
               : undefined
           }
         />
+        <ErrorMessage name={makeName("targetAddress")} />
       </div>
-      <button
-        type="button"
-        className={`mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mx-auto xl:mt-0 xl:self-end`}
-        onClick={e => {
-          e.preventDefault();
+      <div className="flex justify-center xl:block">
+        <label className="hidden text-transparent xl:inline">helper</label>
+        <button
+          type="button"
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0`}
+          onClick={e => {
+            e.preventDefault();
 
-          remove(proposalIndex);
-        }}
-      >
-        Remove
-      </button>
-      <div className="self-start">
-        <ErrorMessage name={makeName("token")} render={renderError} />
-      </div>
-      <div className="self-start">
-        <ErrorMessage name={makeName("amount")} render={renderError} />
-      </div>
-      <div className="self-start">
-        <ErrorMessage name={makeName("targetAddress")} render={renderError} />
+            remove(proposalIndex);
+          }}
+        >
+          Remove
+        </button>
+        {<ErrorMessage name="empty" />}
       </div>
     </div>
   );
@@ -325,21 +314,11 @@ type formValue = {
 type props = {
   proposalIndex: number;
   remove: (index: number) => void;
-  setFieldValue: (
-    name: string,
-    value: formValue | formValue[] | string | fa2Token
-  ) => void;
-  getFieldProps: (
-    name: string
-  ) => FieldInputProps<fa2Token | formValue[] | formValue | undefined>;
 };
 
-const FA2TransferGroup = ({
-  proposalIndex,
-  remove,
-  setFieldValue,
-  getFieldProps,
-}: props) => {
+const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
+  const { setFieldValue, getFieldProps } = useFormikContext();
+
   const [selectedTokens, setSelectedTokens] = useState<
     (fa2Token | undefined)[]
   >([]);
@@ -359,13 +338,11 @@ const FA2TransferGroup = ({
   }, []);
 
   return (
-    <div className="mt-4">
+    <div className="mt-2 space-y-6">
       <FA2Transfer
         proposalIndex={proposalIndex}
         localIndex={0}
         remove={remove}
-        setFieldValue={setFieldValue}
-        getFieldProps={getFieldProps}
         autoSetField={false}
         onTokenChange={token => {
           const data = {
@@ -418,8 +395,6 @@ const FA2TransferGroup = ({
               currentValues.filter((_, ind) => ind !== i + 1)
             );
           }}
-          setFieldValue={setFieldValue}
-          getFieldProps={getFieldProps}
           fa2ContractAddress={contractAddress}
           onTokenChange={token => {
             setSelectedTokens(curr => {
@@ -437,7 +412,9 @@ const FA2TransferGroup = ({
         <button
           type="button"
           onClick={() => setAdditionalTransfers(v => v.concat([uuidV4()]))}
-          className="flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white"
+          className={`${
+            !contractAddress ? "pointer-events-none opacity-70" : ""
+          } flex items-center space-x-2 rounded bg-primary px-2 py-1 text-white`}
         >
           <PlusIcon />
           <span>Add</span>

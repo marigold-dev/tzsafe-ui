@@ -84,7 +84,8 @@ export const RenderProposalContent = ({
     if (
       !metadata?.contract_address &&
       !metadata?.meta?.includes("contract_addr") &&
-      !metadata?.meta?.includes("baker_address")
+      !metadata?.meta?.includes("baker_address") &&
+      !metadata?.meta?.includes("fa1_2_address")
     ) {
       data = {
         ...data,
@@ -92,6 +93,26 @@ export const RenderProposalContent = ({
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         params: metadata.lambda,
+      };
+    } else if (metadata?.meta?.includes("fa1_2_address")) {
+      const contractData = JSON.parse(metadata.meta).payload;
+
+      data = {
+        metadata: undefined,
+        label: `${
+          !!contractData.spender_address ? "Approve" : "Transfer"
+        } FA1.2`,
+        amount: contractData.amount,
+        addresses: [
+          !!contractData.spender_address
+            ? contractData.spender_address
+            : contractData.to,
+        ],
+        entrypoints: undefined,
+        params: JSON.stringify({
+          name: contractData.name,
+          fa1_2_address: contractData.fa1_2_address,
+        }),
       };
     } else if (metadata?.meta?.includes("fa2_address")) {
       const contractData = JSON.parse(metadata.meta);
@@ -321,6 +342,12 @@ const labelOfProposalContent = (content: proposalContent) => {
       isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
+      : !!metadata.meta &&
+        metadata.meta.includes("fa1_2_address") &&
+        metadata.meta.includes("spender_address")
+      ? "Approve FA1.2"
+      : !!metadata.meta && metadata.meta.includes("fa1_2_address")
+      ? "Transfer FA1.2"
       : !!metadata.meta && metadata.meta.includes("old_baker_address")
       ? "Undelegate"
       : !!metadata.meta && metadata.meta.includes("baker_address")
