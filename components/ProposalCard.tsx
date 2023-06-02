@@ -225,7 +225,7 @@ export const RenderProposalContent = ({
   }
 
   return (
-    <div className="after:content[''] relative w-full text-xs after:absolute after:left-0 after:right-0 after:-bottom-2 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
+    <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
         className={`${
           !data.params ? "cursor-default" : ""
@@ -247,7 +247,7 @@ export const RenderProposalContent = ({
         <span
           className={`${
             !data.metadata ? "text-zinc-500" : ""
-          } w-auto justify-self-end text-right lg:w-full lg:w-auto lg:justify-self-start lg:text-left`}
+          } w-auto justify-self-end text-right lg:w-auto lg:w-full lg:justify-self-start lg:text-left`}
         >
           <p className="flex justify-center font-medium text-zinc-500 lg:hidden">
             Metadata

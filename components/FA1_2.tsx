@@ -194,7 +194,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
         <label className="hidden text-transparent xl:inline">helper</label>
         <button
           type="button"
-          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0 xl:mb-1`}
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mb-1 xl:mt-0`}
           onClick={e => {
             e.preventDefault();
 

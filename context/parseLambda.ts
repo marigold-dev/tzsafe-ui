@@ -26,6 +26,13 @@ export enum LambdaType {
   LAMBDA_EXECUTION = "LAMBDA_EXECUTION",
 }
 
+const FA2_SIGNATURE =
+  '{"name":"transfer","params":{"type":"list","children":[{"type":"pair","children":[{"name":"from_","type":"address"},{"name":"txs","type":"list","children":[{"type":"pair","children":[{"name":"to_","type":"address"},{"type":"pair","children":[{"name":"token_id","type":"nat"},{"name":"amount","type":"nat"}]}]}]}]}]}}';
+const FA1_2_TRANSFER_SIGNATURE =
+  '{"name":"transfer","params":{"type":"pair","children":[{"name":"from","type":"address"},{"type":"pair","children":[{"name":"to","type":"address"},{"name":"amount","type":"nat"}]}]}}';
+const FA1_2_APPROVE_SIGNATURE =
+  '{"name":"approve","params":{"type":"pair","children":[{"name":"spender","type":"address"},{"name":"value","type":"nat"}]}}';
+
 const lambdaExec: [LambdaType, output | undefined] = [
   LambdaType.LAMBDA_EXECUTION,
   undefined,
@@ -134,8 +141,16 @@ export const parseLambda = (lambda: Expr): [LambdaType, output | undefined] => {
 
   if (!contractAddress || !data) return lambdaExec;
 
+  const entrypointSignature = JSON.stringify(entrypoint);
+
   return [
-    LambdaType.LAMBDA_EXECUTION,
+    entrypointSignature === FA2_SIGNATURE
+      ? LambdaType.FA2
+      : entrypointSignature === FA1_2_APPROVE_SIGNATURE
+      ? LambdaType.FA1_2_APPROVE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      ? LambdaType.FA1_2_TRANSFER
+      : LambdaType.LAMBDA_EXECUTION,
     {
       contractAddress,
       entrypoint,

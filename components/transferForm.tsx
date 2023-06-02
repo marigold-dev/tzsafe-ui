@@ -138,7 +138,7 @@ function Basic({
 
   return (
     <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-      <div className="flex w-full flex-col justify-center space-y-2 space-x-0 md:flex-row md:space-x-4 md:space-y-0">
+      <div className="flex w-full flex-col justify-center space-x-0 space-y-2 md:flex-row md:space-x-4 md:space-y-0">
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
             <label className="font-medium text-white">Contract address</label>
@@ -282,7 +282,7 @@ function ExecuteContractForm(
 
   if (loading) {
     return (
-      <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
+      <div className="mb-2 mt-8 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
         <ContractLoader loading={loading}></ContractLoader>
       </div>
     );
@@ -438,7 +438,7 @@ function TransferForm(
           </a>
           , and if it is, {"it'll"} appear in the proposals
         </p>
-        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-x-4 md:space-y-0">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -579,7 +579,7 @@ function TransferForm(
                         isMenuOpen
                           ? "right-2 top-4 justify-end"
                           : "right-2 top-2 justify-between"
-                      } -mt-1 flex w-full items-center py-2 px-6 text-white lg:hidden`}
+                      } -mt-1 flex w-full items-center px-6 py-2 text-white lg:hidden`}
                       onClick={() => setIsMenuOpen(v => !v)}
                     >
                       {isMenuOpen ? (
@@ -1003,7 +1003,7 @@ function TransferForm(
                             <div
                               className={
                                 withTextArea +
-                                "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
+                                "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-x-4 md:space-y-0  md:rounded-none md:border-none"
                               }
                               key={index}
                             >

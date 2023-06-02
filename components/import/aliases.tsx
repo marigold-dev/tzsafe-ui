@@ -113,7 +113,7 @@ function Aliases() {
                     values.validators.map((validator, index) => {
                       return (
                         <div
-                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-2 md:flex-row md:space-y-0 md:space-x-4 md:rounded-none md:border-none`}
+                          className={`md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-2 md:flex-row md:space-x-4 md:space-y-0 md:rounded-none md:border-none`}
                           key={index}
                         >
                           <div className="flex w-full flex-col md:w-auto">
@@ -194,7 +194,7 @@ function Aliases() {
           </div>
           <div className="mt-4 w-full">
             <h3 className="text-lg text-white">Proposal duration</h3>
-            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+            <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-x-4 md:space-y-0">
               <div className="flex w-full grow flex-col md:w-auto">
                 <label className="text-white">Days</label>
                 <Field

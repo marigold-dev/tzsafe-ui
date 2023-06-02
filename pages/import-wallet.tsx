@@ -23,7 +23,7 @@ function Import() {
   return (
     <div className="h-full grow">
       <Meta title={"Import wallet - TzSafe"} />
-      <h1 className="mx-auto max-w-7xl py-6 px-4 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
+      <h1 className="mx-auto max-w-7xl px-4 py-6 text-2xl font-extrabold text-white sm:px-6 lg:px-8">
         Import wallet
       </h1>
       <main className="mt-8 grow">

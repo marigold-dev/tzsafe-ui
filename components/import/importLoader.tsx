@@ -86,7 +86,7 @@ function Success() {
         onClick={() => {
           dispatch!({ type: "setCurrentContract", payload: address.address });
         }}
-        className="text-md row-span-1 mt-4 w-full max-w-full items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1 md:px-2 md:text-xl"
+        className="text-md row-span-1 mt-4 w-full max-w-full items-center justify-self-end rounded bg-primary px-2 py-2 text-center font-bold text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:px-2 md:py-1 md:text-xl"
       >
         Go to the wallet
       </Link>

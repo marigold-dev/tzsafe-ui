@@ -239,7 +239,7 @@ const SignersForm: FC<{
           , and if it is, {"it'll"} appear in the proposals
         </p>
         <div></div>
-        <div className="mt-8 w-full space-y-4 md:space-y-0 md:space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-x-4 md:space-y-0">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -499,7 +499,7 @@ const SignersForm: FC<{
                       values.validators.map((validator, index) => {
                         return (
                           <div
-                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4"
+                            className="md:p-none flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-x-4 md:space-y-0"
                             key={index}
                           >
                             <div className="flex w-full flex-col md:w-auto">
@@ -605,7 +605,7 @@ const SignersForm: FC<{
                         props.disabled ?? false
                           ? "pointer-events-none opacity-50"
                           : ""
-                      } my-2 mx-auto block self-center justify-self-center rounded bg-primary p-2 font-medium text-white`}
+                      } mx-auto my-2 block self-center justify-self-center rounded bg-primary p-2 font-medium text-white`}
                       onClick={e => {
                         e.preventDefault();
                         push({ name: "", address: "" });
@@ -647,7 +647,7 @@ const SignersForm: FC<{
 
             <div className="mt-4 w-full">
               <h3 className="text-lg text-white">Proposal duration</h3>
-              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-x-4 md:space-y-0">
                 <div className="flex w-full grow flex-col md:w-auto">
                   <label className="text-white">Days</label>
                   <Field

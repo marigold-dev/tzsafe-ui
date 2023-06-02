@@ -11,7 +11,7 @@ function Home() {
     <div className="min-h-content  relative flex grow flex-col">
       <Meta title={"Wallets - TzSafe"} />
       <div className="bg-graybg shadow">
-        <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto  flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">
             Imported wallets
           </h1>
