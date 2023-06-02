@@ -1,4 +1,5 @@
 import { Expr, Prim } from "@taquito/michel-codec";
+import { bytes2Char } from "@taquito/utils";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -93,7 +94,10 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
   return [];
 };
 
-export const parseLambda = (lambda: Expr): [LambdaType, output | undefined] => {
+export const parseLambda = (
+  lambda: Expr | null
+): [LambdaType, output | undefined] => {
+  if (!lambda) return lambdaExec;
   if (!Array.isArray(lambda)) return lambdaExec;
 
   const contractAddress = (() => {

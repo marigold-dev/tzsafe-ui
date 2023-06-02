@@ -1,5 +1,7 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
+import { Parser } from "@taquito/michel-codec";
 import { useState } from "react";
+import { parseLambda } from "../context/parseLambda";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
@@ -80,6 +82,13 @@ export const RenderProposalContent = ({
     };
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
+
+    const parser = new Parser();
+
+    console.log(content.executeLambda.content, content.executeLambda.metadata);
+    parseLambda(
+      parser.parseMichelineExpression(content.executeLambda.content ?? "")
+    );
 
     if (
       !metadata?.contract_address &&
