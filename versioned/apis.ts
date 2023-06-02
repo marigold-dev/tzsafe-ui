@@ -146,9 +146,9 @@ function matchLambda<acc extends { [key: string]: acc[typeof key] }>(
 ): { [key: string]: any } | null {
   try {
     let p = new Parser();
-    // let lam = cast<Array<Expr>>(p.parseJSON(items));
+    let lam = cast<Array<Expr>>(p.parseJSON(items));
 
-    let result = items.reduce(
+    let result = lam.reduce(
       (acc, item, idx) =>
         lambdaTable[`${idx}.${cast<Prim>(item).prim}`](acc, item),
       acc
