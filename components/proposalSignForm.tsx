@@ -6,6 +6,7 @@ import React, { useContext, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
+import useWalletTokens from "../utils/useWalletTokens";
 import { VersionedApi } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import { RenderProposalContent } from "./ProposalCard";
@@ -33,6 +34,7 @@ function ProposalSignForm({
 }) {
   const state = useContext(AppStateContext)!;
   const router = useRouter();
+  const walletTokens = useWalletTokens();
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
@@ -191,7 +193,11 @@ function ProposalSignForm({
             </div>
             <div className="mt-2 space-y-4 font-light lg:space-y-2">
               {proposal.ui.content.map((v, i) => (
-                <RenderProposalContent content={v} key={i} />
+                <RenderProposalContent
+                  content={v}
+                  key={i}
+                  walletTokens={walletTokens ?? []}
+                />
               ))}
             </div>
           </section>
