@@ -1,5 +1,9 @@
 import { Expr, Prim } from "@taquito/michel-codec";
-import { bytes2Char } from "@taquito/utils";
+import {
+  encodePubKey,
+  validateAddress,
+  ValidationResult,
+} from "@taquito/utils";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -69,10 +73,10 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
 
   if ("string" in rawData)
     return { [currentParam.name ?? "value"]: rawData.string };
+  else if ("bytes" in rawData)
+    return { [currentParam.name ?? "value"]: encodePubKey(rawData.bytes) };
   else if ("int" in rawData)
     return { [currentParam.name ?? "value"]: Number(rawData.int) };
-  else if ("bytes" in rawData)
-    return { [currentParam.name ?? "value"]: rawData.bytes };
 
   if (rawData.prim === "list")
     return rawData.args?.map(v => rawDataToData(v, currentParam)) ?? [];
@@ -106,14 +110,30 @@ export const parseLambda = (
 
       const { prim, args } = expr;
 
-      return (
-        //@ts-expect-error
-        prim === "PUSH" && args?.[0]?.prim === "address" && !!args?.[1]?.string
-      );
+      //@ts-expect-error
+      if (prim !== "PUSH" || args?.[0]?.prim !== "address") return false;
+
+      //@ts-expect-error
+      if (!!args?.[1]?.bytes) {
+        return (
+          //@ts-expect-error
+          validateAddress(encodePubKey(`0x${args[1].bytes}`)) ===
+          ValidationResult.VALID
+        );
+      }
+
+      //@ts-expect-error
+      return !!args?.[1]?.string;
     });
 
+    if (!expr) return undefined;
+
     //@ts-expect-error
-    return !!expr ? ((expr as Prim).args![1].string as string) : undefined;
+    return !!(expr as Prim).args![1].string
+      ? //@ts-expect-error
+        ((expr as Prim).args![1].string as string)
+      : //@ts-expect-error
+        encodePubKey((expr as Prim).args![1].bytes);
   })();
 
   const rawEntrypoint = (() => {

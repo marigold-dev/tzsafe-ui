@@ -5,7 +5,6 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../components/Alias";
 import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
-import Tooltip from "../components/Tooltip";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
@@ -18,6 +17,7 @@ import {
 } from "../context/state";
 import { mutezTransfer, proposal, version } from "../types/display";
 import { mutezToTez } from "../utils/tez";
+import useWalletTokens from "../utils/useWalletTokens";
 import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
@@ -30,6 +30,8 @@ const getLatestTimestamp = (og: {
 const History = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+
+  const walletTokens = useWalletTokens();
 
   const [isLoading, setIsLoading] = useState(true);
   const [invalid, setInvalid] = useState(false);
@@ -153,7 +155,7 @@ const History = () => {
                 Invalid contract address: {state.currentContract}
               </p>
             </div>
-          ) : isLoading ? (
+          ) : isLoading || !walletTokens ? (
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
@@ -213,6 +215,7 @@ const History = () => {
                       content={x[1].ui.content}
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.resolver}
+                      walletTokens={walletTokens}
                     />
                   );
                 })}

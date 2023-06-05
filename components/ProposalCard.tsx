@@ -1,10 +1,12 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { Parser } from "@taquito/michel-codec";
+import BigNumber from "bignumber.js";
 import { useState } from "react";
-import { parseLambda } from "../context/parseLambda";
+import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
+import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import Tooltip from "./Tooltip";
 
@@ -29,8 +31,10 @@ const isFa2 = (payload: any[]) => {
 
 export const RenderProposalContent = ({
   content,
+  walletTokens,
 }: {
   content: proposalContent;
+  walletTokens: walletToken[];
 }) => {
   const [hasParam, setHasParam] = useState(false);
 
@@ -85,17 +89,11 @@ export const RenderProposalContent = ({
 
     const parser = new Parser();
 
-    console.log(content.executeLambda.content, content.executeLambda.metadata);
-    parseLambda(
+    const [type, lambda] = parseLambda(
       parser.parseMichelineExpression(content.executeLambda.content ?? "")
     );
 
-    if (
-      !metadata?.contract_address &&
-      !metadata?.meta?.includes("contract_addr") &&
-      !metadata?.meta?.includes("baker_address") &&
-      !metadata?.meta?.includes("fa1_2_address")
-    ) {
+    if (type === LambdaType.LAMBDA_EXECUTION) {
       data = {
         ...data,
         label: "Execute lambda",
@@ -103,42 +101,51 @@ export const RenderProposalContent = ({
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         params: metadata.lambda,
       };
-    } else if (metadata?.meta?.includes("fa1_2_address")) {
-      const contractData = JSON.parse(metadata.meta).payload;
+    } else if (
+      type === LambdaType.FA1_2_APPROVE ||
+      type === LambdaType.FA1_2_TRANSFER
+    ) {
+      const lambdaData = lambda?.data as
+        | { spender: string; value: number }
+        | { from: string; to: string; amount: number };
+
+      const token = walletTokens.find(
+        token => token.token.contract.address === lambda?.contractAddress
+      );
 
       data = {
         metadata: undefined,
         label: `${
-          !!contractData.spender_address ? "Approve" : "Transfer"
+          type === LambdaType.FA1_2_APPROVE ? "Approve" : "Transfer"
         } FA1.2`,
-        amount: contractData.amount,
+        amount: (() => {
+          const amount =
+            "value" in lambdaData ? lambdaData.value : lambdaData.amount;
+
+          if (!token) return amount.toString();
+
+          return BigNumber(amount)
+            .div(BigNumber(10).pow(token.token.metadata.decimals))
+            .toString();
+        })(),
         addresses: [
-          !!contractData.spender_address
-            ? contractData.spender_address
-            : contractData.to,
+          "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         ],
         entrypoints: undefined,
         params: JSON.stringify({
-          name: contractData.name,
-          fa1_2_address: contractData.fa1_2_address,
+          name: token?.token.metadata.name,
+          fa1_2_address: lambda?.contractAddress,
         }),
       };
-    } else if (metadata?.meta?.includes("fa2_address")) {
-      const contractData = JSON.parse(metadata.meta);
-      data = {
-        label: "Transfer FA2",
-        metadata: undefined,
-        amount: contractData.amount,
-        addresses: [contractData.contract_addr],
-        entrypoints: undefined,
-        params: JSON.stringify(contractData.payload),
-      };
-    } else if (
-      metadata.entrypoint === "%transfer" &&
-      Array.isArray(metadata.payload) &&
-      isFa2(metadata.payload)
-    ) {
-      const [{ txs }] = metadata.payload;
+    } else if (type === LambdaType.FA2) {
+      const lambdaData = lambda?.data as {
+        from_: string;
+        txs: { to_: string; token_id: number; amount: number }[];
+      }[];
+
+      const token = walletTokens.find(
+        token => token.token.contract.address === lambda?.contractAddress
+      );
 
       data = {
         label: "Transfer FA2",
@@ -147,22 +154,14 @@ export const RenderProposalContent = ({
         addresses: [],
         entrypoints: undefined,
         params: JSON.stringify(
-          txs.map(
-            ({
-              to_,
-              token_id,
-              amount,
-            }: {
-              to_: string;
-              token_id: number;
-              amount: number;
-            }) => ({
-              fa2_address: metadata.contract_address,
-              token_id,
-              to: to_,
-              amount,
-            })
-          )
+          lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
+            fa2_address: token?.token.contract.address,
+            token_id,
+            to: to_,
+            amount: BigNumber(amount)
+              .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
+              .toString(),
+          }))
         ),
       };
     } else if (metadata?.meta?.includes("baker_address")) {
@@ -346,16 +345,17 @@ const labelOfProposalContent = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    return (metadata.entrypoint === "%transfer" &&
-      Array.isArray(metadata.payload) &&
-      isFa2(metadata.payload)) ||
-      (!!metadata.meta && metadata.meta.includes("fa2_address"))
+    const parser = new Parser();
+
+    const [type, _] = parseLambda(
+      parser.parseMichelineExpression(content.executeLambda.content ?? "")
+    );
+
+    return type === LambdaType.FA2
       ? "Transfer FA2"
-      : !!metadata.meta &&
-        metadata.meta.includes("fa1_2_address") &&
-        metadata.meta.includes("spender_address")
+      : type === LambdaType.FA1_2_APPROVE
       ? "Approve FA1.2"
-      : !!metadata.meta && metadata.meta.includes("fa1_2_address")
+      : type === LambdaType.FA1_2_TRANSFER
       ? "Transfer FA1.2"
       : !!metadata.meta && metadata.meta.includes("old_baker_address")
       ? "Undelegate"
@@ -374,6 +374,7 @@ type ProposalCardProps = {
   date: Date;
   activities: { signer: string; hasApproved: boolean }[];
   content: proposalContent[];
+  walletTokens: walletToken[];
   proposer: { actor: string; timestamp: string };
   resolver: { actor: string; timestamp: string } | undefined;
   isSignable?: boolean;
@@ -389,6 +390,7 @@ const ProposalCard = ({
   proposer,
   resolver,
   content,
+  walletTokens,
   isSignable = false,
   shouldResolve = false,
   setCloseModal,
@@ -505,7 +507,11 @@ const ProposalCard = ({
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
             {content.map((v, i) => (
-              <RenderProposalContent key={i} content={v} />
+              <RenderProposalContent
+                key={i}
+                content={v}
+                walletTokens={walletTokens}
+              />
             ))}
           </div>
         </section>
@@ -520,7 +526,7 @@ const ProposalCard = ({
                 .padStart(2, "0")}`}
             </p>
           )}
-          <div className="mt-4 grid grid grid-cols-3 text-zinc-500">
+          <div className="mt-4 grid grid-cols-3 text-zinc-500">
             <span>Date</span>
             <span className="justify-self-center">Proposer</span>
             <span className="justify-self-end">Status</span>
