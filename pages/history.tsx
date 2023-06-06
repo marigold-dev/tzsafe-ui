@@ -1,4 +1,3 @@
-import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -170,7 +169,7 @@ const History = () => {
                   return x[0] == -1 ? (
                     <div
                       key={(x[1] as any).timestamp}
-                      className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
+                      className="grid h-16 w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
                     >
                       <span className="justify-self-start font-bold md:ml-11">
                         <span className="hidden md:block">Received Tez</span>
@@ -200,6 +199,7 @@ const History = () => {
                     <ProposalCard
                       id={x[0]}
                       key={x[0]}
+                      metadataRender
                       status={x[1].ui.status}
                       date={
                         !!x[1].og.resolver

@@ -31,6 +31,7 @@ export enum LambdaType {
   LAMBDA_EXECUTION = "LAMBDA_EXECUTION",
   DELEGATE = "DELEGATE",
   UNDELEGATE = "UNDELEGATE",
+  CONTRACT_EXECUTION = "CONTRACT_EXECUTION",
 }
 
 const FA2_SIGNATURE =
@@ -105,7 +106,6 @@ const parseDelegate = (
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  console.log(lambda);
   if (!lambda.find(expr => "prim" in expr && expr.prim === "SET_DELEGATE"))
     return [false, undefined, undefined];
 
@@ -232,7 +232,7 @@ export const parseLambda = (
       ? LambdaType.FA1_2_APPROVE
       : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
       ? LambdaType.FA1_2_TRANSFER
-      : LambdaType.LAMBDA_EXECUTION,
+      : LambdaType.CONTRACT_EXECUTION,
     {
       contractAddress,
       entrypoint,
