@@ -183,7 +183,7 @@ const RenderProposalContentLambda = ({
         label: type === LambdaType.DELEGATE ? "Delegate" : "Undelegate",
         metadata: undefined,
         amount: undefined,
-        addresses: !!address ? [address] : [],
+        addresses: !!address ? [address] : undefined,
         entrypoints: undefined,
         params: undefined,
       };
