@@ -89,6 +89,7 @@ const RenderProposalContentLambda = ({
         label: "Execute lambda",
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
+        amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
         params: metadata.lambda,
       };
     } else if (type === LambdaType.CONTRACT_EXECUTION) {
@@ -96,8 +97,9 @@ const RenderProposalContentLambda = ({
         ...data,
         label: "Execute contract",
         addresses: !!lambda?.contractAddress ? [lambda.contractAddress] : [],
+        entrypoints: lambda?.entrypoint.name,
+        amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
         params: JSON.stringify({
-          entrypoint: lambda?.entrypoint.name,
           type: lambda?.entrypoint.params,
           data: lambda?.data,
         }),
@@ -151,12 +153,21 @@ const RenderProposalContentLambda = ({
       data = {
         label: "Transfer FA2",
         metadata: undefined,
-        amount: undefined,
-        addresses: [],
+        amount: lambdaData[0].txs
+          .reduce((acc, { amount }) => {
+            const value = BigNumber(amount)
+              .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
+              .toString();
+
+            return acc.plus(value);
+          }, BigNumber(0))
+          .toString(),
+        addresses: undefined,
         entrypoints: undefined,
         params: JSON.stringify(
           lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
             fa2_address: token?.token.contract.address,
+            name: token?.token.metadata.name,
             token_id,
             to: to_,
             amount: BigNumber(amount)

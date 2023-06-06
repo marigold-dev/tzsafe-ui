@@ -1,4 +1,5 @@
 import { Expr, Prim } from "@taquito/michel-codec";
+import { IntLiteral } from "@taquito/michel-codec/dist/types/micheline";
 import {
   encodePubKey,
   validateAddress,
@@ -17,6 +18,7 @@ export type param =
 
 export type output = {
   contractAddress: string;
+  mutez: number | undefined;
   entrypoint: {
     name: string;
     params: param;
@@ -46,6 +48,9 @@ const lambdaExec: [LambdaType, output | undefined] = [
   undefined,
 ];
 
+const formatBytes = (bytes: string | undefined): string =>
+  bytes?.includes("0x") ? bytes : `0x${bytes}`;
+
 const argToParam = (arg: Prim): param => {
   return {
     name: arg.annots?.[0].replace(/%|:/g, ""),
@@ -58,7 +63,7 @@ const argToParam = (arg: Prim): param => {
 
 const parseContractEntrypoint = (entrypoint: Prim): output["entrypoint"] => {
   return {
-    name: entrypoint.annots![0].replace(/%|:/g, ""),
+    name: entrypoint.annots?.[0].replace(/%|:/g, "") ?? "",
     params: !!entrypoint.args?.[0]
       ? argToParam(entrypoint.args[0] as Prim)
       : { name: undefined, type: "unit" },
@@ -134,8 +139,10 @@ const parseDelegate = (
     return !!expr?.args?.[1].string
       ? //@ts-expect-error
         (expr?.args?.[1].string as string)
-      : //@ts-expect-error
-        encodePubKey(expr?.args?.[1].bytes);
+      : encodePubKey(
+          //@ts-expect-error
+          formatBytes(expr?.args?.[1].bytes)
+        );
   })();
 
   return [true, type, !!address ? { address } : undefined];
@@ -154,6 +161,7 @@ export const parseLambda = (
       type,
       {
         contractAddress: "",
+        mutez: undefined,
         entrypoint: {
           name: "",
           params: { name: "", type: "" },
@@ -174,9 +182,12 @@ export const parseLambda = (
       //@ts-expect-error
       if (!!args?.[1]?.bytes) {
         return (
-          //@ts-expect-error
-          validateAddress(encodePubKey(`0x${args[1].bytes}`)) ===
-          ValidationResult.VALID
+          validateAddress(
+            encodePubKey(
+              //@ts-expect-error
+              formatBytes(args[1].bytes)
+            )
+          ) === ValidationResult.VALID
         );
       }
 
@@ -191,14 +202,16 @@ export const parseLambda = (
       ? //@ts-expect-error
         ((expr as Prim).args![1].string as string)
       : //@ts-expect-error
-        encodePubKey((expr as Prim).args![1].bytes);
+        encodePubKey(formatBytes((expr as Prim).args![1].bytes));
   })();
 
   const rawEntrypoint = (() => {
     const expr = lambda.find(expr => {
       if (!("prim" in expr)) return false;
 
-      return expr.prim === "CONTRACT" && !!expr.annots?.[0];
+      return (
+        expr.prim === "CONTRACT" && (!!expr.annots?.[0] || !!expr.args?.[0])
+      );
     });
 
     return expr as Prim | undefined;
@@ -225,6 +238,20 @@ export const parseLambda = (
 
   const entrypointSignature = JSON.stringify(entrypoint);
 
+  const mutez = (() => {
+    const expr = lambda.find(
+      v =>
+        "prim" in v &&
+        v.prim === "PUSH" &&
+        !!v.args &&
+        (v.args[0] as Prim).prim === "mutez"
+    ) as Prim | undefined;
+
+    if (!expr?.args) return;
+
+    return Number((expr.args[1] as IntLiteral).int);
+  })();
+
   return [
     entrypointSignature === FA2_SIGNATURE
       ? LambdaType.FA2
@@ -236,6 +263,7 @@ export const parseLambda = (
     {
       contractAddress,
       entrypoint,
+      mutez,
       data: rawDataToData(data.args![1], entrypoint.params),
     },
   ];

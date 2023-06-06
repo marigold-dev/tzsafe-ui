@@ -1,11 +1,6 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
-import { Parser } from "@taquito/michel-codec";
-import BigNumber from "bignumber.js";
 import { useState } from "react";
-import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent } from "../types/display";
-import { crop } from "../utils/strings";
-import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
