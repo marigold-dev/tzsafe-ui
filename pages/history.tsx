@@ -134,6 +134,7 @@ const History = () => {
             state={openModal.proposal[0]}
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
+            walletTokens={walletTokens ?? []}
           />
         )}
       </Modal>

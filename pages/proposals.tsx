@@ -95,6 +95,7 @@ const Proposals = () => {
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
             onSuccess={() => setRefresher(v => v + 1)}
+            walletTokens={walletTokens ?? []}
           />
         )}
       </Modal>
