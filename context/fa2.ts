@@ -1,5 +1,3 @@
-import { Parser } from "@taquito/michel-codec";
-
 type makeFa2MichelsonParam = {
   walletAddress: string;
   targetAddress: string;
