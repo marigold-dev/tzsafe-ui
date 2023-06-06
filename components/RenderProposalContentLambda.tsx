@@ -99,10 +99,11 @@ const RenderProposalContentLambda = ({
         addresses: !!lambda?.contractAddress ? [lambda.contractAddress] : [],
         entrypoints: lambda?.entrypoint.name,
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
-        params: JSON.stringify({
-          type: lambda?.entrypoint.params,
-          data: lambda?.data,
-        }),
+        params: !lambda?.data
+          ? "Unit"
+          : Array.isArray(lambda.data) && lambda.data.length === 0
+          ? "Unit"
+          : JSON.stringify(lambda.data),
       };
     } else if (
       type === LambdaType.FA1_2_APPROVE ||
