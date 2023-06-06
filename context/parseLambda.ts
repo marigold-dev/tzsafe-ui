@@ -29,6 +29,8 @@ export enum LambdaType {
   FA1_2_APPROVE = "FA1_2_APPROVE",
   FA1_2_TRANSFER = "FA1_2_TRANSFER",
   LAMBDA_EXECUTION = "LAMBDA_EXECUTION",
+  DELEGATE = "DELEGATE",
+  UNDELEGATE = "UNDELEGATE",
 }
 
 const FA2_SIGNATURE =
@@ -98,11 +100,67 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
   return [];
 };
 
+const parseDelegate = (
+  lambda: Expr[]
+):
+  | [true, LambdaType, { address: string } | undefined]
+  | [false, undefined, undefined] => {
+  console.log(lambda);
+  if (!lambda.find(expr => "prim" in expr && expr.prim === "SET_DELEGATE"))
+    return [false, undefined, undefined];
+
+  const type = !!lambda.find(
+    expr =>
+      "prim" in expr &&
+      expr.prim === "PUSH" &&
+      // @ts-expect-error
+      expr.args?.[0].prim === "key_hash"
+  )
+    ? LambdaType.DELEGATE
+    : LambdaType.UNDELEGATE;
+
+  const address = (() => {
+    if (type !== LambdaType.DELEGATE) return;
+
+    const expr = lambda.find(
+      expr =>
+        "prim" in expr &&
+        expr.prim === "PUSH" &&
+        // @ts-expect-error
+        expr.args?.[0].prim === "key_hash"
+    ) as Prim | undefined;
+
+    //@ts-expect-error
+    return !!expr?.args?.[1].string
+      ? //@ts-expect-error
+        (expr?.args?.[1].string as string)
+      : //@ts-expect-error
+        encodePubKey(expr?.args?.[1].bytes);
+  })();
+
+  return [true, type, !!address ? { address } : undefined];
+};
+
 export const parseLambda = (
   lambda: Expr | null
 ): [LambdaType, output | undefined] => {
   if (!lambda) return lambdaExec;
   if (!Array.isArray(lambda)) return lambdaExec;
+
+  const [isDelegate, type, delegateData] = parseDelegate(lambda);
+
+  if (isDelegate)
+    return [
+      type,
+      {
+        contractAddress: "",
+        entrypoint: {
+          name: "",
+          params: { name: "", type: "" },
+        },
+        data: delegateData ?? {},
+      },
+    ];
 
   const contractAddress = (() => {
     const expr = lambda.find(expr => {
