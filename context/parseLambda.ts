@@ -9,7 +9,7 @@ import {
 export type primitiveName = "string" | "number" | "list";
 
 export type primitiveValue = string | number | data[] | primitiveValue[];
-export type data = { [k: string]: primitiveValue } | data[];
+export type data = { [k: string]: primitiveValue } | data[] | string;
 
 export type param =
   | { name: string | undefined; type: string }
@@ -99,6 +99,8 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
         ...acc,
         ...(Array.isArray(parsed)
           ? { [currentParam.children[i].name ?? "value"]: parsed }
+          : typeof parsed === "string"
+          ? {}
           : parsed),
       };
     }, {});
@@ -185,7 +187,7 @@ export const parseLambda = (
           validateAddress(
             encodePubKey(
               //@ts-expect-error
-              formatBytes(args[1].bytes)
+              args[1].bytes
             )
           ) === ValidationResult.VALID
         );
@@ -202,7 +204,7 @@ export const parseLambda = (
       ? //@ts-expect-error
         ((expr as Prim).args![1].string as string)
       : //@ts-expect-error
-        encodePubKey(formatBytes((expr as Prim).args![1].bytes));
+        encodePubKey((expr as Prim).args![1].bytes);
   })();
 
   const rawEntrypoint = (() => {
@@ -252,19 +254,24 @@ export const parseLambda = (
     return Number((expr.args[1] as IntLiteral).int);
   })();
 
-  return [
+  const lambdaType =
     entrypointSignature === FA2_SIGNATURE
       ? LambdaType.FA2
       : entrypointSignature === FA1_2_APPROVE_SIGNATURE
       ? LambdaType.FA1_2_APPROVE
       : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
       ? LambdaType.FA1_2_TRANSFER
-      : LambdaType.CONTRACT_EXECUTION,
+      : LambdaType.CONTRACT_EXECUTION;
+  return [
+    lambdaType,
     {
       contractAddress,
       entrypoint,
       mutez,
-      data: rawDataToData(data.args![1], entrypoint.params),
+      data:
+        lambdaType === LambdaType.CONTRACT_EXECUTION
+          ? JSON.stringify(data.args?.[1]) ?? {}
+          : rawDataToData(data.args![1], entrypoint.params),
     },
   ];
 };

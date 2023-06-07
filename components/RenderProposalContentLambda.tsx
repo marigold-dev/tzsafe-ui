@@ -103,7 +103,7 @@ const RenderProposalContentLambda = ({
           ? "Unit"
           : Array.isArray(lambda.data) && lambda.data.length === 0
           ? "Unit"
-          : JSON.stringify(lambda.data),
+          : (lambda.data as string),
       };
     } else if (
       type === LambdaType.FA1_2_APPROVE ||
