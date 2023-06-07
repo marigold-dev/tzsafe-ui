@@ -11,6 +11,7 @@ import { getProposals } from "../context/proposals";
 import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
+import useWalletTokens from "../utils/useWalletTokens";
 import { getProposalsId, toProposal } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
@@ -18,6 +19,7 @@ const emptyProps: [number, { og: any; ui: proposal }][] = [];
 const Proposals = () => {
   const state = useContext(AppStateContext)!;
   const isOwner = useIsOwner();
+  const walletTokens = useWalletTokens();
 
   const [isLoading, setIsLoading] = useState(true);
   const [invalid, setInvalid] = useState(false);
@@ -93,16 +95,17 @@ const Proposals = () => {
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
             onSuccess={() => setRefresher(v => v + 1)}
+            walletTokens={walletTokens ?? []}
           />
         )}
       </Modal>
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Proposals</h1>
         </div>
       </div>
       <main className="min-h-fit grow">
-        <div className="mx-auto min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
@@ -113,7 +116,7 @@ const Proposals = () => {
                 Invalid contract address: {state.currentContract}
               </p>
             </div>
-          ) : isLoading ? (
+          ) : isLoading || !walletTokens ? (
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
@@ -170,6 +173,7 @@ const Proposals = () => {
                           x[1].ui.status
                         )
                       }
+                      walletTokens={walletTokens}
                       date={deadline}
                       activities={x[1].ui.signatures.map(
                         ({ signer, result }) => ({

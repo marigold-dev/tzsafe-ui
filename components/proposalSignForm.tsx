@@ -6,9 +6,10 @@ import React, { useContext, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
+import { walletToken } from "../utils/useWalletTokens";
 import { VersionedApi } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
-import { RenderProposalContent } from "./ProposalCard";
+import RenderProposalContentLambda from "./RenderProposalContentLambda";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
 
@@ -21,6 +22,7 @@ function ProposalSignForm({
   closeModal,
   threshold,
   onSuccess,
+  walletTokens,
 }: {
   address: string;
   proposal: { og: any; ui: proposal };
@@ -29,6 +31,7 @@ function ProposalSignForm({
   id: number;
   state: boolean | undefined;
   closeModal: () => void;
+  walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
@@ -191,7 +194,11 @@ function ProposalSignForm({
             </div>
             <div className="mt-2 space-y-4 font-light lg:space-y-2">
               {proposal.ui.content.map((v, i) => (
-                <RenderProposalContent content={v} key={i} />
+                <RenderProposalContentLambda
+                  content={v}
+                  key={i}
+                  walletTokens={walletTokens}
+                />
               ))}
             </div>
           </section>

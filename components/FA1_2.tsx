@@ -4,7 +4,6 @@ import { API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
-import Alias from "./Alias";
 import ErrorMessage from "./ErrorMessage";
 import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
@@ -115,7 +114,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
             };
           })
           .then(res => res.json()),
-        5000
+        3000
       ).then((v: fa1_2Token[] | number) => {
         if (typeof v === "number") {
           setSelectError("Failed to fetch the tokens. Please try again");
@@ -194,7 +193,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
         <label className="hidden text-transparent xl:inline">helper</label>
         <button
           type="button"
-          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mt-0 xl:mb-1`}
+          className={`mt-2 rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 xl:mb-1 xl:mt-0`}
           onClick={e => {
             e.preventDefault();
 

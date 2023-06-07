@@ -112,7 +112,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
           )}
           <div
-            className={`pt-20 pb-28 ${
+            className={`pb-28 pt-20 ${
               Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
             } ${state.hasBanner ? "mt-12" : ""}`}
           >

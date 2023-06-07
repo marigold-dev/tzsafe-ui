@@ -106,6 +106,8 @@ class Version0_0_11 extends Versioned {
                         token_id: Number(value.tokenId),
                         fa2_address: value.fa2Address,
                         amount: Number(value.amount),
+                        name: (value.token as unknown as fa2Token).token
+                          .metadata.name,
                       })),
                     })
                   ),
