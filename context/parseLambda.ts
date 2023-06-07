@@ -270,7 +270,7 @@ export const parseLambda = (
       mutez,
       data:
         lambdaType === LambdaType.CONTRACT_EXECUTION
-          ? JSON.stringify(data.args?.[1]) ?? {}
+          ? JSON.stringify(data.args?.[1], null, 2) ?? {}
           : rawDataToData(data.args![1], entrypoint.params),
     },
   ];

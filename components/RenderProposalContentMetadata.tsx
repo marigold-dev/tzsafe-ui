@@ -314,7 +314,7 @@ const RenderProposalContentMetadata = ({
       <div
         className={`${
           hasParam ? "block" : "hidden"
-        } mt-2 overflow-auto rounded bg-zinc-900 px-4 py-4 font-light`}
+        } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
         {data.params}
       </div>
