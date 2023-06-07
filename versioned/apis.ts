@@ -12,11 +12,12 @@ import { BigNumber } from "bignumber.js";
 import { contractStorage } from "../types/app";
 import { version, proposal } from "../types/display";
 import { Versioned } from "./interface";
-import Version006 from "./version006";
-import Version008 from "./version008";
-import Version009 from "./version009";
-import Version010 from "./version010";
-import Version011 from "./version011";
+import Version0_0_6 from "./version0_0_6";
+import Version0_0_8 from "./version0_0_8";
+import Version0_0_9 from "./version0_0_9";
+import Version0_0_10 from "./version0_0_10";
+import Version0_0_11 from "./version0_0_11";
+import Version0_1_1 from "./version0_1_1";
 
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
@@ -24,11 +25,12 @@ function signers(c: contractStorage): string[] {
 const dispatch: {
   [key in version]: (version: version, address: string) => Versioned;
 } = {
-  "0.0.6": (version, address) => new Version006(version, address),
-  "0.0.8": (version, address) => new Version008(version, address),
-  "0.0.9": (version, address) => new Version009(version, address),
-  "0.0.10": (version, address) => new Version010(version, address),
-  "0.0.11": (version, address) => new Version011(version, address),
+  "0.0.6": (version, address) => new Version0_0_6(version, address),
+  "0.0.8": (version, address) => new Version0_0_8(version, address),
+  "0.0.9": (version, address) => new Version0_0_9(version, address),
+  "0.0.10": (version, address) => new Version0_0_10(version, address),
+  "0.0.11": (version, address) => new Version0_0_11(version, address),
+  "0.1.1": (version, address) => new Version0_1_1(version, address),
   "unknown version": () => {
     throw new Error("not implemented!");
   },
@@ -36,11 +38,12 @@ const dispatch: {
 const dispatchUi: {
   [key in version]: any;
 } = {
-  "0.0.6": Version006,
-  "0.0.8": Version008,
-  "0.0.9": Version009,
-  "0.0.10": Version010,
-  "0.0.11": Version011,
+  "0.0.6": Version0_0_6,
+  "0.0.8": Version0_0_8,
+  "0.0.9": Version0_0_9,
+  "0.0.10": Version0_0_10,
+  "0.0.11": Version0_0_11,
+  "0.1.1": Version0_1_1,
   "unknown version": () => {
     throw new Error("not implemented!");
   },

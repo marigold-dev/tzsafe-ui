@@ -1,15 +1,19 @@
-import { Parser } from "@taquito/michel-codec";
+import { Parser, emitMicheline } from "@taquito/michel-codec";
 import {
+  BigMapAbstraction,
   Contract,
   TezosToolkit,
-  BigMapAbstraction,
-  MichelsonMap,
   WalletContract,
 } from "@taquito/taquito";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
 import { makeFa2Michelson } from "../context/fa2";
-import { content, contractStorage as storage } from "../types/006Proposal";
+import {
+  content,
+  proposal as p1,
+  contractStorage as c1,
+} from "../types/Proposal0_0_8";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { promiseWithTimeout } from "../utils/timeout";
@@ -18,7 +22,10 @@ import { ownersForm } from "./forms";
 import { timeoutAndHash, Versioned } from "./interface";
 import { proposals } from "./interface";
 
-class Version006 extends Versioned {
+function convert(x: string): string {
+  return char2Bytes(x);
+}
+class Version0_0_8 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -39,15 +46,27 @@ class Version006 extends Versioned {
             case "lambda": {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
+              let meta = !!x.values.metadata
+                ? convert(x.values.metadata)
+                : null;
               return {
-                execute_lambda: michelsonCode,
+                execute_lambda: {
+                  metadata: meta,
+                  lambda: michelsonCode,
+                },
               };
             }
             case "contract": {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
+              let meta = !!x.values.metadata
+                ? convert(x.values.metadata)
+                : null;
               return {
-                execute_lambda: michelsonCode,
+                execute_lambda: {
+                  metadata: meta,
+                  lambda: michelsonCode,
+                },
               };
             }
             case "fa2": {
@@ -87,7 +106,6 @@ class Version006 extends Versioned {
         })
       )
       .toTransferParams();
-
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(
@@ -110,8 +128,8 @@ class Version006 extends Versioned {
 
     return [false, op.opHash];
   }
-  static override getProposalsId(_contract: storage): string {
-    return _contract.proposal_map.toString();
+  static override getProposalsId(_contract: c1): string {
+    return _contract.proposals.toString();
   }
   async signProposal(
     cc: WalletContract,
@@ -120,15 +138,21 @@ class Version006 extends Versioned {
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
+    let proposals: { proposals: BigMapAbstraction } = await cc.storage();
+    let prop: any = await proposals.proposals.get(BigNumber(proposal));
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(BigNumber(proposal), result)
+        cc.methods.sign_proposal_only(
+          BigNumber(proposal),
+          prop.contents,
+          result
+        )
       );
     }
     if (resolve) {
       await batch.withContractCall(
-        cc.methods.resolve_proposal(BigNumber(proposal))
+        cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
       );
     }
     let op = await batch.send();
@@ -153,16 +177,17 @@ class Version006 extends Versioned {
     let content = ops
       .map(v => {
         if ("addOwners" in v) {
-          return { add_signers: v.addOwners };
+          return { add_owners: v.addOwners };
         } else if ("removeOwners" in v) {
-          return { remove_signers: v.removeOwners };
+          return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
-          return { adjust_threshold: v.changeThreshold };
+          return { change_threshold: v.changeThreshold };
         }
       })
       .filter(x => !!x);
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
+
     const transacValue = await promiseWithTimeout(
       op.transactionOperation(),
       DEFAULT_TIMEOUT
@@ -178,39 +203,37 @@ class Version006 extends Versioned {
     contract: any,
     balance: BigNumber
   ): contractStorage {
-    let c: {
-      proposal_counter: BigNumber;
-      proposal_map: BigMapAbstraction;
-      signers: string[];
-      threshold: BigNumber;
-    } = contract;
+    let c: c1 = contract;
     return {
       balance: balance!.toString() || "0",
-      proposal_map: c.proposal_map.toString(),
+      proposal_map: c.proposals.toString(),
       proposal_counter: c.proposal_counter.toString(),
       threshold: c!.threshold.toNumber()!,
-      signers: c!.signers!,
-      version: "0.0.6",
+      owners: c!.owners!,
+      version: "0.0.8",
     };
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
-      let meta = content.execute_lambda
-        ? matchLambda({}, JSON.parse(content.execute_lambda))
-        : null;
+      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
           metadata: !!meta
             ? JSON.stringify(meta, null, 2)
             : JSON.stringify(
                 {
-                  status: "Failed to parse lambda",
-                  meta: { lambda: content.execute_lambda },
+                  status: "Cant parse lambda",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                  lambda: emitMicheline(
+                    JSON.parse(content.execute_lambda.lambda)
+                  ),
                 },
                 null,
                 2
               ),
-          content: content.execute_lambda || "Lambda unavailable",
+          content: content.execute_lambda.lambda,
         },
       };
     } else if ("transfer" in content) {
@@ -220,17 +243,17 @@ class Version006 extends Versioned {
           destination: content.transfer.target,
         },
       };
-    } else if ("add_signers" in content) {
+    } else if ("add_owners" in content) {
       return {
-        addOwners: content.add_signers,
+        addOwners: content.add_owners,
       };
-    } else if ("remove_signers" in content) {
+    } else if ("remove_owners" in content) {
       return {
-        removeOwners: content.remove_signers,
+        removeOwners: content.remove_owners,
       };
-    } else if ("adjust_threshold" in content) {
+    } else if ("change_threshold" in content) {
       return {
-        changeThreshold: content.adjust_threshold,
+        changeThreshold: content.change_threshold,
       };
     } else if ("execute" in content) {
       return { execute: content.execute };
@@ -240,24 +263,17 @@ class Version006 extends Versioned {
   }
 
   static override toProposal(proposal: any): proposal {
-    let prop: {
-      signatures: MichelsonMap<string, boolean>;
-      state: { active: Symbol } | { done: Symbol } | { closed: Symbol };
-      content: content[];
-      executed?: string;
-      proposer: string;
-      timestamp: string;
-    } = proposal;
+    let prop: p1 = proposal;
     const status: { [key: string]: status } = {
-      active: "Proposing",
-      done: "Executed",
+      proposing: "Proposing",
+      executed: "Executed",
       closed: "Rejected",
     };
     return {
-      timestamp: prop.timestamp,
-      author: prop.proposer,
+      timestamp: prop.proposer.timestamp,
+      author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
-      content: prop.content.map(this.mapContent),
+      content: prop.contents.map(this.mapContent),
       signatures: [...Object.entries(prop.signatures)].map(([k, v]) => ({
         signer: k,
         result: v,
@@ -266,7 +282,4 @@ class Version006 extends Versioned {
   }
 }
 
-export default Version006;
-function convert(arg0: string): any {
-  throw new Error("Function not implemented.");
-}
+export default Version0_0_8;

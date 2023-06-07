@@ -1,4 +1,5 @@
-import { Parser, emitMicheline } from "@taquito/michel-codec";
+import { Parser } from "@taquito/michel-codec";
+import { emitMicheline } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
   Contract,
@@ -13,7 +14,7 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/008Proposal";
+} from "../types/Proposal0_0_10";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { promiseWithTimeout } from "../utils/timeout";
@@ -25,7 +26,7 @@ import { proposals } from "./interface";
 function convert(x: string): string {
   return char2Bytes(x);
 }
-class Version008 extends Versioned {
+class Version0_0_10 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -128,9 +129,6 @@ class Version008 extends Versioned {
 
     return [false, op.opHash];
   }
-  static override getProposalsId(_contract: c1): string {
-    return _contract.proposals.toString();
-  }
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
@@ -143,11 +141,7 @@ class Version008 extends Versioned {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(
-          BigNumber(proposal),
-          prop.contents,
-          result
-        )
+        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {
@@ -182,9 +176,14 @@ class Version008 extends Versioned {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
           return { change_threshold: v.changeThreshold };
+        } else if ("adjustEffectivePeriod" in v) {
+          return { adjust_effective_period: v.adjustEffectivePeriod };
+        } else {
+          return v;
         }
       })
       .filter(x => !!x);
+
     let params = cc.methods.create_proposal(content).toTransferParams();
     let op = await t.wallet.transfer(params).send();
 
@@ -208,9 +207,10 @@ class Version008 extends Versioned {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
       proposal_counter: c.proposal_counter.toString(),
+      effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.0.8",
+      version: "0.0.10",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -218,22 +218,33 @@ class Version008 extends Versioned {
       let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
-          metadata: !!meta
-            ? JSON.stringify(meta, null, 2)
+          metadata: !!content.execute_lambda.lambda
+            ? JSON.stringify(
+                !!!meta
+                  ? {
+                      status: "Cant parse lambda",
+                      meta: content.execute_lambda.metadata
+                        ? bytes2Char(content.execute_lambda.metadata)
+                        : "No meta supplied",
+                      lambda: emitMicheline(
+                        JSON.parse(content.execute_lambda.lambda)
+                      ),
+                    }
+                  : meta,
+                null,
+                2
+              )
             : JSON.stringify(
                 {
-                  status: "Cant parse lambda",
+                  status: "Executed; lambda unavailable",
                   meta: content.execute_lambda.metadata
                     ? bytes2Char(content.execute_lambda.metadata)
                     : "No meta supplied",
-                  lambda: emitMicheline(
-                    JSON.parse(content.execute_lambda.lambda)
-                  ),
                 },
                 null,
                 2
               ),
-          content: content.execute_lambda.lambda,
+          content: JSON.parse(content.execute_lambda.lambda || ""),
         },
       };
     } else if ("transfer" in content) {
@@ -255,19 +266,26 @@ class Version008 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
+    } else if ("adjust_effective_period" in content) {
+      return {
+        adjustEffectivePeriod: content.adjust_effective_period,
+      };
     } else if ("execute" in content) {
       return { execute: content.execute };
     }
     let never: never = content;
     throw new Error("unknown proposal");
   }
-
+  static override getProposalsId(_contract: c1): string {
+    return _contract.proposals.toString();
+  }
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
     const status: { [key: string]: status } = {
       proposing: "Proposing",
       executed: "Executed",
       closed: "Rejected",
+      expired: "Expired",
     };
     return {
       timestamp: prop.proposer.timestamp,
@@ -282,4 +300,4 @@ class Version008 extends Versioned {
   }
 }
 
-export default Version008;
+export default Version0_0_10;
