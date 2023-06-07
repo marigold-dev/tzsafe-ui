@@ -272,7 +272,7 @@ export const parseLambda = (
         lambdaType === LambdaType.CONTRACT_EXECUTION
           ? !!data.args?.[1]
             ? emitMicheline(data.args[1])
-            : `{ "prim": "Unit" }`
+            : "Unit"
           : rawDataToData(data.args![1], entrypoint.params),
     },
   ];

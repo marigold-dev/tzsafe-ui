@@ -104,9 +104,9 @@ const RenderProposalContentLambda = ({
           : lambda.entrypoint.name,
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
         params: !lambda?.data
-          ? `{ "prim": "Unit" }`
+          ? "Unit"
           : Array.isArray(lambda.data) && lambda.data.length === 0
-          ? `{ "prim": "Unit" }`
+          ? "Unit"
           : (lambda.data as string),
       };
     } else if (
