@@ -1,5 +1,4 @@
-import { Expr, Prim } from "@taquito/michel-codec";
-import { IntLiteral } from "@taquito/michel-codec/dist/types/micheline";
+import { Expr, Prim, IntLiteral, emitMicheline } from "@taquito/michel-codec";
 import {
   encodePubKey,
   validateAddress,
@@ -262,6 +261,7 @@ export const parseLambda = (
       : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
       ? LambdaType.FA1_2_TRANSFER
       : LambdaType.CONTRACT_EXECUTION;
+
   return [
     lambdaType,
     {
@@ -270,7 +270,9 @@ export const parseLambda = (
       mutez,
       data:
         lambdaType === LambdaType.CONTRACT_EXECUTION
-          ? JSON.stringify(data.args?.[1], null, 2) ?? {}
+          ? !!data.args?.[1]
+            ? emitMicheline(data.args[1])
+            : `{ "prim": "Unit" }`
           : rawDataToData(data.args![1], entrypoint.params),
     },
   ];

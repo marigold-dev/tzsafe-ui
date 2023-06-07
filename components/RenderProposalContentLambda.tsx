@@ -96,13 +96,15 @@ const RenderProposalContentLambda = ({
       data = {
         ...data,
         label: "Execute contract",
-        addresses: !!lambda?.contractAddress ? [lambda.contractAddress] : [],
+        addresses: !!lambda?.contractAddress
+          ? [lambda.contractAddress]
+          : undefined,
         entrypoints: lambda?.entrypoint.name,
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
         params: !lambda?.data
-          ? "Unit"
+          ? `{ "prim": "Unit" }`
           : Array.isArray(lambda.data) && lambda.data.length === 0
-          ? "Unit"
+          ? `{ "prim": "Unit" }`
           : (lambda.data as string),
       };
     } else if (
@@ -154,15 +156,7 @@ const RenderProposalContentLambda = ({
       data = {
         label: "Transfer FA2",
         metadata: undefined,
-        amount: lambdaData[0].txs
-          .reduce((acc, { amount }) => {
-            const value = BigNumber(amount)
-              .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-              .toString();
-
-            return acc.plus(value);
-          }, BigNumber(0))
-          .toString(),
+        amount: undefined,
         addresses: undefined,
         entrypoints: undefined,
         params: JSON.stringify(
