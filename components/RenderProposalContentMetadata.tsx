@@ -144,12 +144,15 @@ const RenderProposalContentMetadata = ({
               to_,
               token_id,
               amount,
+              name,
             }: {
               to_: string;
               token_id: number;
               amount: number;
+              name?: string;
             }) => ({
               fa2_address: metadata.contract_address,
+              name,
               token_id,
               to: to_,
               amount,
