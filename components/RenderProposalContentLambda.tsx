@@ -99,7 +99,7 @@ const RenderProposalContentLambda = ({
         addresses: !!lambda?.contractAddress
           ? [lambda.contractAddress]
           : undefined,
-        entrypoints: lambda?.entrypoint.name,
+        entrypoints: lambda?.entrypoint.name ?? "default",
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
         params: !lambda?.data
           ? `{ "prim": "Unit" }`
