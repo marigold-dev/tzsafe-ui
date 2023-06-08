@@ -1,12 +1,19 @@
-import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import { TokenSchema, Schema } from "@taquito/michelson-encoder";
 import {
   ContractAbstraction,
   ContractProvider,
   MichelsonMap,
 } from "@taquito/taquito";
-import { validateAddress } from "@taquito/utils";
+import {
+  validateAddress,
+  encodePubKey,
+  encodeKey,
+  encodeKeyHash,
+} from "@taquito/utils";
 import { assertNever } from "assert-never";
+import { list } from "postcss";
+import { off } from "process";
 import { makeContractExecution } from "../context/contractExecution";
 
 type michelsonType =
@@ -674,6 +681,218 @@ function parseContract(
   return token;
 }
 
+/**
+ *  pair (t{1}) ... (t{n}) with n > 2: A shorthand for pair (t{1}) (pair (t{2}) ... (pair (t{n-1}) (t{n})) ...).
+ *
+ *  reference: https://tezos.gitlab.io/active/michelson.html#core-data-types-and-notations
+ */
+function toRightAssociative(type: Expr): void {
+  if ("prim" in type && type.prim === "pair" && !!type.args) {
+    if (type.args.length <= 2) {
+      return;
+    } else {
+      const right = type.args.pop();
+      const left = type.args.pop();
+      if (!right || !left) throw new Error("Internal: it'can happen.");
+      type.args.push({ prim: "pair", args: [left, right] });
+      toRightAssociative(type);
+    }
+  } else {
+    throw new Error("Internal: not pair");
+  }
+}
+
+function decodeB58(type: Expr, data: Expr): Expr {
+  if ("prim" in type) {
+    switch (type.prim as michelsonType) {
+      case "bls12_381_fr":
+      case "bls12_381_g1":
+      case "bls12_381_g2":
+      case "chain_id":
+      case "bytes":
+      case "string":
+      case "bool":
+      case "int":
+      case "nat":
+      case "mutez":
+      case "timestamp":
+      case "never":
+      case "operation":
+      case "chest":
+      case "chest_key":
+      case "unit":
+      case "constant":
+      case "sapling_transaction_deprecated":
+      case "sapling_transaction":
+      case "sapling_state":
+      case "signature":
+        return data;
+      case "key_hash": {
+        if ("bytes" in data) {
+          let decode = encodeKeyHash(data.bytes);
+          if (!!decode) return { string: decode };
+          else
+            throw new Error(
+              "Internal: fail to decode address from bytes to string presentation"
+            );
+        } else {
+          return data;
+        }
+      }
+      case "tx_rollup_l2_address":
+        throw new Error(
+          "Internal: tx_rollup_l2_address is disable by protocol."
+        );
+      case "key": {
+        if ("bytes" in data) {
+          let decode = encodeKey(data.bytes);
+          if (!!decode) return { string: decode };
+          else
+            throw new Error(
+              "Internal: fail to decode address from bytes to string presentation"
+            );
+        } else {
+          return data;
+        }
+      }
+      case "contract":
+      case "address": {
+        if ("bytes" in data) {
+          let decode = encodePubKey(data.bytes);
+          if (!!decode) return { string: decode };
+          else
+            throw new Error(
+              "Internal: fail to decode address from bytes to string presentation"
+            );
+        } else {
+          return data;
+        }
+      }
+      case "ticket_deprecated":
+        throw new Error("Internal: ticket_deprecated can't be happen.");
+      //TODO: handle lambda
+      case "lambda":
+        return data;
+      case "ticket": {
+        if ("prim" in data && !!data.args && Array.isArray(data.args)) {
+          let [ticketer, value] = data.args;
+          if ("bytes" in ticketer) {
+            let decode_ticketer = encodePubKey(ticketer.bytes);
+            if (!!decode_ticketer) ticketer = { string: decode_ticketer };
+            else
+              throw new Error(
+                "Internal: fail to decode tickerer's address from bytes to string presentation"
+              );
+          }
+          data.args[0] = ticketer;
+          if (
+            !!type.args?.[0] &&
+            "prim" in type.args[0] &&
+            type.args[0].prim === "address"
+          ) {
+            if (
+              "prim" in value &&
+              !!value.args?.[0] &&
+              "bytes" in value.args[0]
+            ) {
+              let decode_value = encodePubKey(value.args[0].bytes);
+              if (!!decode_value) value.args[0] = { string: decode_value };
+              else
+                throw new Error(
+                  "Internal: fail to decode an address of contain from bytes to string presentation"
+                );
+            }
+          }
+          data.args[1] = value;
+          return data;
+        } else {
+          throw new Error("Internal: the structure of ticket is wrong");
+        }
+      }
+      case "or": {
+        if ("prim" in data && data.args?.[0]) {
+          if (data.prim == "Left" && !!type.args?.[0]) {
+            const new_data = decodeB58(type.args[0], data.args?.[0]);
+            return new_data;
+          } else if (data.prim == "Right" && type.args?.[1]) {
+            const new_data = decodeB58(type.args[1], data.args?.[0]);
+            return new_data;
+          } else {
+            throw new Error("Internal: or should be either left or right");
+          }
+        } else {
+          throw new Error("Internal: or should be data");
+        }
+      }
+      case "map":
+      case "big_map": {
+        if (Array.isArray(data)) {
+          data.map(v => {
+            if ("prim" in v && !!v.args) {
+              let t_data = type.args?.map((tv, i) => {
+                if (!v.args?.[i]) throw new Error("Internal: should have args");
+                const d = decodeB58(tv, v.args[i]);
+                v.args[i] = d;
+              });
+            } else {
+              throw new Error("Internal: data should be a prim");
+            }
+          });
+          return data;
+        } else {
+          throw new Error("Internal: data should be map or big_map");
+        }
+      }
+      case "pair": {
+        const new_type = toRightAssociative(type);
+        if ("prim" in data && !!data.args) {
+          let new_data = type.args?.map((v, i) => {
+            if (!data.args?.[i]) throw new Error("Internal: should have args");
+            const d = decodeB58(v, data.args[i]);
+            return d;
+          });
+          data.args = new_data;
+          return data;
+        } else {
+          throw new Error("Internal: data should be a prim");
+        }
+      }
+      case "option": {
+        if ("prim" in data) {
+          if (data.prim === "Some" && !!data.args) {
+            let new_data = type.args?.map((v, i) => {
+              if (!data.args?.[i])
+                throw new Error("Internal: should have args");
+              const d = decodeB58(v, data.args[i]);
+              return d;
+            });
+            data.args = new_data;
+          }
+          return data;
+        } else {
+          throw new Error("Internal: data should be a prim");
+        }
+      }
+      case "set":
+      case "list": {
+        if (Array.isArray(data)) {
+          let new_data = data.map(v => {
+            if (!!type.args?.[0]) return decodeB58(type.args[0], v);
+            else throw new Error("Internal: should have an arg");
+          });
+          return new_data;
+        } else {
+          throw new Error("Internal: should be array");
+        }
+      }
+      default:
+        throw new Error(`Internal: unknow type, ${type.prim}`);
+    }
+  } else {
+    throw new Error("Internal: type should be a prim");
+  }
+}
+
 export {
   parseSchema,
   genLambda,
@@ -681,5 +900,7 @@ export {
   allocateNewTokenCounter,
   showName,
   parseContract,
+  decodeB58,
+  toRightAssociative,
 };
 export type { token, tokenMap, tokenValueType };

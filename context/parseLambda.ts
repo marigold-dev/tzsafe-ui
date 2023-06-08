@@ -4,6 +4,7 @@ import {
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
+import { decodeB58 } from "../utils/contractParam";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -270,8 +271,8 @@ export const parseLambda = (
       mutez,
       data:
         lambdaType === LambdaType.CONTRACT_EXECUTION
-          ? !!data.args?.[1]
-            ? emitMicheline(data.args[1])
+          ? !!data.args?.[1] && !!data.args?.[0]
+            ? emitMicheline(decodeB58(data.args?.[0], data.args?.[1]))
             : "Unit"
           : rawDataToData(data.args![1], entrypoint.params),
     },
