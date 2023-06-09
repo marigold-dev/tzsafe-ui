@@ -46,8 +46,16 @@ a {
   grid-template-columns: 3fr 2fr 3fr 70px;
 }
 
+.fund-grid-template {
+  grid-template-columns: 3fr 2fr 70px;
+}
+
 @media (max-width: 1280px) {
   .fa2-grid-template {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .fund-grid-template {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 }
