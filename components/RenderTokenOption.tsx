@@ -36,7 +36,12 @@ const RenderTokenOption = ({
         )}
       </div>
 
-      <div className="flex w-5/6 flex-col justify-between px-2">
+      <div
+        className="flex flex-col justify-between px-2"
+        style={{
+          width: "calc(100% - 3rem)",
+        }}
+      >
         <div className="flex items-center justify-between">
           <span className="text-xs text-zinc-400">#{tokenId}</span>
 
