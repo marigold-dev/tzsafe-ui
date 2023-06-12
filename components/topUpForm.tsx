@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import { OpKind } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
@@ -13,6 +14,7 @@ import {
   API_URL,
   BROKEN_FA2_ADDRESSES,
   MODAL_TIMEOUT,
+  PREFERED_NETWORK,
   THUMBNAIL_URL,
 } from "../context/config";
 import fetchVersion from "../context/metadata";
@@ -185,18 +187,20 @@ function TopUp(props: {
             .transfer([
               {
                 from_: state.address,
-                [BROKEN_FA2_ADDRESSES.includes(address) ? "tx" : "txs"]:
-                  tokens.map(fromToken => ({
-                    to_: state.currentContract,
-                    token_id: Number(fromToken.tokenId),
-                    amount: BigNumber(fromToken.amount ?? 0)
-                      .multipliedBy(
-                        BigNumber(10).pow(
-                          fromToken.token?.token.metadata.decimals ?? 0
-                        )
+                [PREFERED_NETWORK === NetworkType.GHOSTNET &&
+                BROKEN_FA2_ADDRESSES.includes(address)
+                  ? "tx"
+                  : "txs"]: tokens.map(fromToken => ({
+                  to_: state.currentContract,
+                  token_id: Number(fromToken.tokenId),
+                  amount: BigNumber(fromToken.amount ?? 0)
+                    .multipliedBy(
+                      BigNumber(10).pow(
+                        fromToken.token?.token.metadata.decimals ?? 0
                       )
-                      .toNumber(),
-                  })),
+                    )
+                    .toNumber(),
+                })),
               },
             ])
             .toTransferParams(),
