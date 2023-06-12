@@ -1,10 +1,4 @@
 import { Parser, Expr } from "@taquito/michel-codec";
-import {
-  validateAddress,
-  encodePubKey,
-  encodeKey,
-  encodeKeyHash,
-} from "@taquito/utils";
 import { describe, expect, it } from "vitest";
 import { decodeB58, toRightAssociative } from "../utils/contractParam";
 
