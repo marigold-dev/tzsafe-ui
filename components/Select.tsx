@@ -1,5 +1,5 @@
 import * as Ariakit from "@ariakit/react";
-import { CheckIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
 import Spinner from "./Spinner";
 
 type option<T> = T & { id: string; value: string; label: string };
@@ -12,10 +12,12 @@ type props<T> = {
   value: option<T> | undefined;
   loading?: boolean;
   withSeeMore?: boolean;
+  onBlur?: () => void;
   onSeeMore?: () => void;
   renderOption?: (option: option<T>) => React.ReactNode;
   className?: string;
   error?: string;
+  clearInputOnClose?: boolean;
 };
 
 const Select = <T,>({
@@ -26,12 +28,16 @@ const Select = <T,>({
   value,
   renderOption,
   onSeeMore,
+  onBlur,
   className,
   placeholder,
   error,
   loading = false,
   withSeeMore = false,
+  clearInputOnClose = false,
 }: props<T>) => {
+  const [searchValue, setSearchValue] = useState("");
+
   const select = Ariakit.useSelectStore({
     sameWidth: true,
     gutter: 0,
@@ -42,6 +48,10 @@ const Select = <T,>({
       if (!newToken) return;
 
       onChange(newToken);
+    },
+    setOpen(open) {
+      if (!open) onBlur?.();
+      if (!!clearInputOnClose) setSearchValue("");
     },
   });
 
@@ -74,8 +84,10 @@ const Select = <T,>({
             className=" mb-2 w-full rounded px-2 py-1 text-sm text-zinc-900"
             placeholder="Search"
             onChange={e => {
+              setSearchValue(e.target.value);
               onSearch(e.target.value);
             }}
+            value={searchValue}
           />
         </div>
         {loading ? (

@@ -21,7 +21,7 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { tezToMutez } from "../utils/tez";
+import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { toStorage } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
@@ -347,11 +347,28 @@ function TopUp(props: {
             )}
             <div className="flex w-full flex-col justify-between md:items-start">
               <label className="font-medium text-white">Amount of Tez</label>
-              <Field
-                name="amount"
-                className="mt-2 w-full rounded-md p-2"
-                placeholder="1"
-              />
+              <div className="relative mt-2 w-full">
+                <Field
+                  name="amount"
+                  className="w-full rounded-md p-2"
+                  placeholder="1"
+                />
+                {!!state.currentContract &&
+                  !!state.contracts[state.currentContract]?.balance && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                      Max:{" "}
+                      {mutezToTez(
+                        Number(state.contracts[state.currentContract].balance)
+                      ) > 1000
+                        ? "1000+"
+                        : mutezToTez(
+                            Number(
+                              state.contracts[state.currentContract].balance
+                            )
+                          )}
+                    </span>
+                  )}
+              </div>
               <ErrorMessage name="amount" />
             </div>
             <FieldArray name="tokens">
@@ -381,7 +398,7 @@ function TopUp(props: {
                           >
                             {() => (
                               <Select
-                                placeholder="Please select an FA1.2 token"
+                                placeholder="Please select an FA1.2/FA2 token"
                                 label=""
                                 withSeeMore={canSeeMore}
                                 onSeeMore={() => {
@@ -407,6 +424,8 @@ function TopUp(props: {
                                 loading={isFetching}
                                 renderOption={RenderTokenOption}
                                 error={selectError}
+                                onBlur={() => setFilterValue("")}
+                                clearInputOnClose
                               />
                             )}
                           </Field>
