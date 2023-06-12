@@ -23,7 +23,7 @@ const TopUpPage = () => {
           ) : (
             <TopUp
               address={state.currentContract ?? ""}
-              closeModal={console.log}
+              closeModal={() => {}}
             />
           )}
         </div>
