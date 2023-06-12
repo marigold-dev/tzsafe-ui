@@ -357,21 +357,14 @@ function TopUp(props: {
                   className="w-full rounded-md p-2"
                   placeholder="1"
                 />
-                {!!state.currentContract &&
-                  !!state.contracts[state.currentContract]?.balance && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
-                      Max:{" "}
-                      {mutezToTez(
-                        Number(state.contracts[state.currentContract].balance)
-                      ) > 1000
-                        ? "1000+"
-                        : mutezToTez(
-                            Number(
-                              state.contracts[state.currentContract].balance
-                            )
-                          )}
-                    </span>
-                  )}
+                {!!state.balance && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                    Max:{" "}
+                    {mutezToTez(Number(state.balance)) > 1000
+                      ? "1000+"
+                      : mutezToTez(Number(state.balance))}
+                  </span>
+                )}
               </div>
               <ErrorMessage name="amount" />
             </div>
