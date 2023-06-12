@@ -21,4 +21,8 @@ export const PROPOSAL_DURATION_WARNING = 600000;
 export const MARIGOLD_LOGO_URL =
   "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";
 
-export const BROKEN_FA2_ADDRESSES = ["KT1H9hKtcqcMHuCoaisu8Qy7wutoUPFELcLm"];
+export const BROKEN_FA2_ADDRESSES = [
+  "KT1H9hKtcqcMHuCoaisu8Qy7wutoUPFELcLm",
+  "KT19RSC3s5EzvSTquHnav6JNzgb6ngoh1YUh",
+  "KT1UhjCszVyY5dkNUXFGAwdNcVgVe2ZeuPv5",
+];
