@@ -202,7 +202,11 @@ function ProposalSignForm({
               ))}
             </div>
             {!!proposal.ui.content.find(
-              v => "addOwners" in v || "removeOwners" in v
+              v =>
+                "addOwners" in v ||
+                "removeOwners" in v ||
+                "changeThreshold" in v ||
+                "adjustExpirationPeriod" in v
             ) && (
               <span className="mt-2 text-xs font-light text-yellow-500">
                 This proposal will update the signers for all the active
