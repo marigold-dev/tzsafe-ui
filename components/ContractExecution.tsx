@@ -7,7 +7,7 @@ import {
   Formik,
   useFormikContext,
 } from "formik";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { AppStateContext } from "../context/state";
 import {
   parseContract,
