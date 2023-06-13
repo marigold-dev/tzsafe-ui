@@ -1,4 +1,6 @@
 import { NetworkType } from "@airgap/beacon-sdk";
+import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import { OpKind } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
@@ -177,33 +179,51 @@ function TopUp(props: {
       }
     );
 
+    const p = new Parser();
+
     const fa2Transfers = (await Promise.all(
       Object.entries(fa2).map(async ([address, tokens]) => {
         const contract = await state.connection.contract.at(address);
 
+        // [
+        //       {
+        //         from_: state.address,
+        //         [PREFERED_NETWORK === NetworkType.GHOSTNET &&
+        //         BROKEN_FA2_ADDRESSES.includes(address)
+        //           ? "tx"
+        //           : "txs"]: tokens.map(fromToken => ({
+        //           to_: state.currentContract,
+        //           token_id: Number(fromToken.tokenId),
+        //           amount: BigNumber(fromToken.amount ?? 0)
+        //             .multipliedBy(
+        //               BigNumber(10).pow(
+        //                 fromToken.token?.token.metadata.decimals ?? 0
+        //               )
+        //             )
+        //             .toNumber(),
+        //         })),
+        //       },
+        //     ]
+
+        const data = p.parseMichelineExpression(
+          `{ Pair "${state.address}" { ${tokens
+            .map(
+              ({ tokenId, amount, token }) =>
+                `Pair "${state.currentContract}" (Pair ${tokenId} ${BigNumber(
+                  amount ?? 0
+                )
+                  .multipliedBy(
+                    BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+                  )
+                  .toNumber()}) ;`
+            )
+            .join("\n")} } }`
+        );
+        const schema = new Schema(contract.entrypoints.entrypoints["transfer"]);
+
         return {
           kind: OpKind.TRANSACTION,
-          ...contract.methods
-            .transfer([
-              {
-                from_: state.address,
-                [PREFERED_NETWORK === NetworkType.GHOSTNET &&
-                BROKEN_FA2_ADDRESSES.includes(address)
-                  ? "tx"
-                  : "txs"]: tokens.map(fromToken => ({
-                  to_: state.currentContract,
-                  token_id: Number(fromToken.tokenId),
-                  amount: BigNumber(fromToken.amount ?? 0)
-                    .multipliedBy(
-                      BigNumber(10).pow(
-                        fromToken.token?.token.metadata.decimals ?? 0
-                      )
-                    )
-                    .toNumber(),
-                })),
-              },
-            ])
-            .toTransferParams(),
+          ...contract.methods.transfer(schema.Execute(data)).toTransferParams(),
         };
       })
     )) as transfer;
