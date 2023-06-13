@@ -143,7 +143,7 @@ function TopUp(props: {
     amount,
     tokens,
   }: {
-    amount: number;
+    amount: string;
     tokens: formToken[];
   }) {
     if (!state.currentContract) return;
@@ -228,12 +228,12 @@ function TopUp(props: {
     ).flat() as transfer;
 
     const batch = state.connection.wallet.batch(
-      (!!amount && amount > 0
+      (!!amount && Number(amount) > 0
         ? ([
             {
               kind: OpKind.TRANSACTION,
               to: state.currentContract,
-              amount: tezToMutez(amount),
+              amount: tezToMutez(Number(amount)),
               mutez: true,
             },
           ] as transfer)
@@ -263,7 +263,7 @@ function TopUp(props: {
   return (
     <Formik
       initialValues={{
-        amount: 0,
+        amount: "",
         tokens: [],
       }}
       validate={values => {
@@ -487,7 +487,7 @@ function TopUp(props: {
                   })}
                   <button
                     type="button"
-                    className="rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                    className="mt-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
                     onClick={e => {
                       push({
                         contractAddress: undefined,
