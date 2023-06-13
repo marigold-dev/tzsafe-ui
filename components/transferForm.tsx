@@ -301,13 +301,13 @@ function ExecuteContractForm(
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
           setState({ ...state, amount });
+          setFieldValue(
+            `transfers.${props.id}.amount`,
+            mutezToTez(state.amount)
+          );
         }}
         onAddressChange={address => {
           setState({ ...state, address });
-          setFieldValue(
-            `transfers.${props.id}.amount`,
-            !!state.amount ? mutezToTez(state.amount) : undefined
-          );
         }}
         withContinue={!state.address}
         address={state.address}
