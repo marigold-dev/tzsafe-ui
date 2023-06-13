@@ -204,14 +204,26 @@ function Basic({
                   placeholder="0"
                   onChange={async (e: ChangeEvent<HTMLInputElement>) => {
                     field.onChange(e);
-                    const amount = Number(e.target.value.trim());
-                    const hasError = await validateAndSetState({
-                      ...localFormState,
-                      amount,
-                    });
+                    const amount = Number(
+                      e.target.value.trim() === "" ? NaN : e.target.value.trim()
+                    );
 
-                    if (hasError) return;
+                    if (isNaN(amount ?? NaN) || (amount ?? -1) < 0) {
+                      console.log("???");
+                      setErrors({
+                        ...errors,
+                        amount:
+                          amount === undefined
+                            ? ""
+                            : "Invalid amount " + amount,
+                      });
 
+                      return;
+                    } else {
+                      setErrors({ ...errors, amount: undefined });
+                    }
+
+                    setLocalFormState({ ...localFormState, amount });
                     onAmountChange?.(tezToMutez(amount));
                   }}
                 />
@@ -300,11 +312,7 @@ function ExecuteContractForm(
         id={props.id}
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
-          setState({ ...state, amount });
-          setFieldValue(
-            `transfers.${props.id}.amount`,
-            mutezToTez(state.amount)
-          );
+          setFieldValue(`transfers.${props.id}.amount`, mutezToTez(amount));
         }}
         onAddressChange={address => {
           setState({ ...state, address });
@@ -312,7 +320,7 @@ function ExecuteContractForm(
         withContinue={!state.address}
         address={state.address}
         defaultValues={{
-          amount: state.amount,
+          amount: undefined,
           address: undefined,
         }}
       />
