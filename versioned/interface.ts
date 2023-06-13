@@ -8,6 +8,35 @@ import { ownersForm } from "./forms";
 
 export type timeoutAndHash = [boolean, string];
 
+type common = {
+  fields: {
+    field: string;
+    label: string;
+    path: string;
+    placeholder: string;
+    kind?: "textarea" | "input-complete" | "autocomplete";
+    validate: (p: string) => string | undefined;
+  }[];
+};
+export type proposals =
+  | {
+      transfers: ({
+        type:
+          | "transfer"
+          | "lambda"
+          | "contract"
+          | "fa1.2-transfer"
+          | "fa1.2-approve";
+        values: { [key: string]: string };
+      } & common)[];
+    }
+  | {
+      transfers: ({
+        type: "fa2";
+        values: { [key: string]: string }[];
+      } & common)[];
+    };
+
 abstract class Versioned {
   readonly version: string;
   readonly contractAddress: string;
@@ -18,19 +47,7 @@ abstract class Versioned {
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: {
-      transfers: {
-        type: "transfer" | "lambda" | "contract" | "fa2";
-        values: { [key: string]: string };
-        fields: {
-          field: string;
-          label: string;
-          path: string;
-          placeholder: string;
-          validate: (p: string) => string | undefined;
-        }[];
-      }[];
-    }
+    proposals: proposals
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(
@@ -65,7 +82,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return c.owners;
     }
@@ -81,7 +99,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return c.owners;
     }
@@ -132,7 +151,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return {
         values: {
@@ -197,11 +217,11 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez",
+            label: "Amount (Tez)",
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
-              const amount = Number.parseInt(x);
+              const amount = Number(x);
               if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
               }
@@ -224,7 +244,8 @@ abstract class Versioned {
       c.version === "0.0.8" ||
       c.version === "0.0.9" ||
       c.version === "0.0.10" ||
-      c.version === "0.0.11"
+      c.version === "0.0.11" ||
+      c.version === "0.1.1"
     ) {
       return {
         values: {
@@ -234,11 +255,11 @@ abstract class Versioned {
         fields: [
           {
             field: "amount",
-            label: "Amount in Mutez",
+            label: "Amount (Tez)",
             path: ".amount",
             placeholder: "1",
             validate: (x: string) => {
-              const amount = Number.parseInt(x);
+              const amount = Number(x);
               if (isNaN(amount) || amount <= 0) {
                 return `Invalid amount ${x}`;
               }
@@ -266,44 +287,32 @@ abstract class Versioned {
   }
 
   static fa2(c: contractStorage): {
-    values: { [key: string]: string };
+    values: { [key: string]: string }[];
     fields: {
       field: string;
       label: string;
       path: string;
-      kind?: "input-complete";
+      kind?: "input-complete" | "autocomplete";
       placeholder: string;
       validate: (p: string) => string | undefined;
     }[];
   } {
     return {
-      values: {
-        targetAddress: "",
-        tokenId: "",
-        amount: "",
-        fa2Address: "",
-      },
+      values: [
+        {
+          token: "",
+          amount: "",
+          targetAddress: "",
+        },
+      ],
       fields: [
         {
-          field: "fa2Address",
-          label: "FA2 address",
-          path: ".fa2Address",
-          kind: "input-complete",
-          placeholder: "Fa2 address",
-          validate: (x: string) =>
-            validateAddress(x) !== ValidationResult.VALID
-              ? `Invalid address ${x}`
-              : undefined,
-        },
-        {
-          field: "tokenId",
-          label: "Token Id",
-          path: ".tokenId",
-          placeholder: "0",
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
           validate: (x: string) => {
-            if (isNaN(parseInt(x))) {
-              return `Invalid id ${x}`;
-            }
+            return !x ? "Please select a token" : undefined;
           },
         },
         {
@@ -312,7 +321,115 @@ abstract class Versioned {
           path: ".amount",
           placeholder: "1",
           validate: (x: string) => {
-            const amount = parseInt(x);
+            const amount = Number(x);
+            if (isNaN(amount) || amount <= 0 || !Number.isInteger(amount)) {
+              return `Invalid amount ${x}`;
+            }
+          },
+        },
+        {
+          field: "targetAddress",
+          label: "Transfer to",
+          path: ".targetAddress",
+          kind: "input-complete",
+          placeholder: "Destination address",
+          validate: (x: string) =>
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
+        },
+      ],
+    };
+  }
+
+  static fa1_2_approve(c: contractStorage): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      kind?: "input-complete" | "autocomplete";
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    return {
+      values: {
+        token: "",
+        amount: "",
+        targetAddress: "",
+      },
+      fields: [
+        {
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
+          validate: (x: string) => {
+            return !x ? "Please select a token" : undefined;
+          },
+        },
+        {
+          field: "amount",
+          label: "Amount",
+          path: ".amount",
+          placeholder: "1",
+          validate: (x: string) => {
+            const amount = Number(x);
+            if (isNaN(amount) || amount < 0) {
+              return `Invalid amount ${x}`;
+            }
+          },
+        },
+        {
+          field: "spenderAddress",
+          label: "Transfer to",
+          path: ".spenderAddress",
+          kind: "input-complete",
+          placeholder: "Spender address",
+          validate: (x: string) =>
+            validateAddress(x) !== ValidationResult.VALID
+              ? `Invalid address ${x}`
+              : undefined,
+        },
+      ],
+    };
+  }
+
+  static fa1_2_transfer(c: contractStorage): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      kind?: "input-complete" | "autocomplete";
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    return {
+      values: {
+        token: "",
+        amount: "",
+        targetAddress: "",
+      },
+      fields: [
+        {
+          field: "token",
+          label: "Token",
+          path: ".token",
+          placeholder: "Token",
+          validate: (x: string) => {
+            return !x ? "Please select a token" : undefined;
+          },
+        },
+        {
+          field: "amount",
+          label: "Amount",
+          path: ".amount",
+          placeholder: "1",
+          validate: (x: string) => {
+            const amount = Number(x);
             if (isNaN(amount) || amount <= 0) {
               return `Invalid amount ${x}`;
             }

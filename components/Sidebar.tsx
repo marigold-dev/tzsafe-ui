@@ -68,7 +68,7 @@ const SelectedItem = ({
         </span>
       </Copy>
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-lg">{formattedBalance.toString()}xtz</p>
+        <p className="text-lg">{formattedBalance.toString()} Tez</p>
         <p className="text-xs text-zinc-500">V{version ?? "0.0.0"}</p>
       </div>
     </div>
@@ -168,7 +168,7 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`fixed left-0 bottom-0 ${
+      className={`fixed bottom-0 left-0 ${
         state.hasBanner ? "top-32" : "top-20"
       } z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
@@ -210,7 +210,7 @@ const Sidebar = ({
             </Select.Icon>
           </FixedTrigger>
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content className="z-10">
           <Select.ScrollUpButton className="flex items-center justify-center text-zinc-300">
             <ChevronUpIcon />
           </Select.ScrollUpButton>

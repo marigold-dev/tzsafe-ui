@@ -299,7 +299,7 @@ function Aliases() {
             </div>
             <div className="mt-4 w-full">
               <h3 className="text-lg text-white">Proposal duration</h3>
-              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+              <div className="md:p-none mt-2 flex min-w-full flex-col items-start justify-start space-y-4 md:flex-row md:space-x-4 md:space-y-0">
                 <div className="flex w-full grow flex-col md:w-auto">
                   <label className="text-white">Days</label>
                   <Field
@@ -338,7 +338,7 @@ function Aliases() {
                   )
                 : null}
             </div>
-            <div className="mt-8 mb-8 flex space-x-6">
+            <div className="mb-8 mt-8 flex space-x-6">
               <Link
                 type="button"
                 href="/"

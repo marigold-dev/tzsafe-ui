@@ -51,7 +51,7 @@ function Home() {
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Address book - TzSafe"} />
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 lg:px-8">
+        <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Address book</h1>
         </div>
       </div>
@@ -136,7 +136,7 @@ function Home() {
                             <div className="flex space-x-8">
                               <button
                                 type="button"
-                                className="my-2 mx-auto block w-full self-center justify-self-center rounded border border-white bg-transparent p-2 font-medium text-white"
+                                className="mx-auto my-2 block w-full self-center justify-self-center rounded border border-white bg-transparent p-2 font-medium text-white"
                                 onClick={e => {
                                   e.preventDefault();
                                   unshift({

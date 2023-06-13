@@ -27,6 +27,8 @@ RUN \
     echo -en "NEXT_PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.ghostnet.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=ghostnet" > .env.local; \
   fi
 
+RUN npm run test
+
 RUN npm run build
 
 EXPOSE 80

@@ -1,16 +1,17 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { ErrorMessage, Field, Form, Formik } from "formik";
+import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
+import { walletToken } from "../utils/useWalletTokens";
 import { VersionedApi } from "../versioned/apis";
-import { RenderProposalContent } from "./ProposalCard";
+import ErrorMessage from "./ErrorMessage";
+import RenderProposalContentLambda from "./RenderProposalContentLambda";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
-import renderError from "./formUtils";
 
 function ProposalSignForm({
   address,
@@ -21,6 +22,7 @@ function ProposalSignForm({
   closeModal,
   threshold,
   onSuccess,
+  walletTokens,
 }: {
   address: string;
   proposal: { og: any; ui: proposal };
@@ -29,6 +31,7 @@ function ProposalSignForm({
   id: number;
   state: boolean | undefined;
   closeModal: () => void;
+  walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
@@ -191,9 +194,25 @@ function ProposalSignForm({
             </div>
             <div className="mt-2 space-y-4 font-light lg:space-y-2">
               {proposal.ui.content.map((v, i) => (
-                <RenderProposalContent content={v} key={i} />
+                <RenderProposalContentLambda
+                  content={v}
+                  key={i}
+                  walletTokens={walletTokens}
+                />
               ))}
             </div>
+            {!!proposal.ui.content.find(
+              v =>
+                "addOwners" in v ||
+                "removeOwners" in v ||
+                "changeThreshold" in v ||
+                "adjustEffectivePeriod" in v
+            ) && (
+              <span className="mt-2 text-xs font-light text-yellow-500">
+                This proposal will update the settings for all the active
+                proposals
+              </span>
+            )}
           </section>
           <p className="mt-8 text-lg font-medium text-white">
             Action:{" "}
@@ -208,18 +227,18 @@ function ProposalSignForm({
           (modalState === false && threshold !== 1
             ? proposal.ui.signatures.length + 1 > threshold
             : proposal.ui.signatures.length + 1 >= threshold && (
-                <div className="mb-2 flex w-full items-center justify-between">
+                <div className="mb-2 flex w-full items-center space-x-4">
                   <label className="font-medium text-white">
                     Try to resolve immediately:
                   </label>
                   <Field
                     name="flag"
                     type="checkbox"
-                    className="rounded-md p-2"
+                    className="h-4 w-4 rounded-md p-2"
                   />
                 </div>
               ))}
-        <ErrorMessage name="flag" render={renderError} />
+        <ErrorMessage name="flag" />
         <div className="flex w-2/3 justify-between md:w-1/3">
           <button
             className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"

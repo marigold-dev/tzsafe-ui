@@ -25,7 +25,7 @@ const Settings = () => {
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Settings - TzSafe"} />
       <div>
-        <div className="mx-auto flex max-w-7xl flex-col justify-start py-6 px-4 sm:px-6 md:flex-row md:justify-between lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-start px-4 py-6 sm:px-6 md:flex-row md:justify-between lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">Settings</h1>
 
           <button
@@ -47,7 +47,7 @@ const Settings = () => {
         </div>
       </div>
       <main className="min-h-fit grow">
-        <div className="mx-auto min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar

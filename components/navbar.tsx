@@ -91,7 +91,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                   <div className="flex items-end">
                     <button
                       type="button"
-                      className=" focus:border-offset-2 focus:border-offset-zinc-800  max-w-xs items-center bg-zinc-800 py-1 px-2 text-sm focus:border-2 focus:border-white focus:outline-none"
+                      className=" focus:border-offset-2 focus:border-offset-zinc-800  max-w-xs items-center bg-zinc-800 px-2 py-1 text-sm focus:border-2 focus:border-white focus:outline-none"
                       id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
@@ -157,7 +157,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 onClick={() => {
                   menuOpen ? setMenuOpen(false) : setMenuOpen(true);
                 }}
-                className="inline-flex items-center justify-center rounded-md bg-zinc-800 p-2 text-zinc-400 text-white hover:bg-zinc-700 hover:text-white focus:outline-none"
+                className="inline-flex items-center justify-center rounded-md bg-zinc-800 p-2 text-white text-zinc-400 hover:bg-zinc-700 hover:text-white focus:outline-none"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
               >
@@ -202,7 +202,7 @@ const NavBar = (_: React.PropsWithChildren) => {
         className={`${menuOpen ? "" : "hidden"} w-full md:hidden`}
         id="mobile-menu"
       >
-        <div className={`w-full space-y-1 px-2 pt-2 pb-3 text-left sm:px-3`}>
+        <div className={`w-full space-y-1 px-2 pb-3 pt-2 text-left sm:px-3`}>
           <LinkComponent
             onClick={closeMenu}
             path="/address-book"

@@ -1,10 +1,15 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { ChevronDownIcon, ChevronUpIcon } from "@radix-ui/react-icons";
-import { validateContractAddress, ValidationResult } from "@taquito/utils";
 import {
-  ErrorMessage,
+  validateContractAddress,
+  ValidationResult,
+  validateAddress,
+} from "@taquito/utils";
+import BigNumber from "bignumber.js";
+import {
   Field,
   FieldArray,
+  FieldProps,
   Form,
   Formik,
   useFormikContext,
@@ -14,16 +19,21 @@ import React, {
   ChangeEvent,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
+import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
-import { Versioned } from "../versioned/interface";
+import { Versioned, proposals } from "../versioned/interface";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
+import ErrorMessage from "./ErrorMessage";
+import FA1_2 from "./FA1_2";
+import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
 import renderError from "./formUtils";
@@ -128,7 +138,7 @@ function Basic({
 
   return (
     <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
-      <div className="flex w-full flex-col justify-center space-y-2 space-x-0 md:flex-row md:space-x-4 md:space-y-0">
+      <div className="flex w-full flex-col justify-center space-x-0 space-y-2 md:flex-row md:space-x-4 md:space-y-0">
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
             <label className="font-medium text-white">Contract address</label>
@@ -185,24 +195,28 @@ function Basic({
         </div>
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
-            <label className="font-medium text-white">Amount in mutez</label>
-            <Field
-              name={`transfers.${id}.amount`}
-              className=" w-full rounded p-2 text-black"
-              placeholder="0"
-              onChange={async (e: ChangeEvent<HTMLInputElement>) => {
-                const amount = Number(e.target.value.trim());
-                const hasError = await validateAndSetState({
-                  ...localFormState,
-                  amount,
-                });
+            <label className="font-medium text-white">Amount (Tez)</label>
+            <Field name={`transfers.${id}.amount`}>
+              {({ field }: FieldProps) => (
+                <input
+                  {...field}
+                  className="w-full rounded p-2 text-black"
+                  placeholder="0"
+                  onChange={async (e: ChangeEvent<HTMLInputElement>) => {
+                    field.onChange(e);
+                    const amount = Number(e.target.value.trim());
+                    const hasError = await validateAndSetState({
+                      ...localFormState,
+                      amount,
+                    });
 
-                if (hasError) return;
+                    if (hasError) return;
 
-                onAmountChange?.(amount);
-              }}
-              defaultValue={defaultValues?.amount}
-            />
+                    onAmountChange?.(tezToMutez(amount));
+                  }}
+                />
+              )}
+            </Field>
           </div>
           {!!errors.amount && renderError(errors.amount)}
         </div>
@@ -236,35 +250,39 @@ function Basic({
   );
 }
 
+type state = {
+  address: string;
+  amount: number;
+  shape: object;
+};
 function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
     getFieldProps: () => string;
     id: number;
+    defaultState?: state;
     onReset: () => void;
+    onChange: (state: state) => void;
   }>
 ) {
-  const { submitCount } = useFormikContext();
+  const { submitCount, setFieldValue } = useFormikContext();
   const submitCountRef = useRef(submitCount);
 
-  const [state, setState] = useState({ address: "", amount: 0, shape: {} });
+  const [state, setState] = useState(
+    () => props.defaultState ?? { address: "", amount: 0, shape: {} }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const setLoader = useCallback((x: boolean) => setLoading(x), []);
 
-  const setStater = useCallback(({ shape }: { shape: object }) => {
-    setState((prev: any) => {
-      if (Object.keys(prev.shape).length) {
-        return prev;
-      }
-      return { ...prev, shape };
-    });
-  }, []);
+  useEffect(() => {
+    props.onChange(state);
+  }, [state, props.onChange]);
 
   if (loading) {
     return (
-      <div className="mt-8 mb-2 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
+      <div className="mb-2 mt-8 flex w-full items-center justify-center rounded border-2 border-white p-4 align-middle">
         <ContractLoader loading={loading}></ContractLoader>
       </div>
     );
@@ -286,6 +304,10 @@ function ExecuteContractForm(
         }}
         onAddressChange={address => {
           setState({ ...state, address });
+          setFieldValue(
+            `transfers.${props.id}.amount`,
+            !!state.amount ? mutezToTez(state.amount) : undefined
+          );
         }}
         withContinue={!state.address}
         address={state.address}
@@ -299,8 +321,14 @@ function ExecuteContractForm(
           loading={loading}
           setLoading={setLoader}
           shape={state.shape}
+          onShapeChange={shape => {
+            setState(v => ({
+              ...v,
+              shape: { ...v.shape, init: shape },
+            }));
+          }}
           setState={shape => {
-            setStater({ shape });
+            setState(v => ({ ...v, shape }));
           }}
           reset={() => setState({ address: "", amount: 0, shape: {} })}
           address={state.address}
@@ -366,20 +394,7 @@ const addNewField = (
   if (window.scrollY > 200) window.scrollTo(0, 0);
 };
 
-const initialProps: {
-  transfers: {
-    type: "lambda" | "transfer" | "contract" | "fa2";
-    values: { [key: string]: string };
-    fields: {
-      field: string;
-      label: string;
-      kind?: "textarea" | "input-complete";
-      path: string;
-      placeholder: string;
-      validate: (p: string) => string | undefined;
-    }[];
-  }[];
-} = {
+const initialProps: proposals = {
   transfers: [],
 };
 
@@ -399,6 +414,7 @@ function TransferForm(
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<boolean | undefined>(undefined);
   const [formState, setFormState] = useState(() => initialProps);
+  const executeContractStateRef = useRef<{ [k: number]: state }>({});
 
   if (state?.address == null) {
     return null;
@@ -422,7 +438,7 @@ function TransferForm(
           </a>
           , and if it is, {"it'll"} appear in the proposals
         </p>
-        <div className="mt-8 w-full space-x-4">
+        <div className="mt-8 w-full space-y-4 md:space-x-4 md:space-y-0">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
             onClick={() => {
@@ -505,6 +521,7 @@ function TransferForm(
             let field = element.fields.find(x => x.field === labl);
             let validate =
               field?.placeholder !== value ? field?.validate(value) : undefined;
+
             if (validate) {
               if (!errors.transfers[idx]) {
                 errors.transfers[idx] = { values: {} };
@@ -538,11 +555,11 @@ function TransferForm(
         }, MODAL_TIMEOUT);
       }}
     >
-      {({ values, errors, setFieldValue, getFieldProps, setFieldError }) => (
+      {({ values, errors, setFieldValue, getFieldProps, getFieldHelpers }) => (
         <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
           <div className="relative mb-2 grid w-full grid-flow-row items-start gap-4">
             <FieldArray name="transfers">
-              {({ remove, replace, unshift, push, form }) => (
+              {({ remove, replace, push, form }) => (
                 <div
                   className="flex h-fit min-w-full flex-col lg:flex-row-reverse"
                   id="top"
@@ -562,7 +579,7 @@ function TransferForm(
                         isMenuOpen
                           ? "right-2 top-4 justify-end"
                           : "right-2 top-2 justify-between"
-                      } -mt-1 flex w-full items-center py-2 px-6 text-white lg:hidden`}
+                      } -mt-1 flex w-full items-center px-6 py-2 text-white lg:hidden`}
                       onClick={() => setIsMenuOpen(v => !v)}
                     >
                       {isMenuOpen ? (
@@ -595,6 +612,37 @@ function TransferForm(
                       >
                         Transfer
                       </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            push,
+                            "fa1.2-approve",
+                            undefined,
+                            Versioned.fa1_2_approve(props.contract)
+                          );
+                        }}
+                      >
+                        FA1.2 Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                        onClick={e => {
+                          addNewField(
+                            e,
+                            push,
+                            "fa1.2-transfer",
+                            undefined,
+                            Versioned.fa1_2_transfer(props.contract)
+                          );
+                        }}
+                      >
+                        FA1.2 Transfer
+                      </button>
+
                       <button
                         type="button"
                         className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
@@ -659,6 +707,16 @@ function TransferForm(
                             >
                               <ExecuteContractForm
                                 id={index}
+                                defaultState={
+                                  executeContractStateRef.current[index]
+                                    ?.address === ""
+                                    ? undefined
+                                    : executeContractStateRef.current[index]
+                                }
+                                onChange={formState => {
+                                  executeContractStateRef.current[index] =
+                                    formState;
+                                }}
                                 getFieldProps={() =>
                                   getFieldProps(
                                     `transfers.${index}.values.metadata`
@@ -678,6 +736,10 @@ function TransferForm(
                                   );
                                 }}
                                 onReset={() => {
+                                  setFieldValue(
+                                    `transfers.${index}.amount`,
+                                    ""
+                                  );
                                   setFieldValue(
                                     `transfers.${index}.walletAddress`,
                                     ""
@@ -707,7 +769,221 @@ function TransferForm(
                               </button>
                             </div>
                           );
+                        } else if (transfer.type === "fa2") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA2 token transfer
+                              </p>
+                              <FA2Transfer
+                                key={index}
+                                proposalIndex={index}
+                                remove={remove}
+                              />
+                            </section>
+                          );
+                        } else if (transfer.type === "fa1.2-approve") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA1.2 Approve
+                              </p>
+                              <FA1_2 key={index} index={index} remove={remove}>
+                                {token => {
+                                  const balance = !!token
+                                    ? BigNumber(token.balance)
+                                        .div(
+                                          BigNumber(10).pow(
+                                            token.token.metadata.decimals
+                                          )
+                                        )
+                                        .toNumber()
+                                    : undefined;
+
+                                  return (
+                                    <>
+                                      <div className="w-full">
+                                        <label className="text-white">
+                                          Amount
+                                        </label>
+                                        <div className="relative w-full">
+                                          <Field
+                                            name={`transfers.${index}.values.amount`}
+                                            validate={(x: string) => {
+                                              if (!x) return "Value is empty";
+
+                                              const amount = Number(x);
+
+                                              if (isNaN(amount) || amount < 0) {
+                                                return `Invalid amount ${x}`;
+                                              }
+
+                                              if (!balance) return;
+
+                                              if (amount > balance) {
+                                                return `You only have ${balance} token${
+                                                  balance <= 1 ? "" : "s"
+                                                }`;
+                                              }
+                                            }}
+                                          >
+                                            {({ field }: FieldProps) => (
+                                              <>
+                                                <input
+                                                  {...field}
+                                                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                  placeholder="1"
+                                                />
+                                                {!!balance && !field.value && (
+                                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                    Max:{" "}
+                                                    {balance > 1000
+                                                      ? "1000+"
+                                                      : balance}
+                                                  </span>
+                                                )}
+                                              </>
+                                            )}
+                                          </Field>
+                                        </div>
+
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.amount`}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-white">
+                                          Spender
+                                        </label>
+                                        <Field
+                                          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                          placeholder="Destination address"
+                                          validate={(x: string) =>
+                                            validateAddress(x) !==
+                                            ValidationResult.VALID
+                                              ? `Invalid address ${x ?? ""}`
+                                              : undefined
+                                          }
+                                        />
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.spenderAddress`}
+                                        />
+                                      </div>
+                                    </>
+                                  );
+                                }}
+                              </FA1_2>
+                            </section>
+                          );
+                        } else if (transfer.type === "fa1.2-transfer") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                FA1.2 Transfer
+                              </p>
+                              <FA1_2 key={index} index={index} remove={remove}>
+                                {token => {
+                                  const balance = !!token
+                                    ? BigNumber(token.balance)
+                                        .div(
+                                          BigNumber(10).pow(
+                                            token.token.metadata.decimals
+                                          )
+                                        )
+                                        .toNumber()
+                                    : undefined;
+
+                                  return (
+                                    <>
+                                      <div className="w-full">
+                                        <label className="text-white">
+                                          Amount
+                                        </label>
+                                        <div className="relative w-full">
+                                          <Field
+                                            name={`transfers.${index}.values.amount`}
+                                            validate={(x: string) => {
+                                              if (!x) return "Value is empty";
+
+                                              const amount = Number(x);
+
+                                              if (
+                                                isNaN(amount) ||
+                                                amount <= 0
+                                              ) {
+                                                return `Invalid amount ${x}`;
+                                              }
+
+                                              if (!balance) return;
+
+                                              if (amount > balance) {
+                                                return `You only have ${balance} token${
+                                                  balance <= 1 ? "" : "s"
+                                                }`;
+                                              }
+                                            }}
+                                          >
+                                            {({ field }: FieldProps) => (
+                                              <>
+                                                <input
+                                                  {...field}
+                                                  className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm xl:w-full"
+                                                  placeholder="1"
+                                                />
+                                                {!!balance && !field.value && (
+                                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                                                    Max:{" "}
+                                                    {balance > 1000
+                                                      ? "1000+"
+                                                      : balance}
+                                                  </span>
+                                                )}
+                                              </>
+                                            )}
+                                          </Field>
+                                        </div>
+
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.amount`}
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-white">
+                                          Transfer to
+                                        </label>
+                                        <Field
+                                          className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm"
+                                          name={`transfers.${index}.values.targetAddress`}
+                                          placeholder="Destination address"
+                                          validate={(x: string) =>
+                                            validateAddress(x) !==
+                                            ValidationResult.VALID
+                                              ? `Invalid address ${x ?? ""}`
+                                              : undefined
+                                          }
+                                        />
+                                        <ErrorMessage
+                                          name={`transfers.${index}.values.targetAddress`}
+                                        />
+                                      </div>
+                                    </>
+                                  );
+                                }}
+                              </FA1_2>
+                            </section>
+                          );
                         }
+
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"
                         )
@@ -721,15 +997,13 @@ function TransferForm(
                                 #{(index + 1).toString().padStart(2, "0")}
                               </span>
                               {!transfer.fields.find(v => v.kind === "textarea")
-                                ? transfer.type === "fa2"
-                                  ? "Transfer FA2"
-                                  : "Transfer"
+                                ? "Transfer"
                                 : "Execute lambda"}
                             </p>
                             <div
                               className={
                                 withTextArea +
-                                "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-y-0 md:space-x-4  md:rounded-none md:border-none"
+                                "md:p-none flex h-fit min-h-fit min-w-full flex-col items-start justify-around space-y-4 md:flex-row md:space-x-4 md:space-y-0  md:rounded-none md:border-none"
                               }
                               key={index}
                             >
@@ -752,7 +1026,8 @@ function TransferForm(
                                     : "flex flex-col"
                                 } ${
                                   !!value.kind &&
-                                  value.kind === "input-complete"
+                                  (value.kind === "input-complete" ||
+                                    value.kind === "autocomplete")
                                     ? "w-full md:grow"
                                     : ""
                                 }`;
@@ -805,27 +1080,31 @@ function TransferForm(
                                     )}
                                     <ErrorMessage
                                       name={`transfers.${index}.values.${value.field}`}
-                                      render={renderError}
                                     />
                                   </div>
                                 );
                               })}
-                              <button
-                                type="button"
-                                className={
-                                  (errors.transfers && errors.transfers[index]
-                                    ? "my-auto"
-                                    : "") +
-                                  " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
-                                }
-                                onClick={e => {
-                                  e.preventDefault();
+                              <div>
+                                <label className="text-transparent">
+                                  Helper
+                                </label>
+                                <button
+                                  type="button"
+                                  className={
+                                    (errors.transfers && errors.transfers[index]
+                                      ? "my-auto"
+                                      : "") +
+                                    " mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-1 md:self-end"
+                                  }
+                                  onClick={e => {
+                                    e.preventDefault();
 
-                                  remove(index);
-                                }}
-                              >
-                                Remove
-                              </button>
+                                    remove(index);
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              </div>
                             </div>
                           </section>
                         );

@@ -8,7 +8,7 @@ function Home() {
 
       <div>
         <div>
-          <div className="mx-auto  flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto  flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-extrabold text-white">
               Welcome to TzSafe
             </h1>
@@ -32,7 +32,7 @@ function Home() {
                     type="button"
                     href={{ pathname: "/new-wallet" }}
                     className={
-                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:py-1.5 md:px-1 md:text-2xl "
+                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary px-2 py-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500  md:px-1 md:py-1.5 md:text-2xl "
                     }
                     id="user-menu-button"
                     aria-expanded="false"
@@ -55,7 +55,7 @@ function Home() {
                     type="button"
                     href={{ pathname: "/import-wallet" }}
                     className={
-                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary py-2 px-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:py-1.5 md:px-1 md:text-2xl "
+                      "text-md row-span-1 w-1/2 max-w-xs items-center justify-self-end rounded bg-primary px-2 py-2 text-center font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:px-1 md:py-1.5 md:text-2xl "
                     }
                     id="user-menu-button"
                     aria-expanded="false"

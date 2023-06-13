@@ -36,8 +36,8 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           release_branches: release
           pre_release_branches: main
-          default_bump: patch
-          default_prerelease_bump: prerelease
+          default_bump: minor
+          default_prerelease_bump: prepatch
           append_to_pre_release_tag: rc
 
       - name: Build

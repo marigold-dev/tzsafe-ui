@@ -1,11 +1,9 @@
-import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../components/Alias";
 import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
-import Tooltip from "../components/Tooltip";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
@@ -16,12 +14,9 @@ import {
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import {
-  mutezTransfer,
-  proposal,
-  proposalContent,
-  version,
-} from "../types/display";
+import { mutezTransfer, proposal, version } from "../types/display";
+import { mutezToTez } from "../utils/tez";
+import useWalletTokens from "../utils/useWalletTokens";
 import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
@@ -34,6 +29,8 @@ const getLatestTimestamp = (og: {
 const History = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+
+  const walletTokens = useWalletTokens();
 
   const [isLoading, setIsLoading] = useState(true);
   const [invalid, setInvalid] = useState(false);
@@ -137,16 +134,17 @@ const History = () => {
             state={openModal.proposal[0]}
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
+            walletTokens={walletTokens ?? []}
           />
         )}
       </Modal>
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">History</h1>
         </div>
       </div>
       <main className="min-h-fit grow">
-        <div className="mx-auto min-h-full max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
@@ -157,7 +155,7 @@ const History = () => {
                 Invalid contract address: {state.currentContract}
               </p>
             </div>
-          ) : isLoading ? (
+          ) : isLoading || !walletTokens ? (
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
@@ -172,10 +170,10 @@ const History = () => {
                   return x[0] == -1 ? (
                     <div
                       key={(x[1] as any).timestamp}
-                      className="grid h-16 w-full w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
+                      className="grid h-16 w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
                     >
                       <span className="justify-self-start font-bold md:ml-11">
-                        <span className="hidden md:block">Received mutez</span>
+                        <span className="hidden md:block">Received Tez</span>
                         <span className="md:hidden">Received</span>
                       </span>
                       <span className="text-center font-light text-zinc-300 md:min-w-[7rem] md:text-left">
@@ -184,7 +182,7 @@ const History = () => {
                       </span>
                       <span className="truncate font-light text-zinc-300 md:min-w-[7rem]">
                         <span className="hidden md:inline">Amount:</span>{" "}
-                        {(x[1] as any).amount} mutez
+                        {mutezToTez((x[1] as any).amount)} Tez
                       </span>
                       <span className="hidden justify-self-end lg:block">
                         {new Date((x[1] as any).timestamp).toLocaleDateString()}{" "}
@@ -202,6 +200,7 @@ const History = () => {
                     <ProposalCard
                       id={x[0]}
                       key={x[0]}
+                      metadataRender
                       status={x[1].ui.status}
                       date={
                         !!x[1].og.resolver
@@ -217,6 +216,7 @@ const History = () => {
                       content={x[1].ui.content}
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.resolver}
+                      walletTokens={walletTokens}
                     />
                   );
                 })}

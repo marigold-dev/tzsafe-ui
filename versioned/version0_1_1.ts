@@ -1,4 +1,5 @@
-import { Parser, emitMicheline } from "@taquito/michel-codec";
+import { Parser } from "@taquito/michel-codec";
+import { emitMicheline } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
   Contract,
@@ -7,40 +8,32 @@ import {
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { fa1_2Token } from "../components/FA1_2";
+import { fa2Token } from "../components/FA2Transfer";
 import { DEFAULT_TIMEOUT } from "../context/config";
+import { makeFa1_2ApproveMichelson } from "../context/fa1_2";
+import { makeFa1_2TransferMichelson } from "../context/fa1_2";
 import { makeFa2Michelson } from "../context/fa2";
 import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/008Proposal";
+} from "../types/Proposal0_1_1";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
+import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
-import { matchLambda } from "./apis";
 import { ownersForm } from "./forms";
-import { timeoutAndHash, Versioned } from "./interface";
+import { proposals, timeoutAndHash, Versioned } from "./interface";
 
 function convert(x: string): string {
   return char2Bytes(x);
 }
-class Version008 extends Versioned {
+class Version0_1_1 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: {
-      transfers: {
-        type: "transfer" | "lambda" | "contract" | "fa2";
-        values: { [key: string]: string };
-        fields: {
-          field: string;
-          label: string;
-          path: string;
-          placeholder: string;
-          validate: (p: string) => string | undefined;
-        }[];
-      }[];
-    }
+    proposals: proposals
   ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
@@ -50,7 +43,7 @@ class Version008 extends Versioned {
               return {
                 transfer: {
                   target: x.values.to,
-                  amount: x.values.amount,
+                  amount: tezToMutez(Number(x.values.amount)),
                   parameter: {},
                 },
               };
@@ -73,6 +66,7 @@ class Version008 extends Versioned {
               let meta = !!x.values.metadata
                 ? convert(x.values.metadata)
                 : null;
+
               return {
                 execute_lambda: {
                   metadata: meta,
@@ -82,13 +76,57 @@ class Version008 extends Versioned {
             }
             case "fa2": {
               const parser = new Parser();
+
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa2Michelson({
-                  walletAddress: cc.address,
-                  targetAddress: x.values.targetAddress,
-                  tokenId: Number(x.values.tokenId),
-                  amount: Number(x.values.amount),
-                  fa2Address: x.values.fa2Address,
+                makeFa2Michelson(
+                  x.values.map(value => {
+                    const token = value.token as unknown as fa2Token;
+
+                    return {
+                      walletAddress: cc.address,
+                      targetAddress: value.targetAddress,
+                      tokenId: Number(value.tokenId),
+                      amount: BigNumber(value.amount)
+                        .multipliedBy(
+                          BigNumber(10).pow(token.token.metadata.decimals)
+                        )
+                        .toNumber(),
+                      fa2Address: value.fa2Address,
+                    };
+                  })
+                )
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      contract_addr: x.values[0].targetAddress,
+                      payload: x.values.map(value => ({
+                        token_id: Number(value.tokenId),
+                        fa2_address: value.fa2Address,
+                        amount: Number(value.amount),
+                      })),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
+            }
+            case "fa1.2-approve": {
+              const parser = new Parser();
+
+              const token = x.values.token as unknown as fa1_2Token;
+
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa1_2ApproveMichelson({
+                  spenderAddress: x.values.spenderAddress,
+                  amount: BigNumber(x.values.amount)
+                    .multipliedBy(
+                      BigNumber(10).pow(token.token.metadata.decimals)
+                    )
+                    .toNumber(),
+                  fa1_2Address: x.values.fa1_2Address,
                 })
               );
 
@@ -96,12 +134,47 @@ class Version008 extends Versioned {
                 execute_lambda: {
                   metadata: convert(
                     JSON.stringify({
-                      contract_addr: x.values.targetAddress,
                       payload: {
-                        token_id: Number(x.values.tokenId),
-                        fa2_address: x.values.fa2Address,
+                        spender_address: x.values.spenderAddress,
+                        amount: x.values.amount,
+                        fa1_2_address: x.values.fa1_2Address,
+                        name: token.token.metadata.name,
                       },
-                      amount: Number(x.values.amount),
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
+            }
+
+            case "fa1.2-transfer": {
+              const parser = new Parser();
+
+              const token = x.values.token as unknown as fa1_2Token;
+
+              const michelsonCode = parser.parseMichelineExpression(
+                makeFa1_2TransferMichelson({
+                  walletAddress: cc.address,
+                  amount: BigNumber(x.values.amount)
+                    .multipliedBy(
+                      BigNumber(10).pow(token.token.metadata.decimals)
+                    )
+                    .toNumber(),
+                  fa1_2Address: x.values.fa1_2Address,
+                  targetAddress: x.values.targetAddress,
+                })
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      payload: {
+                        amount: Number(x.values.amount),
+                        fa1_2_address: x.values.fa1_2Address,
+                        to: x.values.targetAddress,
+                        name: token.token.metadata.name,
+                      },
                     })
                   ),
                   lambda: michelsonCode,
@@ -114,6 +187,7 @@ class Version008 extends Versioned {
         })
       )
       .toTransferParams();
+
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(
@@ -136,9 +210,6 @@ class Version008 extends Versioned {
 
     return [false, op.opHash];
   }
-  static override getProposalsId(_contract: c1): string {
-    return _contract.proposals.toString();
-  }
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
@@ -151,11 +222,7 @@ class Version008 extends Versioned {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(
-          BigNumber(proposal),
-          prop.contents,
-          result
-        )
+        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {
@@ -189,11 +256,17 @@ class Version008 extends Versioned {
         } else if ("removeOwners" in v) {
           return { remove_owners: v.removeOwners };
         } else if ("changeThreshold" in v) {
-          return { change_threshold: v.changeThreshold };
+          return { adjust_threshold: Number(v.changeThreshold) };
+        } else if ("adjustEffectivePeriod" in v) {
+          return { adjust_effective_period: v.adjustEffectivePeriod };
+        } else {
+          return v;
         }
       })
       .filter(x => !!x);
+
     let params = cc.methods.create_proposal(content).toTransferParams();
+
     let op = await t.wallet.transfer(params).send();
 
     const transacValue = await promiseWithTimeout(
@@ -216,21 +289,20 @@ class Version008 extends Versioned {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
       proposal_counter: c.proposal_counter.toString(),
+      effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.0.8",
+      version: "0.1.1",
     };
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
-      let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
         executeLambda: {
-          metadata: !!meta
-            ? JSON.stringify(meta, null, 2)
-            : JSON.stringify(
+          metadata: !!content.execute_lambda.lambda
+            ? JSON.stringify(
                 {
-                  status: "Cant parse lambda",
+                  status: "Non-executed;",
                   meta: content.execute_lambda.metadata
                     ? bytes2Char(content.execute_lambda.metadata)
                     : "No meta supplied",
@@ -240,8 +312,20 @@ class Version008 extends Versioned {
                 },
                 null,
                 2
+              )
+            : JSON.stringify(
+                {
+                  status: "Executed; lambda unavailable",
+                  meta: content.execute_lambda.metadata
+                    ? bytes2Char(content.execute_lambda.metadata)
+                    : "No meta supplied",
+                },
+                null,
+                2
               ),
-          content: content.execute_lambda.lambda,
+          content: content.execute_lambda.lambda
+            ? emitMicheline(JSON.parse(content.execute_lambda.lambda || ""))
+            : "",
         },
       };
     } else if ("transfer" in content) {
@@ -263,19 +347,30 @@ class Version008 extends Versioned {
       return {
         changeThreshold: content.change_threshold,
       };
+    } else if ("adjust_threshold" in content) {
+      return {
+        changeThreshold: content.adjust_threshold,
+      };
+    } else if ("adjust_effective_period" in content) {
+      return {
+        adjustEffectivePeriod: content.adjust_effective_period,
+      };
     } else if ("execute" in content) {
       return { execute: content.execute };
     }
     let never: never = content;
     throw new Error("unknown proposal");
   }
-
+  static override getProposalsId(_contract: c1): string {
+    return _contract.proposals.toString();
+  }
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
     const status: { [key: string]: status } = {
       proposing: "Proposing",
       executed: "Executed",
       closed: "Rejected",
+      expired: "Expired",
     };
     return {
       timestamp: prop.proposer.timestamp,
@@ -290,4 +385,4 @@ class Version008 extends Versioned {
   }
 }
 
-export default Version008;
+export default Version0_1_1;
