@@ -61,8 +61,6 @@ function ProposalSignForm({
     );
   }
 
-  console.log(proposal.ui.content);
-
   if (timeoutAndHash[0]) {
     return (
       <div className="mx-auto mt-4 w-full text-center text-zinc-400">
