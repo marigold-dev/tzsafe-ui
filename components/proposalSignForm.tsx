@@ -201,6 +201,18 @@ function ProposalSignForm({
                 />
               ))}
             </div>
+            {!!proposal.ui.content.find(
+              v =>
+                "addOwners" in v ||
+                "removeOwners" in v ||
+                "changeThreshold" in v ||
+                "adjustEffectivePeriod" in v
+            ) && (
+              <span className="mt-2 text-xs font-light text-yellow-500">
+                This proposal will update the settings for all the active
+                proposals
+              </span>
+            )}
           </section>
           <p className="mt-8 text-lg font-medium text-white">
             Action:{" "}
