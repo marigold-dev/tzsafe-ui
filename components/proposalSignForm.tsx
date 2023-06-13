@@ -209,7 +209,7 @@ function ProposalSignForm({
                 "adjustExpirationPeriod" in v
             ) && (
               <span className="mt-2 text-xs font-light text-yellow-500">
-                This proposal will update the signers for all the active
+                This proposal will update the setting for all the active
                 proposals
               </span>
             )}
