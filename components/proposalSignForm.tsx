@@ -61,6 +61,8 @@ function ProposalSignForm({
     );
   }
 
+  console.log(proposal.ui.content);
+
   if (timeoutAndHash[0]) {
     return (
       <div className="mx-auto mt-4 w-full text-center text-zinc-400">
@@ -206,10 +208,10 @@ function ProposalSignForm({
                 "addOwners" in v ||
                 "removeOwners" in v ||
                 "changeThreshold" in v ||
-                "adjustExpirationPeriod" in v
+                "adjustEffectivePeriod" in v
             ) && (
               <span className="mt-2 text-xs font-light text-yellow-500">
-                This proposal will update the setting for all the active
+                This proposal will update the settings for all the active
                 proposals
               </span>
             )}
