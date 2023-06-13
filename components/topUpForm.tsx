@@ -12,13 +12,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  API_URL,
-  BROKEN_FA2_ADDRESSES,
-  MODAL_TIMEOUT,
-  PREFERED_NETWORK,
-  THUMBNAIL_URL,
-} from "../context/config";
+import { API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
 import fetchVersion from "../context/metadata";
 import {
   AppDispatchContext,
@@ -185,26 +179,6 @@ function TopUp(props: {
       Object.entries(fa2).map(async ([address, tokens]) => {
         const contract = await state.connection.contract.at(address);
 
-        // [
-        //       {
-        //         from_: state.address,
-        //         [PREFERED_NETWORK === NetworkType.GHOSTNET &&
-        //         BROKEN_FA2_ADDRESSES.includes(address)
-        //           ? "tx"
-        //           : "txs"]: tokens.map(fromToken => ({
-        //           to_: state.currentContract,
-        //           token_id: Number(fromToken.tokenId),
-        //           amount: BigNumber(fromToken.amount ?? 0)
-        //             .multipliedBy(
-        //               BigNumber(10).pow(
-        //                 fromToken.token?.token.metadata.decimals ?? 0
-        //               )
-        //             )
-        //             .toNumber(),
-        //         })),
-        //       },
-        //     ]
-
         const data = p.parseMichelineExpression(
           `{ Pair "${state.address}" { ${tokens
             .map(
@@ -295,7 +269,7 @@ function TopUp(props: {
       validate={values => {
         const parsed = Number(values.amount);
 
-        if (!!values.amount && isNaN(parsed)) {
+        if (!!values.amount && (isNaN(parsed) || parsed <= 0)) {
           return { amount: `Invalid amount ${values.amount}` };
         }
       }}
