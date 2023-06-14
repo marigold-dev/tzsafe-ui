@@ -54,7 +54,7 @@ function Basic({
   setFormState: (x: { address: string; amount: number }) => void;
   defaultValues?: { amount: number | undefined; address: string | undefined };
   withContinue?: boolean;
-  onAmountChange?: (value: number) => any;
+  onAmountChange?: (value: string) => any;
   onAddressChange?: (value: string) => any;
   address?: string;
 }>) {
@@ -209,7 +209,6 @@ function Basic({
                     );
 
                     if (isNaN(amount ?? NaN) || (amount ?? -1) < 0) {
-                      console.log("???");
                       setErrors({
                         ...errors,
                         amount:
@@ -224,7 +223,7 @@ function Basic({
                     }
 
                     setLocalFormState({ ...localFormState, amount });
-                    onAmountChange?.(tezToMutez(amount));
+                    onAmountChange?.(e.target.value);
                   }}
                 />
               )}
@@ -270,7 +269,7 @@ type state = {
 function ExecuteContractForm(
   props: React.PropsWithoutRef<{
     setField: (lambda: string, metadata: string) => void;
-    getFieldProps: () => string;
+    getFieldProps: (name: string) => { value: string };
     id: number;
     defaultState?: state;
     onReset: () => void;
@@ -312,7 +311,8 @@ function ExecuteContractForm(
         id={props.id}
         setFormState={x => setState({ ...x, shape: {} })}
         onAmountChange={amount => {
-          setFieldValue(`transfers.${props.id}.amount`, mutezToTez(amount));
+          setState({ ...state, amount: tezToMutez(Number(amount)) });
+          setFieldValue(`transfers.${props.id}.amount`, amount);
         }}
         onAddressChange={address => {
           setState({ ...state, address });
