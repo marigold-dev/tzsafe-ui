@@ -12,6 +12,7 @@ import {
   FieldProps,
   Form,
   Formik,
+  useField,
   useFormikContext,
 } from "formik";
 import { useRouter } from "next/router";
@@ -58,7 +59,12 @@ function Basic({
   onAddressChange?: (value: string) => any;
   address?: string;
 }>) {
-  const { getFieldProps } = useFormikContext();
+  const { getFieldProps, validateField } = useFormikContext();
+  const [
+    { value: addressValue },
+    { error: addressError, touched: addressTouched },
+    { setTouched: setAddressTouched },
+  ] = useField(`transfers.${id}.walletAddress`);
 
   const state = useContext(AppStateContext)!;
   const [localFormState, setLocalFormState] = useState<{
@@ -74,67 +80,6 @@ function Basic({
     amount: Nullable<string>;
     address: Nullable<string>;
   }>({ amount: undefined, address: undefined });
-
-  const validate = async (newState: typeof localFormState) => {
-    const newErrors: typeof errors = {
-      amount: undefined,
-      address: undefined,
-    };
-
-    if (!newState.address) {
-      newErrors.address = "Address can't be empty";
-    }
-
-    if (
-      !!newState.address &&
-      validateContractAddress(newState.address.trim()) !==
-        ValidationResult.VALID
-    ) {
-      newErrors.address = `Invalid address ${newState.address}`;
-    }
-
-    const exists = await (async () => {
-      try {
-        await state.connection.contract.at(newState.address.trim());
-        return true;
-      } catch (e) {
-        return false;
-      }
-    })();
-
-    if (newState.address !== "" && !exists && !newErrors.address) {
-      newErrors.address = `Contract does not exist at address ${newState.address}`;
-    }
-
-    if (!!address) {
-      newErrors.address = undefined;
-    }
-
-    if (isNaN(newState.amount ?? NaN) || (newState.amount ?? -1) < 0) {
-      newErrors.amount =
-        newState.amount === undefined
-          ? ""
-          : "Invalid amount " + newState.amount;
-    }
-
-    if (
-      errors.amount === newErrors.amount &&
-      errors.address === newErrors.address
-    )
-      return errors;
-
-    setErrors(newErrors);
-
-    return newErrors;
-  };
-
-  const validateAndSetState = async (newState: typeof localFormState) => {
-    const errors = await validate(newState);
-
-    setLocalFormState(newState);
-
-    return !!errors.address || !!errors.amount;
-  };
 
   return (
     <div className="align-self-center col-span-1 flex w-full flex-col items-center justify-center justify-self-center">
@@ -152,16 +97,6 @@ function Basic({
                   <TextInputWithCompletion
                     defaultValue={defaultValues?.address}
                     setTerms={() => {}}
-                    onOwnChange={(address: string) =>
-                      debounce(async () => {
-                        setContractLoading(true);
-                        await validateAndSetState({
-                          ...localFormState,
-                          address,
-                        });
-                        setContractLoading(false);
-                      }, 300)
-                    }
                     filter={x =>
                       validateContractAddress((x as string).trim()) === 3
                     }
@@ -172,14 +107,35 @@ function Basic({
                     placeholder={"contract address"}
                     rows={10}
                     validate={async address => {
-                      const hasError = await validateAndSetState({
-                        ...localFormState,
-                        address,
-                      });
+                      if (localFormState.address === address)
+                        return addressError;
 
-                      // The returned value doesn't matter
-                      // Having one allows to prevent Formik to submit the form
-                      return hasError ? "ohno" : undefined;
+                      setLocalFormState({ ...localFormState, address });
+
+                      if (!address) return "Address can't be empty";
+
+                      if (
+                        !!address &&
+                        validateContractAddress(address.trim()) !==
+                          ValidationResult.VALID
+                      )
+                        return `Invalid address ${address}`;
+
+                      setContractLoading(true);
+                      const exists = await (async () => {
+                        try {
+                          await state.connection.contract.at(address.trim());
+                          return true;
+                        } catch (e) {
+                          return false;
+                        }
+                      })();
+                      setContractLoading(false);
+
+                      if (address !== "" && !exists)
+                        return `Contract does not exist at address ${address}`;
+
+                      return undefined;
                     }}
                   />
                   {contractLoading && (
@@ -191,7 +147,7 @@ function Basic({
               )}
             </div>
           </div>
-          {!!errors.address && renderError(errors.address)}
+          <ErrorMessage name={`transfers.${id}.walletAddress`} />
         </div>
         <div className="flex w-full flex-col">
           <div className="flex w-full flex-col items-start">
@@ -204,11 +160,13 @@ function Basic({
                   placeholder="0"
                   onChange={async (e: ChangeEvent<HTMLInputElement>) => {
                     field.onChange(e);
-                    const amount = Number(
-                      e.target.value.trim() === "" ? NaN : e.target.value.trim()
-                    );
+                    const value = e.target.value.trim();
+                    const amount = Number(value === "" ? NaN : value);
 
-                    if (isNaN(amount ?? NaN) || (amount ?? -1) < 0) {
+                    if (
+                      value !== "" &&
+                      (isNaN(amount ?? NaN) || (amount ?? -1) < 0)
+                    ) {
                       setErrors({
                         ...errors,
                         amount:
@@ -237,21 +195,15 @@ function Basic({
           className="mt-4 rounded bg-primary p-2 font-medium text-white hover:outline-none"
           type="button"
           onClick={async () => {
-            const address = getFieldProps(
-              `transfers.${id}.walletAddress`
-            ).value;
-
-            let toValidate = localFormState;
-
-            if (!!address && !localFormState.address) {
-              toValidate = { ...localFormState, address };
-              setLocalFormState(toValidate);
+            if (!addressValue) {
+              setAddressTouched(true, true);
             }
 
-            const errors = await validate(toValidate);
+            if (!!addressError || !!errors.amount) {
+              return;
+            }
 
-            if (!!errors.amount || !!errors.address) return;
-            onAddressChange?.(toValidate.address);
+            onAddressChange?.(addressValue);
           }}
         >
           Continue
