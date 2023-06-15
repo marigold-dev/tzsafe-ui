@@ -6,8 +6,9 @@ import React, { useContext, useState } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
+import { canExecute, canReject } from "../utils/proposals";
 import { walletToken } from "../utils/useWalletTokens";
-import { VersionedApi } from "../versioned/apis";
+import { VersionedApi, signers } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import RenderProposalContentLambda from "./RenderProposalContentLambda";
 import Tooltip from "./Tooltip";
@@ -35,6 +36,8 @@ function ProposalSignForm({
   onSuccess?: () => void;
 }) {
   const state = useContext(AppStateContext)!;
+  const currentContract = state.currentContract ?? "";
+
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -144,6 +147,13 @@ function ProposalSignForm({
     );
   }
 
+  const isExecutable = canExecute(proposal.ui.signatures, threshold);
+  const isRejectable = canReject(
+    proposal.ui.signatures,
+    threshold,
+    signers(state.contracts[currentContract]).length
+  );
+
   return (
     <Formik
       initialValues={{
@@ -220,7 +230,13 @@ function ProposalSignForm({
               ? modalState
                 ? "Sign"
                 : "Reject"
-              : "Resolve"}
+              : `Resolve${
+                  isExecutable
+                    ? " (Approve)"
+                    : isRejectable
+                    ? " (Reject)"
+                    : " (Expired)"
+                }`}
           </p>
         </div>
         {typeof modalState != "undefined" &&
