@@ -1,7 +1,9 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AppStateContext } from "../context/state";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
+import { signers } from "../versioned/apis";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
   labelOfProposalContentLambda,
@@ -40,10 +42,15 @@ const ProposalCard = ({
   shouldResolve = false,
   metadataRender = false,
 }: ProposalCardProps) => {
+  const state = useContext(AppStateContext)!;
+  const currentContract = state.currentContract ?? "";
+
   const [isOpen, setIsOpen] = useState(false);
 
   const proposalDate = new Date(proposer.timestamp);
   const resolveDate = new Date(resolver?.timestamp ?? 0);
+
+  const allSigners = signers(state.contracts[currentContract]);
 
   return (
     <div
@@ -220,7 +227,14 @@ const ProposalCard = ({
               <span className="justify-self-end">Proposed</span>
             </div>
             {activities.map(({ signer, hasApproved }, i) => (
-              <div key={i} className="grid grid-cols-3">
+              <div
+                key={i}
+                className={`relative grid grid-cols-3 ${
+                  !allSigners.includes(signer)
+                    ? "before:absolute before:left-0 before:right-0 before:top-1/2 before:h-px before:w-full before:translate-y-px before:bg-zinc-300"
+                    : ""
+                }`}
+              >
                 <span className="w-full justify-self-start font-light text-zinc-500">
                   -
                 </span>
