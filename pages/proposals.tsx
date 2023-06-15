@@ -143,21 +143,23 @@ const Proposals = () => {
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
 
-                  const isExecutable = canExecute(
-                    x[1].ui.signatures,
-                    threshold
+                  const allSigners = signers(state.contracts[currentContract]);
+                  const signatures = x[1].ui.signatures.filter(({ signer }) =>
+                    allSigners.includes(signer)
                   );
 
+                  const isExecutable = canExecute(signatures, threshold);
+
                   const isRejectable = canReject(
-                    x[1].ui.signatures,
+                    signatures,
                     threshold,
-                    signers(state.contracts[currentContract]).length
+                    allSigners.length
                   );
 
                   const shouldResolve =
                     hasDeadlinePassed || isExecutable || isRejectable;
 
-                  const hasSigned = !!x[1].ui.signatures.find(
+                  const hasSigned = !!signatures.find(
                     x => x.signer == state.address
                   );
 

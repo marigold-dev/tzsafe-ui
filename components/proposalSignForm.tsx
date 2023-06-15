@@ -147,9 +147,14 @@ function ProposalSignForm({
     );
   }
 
-  const isExecutable = canExecute(proposal.ui.signatures, threshold);
+  const allSigners = signers(state.contracts[currentContract]);
+  const signatures = proposal.ui.signatures.filter(({ signer }) =>
+    allSigners.includes(signer)
+  );
+
+  const isExecutable = canExecute(signatures, threshold);
   const isRejectable = canReject(
-    proposal.ui.signatures,
+    signatures,
     threshold,
     signers(state.contracts[currentContract]).length
   );
