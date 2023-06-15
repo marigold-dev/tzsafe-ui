@@ -10,6 +10,7 @@ import fetchVersion from "../context/metadata";
 import { getProposals } from "../context/proposals";
 import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
+import { canExecute, canReject } from "../utils/proposals";
 import useIsOwner from "../utils/useIsOwner";
 import useWalletTokens from "../utils/useWalletTokens";
 import { getProposalsId, signers, toProposal } from "../versioned/apis";
@@ -141,22 +142,20 @@ const Proposals = () => {
                         1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
-                  const canExec =
-                    x[1].ui.signatures.reduce<number[]>((acc, curr) => {
-                      if (curr.result) return [...acc, 1];
-                      return acc;
-                    }, []).length >= threshold;
 
-                  const canReject =
-                    x[1].ui.signatures.reduce<number[]>((acc, curr) => {
-                      if (!curr.result) return [...acc, 1];
-                      return acc;
-                    }, []).length >
-                    signers(state.contracts[currentContract]).length -
-                      threshold;
+                  const isExecutable = canExecute(
+                    x[1].ui.signatures,
+                    threshold
+                  );
+
+                  const isRejectable = canReject(
+                    x[1].ui.signatures,
+                    threshold,
+                    signers(state.contracts[currentContract]).length
+                  );
 
                   const shouldResolve =
-                    hasDeadlinePassed || canExec || canReject;
+                    hasDeadlinePassed || isExecutable || isRejectable;
 
                   const hasSigned = !!x[1].ui.signatures.find(
                     x => x.signer == state.address
