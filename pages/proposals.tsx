@@ -12,7 +12,7 @@ import { AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import useWalletTokens from "../utils/useWalletTokens";
-import { getProposalsId, toProposal } from "../versioned/apis";
+import { getProposalsId, signers, toProposal } from "../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
@@ -141,8 +141,22 @@ const Proposals = () => {
                         1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
+                  const canExec =
+                    x[1].ui.signatures.reduce<number[]>((acc, curr) => {
+                      if (curr.result) return [...acc, 1];
+                      return acc;
+                    }, []).length >= threshold;
+
+                  const canReject =
+                    x[1].ui.signatures.reduce<number[]>((acc, curr) => {
+                      if (!curr.result) return [...acc, 1];
+                      return acc;
+                    }, []).length >
+                    signers(state.contracts[currentContract]).length -
+                      threshold;
+
                   const shouldResolve =
-                    hasDeadlinePassed || x[1].ui.signatures.length >= threshold;
+                    hasDeadlinePassed || canExec || canReject;
 
                   const hasSigned = !!x[1].ui.signatures.find(
                     x => x.signer == state.address
