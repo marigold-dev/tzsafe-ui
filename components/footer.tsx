@@ -43,8 +43,8 @@ const Footer = ({
             rel="noreferrer"
           >
             {PREFERED_NETWORK === NetworkType.MAINNET
-              ? "Tzsafe Ghostnet"
-              : "Tzsafe Mainnet"}
+              ? "TzSafe Ghostnet"
+              : "TzSafe Mainnet"}
           </a>
         </div>
         <a href="https://tzkt.io/" target="_blank" rel="noreferrer">
