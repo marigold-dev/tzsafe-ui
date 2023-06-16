@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -45,7 +46,12 @@ const NavBar = (_: React.PropsWithChildren) => {
                   alt="Tzsafe logo"
                   className="h-16 w-auto"
                 />
-                <span className="ml-4 text-xs">BETA</span>
+                <div>
+                  <p className="ml-4 text-xs">BETA</p>
+                  {PREFERED_NETWORK === NetworkType.GHOSTNET && (
+                    <p className="ml-4 mt-1 text-xs">Ghostnet</p>
+                  )}
+                </div>
               </Link>
             </div>
             <div className="hidden md:block">
