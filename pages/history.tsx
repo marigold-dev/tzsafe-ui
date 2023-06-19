@@ -1,20 +1,32 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
+import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../components/Alias";
+import HistoryToken from "../components/HistoryToken";
 import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
 import Meta from "../components/meta";
 import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
 import fetchVersion from "../context/metadata";
-import { getProposals, getTransfers } from "../context/proposals";
+import {
+  getProposals,
+  getTokenTransfers,
+  getTransfers,
+} from "../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../context/state";
-import { mutezTransfer, proposal, version } from "../types/display";
+import {
+  TransferType,
+  mutezTransfer,
+  proposal,
+  tokenTransfer,
+  version,
+} from "../types/display";
 import { mutezToTez } from "../utils/tez";
 import useWalletTokens from "../utils/useWalletTokens";
 import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
@@ -38,7 +50,9 @@ const History = () => {
     state.contracts[state.currentContract ?? ""]
   );
   const [proposals, setProposals] = useState(emptyProps);
-  const [transfers, setTransfers] = useState([] as mutezTransfer[]);
+  const [transfers, setTransfers] = useState<
+    [mutezTransfer[], tokenTransfer[]]
+  >([[], []]);
   const [openModal, setCloseModal] = useState<{
     state: number;
     proposal: [boolean | undefined, number];
@@ -59,11 +73,16 @@ const History = () => {
       setIsLoading(true);
       if (!state.currentContract) return;
 
-      let c = await state.connection.contract.at(state.currentContract, tzip16);
-      let balance = await state.connection.tz.getBalance(state.currentContract);
+      const c = await state.connection.contract.at(
+        state.currentContract,
+        tzip16
+      );
+      const balance = await state.connection.tz.getBalance(
+        state.currentContract
+      );
 
-      let cc = await c.storage();
-      let version = await (state.contracts[state.currentContract]
+      const cc = await c.storage();
+      const version = await (state.contracts[state.currentContract]
         ? Promise.resolve<version>(
             state.contracts[state.currentContract].version
           )
@@ -78,16 +97,19 @@ const History = () => {
             },
           })
         : null;
-      let bigmap: { key: string; value: any }[] = await getProposals(
+      const bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );
-      let transfers = await getTransfers(state.currentContract);
-      let proposals: [number, any][] = bigmap.map(({ key, value }) => [
+      const response = await Promise.all([
+        getTransfers(state.currentContract),
+        getTokenTransfers(state.currentContract),
+      ]);
+      const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
         { ui: toProposal(version, value), og: value },
       ]);
       setContract(updatedContract);
-      setTransfers(transfers);
+      setTransfers(response);
       setProposals(proposals);
       setIsLoading(false);
     })();
@@ -103,8 +125,25 @@ const History = () => {
         ),
       ]
         .concat(
-          transfers.map(
-            x => [-1, { ui: { timestamp: x.timestamp }, ...x }] as any
+          transfers[0].map(
+            x =>
+              [
+                TransferType.MUTEZ,
+                { ui: { timestamp: x.timestamp }, ...x },
+              ] as any
+          )
+        )
+        .concat(
+          transfers[1].map(
+            x =>
+              [
+                x.token.standard === "fa2"
+                  ? TransferType.FA2
+                  : x.token.standard === "fa1.2"
+                  ? TransferType.FA1_2
+                  : TransferType.UNKNOWN,
+                { ui: { timestamp: x.timestamp }, ...x },
+              ] as any
           )
         )
         .sort((a, b) => {
@@ -167,58 +206,78 @@ const History = () => {
             filteredProposals.length > 0 && (
               <div className="space-y-6">
                 {filteredProposals.map((x, i) => {
-                  return x[0] == -1 ? (
-                    <div
-                      key={(x[1] as any).timestamp}
-                      className="grid h-16 w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
-                    >
-                      <span className="justify-self-start font-bold md:ml-11">
-                        <span className="hidden md:block">Received Tez</span>
-                        <span className="md:hidden">Received</span>
-                      </span>
-                      <span className="text-center font-light text-zinc-300 md:min-w-[7rem] md:text-left">
-                        <span className="hidden md:inline">From:</span>{" "}
-                        <Alias address={(x[1] as any).sender.address} />
-                      </span>
-                      <span className="truncate font-light text-zinc-300 md:min-w-[7rem]">
-                        <span className="hidden md:inline">Amount:</span>{" "}
-                        {mutezToTez((x[1] as any).amount)} Tez
-                      </span>
-                      <span className="hidden justify-self-end lg:block">
-                        {new Date((x[1] as any).timestamp).toLocaleDateString()}{" "}
-                        -{" "}
-                        {`${new Date((x[1] as any).timestamp)
-                          .getHours()
-                          .toString()
-                          .padStart(2, "0")}:${new Date((x[1] as any).timestamp)
-                          .getMinutes()
-                          .toString()
-                          .padStart(2, "0")}`}
-                      </span>
-                    </div>
-                  ) : (
-                    <ProposalCard
-                      id={x[0]}
-                      key={x[0]}
-                      metadataRender
-                      status={x[1].ui.status}
-                      date={
-                        !!x[1].og.resolver
-                          ? new Date(x[1].og.resolver.timestamp)
-                          : new Date(x[1].ui.timestamp)
-                      }
-                      activities={x[1].ui.signatures.map(
-                        ({ signer, result }) => ({
-                          hasApproved: result,
-                          signer,
-                        })
-                      )}
-                      content={x[1].ui.content}
-                      proposer={x[1].og.proposer}
-                      resolver={x[1].og.resolver}
-                      walletTokens={walletTokens}
-                    />
-                  );
+                  switch (x[0]) {
+                    case TransferType.MUTEZ:
+                      return (
+                        <div
+                          key={(x[1] as any).timestamp}
+                          className="grid h-16 w-full grid-cols-3 items-center gap-8 rounded border-b border-zinc-900 bg-zinc-800 px-6 py-4 text-white lg:grid-cols-4"
+                        >
+                          <span className="justify-self-start font-bold md:ml-11">
+                            <span className="hidden md:block">
+                              Received Tez
+                            </span>
+                            <span className="md:hidden">Received</span>
+                          </span>
+                          <span className="text-center font-light text-zinc-300 md:min-w-[7rem] md:text-left">
+                            <span className="hidden md:inline">From:</span>{" "}
+                            <Alias address={(x[1] as any).sender.address} />
+                          </span>
+                          <span className="truncate font-light text-zinc-300 md:min-w-[7rem]">
+                            <span className="hidden md:inline">Amount:</span>{" "}
+                            {mutezToTez((x[1] as any).amount)} Tez
+                          </span>
+                          <span className="hidden justify-self-end lg:block">
+                            {new Date(
+                              (x[1] as any).timestamp
+                            ).toLocaleDateString()}{" "}
+                            -{" "}
+                            {`${new Date((x[1] as any).timestamp)
+                              .getHours()
+                              .toString()
+                              .padStart(2, "0")}:${new Date(
+                              (x[1] as any).timestamp
+                            )
+                              .getMinutes()
+                              .toString()
+                              .padStart(2, "0")}`}
+                          </span>
+                        </div>
+                      );
+                    case TransferType.FA2:
+                    case TransferType.FA1_2:
+                      return (
+                        <HistoryToken transferType={x[0]} token={x[1] as any} />
+                      );
+
+                    case TransferType.UNKNOWN:
+                      return null;
+                    default:
+                      return (
+                        <ProposalCard
+                          id={x[0]}
+                          key={x[0]}
+                          metadataRender
+                          status={x[1].ui.status}
+                          date={
+                            !!x[1].og.resolver
+                              ? new Date(x[1].og.resolver.timestamp)
+                              : new Date(x[1].ui.timestamp)
+                          }
+                          activities={x[1].ui.signatures.map(
+                            ({ signer, result }) => ({
+                              hasApproved: result,
+                              signer,
+                            })
+                          )}
+                          content={x[1].ui.content}
+                          proposer={x[1].og.proposer}
+                          resolver={x[1].og.resolver}
+                          walletTokens={walletTokens}
+                        />
+                      );
+                      break;
+                  }
                 })}
               </div>
             )
