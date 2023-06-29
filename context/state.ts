@@ -8,14 +8,17 @@ import {
   TezosStorageHandler,
   Tzip16Module,
 } from "@taquito/tzip16";
+import { LocalStorage } from "beacon-wallet";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
+import P2PClient from "./P2PClient";
 import { IPFS_NODE, RPC_URL } from "./config";
 
 type tezosState = {
   connection: TezosToolkit;
   beaconWallet: BeaconWallet | null;
+  p2pClient: P2PClient;
   address: string | null;
   balance: string | null;
   currentContract: string | null;
@@ -31,6 +34,11 @@ type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
 };
+
+const p2pClient = new P2PClient({
+  name: "TzSafe",
+  storage: new LocalStorage("P2P"),
+});
 
 let emptyState = (): tezosState => {
   const connection = new TezosToolkit(RPC_URL);
@@ -50,6 +58,7 @@ let emptyState = (): tezosState => {
 
   return {
     beaconWallet: null,
+    p2pClient,
     contracts: {},
     aliases: {},
     balance: null,

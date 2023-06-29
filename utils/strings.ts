@@ -5,3 +5,8 @@ export const crop = (v: string, maxSize: number): string => {
     ? `${v.substring(0, half)}...${v.substring(v.length - half)}`
     : v;
 };
+
+export const buf2Hex = (buffer: Uint8Array) =>
+  [...new Uint8Array(buffer)]
+    .map(x => x.toString(16).padStart(2, "0"))
+    .join("");

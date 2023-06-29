@@ -8,14 +8,18 @@ const LoginButton = () => {
 
   const connectWallet = async (): Promise<void> => {
     try {
+      console.log("#1");
       await state?.beaconWallet!.requestPermissions({
         network: {
           type: PREFERED_NETWORK,
           rpcUrl: RPC_URL,
         },
       });
+      console.log("#2");
       const userAddress: string = await state?.beaconWallet!.getPKH()!;
+      console.log("#3");
       const balance = await state?.connection.tz.getBalance(userAddress);
+      console.log("#4");
       let s = await state?.beaconWallet!.client.getActiveAccount();
       dispatch!({
         type: "login",
@@ -23,7 +27,10 @@ const LoginButton = () => {
         address: userAddress,
         balance: balance!.toString(),
       });
-    } catch (error) {}
+      console.log("#5");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (

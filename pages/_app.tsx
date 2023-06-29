@@ -1,7 +1,9 @@
 import {
   BeaconEvent,
   defaultEventCallbacks,
+  LocalStorage,
   NetworkType,
+  setDebugEnabled,
 } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
@@ -9,7 +11,6 @@ import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
-import Autocomplete from "../components/Autocomplete";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
@@ -62,9 +63,16 @@ export default function App({ Component, pageProps }: AppProps) {
       if (state!.beaconWallet === null) {
         let a = init();
         dispatch({ type: "init", payload: a });
+
+        // await state.p2pClient.init();
+        // await state.p2pClient
+        //   .connect(state.p2pClient.handleMessages)
+        //   .catch(console.log);
+
         const wallet = new BeaconWallet({
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
+          storage: new LocalStorage("LOCAL"),
           disableDefaultEvents: false,
           eventHandlers: {
             [BeaconEvent.PAIR_INIT]: {
@@ -75,6 +83,8 @@ export default function App({ Component, pageProps }: AppProps) {
             },
           },
         });
+        setDebugEnabled(true);
+
         dispatch!({ type: "beaconConnect", payload: wallet });
 
         const activeAccount = await wallet.client.getActiveAccount();

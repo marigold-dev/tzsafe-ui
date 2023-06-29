@@ -16,7 +16,8 @@
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "^3.3.0",
+    "@airgap/beacon-sdk": "^4.0.4",
+    "@airgap/beacon-types": "file:../../beacon-sdk/packages/beacon-types",
     "@ariakit/react": "^0.1.8",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-select": "^1.2.0",
@@ -24,12 +25,15 @@
     "@taquito/beacon-wallet": "^15.0.0",
     "@taquito/taquito": "^15.0.0",
     "@taquito/tzip16": "^15.0.0",
+    "@types/bs58check": "^2.1.0",
     "@types/node": "18.11.9",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
     "@types/uuid": "^9.0.1",
     "assert-never": "^1.2.1",
+    "beacon-wallet": "file:../../beacon-sdk/packages/beacon-wallet",
     "bignumber.js": "^9.1.1",
+    "bs58check": "^3",
     "eslint": "8.28.0",
     "eslint-config-next": "13.0.5",
     "formik": "^2.2.9",
@@ -37,6 +41,7 @@
     "next": "13.1.6",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "tiny-emitter": "^2.1.0",
     "typescript": "4.9.3",
     "uuid": "^9.0.0"
   },
@@ -53,5 +58,10 @@
     "prettier-plugin-tailwindcss": "^0.2.3",
     "tailwindcss": "^3.2.4",
     "vitest": "^0.29.8"
+  },
+  "overrides": {
+    "@airgap/beacon-sdk": {
+      "@airgap/beacon-types": "file:../../beacon-sdk/packages/beacon-types"
+    }
   }
 }
