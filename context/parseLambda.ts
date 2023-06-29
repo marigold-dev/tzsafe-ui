@@ -108,46 +108,102 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
   return [];
 };
 
+const parsePattern = <T>(
+  lambda: Expr[],
+  idx: number,
+  instr: string,
+  process: (expr: Prim) => [boolean, T]
+): [boolean, T?] => {
+  const expr = lambda[idx];
+  if (!!expr && "prim" in expr && expr.prim === instr) {
+    const [res, v] = process(expr);
+    return [true && res, v];
+  } else {
+    return [false, undefined];
+  }
+};
+
 const parseDelegate = (
   lambda: Expr[]
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  if (!lambda.find(expr => "prim" in expr && expr.prim === "SET_DELEGATE"))
+  const delegate_instr_size = 4;
+
+  if (lambda.length != delegate_instr_size)
     return [false, undefined, undefined];
 
-  const type = !!lambda.find(
-    expr =>
-      "prim" in expr &&
-      expr.prim === "PUSH" &&
-      // @ts-expect-error
-      expr.args?.[0].prim === "key_hash"
-  )
-    ? LambdaType.DELEGATE
-    : LambdaType.UNDELEGATE;
+  const fail_parse: [boolean, undefined] = [false, undefined];
+  const succ_parse: [boolean, undefined] = [true, undefined];
 
-  const address = (() => {
-    if (type !== LambdaType.DELEGATE) return;
+  // parse DROP
+  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
 
-    const expr = lambda.find(
-      expr =>
-        "prim" in expr &&
-        expr.prim === "PUSH" &&
+  // parse PUSH key_hash
+  const [parseKeyHash, address] = parseDrop
+    ? parsePattern(lambda, 1, "PUSH", expr => {
         // @ts-expect-error
-        expr.args?.[0].prim === "key_hash"
-    ) as Prim | undefined;
-
-    //@ts-expect-error
-    return !!expr?.args?.[1].string
-      ? //@ts-expect-error
-        (expr?.args?.[1].string as string)
-      : encodePubKey(
+        if (expr.args?.[0].prim === "key_hash") {
           //@ts-expect-error
-          formatBytes(expr?.args?.[1].bytes)
-        );
-  })();
+          const address = !!expr?.args?.[1].string
+            ? //@ts-expect-error
+              (expr?.args?.[1].string as string)
+            : encodePubKey(
+                //@ts-expect-error
+                formatBytes(expr?.args?.[1].bytes)
+              );
+          return [true, address];
+        } else {
+          return fail_parse;
+        }
+      })
+    : fail_parse;
 
-  return [true, type, !!address ? { address } : undefined];
+  // parse SOME
+  const [parseOpt] = parseKeyHash
+    ? parsePattern(lambda, 2, "SOME", () => succ_parse)
+    : fail_parse;
+
+  // parse SET_DELEGATE
+  const [parseSetDelegate] = parseOpt
+    ? parsePattern(lambda, 3, "SET_DELEGATE", () => succ_parse)
+    : fail_parse;
+
+  if (parseSetDelegate) {
+    return [true, LambdaType.DELEGATE, !!address ? { address } : undefined];
+  } else {
+    return [false, undefined, undefined];
+  }
+};
+
+const parseUnDelegate = (
+  lambda: Expr[]
+): [true, LambdaType] | [false, undefined] => {
+  const delegate_instr_size = 3;
+
+  if (lambda.length != delegate_instr_size) return [false, undefined];
+
+  const fail_parse: [boolean, undefined] = [false, undefined];
+  const succ_parse: [boolean, undefined] = [true, undefined];
+
+  // parse DROP
+  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
+
+  // parse NONE
+  const [parseOpt] = parseDrop
+    ? parsePattern(lambda, 1, "NONE", () => succ_parse)
+    : fail_parse;
+
+  // parse SET_DELEGATE
+  const [parseSetDelegate] = parseOpt
+    ? parsePattern(lambda, 2, "SET_DELEGATE", () => succ_parse)
+    : fail_parse;
+
+  if (parseSetDelegate) {
+    return [true, LambdaType.UNDELEGATE];
+  } else {
+    return [false, undefined];
+  }
 };
 
 export const parseLambda = (
@@ -158,7 +214,7 @@ export const parseLambda = (
 
   const [isDelegate, type, delegateData] = parseDelegate(lambda);
 
-  if (isDelegate)
+  if (isDelegate) {
     return [
       type,
       {
@@ -171,6 +227,23 @@ export const parseLambda = (
         data: delegateData ?? {},
       },
     ];
+  } else {
+    const [isUnDelegate, type] = parseUnDelegate(lambda);
+    if (isUnDelegate) {
+      return [
+        type,
+        {
+          contractAddress: "",
+          mutez: undefined,
+          entrypoint: {
+            name: "",
+            params: { name: "", type: "" },
+          },
+          data: {},
+        },
+      ];
+    }
+  }
 
   const contractAddress = (() => {
     const expr = lambda.find(expr => {
