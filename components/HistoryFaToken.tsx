@@ -18,7 +18,7 @@ type props = {
   };
 };
 
-const HistoryToken = ({ transferType, token }: props) => {
+const HistoryFaToken = ({ transferType, token }: props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const { tzDate, tzHours, tzMinutes } = useMemo(
@@ -77,7 +77,7 @@ const HistoryToken = ({ transferType, token }: props) => {
             {token.token.metadata.name}
           </li>
           <li>
-            <span className="text-zinc-400">Token id:</span>{" "}
+            <span className="text-zinc-400">Token ID:</span>{" "}
             {token.token.tokenId}
           </li>
           <li>
@@ -90,4 +90,4 @@ const HistoryToken = ({ transferType, token }: props) => {
   );
 };
 
-export default HistoryToken;
+export default HistoryFaToken;
