@@ -15,8 +15,6 @@ const FA2_LAMBDA = p.parseMichelineExpression(`{
             Pair "targetAddress2" (Pair 2 12) ;
             Pair "targetAddress3" (Pair 3 13) ;
       
-        }
-      
     } };
     TRANSFER_TOKENS
   }`)!;
