@@ -43,7 +43,8 @@ const Beacon = () => {
     if (
       !searchParams.has("data") ||
       !searchParams.has("type") ||
-      !state.currentContract
+      !state.currentContract ||
+      !state.p2pClient
     )
       return;
 
@@ -53,16 +54,16 @@ const Beacon = () => {
     setData(data);
 
     (async () => {
-      state.p2pClient.on(Event.PERMISSION_REQUEST, () => {
+      state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
         setValidationState(State.AUTHORIZE);
       });
 
-      state.p2pClient.on(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, () => {
+      state.p2pClient!.on(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, () => {
         setValidationState(State.AUTHORIZED);
       });
-      state.p2pClient.addPeer(data);
+      state.p2pClient!.addPeer(data);
     })();
-  }, [searchParams, state.currentContract]);
+  }, [searchParams, state.currentContract, state.p2pClient]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -85,7 +86,8 @@ const Beacon = () => {
               return (
                 <>
                   <p>
-                    Do you want to authorize the connection to {data?.name} ?
+                    Do you want to authorize {data?.name} to connect to{" "}
+                    {state.aliases[state.currentContract ?? ""]}?
                   </p>
                   <div className="flex items-center space-x-4">
                     <button
@@ -95,7 +97,7 @@ const Beacon = () => {
                         e.preventDefault();
                         if (!permissionRequest) return;
 
-                        await state.p2pClient.refusePermission();
+                        await state.p2pClient!.refusePermission();
                       }}
                     >
                       Refuse
@@ -108,13 +110,13 @@ const Beacon = () => {
                       onClick={async e => {
                         e.preventDefault();
                         if (
-                          !state.p2pClient.hasReceivedPermissionRequest() ||
+                          !state.p2pClient!.hasReceivedPermissionRequest() ||
                           !state.currentContract
                         )
                           return;
 
                         setValidationState(State.LOADING);
-                        await state.p2pClient.approvePermission(
+                        await state.p2pClient!.approvePermission(
                           state.currentContract
                         );
                       }}
@@ -141,7 +143,7 @@ const Beacon = () => {
                         e.preventDefault();
                         if (!permissionRequest) return;
 
-                        await state.p2pClient.refusePoeChallenge();
+                        await state.p2pClient!.refusePoeChallenge();
                       }}
                     >
                       Refuse
@@ -154,29 +156,26 @@ const Beacon = () => {
                       onClick={async e => {
                         e.preventDefault();
                         if (
-                          !state.p2pClient.hasReceivedPermissionRequest() ||
+                          !state.p2pClient!.hasReceivedPermissionRequest() ||
                           !state.currentContract
                         )
                           return;
 
                         setValidationState(State.LOADING);
-                        await state.p2pClient.approvePoeChallenge();
+                        await state.p2pClient!.approvePoeChallenge();
                         setValidationState(State.AUTHORIZED);
 
-                        console.log("#1");
-                        const contract = await state.connection.contract.at(
+                        const contract = await state.connection.wallet.at(
                           state.currentContract
                         );
-                        console.log("#2");
-                        console.log(contract);
-                        const op = await contract.methods
+
+                        const op = await contract.methodsObject
                           .proof_of_event_challenge(
-                            state.p2pClient.proofOfEvent.message
+                            state.p2pClient!.proofOfEvent.data
                           )
                           .send();
-                        console.log("#3");
+
                         await op.confirmation(1);
-                        console.log("#4");
                       }}
                     >
                       Sign

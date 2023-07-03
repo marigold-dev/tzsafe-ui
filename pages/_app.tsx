@@ -15,6 +15,7 @@ import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
+import P2PClient from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
 import {
   tezosState,
@@ -60,47 +61,49 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     (async () => {
-      if (state!.beaconWallet === null) {
-        let a = init();
-        dispatch({ type: "init", payload: a });
+      let a = init();
+      dispatch({ type: "init", payload: a });
 
-        // await state.p2pClient.init();
-        // await state.p2pClient
-        //   .connect(state.p2pClient.handleMessages)
-        //   .catch(console.log);
+      const p2pClient = new P2PClient({
+        name: "TzSafe",
+        storage: new LocalStorage("P2P"),
+      });
 
-        const wallet = new BeaconWallet({
-          name: "TzSafe",
-          preferredNetwork: PREFERED_NETWORK,
-          storage: new LocalStorage("LOCAL"),
-          disableDefaultEvents: false,
-          eventHandlers: {
-            [BeaconEvent.PAIR_INIT]: {
-              handler: defaultEventCallbacks.PAIR_INIT,
-            },
-            [BeaconEvent.PAIR_SUCCESS]: {
-              handler: defaultEventCallbacks.PAIR_SUCCESS,
-            },
+      await p2pClient.init();
+      await p2pClient.connect(p2pClient.handleMessages).catch(console.log);
+
+      const wallet = new BeaconWallet({
+        name: "TzSafe",
+        preferredNetwork: PREFERED_NETWORK,
+        storage: new LocalStorage("LOCAL"),
+        disableDefaultEvents: false,
+        eventHandlers: {
+          [BeaconEvent.PAIR_INIT]: {
+            handler: defaultEventCallbacks.PAIR_INIT,
           },
+          [BeaconEvent.PAIR_SUCCESS]: {
+            handler: defaultEventCallbacks.PAIR_SUCCESS,
+          },
+        },
+      });
+      setDebugEnabled(true);
+
+      dispatch!({ type: "beaconConnect", payload: wallet });
+      dispatch!({ type: "p2pConnect", payload: p2pClient });
+
+      const activeAccount = await wallet.client.getActiveAccount();
+      if (activeAccount && state?.accountInfo == null) {
+        const userAddress = await wallet.getPKH();
+        const balance = await state?.connection.tz.getBalance(userAddress);
+        dispatch!({
+          type: "login",
+          accountInfo: activeAccount!,
+          address: userAddress,
+          balance: balance!.toString(),
         });
-        setDebugEnabled(true);
-
-        dispatch!({ type: "beaconConnect", payload: wallet });
-
-        const activeAccount = await wallet.client.getActiveAccount();
-        if (activeAccount && state?.accountInfo == null) {
-          const userAddress = await wallet.getPKH();
-          const balance = await state?.connection.tz.getBalance(userAddress);
-          dispatch!({
-            type: "login",
-            accountInfo: activeAccount!,
-            address: userAddress,
-            balance: balance!.toString(),
-          });
-        }
       }
     })();
-  }, [state, dispatch]);
+  }, []);
 
   useEffect(() => {
     setHasSidebar(false);

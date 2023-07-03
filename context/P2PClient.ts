@@ -16,7 +16,7 @@ export enum Event {
   PROOF_OF_EVENT_CHALLENGE_REQUEST = "PROOF_OF_EVENT_CHALLENGE_REQUEST",
 }
 
-class P2PClient {
+class P2PClient extends WalletClient {
   private events = new TinyEmitter();
   permissionMessage: PermissionRequestOutput | undefined = undefined;
   proofOfEvent: {
@@ -28,7 +28,7 @@ class P2PClient {
   };
 
   constructor(config: WalletClientOptions) {
-    // super(config);
+    super(config);
   }
 
   hasReceivedPermissionRequest() {

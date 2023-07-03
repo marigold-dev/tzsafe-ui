@@ -203,7 +203,7 @@ const contract = `
                      IF { NIL operation ;
                           DUG 2 ;
                           PAIR ;
-                          EMIT %proof_of_event (pair bytes bytes) ;
+                          EMIT %proof_of_event (pair (bytes %challenge_id) (bytes %payload)) ;
                           CONS }
                         { DROP 2 ; NIL operation } }
                    { UNPAIR ;

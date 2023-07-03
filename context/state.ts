@@ -18,7 +18,7 @@ import { IPFS_NODE, RPC_URL } from "./config";
 type tezosState = {
   connection: TezosToolkit;
   beaconWallet: BeaconWallet | null;
-  p2pClient: P2PClient;
+  p2pClient: P2PClient | null;
   address: string | null;
   balance: string | null;
   currentContract: string | null;
@@ -35,13 +35,9 @@ type storage = {
   aliases: { [address: string]: string };
 };
 
-const p2pClient = new P2PClient({
-  name: "TzSafe",
-  storage: new LocalStorage("P2P"),
-});
-
 let emptyState = (): tezosState => {
   const connection = new TezosToolkit(RPC_URL);
+
   const customHandler = new Map<string, Handler>([
     ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
     ["tezos-storage", new TezosStorageHandler()],
@@ -58,7 +54,7 @@ let emptyState = (): tezosState => {
 
   return {
     beaconWallet: null,
-    p2pClient,
+    p2pClient: null,
     contracts: {},
     aliases: {},
     balance: null,
@@ -75,6 +71,7 @@ let emptyState = (): tezosState => {
 
 type action =
   | { type: "beaconConnect"; payload: BeaconWallet }
+  | { type: "p2pConnect"; payload: P2PClient }
   | { type: "init"; payload: tezosState }
   | {
       type: "login";
@@ -119,8 +116,14 @@ type action =
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
     case "beaconConnect": {
-      state.connection.setWalletProvider(action.payload);
+      state.connection.setProvider({
+        rpc: RPC_URL,
+        wallet: action.payload,
+      });
       return { ...state, beaconWallet: action.payload };
+    }
+    case "p2pConnect": {
+      return { ...state, p2pClient: action.payload };
     }
     case "addContract": {
       let al = action.payload.aliases;
