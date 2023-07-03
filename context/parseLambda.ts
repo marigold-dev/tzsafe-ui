@@ -4,6 +4,7 @@ import {
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
+import { parse } from "path";
 import { decodeB58 } from "../utils/contractParam";
 
 export type primitiveName = "string" | "number" | "list";
@@ -245,109 +246,138 @@ export const parseLambda = (
     }
   }
 
-  const contractAddress = (() => {
-    const expr = lambda.find(expr => {
-      if (!("prim" in expr)) return false;
+  // FA1.2 and FA2 is a special case of contract_execution. There number of instrucions is the same as regular contract execution
+  const contract_execution_instr_size = 7;
+  if (lambda.length != contract_execution_instr_size)
+    return [LambdaType.LAMBDA_EXECUTION, undefined];
 
-      const { prim, args } = expr;
+  const fail_parse: [boolean, undefined] = [false, undefined];
+  const succ_parse: [boolean, undefined] = [true, undefined];
 
-      //@ts-expect-error
-      if (prim !== "PUSH" || args?.[0]?.prim !== "address") return false;
+  // parse DROP
+  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
 
-      //@ts-expect-error
-      if (!!args?.[1]?.bytes) {
-        return (
-          validateAddress(
-            encodePubKey(
+  // parse PUSH address
+  const [parsePushAddr, contractAddress] = parseDrop
+    ? parsePattern(lambda, 1, "PUSH", expr => {
+        //@ts-expect-error
+        if (expr.args?.[0]?.prim !== "address") {
+          return fail_parse;
+        } else {
+          //@ts-expect-error
+          if (!!expr.args?.[1]?.bytes) {
+            const addr = encodePubKey(
               //@ts-expect-error
-              args[1].bytes
-            )
-          ) === ValidationResult.VALID
-        );
-      }
+              expr.args[1].bytes
+            );
 
-      //@ts-expect-error
-      return !!args?.[1]?.string;
-    });
+            return validateAddress(addr) === ValidationResult.VALID
+              ? [true, addr]
+              : fail_parse;
+          } else if (
+            //@ts-expect-error
+            !!expr.args?.[1]?.string
+          ) {
+            //@ts-expect-error
+            return [true, expr.args?.[1]?.string as string];
+          } else {
+            return fail_parse;
+          }
+        }
+      })
+    : fail_parse;
 
-    if (!expr) return undefined;
+  const [parseContrEp, entrypoint] = parsePushAddr
+    ? parsePattern(lambda, 2, "CONTRACT", expr => {
+        return [true, parseContractEntrypoint(expr)];
+      })
+    : fail_parse;
 
-    //@ts-expect-error
-    return !!(expr as Prim).args![1].string
-      ? //@ts-expect-error
-        ((expr as Prim).args![1].string as string)
-      : //@ts-expect-error
-        encodePubKey((expr as Prim).args![1].bytes);
-  })();
+  const [parseIfNone] = parseContrEp
+    ? parsePattern(lambda, 3, "IF_NONE", expr => {
+        //@ts-expect-error
+        const arg0 = expr.args[0];
 
-  const rawEntrypoint = (() => {
-    const expr = lambda.find(expr => {
-      if (!("prim" in expr)) return false;
+        //@ts-expect-error
+        const arg1 = expr.args[1];
 
-      return (
-        expr.prim === "CONTRACT" && (!!expr.annots?.[0] || !!expr.args?.[0])
-      );
-    });
+        if (
+          !(
+            Array.isArray(arg0) &&
+            arg0.length == 2 &&
+            "prim" in arg0[0] &&
+            arg0[0].prim === "PUSH" &&
+            "prim" in arg0[1] &&
+            arg0[1].prim === "FAILWITH"
+          )
+        )
+          return fail_parse;
 
-    return expr as Prim | undefined;
-  })();
+        if (!(Array.isArray(arg1) && arg1.length == 0)) return fail_parse;
 
-  if (!rawEntrypoint) return lambdaExec;
+        return succ_parse;
+      })
+    : fail_parse;
 
-  const entrypoint = parseContractEntrypoint(rawEntrypoint);
-
-  const data = (() => {
-    const expr = lambda.find(expr => {
-      if (!("prim" in expr) || expr.prim !== "PUSH") return false;
-
-      return (
-        JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
-        JSON.stringify(entrypoint.params)
-      );
-    });
-
-    return expr as Prim | undefined;
-  })();
-
-  if (!contractAddress || !data) return lambdaExec;
+  const [parseMutez, mutez] = parseIfNone
+    ? parsePattern(lambda, 4, "PUSH", expr => {
+        if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
+          return [true, Number((expr.args[1] as IntLiteral).int)];
+        else return fail_parse;
+      })
+    : fail_parse;
 
   const entrypointSignature = JSON.stringify(entrypoint);
 
-  const mutez = (() => {
-    const expr = lambda.find(
-      v =>
-        "prim" in v &&
-        v.prim === "PUSH" &&
-        !!v.args &&
-        (v.args[0] as Prim).prim === "mutez"
-    ) as Prim | undefined;
+  const lambdaType = !parseMutez
+    ? LambdaType.LAMBDA_EXECUTION
+    : entrypointSignature === FA2_SIGNATURE
+    ? LambdaType.FA2
+    : entrypointSignature === FA1_2_APPROVE_SIGNATURE
+    ? LambdaType.FA1_2_APPROVE
+    : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+    ? LambdaType.FA1_2_TRANSFER
+    : LambdaType.CONTRACT_EXECUTION;
 
-    if (!expr?.args) return;
+  const [parsePushParam, data] = parseMutez
+    ? parsePattern(lambda, 5, "PUSH", expr => {
+        if (
+          !!entrypoint &&
+          JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
+            JSON.stringify(entrypoint.params)
+        ) {
+          const data =
+            lambdaType === LambdaType.CONTRACT_EXECUTION
+              ? !!expr.args?.[1] && !!expr.args?.[0]
+                ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
+                : "Unit"
+              : rawDataToData(expr.args![1], entrypoint.params);
+          return [true, data];
+        } else {
+          return fail_parse;
+        }
+      })
+    : fail_parse;
 
-    return Number((expr.args[1] as IntLiteral).int);
-  })();
+  const [parseTransfer] = parsePushParam
+    ? parsePattern(lambda, 6, "TRANSFER_TOKENS", expr => succ_parse)
+    : fail_parse;
 
-  const lambdaType =
-    entrypointSignature === FA2_SIGNATURE
-      ? LambdaType.FA2
-      : entrypointSignature === FA1_2_APPROVE_SIGNATURE
-      ? LambdaType.FA1_2_APPROVE
-      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
-      ? LambdaType.FA1_2_TRANSFER
-      : LambdaType.CONTRACT_EXECUTION;
-
-  return [
-    lambdaType,
-    {
-      contractAddress,
-      entrypoint,
-      mutez,
-      data:
-        lambdaType === LambdaType.CONTRACT_EXECUTION
-          ? !!data.args?.[1] && !!data.args?.[0]
-            ? emitMicheline(decodeB58(data.args?.[0], data.args?.[1]))
-            : "Unit"
-          : rawDataToData(data.args![1], entrypoint.params),
-    },
-  ];
+  if (
+    parseTransfer &&
+    !!contractAddress &&
+    !!data &&
+    !!entrypoint &&
+    mutez !== undefined
+  )
+    return [
+      lambdaType,
+      {
+        contractAddress,
+        entrypoint,
+        mutez,
+        data,
+      },
+    ];
+  else return lambdaExec;
 };
