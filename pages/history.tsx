@@ -3,7 +3,7 @@ import { validateContractAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../components/Alias";
-import HistoryToken from "../components/HistoryToken";
+import HistoryFaToken from "../components/HistoryFaToken";
 import ProposalCard from "../components/ProposalCard";
 import Spinner from "../components/Spinner";
 import Meta from "../components/meta";
@@ -247,7 +247,10 @@ const History = () => {
                     case TransferType.FA2:
                     case TransferType.FA1_2:
                       return (
-                        <HistoryToken transferType={x[0]} token={x[1] as any} />
+                        <HistoryFaToken
+                          transferType={x[0]}
+                          token={x[1] as any}
+                        />
                       );
 
                     case TransferType.UNKNOWN:
