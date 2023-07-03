@@ -109,7 +109,7 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
   return [];
 };
 
-const parsePattern = <T>(
+const parsePrimPattern = <T>(
   lambda: Expr[],
   idx: number,
   instr: string,
@@ -138,11 +138,11 @@ const parseDelegate = (
   const succ_parse: [boolean, undefined] = [true, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
+  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succ_parse);
 
   // parse PUSH key_hash
   const [parseKeyHash, address] = parseDrop
-    ? parsePattern(lambda, 1, "PUSH", expr => {
+    ? parsePrimPattern(lambda, 1, "PUSH", expr => {
         // @ts-expect-error
         if (expr.args?.[0].prim === "key_hash") {
           //@ts-expect-error
@@ -162,12 +162,12 @@ const parseDelegate = (
 
   // parse SOME
   const [parseOpt] = parseKeyHash
-    ? parsePattern(lambda, 2, "SOME", () => succ_parse)
+    ? parsePrimPattern(lambda, 2, "SOME", () => succ_parse)
     : fail_parse;
 
   // parse SET_DELEGATE
   const [parseSetDelegate] = parseOpt
-    ? parsePattern(lambda, 3, "SET_DELEGATE", () => succ_parse)
+    ? parsePrimPattern(lambda, 3, "SET_DELEGATE", () => succ_parse)
     : fail_parse;
 
   if (parseSetDelegate) {
@@ -188,16 +188,16 @@ const parseUnDelegate = (
   const succ_parse: [boolean, undefined] = [true, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
+  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succ_parse);
 
   // parse NONE
   const [parseOpt] = parseDrop
-    ? parsePattern(lambda, 1, "NONE", () => succ_parse)
+    ? parsePrimPattern(lambda, 1, "NONE", () => succ_parse)
     : fail_parse;
 
   // parse SET_DELEGATE
   const [parseSetDelegate] = parseOpt
-    ? parsePattern(lambda, 2, "SET_DELEGATE", () => succ_parse)
+    ? parsePrimPattern(lambda, 2, "SET_DELEGATE", () => succ_parse)
     : fail_parse;
 
   if (parseSetDelegate) {
@@ -255,11 +255,11 @@ export const parseLambda = (
   const succ_parse: [boolean, undefined] = [true, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePattern(lambda, 0, "DROP", () => succ_parse);
+  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succ_parse);
 
   // parse PUSH address
   const [parsePushAddr, contractAddress] = parseDrop
-    ? parsePattern(lambda, 1, "PUSH", expr => {
+    ? parsePrimPattern(lambda, 1, "PUSH", expr => {
         //@ts-expect-error
         if (expr.args?.[0]?.prim !== "address") {
           return fail_parse;
@@ -288,13 +288,13 @@ export const parseLambda = (
     : fail_parse;
 
   const [parseContrEp, entrypoint] = parsePushAddr
-    ? parsePattern(lambda, 2, "CONTRACT", expr => {
+    ? parsePrimPattern(lambda, 2, "CONTRACT", expr => {
         return [true, parseContractEntrypoint(expr)];
       })
     : fail_parse;
 
   const [parseIfNone] = parseContrEp
-    ? parsePattern(lambda, 3, "IF_NONE", expr => {
+    ? parsePrimPattern(lambda, 3, "IF_NONE", expr => {
         //@ts-expect-error
         const arg0 = expr.args[0];
 
@@ -320,7 +320,7 @@ export const parseLambda = (
     : fail_parse;
 
   const [parseMutez, mutez] = parseIfNone
-    ? parsePattern(lambda, 4, "PUSH", expr => {
+    ? parsePrimPattern(lambda, 4, "PUSH", expr => {
         if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
           return [true, Number((expr.args[1] as IntLiteral).int)];
         else return fail_parse;
@@ -340,7 +340,7 @@ export const parseLambda = (
     : LambdaType.CONTRACT_EXECUTION;
 
   const [parsePushParam, data] = parseMutez
-    ? parsePattern(lambda, 5, "PUSH", expr => {
+    ? parsePrimPattern(lambda, 5, "PUSH", expr => {
         if (
           !!entrypoint &&
           JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
@@ -360,7 +360,7 @@ export const parseLambda = (
     : fail_parse;
 
   const [parseTransfer] = parsePushParam
-    ? parsePattern(lambda, 6, "TRANSFER_TOKENS", expr => succ_parse)
+    ? parsePrimPattern(lambda, 6, "TRANSFER_TOKENS", expr => succ_parse)
     : fail_parse;
 
   if (
