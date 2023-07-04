@@ -52,7 +52,11 @@ const HistoryFaToken = ({ transferType, token }: props) => {
         </span>
         <span className="text-center font-light text-zinc-300 md:min-w-[7rem] md:text-left">
           <span className="hidden md:inline">From:</span>{" "}
-          <Alias address={token.from.address} />
+          {!!token.from ? (
+            <Alias address={token.from.address} />
+          ) : (
+            <span className="text-zinc-400">-</span>
+          )}
         </span>
         <span className="truncate font-light text-zinc-300 md:min-w-[7rem]">
           <span className="hidden md:inline">Amount:</span>{" "}
