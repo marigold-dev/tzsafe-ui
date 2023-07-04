@@ -4,7 +4,6 @@ import {
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
-import { parse } from "path";
 import { decodeB58 } from "../utils/contractParam";
 
 export type primitiveName = "string" | "number" | "list";
