@@ -137,10 +137,10 @@ const parseDelegate = (
     return [false, undefined, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
   // parse PUSH key_hash
-  const [parseKeyHash, address] = parseDrop
+  const [isParsedKeyHash, address] = isParsedDrop
     ? parsePrimPattern(lambda, 1, "PUSH", expr => {
         // @ts-expect-error
         if (expr.args?.[0].prim === "key_hash") {
@@ -160,16 +160,16 @@ const parseDelegate = (
     : failParse;
 
   // parse SOME
-  const [parseOpt] = parseKeyHash
+  const [isParsedOpt] = isParsedKeyHash
     ? parsePrimPattern(lambda, 2, "SOME", () => succParse)
     : failParse;
 
   // parse SET_DELEGATE
-  const [parseSetDelegate] = parseOpt
+  const [isParsedSetDelegate] = isParsedOpt
     ? parsePrimPattern(lambda, 3, "SET_DELEGATE", () => succParse)
     : failParse;
 
-  if (parseSetDelegate) {
+  if (isParsedSetDelegate) {
     return [true, LambdaType.DELEGATE, !!address ? { address } : undefined];
   } else {
     return [false, undefined, undefined];
@@ -184,19 +184,19 @@ const parseUnDelegate = (
   if (lambda.length != undelegate_instr_size) return [false, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
   // parse NONE
-  const [parseOpt] = parseDrop
+  const [isParsedOpt] = isParsedDrop
     ? parsePrimPattern(lambda, 1, "NONE", () => succParse)
     : failParse;
 
   // parse SET_DELEGATE
-  const [parseSetDelegate] = parseOpt
+  const [isParsedSetDelegate] = isParsedOpt
     ? parsePrimPattern(lambda, 2, "SET_DELEGATE", () => succParse)
     : failParse;
 
-  if (parseSetDelegate) {
+  if (isParsedSetDelegate) {
     return [true, LambdaType.UNDELEGATE];
   } else {
     return [false, undefined];
@@ -248,10 +248,10 @@ export const parseLambda = (
     return [LambdaType.LAMBDA_EXECUTION, undefined];
 
   // parse DROP
-  const [parseDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
   // parse PUSH address
-  const [parsePushAddr, contractAddress] = parseDrop
+  const [isParsedPushAddr, contractAddress] = isParsedDrop
     ? parsePrimPattern(lambda, 1, "PUSH", expr => {
         //@ts-expect-error
         if (expr.args?.[0]?.prim !== "address") {
@@ -280,13 +280,15 @@ export const parseLambda = (
       })
     : failParse;
 
-  const [parseContrEp, entrypoint] = parsePushAddr
+  // parse CONTRACT
+  const [isParsedContrEp, entrypoint] = isParsedPushAddr
     ? parsePrimPattern(lambda, 2, "CONTRACT", expr => {
         return [true, parseContractEntrypoint(expr)];
       })
     : failParse;
 
-  const [parseIfNone] = parseContrEp
+  // parse IF_NONE
+  const [isParsedIfNone] = isParsedContrEp
     ? parsePrimPattern(lambda, 3, "IF_NONE", expr => {
         //@ts-expect-error
         const arg0 = expr.args[0];
@@ -312,7 +314,8 @@ export const parseLambda = (
       })
     : failParse;
 
-  const [parseMutez, mutez] = parseIfNone
+  // parse PUSH mutez
+  const [isParsedMutez, mutez] = isParsedIfNone
     ? parsePrimPattern(lambda, 4, "PUSH", expr => {
         if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
           return [true, Number((expr.args[1] as IntLiteral).int)];
@@ -322,7 +325,7 @@ export const parseLambda = (
 
   const entrypointSignature = JSON.stringify(entrypoint);
 
-  const lambdaType = !parseMutez
+  const lambdaType = !isParsedMutez
     ? LambdaType.LAMBDA_EXECUTION
     : entrypointSignature === FA2_SIGNATURE
     ? LambdaType.FA2
@@ -332,7 +335,8 @@ export const parseLambda = (
     ? LambdaType.FA1_2_TRANSFER
     : LambdaType.CONTRACT_EXECUTION;
 
-  const [parsePushParam, data] = parseMutez
+  // parse PUSH data
+  const [isParsedPushParam, data] = isParsedMutez
     ? parsePrimPattern(lambda, 5, "PUSH", expr => {
         if (
           !!entrypoint &&
@@ -352,12 +356,13 @@ export const parseLambda = (
       })
     : failParse;
 
-  const [parseTransfer] = parsePushParam
+  // Parse TRANSFER_TOKENS
+  const [isParsedTransfer] = isParsedPushParam
     ? parsePrimPattern(lambda, 6, "TRANSFER_TOKENS", expr => succParse)
     : failParse;
 
   if (
-    parseTransfer &&
+    isParsedTransfer &&
     !!contractAddress &&
     !!data &&
     !!entrypoint &&
