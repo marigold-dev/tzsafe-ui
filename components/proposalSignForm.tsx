@@ -2,7 +2,7 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useMemo } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
@@ -10,7 +10,9 @@ import { canExecute, canReject } from "../utils/proposals";
 import { walletToken } from "../utils/useWalletTokens";
 import { VersionedApi, signers } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
-import RenderProposalContentLambda from "./RenderProposalContentLambda";
+import RenderProposalContentLambda, {
+  contentToData,
+} from "./RenderProposalContentLambda";
 import Tooltip from "./Tooltip";
 import ContractLoader from "./contractLoader";
 
@@ -35,6 +37,10 @@ function ProposalSignForm({
   walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
+  const rows = useMemo(
+    () => proposal.ui.content.map(v => contentToData(v, walletTokens)),
+    proposal.ui.content
+  );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -158,6 +164,9 @@ function ProposalSignForm({
     threshold,
     signers(state.contracts[currentContract]).length
   );
+  const isSignOrResolve =
+    (typeof modalState === "boolean" && modalState) ||
+    (typeof modalState !== "boolean" && isExecutable);
 
   return (
     <Formik
@@ -205,29 +214,39 @@ function ProposalSignForm({
               <span className="justify-self-center">Amount</span>
               <span className="justify-self-center">Address</span>
               <span className="justify-self-end">Entrypoint</span>
-              <span className="justify-self-end">Parameters</span>
+              <span className="justify-self-end">Params/Tokens</span>
             </div>
             <div className="mt-2 space-y-4 font-light lg:space-y-2">
-              {proposal.ui.content.map((v, i) => (
-                <RenderProposalContentLambda
-                  content={v}
-                  key={i}
-                  walletTokens={walletTokens}
-                />
-              ))}
+              {rows.length > 0
+                ? rows.map((v, i) => (
+                    <RenderProposalContentLambda data={v} key={i} />
+                  ))
+                : []}
             </div>
-            {!!proposal.ui.content.find(
-              v =>
-                "addOwners" in v ||
-                "removeOwners" in v ||
-                "changeThreshold" in v ||
-                "adjustEffectivePeriod" in v
-            ) && (
-              <span className="mt-2 text-xs font-light text-yellow-500">
-                This proposal will update the settings for all the active
-                proposals
-              </span>
-            )}
+            {isSignOrResolve &&
+              !!proposal.ui.content.find(
+                v =>
+                  "addOwners" in v ||
+                  "removeOwners" in v ||
+                  "changeThreshold" in v ||
+                  "adjustEffectivePeriod" in v
+              ) && (
+                <span className="mt-2 text-xs font-light text-yellow-500">
+                  This proposal will update the settings for all the active
+                  proposals
+                </span>
+              )}
+            {isSignOrResolve &&
+              !!rows.find(v => v.label == "Execute lambda") && (
+                <span className="mt-2 text-xs font-light text-yellow-500">
+                  {`We strongly advise that refrain from signing this proposal
+                  unless you have a complete understanding of the potential
+                  consequences. Please be aware that the "Metadata" may not
+                  accurately reflect the actual behavior of the "Execute Lambda"
+                  function. It is crucial to verify the behavior on the
+                  "Param/Token."`}
+                </span>
+              )}
           </section>
           <p className="mt-8 text-lg font-medium text-white">
             Action:{" "}
