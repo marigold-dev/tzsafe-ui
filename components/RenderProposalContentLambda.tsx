@@ -19,15 +19,10 @@ type data = {
   params: undefined | string;
 };
 
-const RenderProposalContentLambda = ({
-  content,
-  walletTokens,
-}: {
-  content: proposalContent;
-  walletTokens: walletToken[];
-}) => {
-  const [hasParam, setHasParam] = useState(false);
-
+export const contentToData = (
+  content: proposalContent,
+  walletTokens: walletToken[]
+): data => {
   let data: data = {
     label: undefined,
     metadata: undefined,
@@ -233,6 +228,12 @@ const RenderProposalContentLambda = ({
       };
     }
   }
+  return data;
+};
+
+const RenderProposalContentLambda = ({ data }: { data: data }) => {
+  const [hasParam, setHasParam] = useState(false);
+  console.log("data", data);
 
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
@@ -308,7 +309,7 @@ const RenderProposalContentLambda = ({
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="font-medium text-zinc-500 lg:hidden">Params/Token</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params/Tokens</p>
           <div>
             {!!data.params
               ? `${
