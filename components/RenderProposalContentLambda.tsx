@@ -13,7 +13,7 @@ import Tooltip from "./Tooltip";
 
 type data = {
   type:
-    | "UpdateThreshold"
+    | "UpdateThreshold" // legacy code
     | "UpdateProposalDuration"
     | "AddSigner"
     | "RemoveSigner"

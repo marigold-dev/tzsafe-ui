@@ -57,18 +57,6 @@ const ProposalCard = ({
 
   const allSigners = signers(state.contracts[currentContract]);
 
-  const renderRow = () => {
-    const tmp = [];
-    for (let i = 0; i < rows.length; i++) {
-      metadataRender
-        ? tmp.push(
-            <RenderProposalContentMetadata key={i} content={content[i]} />
-          )
-        : tmp.push(<RenderProposalContentLambda key={i} data={rows[i]} />);
-    }
-    return tmp;
-  };
-
   return (
     <div
       className={`${
@@ -187,7 +175,13 @@ const ProposalCard = ({
             <span className="justify-self-end">Params/Tokens</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {renderRow().map(v => v)}
+            {rows.map((v, i) =>
+              metadataRender ? (
+                <RenderProposalContentMetadata key={i} content={content[i]} />
+              ) : (
+                <RenderProposalContentLambda key={i} data={v} />
+              )
+            )}
           </div>
         </section>
         <section className="text-xs md:text-base">
