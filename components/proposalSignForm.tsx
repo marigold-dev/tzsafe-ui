@@ -229,7 +229,7 @@ function ProposalSignForm({
                 !!rows.find(
                   v =>
                     v.type === "UpdateProposalDuration" &&
-                    Number(v.params) < PROPOSAL_DURATION_WARNING
+                    Number(v.rawParams) < PROPOSAL_DURATION_WARNING
                 ) && (
                   <li className="mt-1">
                     The proposal duration is short, which may limit your ability

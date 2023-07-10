@@ -33,6 +33,7 @@ type data = {
   addresses: undefined | string[];
   entrypoints: undefined | string;
   params: undefined | string;
+  rawParams: undefined | string;
 };
 
 export const contentToData = (
@@ -47,6 +48,7 @@ export const contentToData = (
     addresses: undefined,
     entrypoints: undefined,
     params: undefined,
+    rawParams: undefined,
   };
   // "changeThreshold is a legacy."
   if ("changeThreshold" in content) {
@@ -77,9 +79,10 @@ export const contentToData = (
       : "";
     data = {
       ...data,
-      type: "UnDelegate",
+      type: "UpdateProposalDuration",
       label: "Update proposal duration",
       params: `${days}${hours}${minutes}`,
+      rawParams: content.adjustEffectivePeriod.toString(),
     };
   } else if ("addOwners" in content) {
     data = {
