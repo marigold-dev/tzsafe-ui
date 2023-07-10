@@ -45,7 +45,7 @@ const ProposalCard = ({
 }: ProposalCardProps) => {
   const rows = useMemo(
     () => content.map(v => contentToData(v, walletTokens)),
-    content
+    [content]
   );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
