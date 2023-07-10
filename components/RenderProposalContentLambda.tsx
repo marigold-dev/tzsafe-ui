@@ -186,6 +186,7 @@ export const contentToData = (
           name: token?.token.metadata.name,
           fa1_2_address: lambda?.contractAddress,
         }),
+        rawParams: undefined,
       };
     } else if (type === LambdaType.FA2) {
       const lambdaData = lambda?.data as {
@@ -215,6 +216,7 @@ export const contentToData = (
               .toString(),
           }))
         ),
+        rawParams: undefined,
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
       const address = (lambda?.data as { address?: string }).address;
@@ -226,6 +228,7 @@ export const contentToData = (
         addresses: !!address ? [address] : undefined,
         entrypoints: undefined,
         params: undefined,
+        rawParams: undefined,
       };
 
       // This condition handles some legacy code so old wallets don't crash
@@ -253,6 +256,7 @@ export const contentToData = (
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        rawParams: undefined,
       };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -276,6 +280,7 @@ export const contentToData = (
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        rawParams: undefined,
       };
     }
   }
