@@ -237,7 +237,7 @@ function ProposalSignForm({
                 </span>
               )}
             {isSignOrResolve &&
-              !!rows.find(v => v.label == "Execute lambda") && (
+              !!rows.find(v => v.type === "ExecuteLambda") && (
                 <span className="mt-2 text-xs font-light text-yellow-500">
                   {`We strongly advise that refrain from signing this proposal
                   unless you have a complete understanding of the potential

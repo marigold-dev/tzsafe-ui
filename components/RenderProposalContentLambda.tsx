@@ -8,9 +8,24 @@ import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
+import FA1_2 from "./FA1_2";
 import Tooltip from "./Tooltip";
 
 type data = {
+  type:
+    | "UpdateThreshold"
+    | "UpdateProposalDuration"
+    | "AddSigner"
+    | "RemoveSigner"
+    | "Transfer"
+    | "Execute"
+    | "ExecuteLambda"
+    | "ExecuteContract"
+    | "TransferFA2"
+    | "TransferFA1_2"
+    | "ApproveFA1_2"
+    | "Delegate"
+    | "UnDelegate";
   label: undefined | string;
   metadata: undefined | string;
   amount: undefined | string;
@@ -24,6 +39,7 @@ export const contentToData = (
   walletTokens: walletToken[]
 ): data => {
   let data: data = {
+    type: "ExecuteLambda",
     label: undefined,
     metadata: undefined,
     amount: undefined,
@@ -35,30 +51,35 @@ export const contentToData = (
   if ("changeThreshold" in content) {
     data = {
       ...data,
+      type: "UpdateThreshold",
       label: "Update threshold",
       params: content.changeThreshold.toString(),
     };
   } else if ("adjustEffectivePeriod" in content) {
     data = {
       ...data,
+      type: "UnDelegate",
       label: "Update proposal duration",
       params: content.adjustEffectivePeriod.toString(),
     };
   } else if ("addOwners" in content) {
     data = {
       ...data,
+      type: "AddSigner",
       label: `Add signer${content.addOwners.length > 1 ? "s" : ""}`,
       addresses: content.addOwners,
     };
   } else if ("removeOwners" in content) {
     data = {
       ...data,
+      type: "RemoveSigner",
       label: `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`,
       addresses: content.removeOwners,
     };
   } else if ("transfer" in content) {
     data = {
       ...data,
+      type: "Transfer",
       label: "Transfer",
       addresses: [content.transfer.destination],
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
@@ -66,6 +87,7 @@ export const contentToData = (
   } else if ("execute" in content) {
     data = {
       ...data,
+      type: "Execute",
       label: "Execute",
       metadata: content.execute,
     };
@@ -90,6 +112,7 @@ export const contentToData = (
     } else if (type === LambdaType.CONTRACT_EXECUTION) {
       data = {
         ...data,
+        type: "ExecuteContract",
         label: "Execute contract",
         addresses: !!lambda?.contractAddress
           ? [lambda.contractAddress]
@@ -118,6 +141,8 @@ export const contentToData = (
 
       data = {
         metadata: undefined,
+        type:
+          type === LambdaType.FA1_2_APPROVE ? "ApproveFA1_2" : "TransferFA1_2",
         label: `${
           type === LambdaType.FA1_2_APPROVE ? "Approve" : "Transfer"
         } FA1.2`,
@@ -151,6 +176,7 @@ export const contentToData = (
       );
 
       data = {
+        type: "TransferFA2",
         label: "Transfer FA2",
         metadata: undefined,
         amount: undefined,
@@ -171,6 +197,7 @@ export const contentToData = (
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
       const address = (lambda?.data as { address?: string }).address;
       data = {
+        type: type === LambdaType.DELEGATE ? "Delegate" : "UnDelegate",
         label: type === LambdaType.DELEGATE ? "Delegate" : "Undelegate",
         metadata: undefined,
         amount: undefined,
@@ -194,6 +221,7 @@ export const contentToData = (
       })();
 
       data = {
+        type: "ExecuteContract",
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
@@ -216,6 +244,7 @@ export const contentToData = (
       })();
 
       data = {
+        type: "ExecuteContract",
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
