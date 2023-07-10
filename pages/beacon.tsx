@@ -35,9 +35,6 @@ const Beacon = () => {
   const searchParams = useSearchParams();
   const [data, setData] = useState<data | undefined>();
   const [validationState, setValidationState] = useState(State.LOADING);
-  const [permissionRequest, setPermissionRequest] = useState<
-    PermissionRequestOutput | undefined
-  >();
 
   useEffect(() => {
     if (
@@ -95,7 +92,8 @@ const Beacon = () => {
                       className="rounded border-2 bg-transparent px-3 py-1 font-medium text-white hover:outline-none"
                       onClick={async e => {
                         e.preventDefault();
-                        if (!permissionRequest) return;
+                        if (!state.p2pClient!.hasReceivedPermissionRequest())
+                          return;
 
                         await state.p2pClient!.refusePermission();
                       }}
@@ -141,7 +139,8 @@ const Beacon = () => {
                       className="rounded border-2 bg-transparent px-3 py-1 font-medium text-white hover:outline-none"
                       onClick={async e => {
                         e.preventDefault();
-                        if (!permissionRequest) return;
+                        if (!state.p2pClient!.hasReceivedProofOfEventRequest())
+                          return;
 
                         await state.p2pClient!.refusePoeChallenge();
                       }}
