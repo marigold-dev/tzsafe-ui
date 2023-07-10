@@ -224,16 +224,16 @@ function ProposalSignForm({
                   ))
                 : []}
             </div>
-            <ul>
+            <ul className="mt-4 text-xs font-light leading-3 text-yellow-500">
               {isSignOrResolve &&
                 !!rows.find(
                   v =>
                     v.type === "UpdateProposalDuration" &&
                     Number(v.params) < PROPOSAL_DURATION_WARNING
                 ) && (
-                  <li className="mt-2 text-xs font-light text-yellow-500">
-                    Proposal duration is low, you may not be able to execute the
-                    proposals after proposal has been executed.
+                  <li className="mt-1">
+                    The proposal duration is short, which may limit your ability
+                    to execute proposals once they have been executed.
                   </li>
                 )}
               {isSignOrResolve &&
@@ -244,8 +244,9 @@ function ProposalSignForm({
                     !!v.addresses &&
                     v.addresses.includes(state.address)
                 ) && (
-                  <li className="mt-2 text-xs font-light text-yellow-500">
-                    Your address is not in the owners.
+                  <li className="mt-1">
+                    Your ownership will be revoked, resulting in your removal
+                    from the list of owners.
                   </li>
                 )}
               {isSignOrResolve &&
@@ -256,14 +257,14 @@ function ProposalSignForm({
                     "changeThreshold" in v ||
                     "adjustEffectivePeriod" in v
                 ) && (
-                  <li className="mt-2 text-xs font-light text-yellow-500">
+                  <li className="mt-1">
                     This proposal will update the settings for all the active
                     proposals.
                   </li>
                 )}
               {isSignOrResolve &&
                 !!rows.find(v => v.type === "ExecuteLambda") && (
-                  <li className="mt-2 text-xs font-light text-yellow-500">
+                  <li className="mt-1">
                     {`We strongly advise that refrain from signing this proposal
                   unless you have a complete understanding of the potential
                   consequences. Please be aware that the "Metadata" may not
