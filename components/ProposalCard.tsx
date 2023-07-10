@@ -206,6 +206,7 @@ const ProposalCard = ({
                 <span>
                   <span>{proposalDate.toLocaleDateString()}</span>
                   <span className="hidden lg:inline">
+                    {" "}
                     -{" "}
                     {`${proposalDate
                       .getHours()
