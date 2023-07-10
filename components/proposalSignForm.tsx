@@ -39,7 +39,7 @@ function ProposalSignForm({
 }) {
   const rows = useMemo(
     () => proposal.ui.content.map(v => contentToData(v, walletTokens)),
-    proposal.ui.content
+    [proposal.ui.content]
   );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";

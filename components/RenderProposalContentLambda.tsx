@@ -233,7 +233,6 @@ export const contentToData = (
 
 const RenderProposalContentLambda = ({ data }: { data: data }) => {
   const [hasParam, setHasParam] = useState(false);
-  console.log("data", data);
 
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
