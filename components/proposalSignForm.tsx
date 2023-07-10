@@ -4,6 +4,7 @@ import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState, useMemo } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import { PROPOSAL_DURATION_WARNING } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { version, proposal } from "../types/display";
 import { canExecute, canReject } from "../utils/proposals";
@@ -223,30 +224,55 @@ function ProposalSignForm({
                   ))
                 : []}
             </div>
-            {isSignOrResolve &&
-              !!proposal.ui.content.find(
-                v =>
-                  "addOwners" in v ||
-                  "removeOwners" in v ||
-                  "changeThreshold" in v ||
-                  "adjustEffectivePeriod" in v
-              ) && (
-                <span className="mt-2 text-xs font-light text-yellow-500">
-                  This proposal will update the settings for all the active
-                  proposals
-                </span>
-              )}
-            {isSignOrResolve &&
-              !!rows.find(v => v.type === "ExecuteLambda") && (
-                <span className="mt-2 text-xs font-light text-yellow-500">
-                  {`We strongly advise that refrain from signing this proposal
+            <ul>
+              {isSignOrResolve &&
+                !!rows.find(
+                  v =>
+                    v.type === "UpdateProposalDuration" &&
+                    Number(v.params) < PROPOSAL_DURATION_WARNING
+                ) && (
+                  <li className="mt-2 text-xs font-light text-yellow-500">
+                    Proposal duration is low, you may not be able to execute the
+                    proposals after proposal has been executed.
+                  </li>
+                )}
+              {isSignOrResolve &&
+                !!rows.find(
+                  v =>
+                    v.type === "RemoveSigner" &&
+                    !!state.address &&
+                    !!v.addresses &&
+                    v.addresses.includes(state.address)
+                ) && (
+                  <li className="mt-2 text-xs font-light text-yellow-500">
+                    Your address is not in the owners.
+                  </li>
+                )}
+              {isSignOrResolve &&
+                !!proposal.ui.content.find(
+                  v =>
+                    "addOwners" in v ||
+                    "removeOwners" in v ||
+                    "changeThreshold" in v ||
+                    "adjustEffectivePeriod" in v
+                ) && (
+                  <li className="mt-2 text-xs font-light text-yellow-500">
+                    This proposal will update the settings for all the active
+                    proposals.
+                  </li>
+                )}
+              {isSignOrResolve &&
+                !!rows.find(v => v.type === "ExecuteLambda") && (
+                  <li className="mt-2 text-xs font-light text-yellow-500">
+                    {`We strongly advise that refrain from signing this proposal
                   unless you have a complete understanding of the potential
                   consequences. Please be aware that the "Metadata" may not
                   accurately reflect the actual behavior of the "Execute Lambda"
                   function. It is crucial to verify the behavior on the
                   "Param/Token."`}
-                </span>
-              )}
+                  </li>
+                )}
+            </ul>
           </section>
           <p className="mt-8 text-lg font-medium text-white">
             Action:{" "}
