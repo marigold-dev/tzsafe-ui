@@ -4,6 +4,7 @@ import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent } from "../types/display";
+import { secondsToDuration } from "../utils/adaptiveTime";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
@@ -47,7 +48,7 @@ export const contentToData = (
     entrypoints: undefined,
     params: undefined,
   };
-
+  // "changeThreshold is a legacy."
   if ("changeThreshold" in content) {
     data = {
       ...data,
@@ -56,11 +57,29 @@ export const contentToData = (
       params: content.changeThreshold.toString(),
     };
   } else if ("adjustEffectivePeriod" in content) {
+    const duration = secondsToDuration(
+      Number(content.adjustEffectivePeriod.toString())
+    );
+    const days = duration.days
+      ? duration.days > 1
+        ? `${duration.days} days `
+        : `${duration.days} day `
+      : "";
+    const hours = duration.hours
+      ? duration.hours > 1
+        ? `${duration.hours} hours `
+        : `${duration.hours} hour`
+      : "";
+    const minutes = duration.minutes
+      ? duration.minutes > 1
+        ? `${duration.minutes} mins`
+        : `${duration.minutes} min`
+      : "";
     data = {
       ...data,
       type: "UnDelegate",
       label: "Update proposal duration",
-      params: content.adjustEffectivePeriod.toString(),
+      params: `${days}${hours}${minutes}`,
     };
   } else if ("addOwners" in content) {
     data = {
