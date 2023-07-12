@@ -148,7 +148,11 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <div className="flex items-center">
                   <div className="md:ml-3">
                     <div className="text-base font-medium leading-none text-white">
-                      <Alias address={state.address} length={3} />
+                      <Alias
+                        address={state.address}
+                        length={3}
+                        className="block w-28 truncate text-right"
+                      />
                     </div>
                   </div>
                 </div>
