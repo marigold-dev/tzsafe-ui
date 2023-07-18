@@ -29,6 +29,34 @@ type mutezTransfer = {
     address: string;
   };
 };
+export type tokenTransfer = {
+  id: number;
+  level: number;
+  timestamp: string;
+  token: {
+    id: number;
+    contract: {
+      address: string;
+    };
+    tokenId: string;
+    standard: string;
+    totalSupply: string;
+    metadata: {
+      name: string;
+      symbol: string;
+      decimals: string;
+    };
+  };
+  from: {
+    address: string;
+  };
+  to: {
+    address: string;
+  };
+  amount: number;
+  transactionId: number;
+};
+
 type status = "Proposing" | "Executed" | "Rejected" | "Expired";
 type proposal = {
   author: string;
@@ -46,6 +74,14 @@ type version =
   | "0.0.11"
   | "0.1.1"
   | "unknown version";
+
+export enum TransferType {
+  MUTEZ = -1,
+  FA2 = -2,
+  FA1_2 = -3,
+  UNKNOWN = -9999,
+}
+
 export {
   type proposal,
   type changeThreshold,

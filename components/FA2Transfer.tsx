@@ -109,25 +109,25 @@ const FA2Transfer = ({
     onTokenChange?.(newToken);
     setCurrentToken(newToken);
 
-    if (autoSetField) {
-      const previousValue = getFieldProps(
-        `transfers.${proposalIndex}.values.${localIndex}`
-      ).value;
+    if (!autoSetField) return;
 
-      if (
-        Array.isArray(previousValue) ||
-        (!!previousValue && "balance" in previousValue)
-      ) {
-        throw new Error("Expect previous value to be formValue");
-      }
+    const previousValue = getFieldProps(
+      `transfers.${proposalIndex}.values.${localIndex}`
+    ).value;
 
-      setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
-        ...(previousValue ?? {}),
-        token: newToken ?? "",
-        tokenId: newToken?.token.tokenId ?? "",
-        fa2Address: newToken?.token.contract.address ?? "",
-      });
+    if (
+      Array.isArray(previousValue) ||
+      (!!previousValue && "balance" in previousValue)
+    ) {
+      throw new Error("Expect previous value to be formValue");
     }
+
+    setFieldValue(`transfers.${proposalIndex}.values.${localIndex}`, {
+      ...(previousValue ?? {}),
+      token: newToken ?? "",
+      tokenId: newToken?.token.tokenId ?? "",
+      fa2Address: newToken?.token.contract.address ?? "",
+    });
   };
 
   const fetchTokens = useCallback(
@@ -345,7 +345,19 @@ const FA2TransferGroup = ({ proposalIndex, remove }: props) => {
         remove={remove}
         autoSetField={false}
         onTokenChange={token => {
+          const previousValue = getFieldProps(
+            `transfers.${proposalIndex}.values.0`
+          ).value;
+
+          if (
+            Array.isArray(previousValue) ||
+            (!!previousValue && "balance" in previousValue)
+          ) {
+            throw new Error("Expect previous value to be formValue");
+          }
+
           const data = {
+            ...previousValue,
             token,
             fa2Address: token.token.contract.address,
             tokenId: token.token.tokenId,

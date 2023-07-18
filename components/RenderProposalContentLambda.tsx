@@ -4,66 +4,104 @@ import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent } from "../types/display";
+import { secondsToDuration } from "../utils/adaptiveTime";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
+import FA1_2 from "./FA1_2";
 import Tooltip from "./Tooltip";
 
 type data = {
+  type:
+    | "UpdateThreshold" // legacy code
+    | "UpdateProposalDuration"
+    | "AddSigner"
+    | "RemoveSigner"
+    | "Transfer"
+    | "Execute"
+    | "ExecuteLambda"
+    | "ExecuteContract"
+    | "TransferFA2"
+    | "TransferFA1_2"
+    | "ApproveFA1_2"
+    | "Delegate"
+    | "UnDelegate";
   label: undefined | string;
   metadata: undefined | string;
   amount: undefined | string;
   addresses: undefined | string[];
   entrypoints: undefined | string;
   params: undefined | string;
+  rawParams: undefined | string;
 };
 
-const RenderProposalContentLambda = ({
-  content,
-  walletTokens,
-}: {
-  content: proposalContent;
-  walletTokens: walletToken[];
-}) => {
-  const [hasParam, setHasParam] = useState(false);
-
+export const contentToData = (
+  content: proposalContent,
+  walletTokens: walletToken[]
+): data => {
   let data: data = {
+    type: "ExecuteLambda",
     label: undefined,
     metadata: undefined,
     amount: undefined,
     addresses: undefined,
     entrypoints: undefined,
     params: undefined,
+    rawParams: undefined,
   };
-
+  // "changeThreshold is a legacy."
   if ("changeThreshold" in content) {
     data = {
       ...data,
+      type: "UpdateThreshold",
       label: "Update threshold",
       params: content.changeThreshold.toString(),
     };
   } else if ("adjustEffectivePeriod" in content) {
+    const duration = secondsToDuration(
+      Number(content.adjustEffectivePeriod.toString())
+    );
+    const days = duration.days
+      ? duration.days > 1
+        ? `${duration.days} days `
+        : `${duration.days} day `
+      : "";
+    const hours = duration.hours
+      ? duration.hours > 1
+        ? `${duration.hours} hours `
+        : `${duration.hours} hour`
+      : "";
+    const minutes = duration.minutes
+      ? duration.minutes > 1
+        ? `${duration.minutes} mins`
+        : `${duration.minutes} min`
+      : "";
     data = {
       ...data,
+      type: "UpdateProposalDuration",
       label: "Update proposal duration",
-      params: content.adjustEffectivePeriod.toString(),
+      params: `${days}${hours}${minutes}`,
+      rawParams: content.adjustEffectivePeriod.toString(),
     };
   } else if ("addOwners" in content) {
     data = {
       ...data,
+      type: "AddSigner",
       label: `Add signer${content.addOwners.length > 1 ? "s" : ""}`,
       addresses: content.addOwners,
     };
   } else if ("removeOwners" in content) {
     data = {
       ...data,
+      type: "RemoveSigner",
       label: `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`,
       addresses: content.removeOwners,
     };
   } else if ("transfer" in content) {
     data = {
       ...data,
+      type: "Transfer",
       label: "Transfer",
       addresses: [content.transfer.destination],
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
@@ -71,6 +109,7 @@ const RenderProposalContentLambda = ({
   } else if ("execute" in content) {
     data = {
       ...data,
+      type: "Execute",
       label: "Execute",
       metadata: content.execute,
     };
@@ -95,6 +134,7 @@ const RenderProposalContentLambda = ({
     } else if (type === LambdaType.CONTRACT_EXECUTION) {
       data = {
         ...data,
+        type: "ExecuteContract",
         label: "Execute contract",
         addresses: !!lambda?.contractAddress
           ? [lambda.contractAddress]
@@ -123,6 +163,8 @@ const RenderProposalContentLambda = ({
 
       data = {
         metadata: undefined,
+        type:
+          type === LambdaType.FA1_2_APPROVE ? "ApproveFA1_2" : "TransferFA1_2",
         label: `${
           type === LambdaType.FA1_2_APPROVE ? "Approve" : "Transfer"
         } FA1.2`,
@@ -144,6 +186,7 @@ const RenderProposalContentLambda = ({
           name: token?.token.metadata.name,
           fa1_2_address: lambda?.contractAddress,
         }),
+        rawParams: undefined,
       };
     } else if (type === LambdaType.FA2) {
       const lambdaData = lambda?.data as {
@@ -156,6 +199,7 @@ const RenderProposalContentLambda = ({
       );
 
       data = {
+        type: "TransferFA2",
         label: "Transfer FA2",
         metadata: undefined,
         amount: undefined,
@@ -172,16 +216,19 @@ const RenderProposalContentLambda = ({
               .toString(),
           }))
         ),
+        rawParams: undefined,
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
       const address = (lambda?.data as { address?: string }).address;
       data = {
+        type: type === LambdaType.DELEGATE ? "Delegate" : "UnDelegate",
         label: type === LambdaType.DELEGATE ? "Delegate" : "Undelegate",
         metadata: undefined,
         amount: undefined,
         addresses: !!address ? [address] : undefined,
         entrypoints: undefined,
         params: undefined,
+        rawParams: undefined,
       };
 
       // This condition handles some legacy code so old wallets don't crash
@@ -199,6 +246,7 @@ const RenderProposalContentLambda = ({
       })();
 
       data = {
+        type: "ExecuteContract",
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
@@ -208,6 +256,7 @@ const RenderProposalContentLambda = ({
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        rawParams: undefined,
       };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -221,6 +270,7 @@ const RenderProposalContentLambda = ({
       })();
 
       data = {
+        type: "ExecuteContract",
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
@@ -230,9 +280,15 @@ const RenderProposalContentLambda = ({
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        rawParams: undefined,
       };
     }
   }
+  return data;
+};
+
+const RenderProposalContentLambda = ({ data }: { data: data }) => {
+  const [hasParam, setHasParam] = useState(false);
 
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
@@ -308,7 +364,7 @@ const RenderProposalContentLambda = ({
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="font-medium text-zinc-500 lg:hidden">Params/Token</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params/Tokens</p>
           <div>
             {!!data.params
               ? `${
