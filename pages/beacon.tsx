@@ -1,28 +1,13 @@
-import {
-  BEACON_VERSION,
-  BeaconErrorType,
-  BeaconMessageType,
-  PermissionRequestOutput,
-} from "beacon-wallet";
 import bs58check from "bs58check";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import Spinner from "../components/Spinner";
 import Meta from "../components/meta";
 import { Event } from "../context/P2PClient";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
+import { p2pData } from "../versioned/interface";
 
-type data = {
-  appUrl: string;
-  id: string;
-  name: string;
-  publicKey: string;
-  relayServer: string;
-  type: string;
-  version: string;
-};
-
-enum State {
+export enum State {
   IDLE = -1,
   LOADING = 0,
   AUTHORIZE = 10,
@@ -32,8 +17,10 @@ enum State {
 
 const Beacon = () => {
   const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+
   const searchParams = useSearchParams();
-  const [data, setData] = useState<data | undefined>();
+  const [data, setData] = useState<p2pData | undefined>();
   const [validationState, setValidationState] = useState(State.LOADING);
 
   useEffect(() => {
@@ -47,7 +34,8 @@ const Beacon = () => {
 
     const data = JSON.parse(
       new TextDecoder().decode(bs58check.decode(searchParams.get("data")!))
-    ) as data;
+    ) as p2pData;
+
     setData(data);
 
     (async () => {
@@ -55,9 +43,6 @@ const Beacon = () => {
         setValidationState(State.AUTHORIZE);
       });
 
-      state.p2pClient!.on(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, () => {
-        setValidationState(State.AUTHORIZED);
-      });
       state.p2pClient!.addPeer(data);
     })();
   }, [searchParams, state.currentContract, state.p2pClient]);
@@ -76,6 +61,17 @@ const Beacon = () => {
         {(() => {
           if (!data) return null;
 
+          if (
+            !!state.connectedDapps[data.id] &&
+            validationState !== State.AUTHORIZED
+          )
+            return (
+              <p>
+                {data?.name} is already connected with{" "}
+                {state.aliases[state.currentContract ?? ""]}
+              </p>
+            );
+
           switch (validationState) {
             case State.LOADING:
               return <Spinner />;
@@ -86,7 +82,7 @@ const Beacon = () => {
                     Do you want to authorize {data?.name} to connect to{" "}
                     {state.aliases[state.currentContract ?? ""]}?
                   </p>
-                  <div className="flex items-center space-x-4">
+                  <div className="mt-4 flex items-center space-x-4">
                     <button
                       type="button"
                       className="rounded border-2 bg-transparent px-3 py-1 font-medium text-white hover:outline-none"
@@ -96,6 +92,7 @@ const Beacon = () => {
                           return;
 
                         await state.p2pClient!.refusePermission();
+                        setValidationState(State.REFUSED);
                       }}
                     >
                       Refuse
@@ -117,6 +114,11 @@ const Beacon = () => {
                         await state.p2pClient!.approvePermission(
                           state.currentContract
                         );
+                        setValidationState(State.AUTHORIZED);
+                        dispatch({
+                          type: "addDapp",
+                          payload: data,
+                        });
                       }}
                     >
                       Authorize
@@ -127,61 +129,13 @@ const Beacon = () => {
 
             case State.AUTHORIZED:
               return (
-                <>
-                  <p>
-                    To finish to authorization of connection with {data.name},
-                    you must sign a message to prove to {data.name} that you are
-                    the owner of the wallet
-                  </p>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      type="button"
-                      className="rounded border-2 bg-transparent px-3 py-1 font-medium text-white hover:outline-none"
-                      onClick={async e => {
-                        e.preventDefault();
-                        if (!state.p2pClient!.hasReceivedProofOfEventRequest())
-                          return;
-
-                        await state.p2pClient!.refusePoeChallenge();
-                      }}
-                    >
-                      Refuse
-                    </button>
-                    <button
-                      type="button"
-                      className={
-                        "rounded border-2 border-primary bg-primary px-3 py-1 font-medium text-white hover:border-red-500 hover:bg-red-500 hover:outline-none focus:border-red-500 focus:bg-red-500"
-                      }
-                      onClick={async e => {
-                        e.preventDefault();
-                        if (
-                          !state.p2pClient!.hasReceivedPermissionRequest() ||
-                          !state.currentContract
-                        )
-                          return;
-
-                        setValidationState(State.LOADING);
-                        await state.p2pClient!.approvePoeChallenge();
-                        setValidationState(State.AUTHORIZED);
-
-                        const contract = await state.connection.wallet.at(
-                          state.currentContract
-                        );
-
-                        const op = await contract.methodsObject
-                          .proof_of_event_challenge(
-                            state.p2pClient!.proofOfEvent.data
-                          )
-                          .send();
-
-                        await op.confirmation(1);
-                      }}
-                    >
-                      Sign
-                    </button>
-                  </div>
-                </>
+                <p>
+                  {data?.name} has been authorized to connect to{" "}
+                  {state.aliases[state.currentContract ?? ""]}
+                </p>
               );
+            case State.REFUSED:
+              return <p>You have refused the connection to {data?.name}</p>;
             default:
               break;
           }

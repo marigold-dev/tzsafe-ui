@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
 import Banner from "../components/Banner";
+import PoeModal from "../components/PoeModal";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
@@ -72,6 +73,13 @@ export default function App({ Component, pageProps }: AppProps) {
       await p2pClient.init();
       await p2pClient.connect(p2pClient.handleMessages).catch(console.log);
 
+      // Connect stored peers
+      Object.values(state.connectedDapps)
+        .flatMap(v => Object.values(v))
+        .forEach(async data => {
+          p2pClient.addPeer(data);
+        });
+
       const wallet = new BeaconWallet({
         name: "TzSafe",
         preferredNetwork: PREFERED_NETWORK,
@@ -114,6 +122,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          <PoeModal />
           <Banner>
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET

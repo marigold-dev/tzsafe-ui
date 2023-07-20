@@ -8,6 +8,16 @@ import { ownersForm } from "./forms";
 
 export type timeoutAndHash = [boolean, string];
 
+export type p2pData = {
+  appUrl: string;
+  id: string;
+  name: string;
+  publicKey: string;
+  relayServer: string;
+  type: string;
+  version: string;
+};
+
 type common = {
   fields: {
     field: string;

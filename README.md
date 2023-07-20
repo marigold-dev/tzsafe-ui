@@ -1,3 +1,11 @@
+# TODO
+
+<!-- - Stocker les dapps connecter dans le state global -->
+<!-- - Ajouter une catégorie dans les settings pour déconnecter les dapps -->
+
+- Modal PoE
+- Incoming request -> request modal
+
 # TzSafe
 
 TzSafe is a website to interact with multi-signatures wallets. The goal is to have a UI layer above the LIGO contracts that you can find [here](https://github.com/marigold-dev/tzsafe).
