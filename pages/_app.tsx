@@ -15,6 +15,7 @@ import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
 import { PREFERED_NETWORK } from "../context/config";
+import { GA_TRACKING_ID } from "../context/config";
 import {
   tezosState,
   action,
@@ -26,6 +27,9 @@ import {
 } from "../context/state";
 import "../styles/globals.css";
 import Proposals from "./proposals";
+import ReactGA from "react-ga4";
+
+ReactGA.initialize(GA_TRACKING_ID);
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
