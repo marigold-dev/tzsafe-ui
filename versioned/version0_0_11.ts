@@ -44,7 +44,7 @@ class Version0_0_11 extends Versioned {
                 transfer: {
                   target: x.values.to,
                   amount: tezToMutez(Number(x.values.amount)),
-                  parameter: {},
+                  parameter: x.values.parameters ?? {},
                 },
               };
             case "lambda": {

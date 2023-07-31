@@ -14,6 +14,7 @@ import { buf2Hex } from "../utils/strings";
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
   PROOF_OF_EVENT_CHALLENGE_REQUEST = "PROOF_OF_EVENT_CHALLENGE_REQUEST",
+  INCOMING_OPERATION = "INCOMING_OPERATION",
 }
 
 class P2PClient extends WalletClient {
@@ -111,6 +112,13 @@ class P2PClient extends WalletClient {
       case BeaconMessageType.ProofOfEventChallengeRecorded:
         console.log("NOICE");
         break;
+      case BeaconMessageType.OperationRequest:
+        this.events.emit(Event.INCOMING_OPERATION, message);
+        break;
+      case BeaconMessageType.BroadcastRequest:
+        console.log(message);
+        break;
+
       // case BeaconMessageType.SignPayloadRequest:
       //   if (await this.isSupportedSignPayload(message)) {
       //     this.signRequest = message;

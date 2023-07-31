@@ -13,6 +13,7 @@ export enum State {
   AUTHORIZE = 10,
   AUTHORIZED = 20,
   REFUSED = 30,
+  TRANSACTION = 40,
 }
 
 const Beacon = () => {

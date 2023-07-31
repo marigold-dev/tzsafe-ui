@@ -1,40 +1,151 @@
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { char2Bytes } from "@taquito/tzip16";
 import {
+  AppMetadata,
   BeaconMessageType,
+  OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
+  TezosOperationType,
 } from "beacon-wallet";
-import { useContext, useEffect, useState } from "react";
+import { Formik } from "formik";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
+import { makeDelegateMichelson } from "../context/delegate";
 import { AppStateContext } from "../context/state";
 import { State } from "../pages/beacon";
+import { proposalContent } from "../types/display";
+import useWalletTokens from "../utils/useWalletTokens";
+import { VersionedApi } from "../versioned/apis";
+import { transfer } from "../versioned/interface";
+import RenderProposalContentLambda, {
+  contentToData,
+} from "./RenderProposalContentLambda";
 import Spinner from "./Spinner";
+import Tooltip from "./Tooltip";
 
+export const transferToProposalContent = (
+  transfer: transfer
+): proposalContent => {
+  if (transfer.type !== "lambda" && transfer.type !== "transfer")
+    throw new Error(`${transfer.type} is not handled`);
+
+  switch (transfer.type) {
+    case "lambda":
+      return {
+        executeLambda: {
+          metadata: transfer.values.metadata,
+          content: transfer.values.lambda,
+        },
+      };
+    case "transfer":
+      return {
+        transfer: {
+          amount: Number(transfer.values.amount),
+          destination: transfer.values.to,
+        },
+      };
+  }
+};
 const PoeModal = () => {
   const state = useContext(AppStateContext)!;
+  const walletTokens = useWalletTokens();
+  const [currentMetadata, setCurrentMetadata] = useState<
+    undefined | AppMetadata
+  >();
   const [message, setMessage] = useState<
     undefined | ProofOfEventChallengeRequestOutput
   >();
+  const [transfers, setTransfers] = useState<transfer[] | undefined>();
+  const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [currentState, setCurrentState] = useState(State.IDLE);
 
+  const rows = useMemo(
+    () =>
+      (transfers ?? []).map(t =>
+        contentToData(transferToProposalContent(t), walletTokens ?? [])
+      ),
+    [transfers]
+  );
   useEffect(() => {
     if (!state.p2pClient) return;
 
-    const cb = setMessage;
+    const challengeCb = setMessage;
+    const transactionCb = async (message: OperationRequestOutput) => {
+      setCurrentMetadata(message.appMetadata);
+      setTransfers(
+        message.operationDetails.flatMap<transfer>(detail => {
+          switch (detail.kind) {
+            case TezosOperationType.TRANSACTION:
+              return [
+                {
+                  type: "transfer",
+                  values: {
+                    to: detail.destination,
+                    amount: detail.amount,
+                    parameters: detail.parameters,
+                  },
+                },
+              ];
+            case TezosOperationType.DELEGATION:
+              return !!detail.delegate
+                ? [
+                    {
+                      type: "lambda",
+                      values: {
+                        lambda: makeDelegateMichelson({
+                          bakerAddress: detail.delegate,
+                        }),
+                        metadata: char2Bytes(
+                          JSON.stringify({
+                            baker_address: detail.delegate,
+                          })
+                        ),
+                      },
+                    },
+                  ]
+                : [];
+
+            default:
+              return [];
+          }
+        })
+      );
+
+      setCurrentState(State.TRANSACTION);
+
+      // const cc = await state.connection.contract.at(state.currentContract);
+
+      // const versioned = VersionedApi(
+      //   state.contracts[state.currentContract].version,
+      //   state.currentContract
+      // );
+      // setTimeoutAndHash(
+      //   await versioned.submitTxProposals(cc, state.connection, { transfers })
+      // );
+    };
 
     const tinyEmitter = state.p2pClient.on(
       Event.PROOF_OF_EVENT_CHALLENGE_REQUEST,
-      cb
+      challengeCb
     );
 
+    state.p2pClient.on(Event.INCOMING_OPERATION, transactionCb);
+
     return () => {
-      tinyEmitter.off(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, cb);
+      tinyEmitter.off(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, challengeCb);
+      tinyEmitter.off(Event.INCOMING_OPERATION, transactionCb);
     };
   }, [state.p2pClient]);
 
-  if (!message) return null;
+  if (!message && !transfers) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="min-h-[96] w-1/3  rounded bg-graybg px-6 py-12 text-white">
+      <div
+        className={`min-h-[96] ${
+          !!message ? "w-1/3" : "w-2/3"
+        } rounded bg-graybg px-6 py-12 text-white`}
+      >
         {(() => {
           switch (currentState) {
             case State.LOADING:
@@ -63,7 +174,63 @@ const PoeModal = () => {
                   </div>
                 </>
               );
+            case State.TRANSACTION:
+              if (!transfers) return null;
+
+              return (
+                <>
+                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                    <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+                      Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
+                      from {currentMetadata?.name}
+                    </div>
+                    <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
+                      <section className="w-full text-white">
+                        <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
+                          <span>Function</span>
+                          <span className="flex items-center">
+                            Metadata
+                            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                              <InfoCircledIcon className="ml-2 h-4 w-4" />
+                            </Tooltip>
+                          </span>
+                          <span className="justify-self-center">Amount</span>
+                          <span className="justify-self-center">Address</span>
+                          <span className="justify-self-end">Entrypoint</span>
+                          <span className="justify-self-end">
+                            Params/Tokens
+                          </span>
+                        </div>
+                        <div className="mt-2 space-y-4 font-light lg:space-y-2">
+                          {rows.map((v, i) => (
+                            <RenderProposalContentLambda data={v} key={i} />
+                          ))}
+                        </div>
+                      </section>
+                    </div>
+                    <div className="flex w-2/3 justify-between md:w-1/3">
+                      <button
+                        className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+                        onClick={e => {
+                          e.preventDefault();
+                          // closeModal();
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="hover:border-offset-2 hover:border-offset-gray-800 my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                        type="submit"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </div>
+                </>
+              );
             default:
+              if (!message) return null;
+
               return (
                 <>
                   <h1 className="text-lg font-medium">

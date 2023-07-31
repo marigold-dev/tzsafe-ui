@@ -28,24 +28,35 @@ type common = {
     validate: (p: string) => string | undefined;
   }[];
 };
-export type proposals =
+
+export type transfer =
+  | ({
+      type: "contract" | "fa1.2-transfer" | "fa1.2-approve";
+      values: { [key: string]: string };
+    } & common)
   | {
-      transfers: ({
-        type:
-          | "transfer"
-          | "lambda"
-          | "contract"
-          | "fa1.2-transfer"
-          | "fa1.2-approve";
-        values: { [key: string]: string };
-      } & common)[];
+      type: "transfer";
+      values: {
+        to: string;
+        amount: string;
+        parameters?: { [k: string]: any };
+      };
     }
   | {
-      transfers: ({
-        type: "fa2";
-        values: { [key: string]: string }[];
-      } & common)[];
-    };
+      type: "lambda";
+      values: {
+        lambda: string;
+        metadata: any;
+      };
+    }
+  | ({
+      type: "fa2";
+      values: { [key: string]: string }[];
+    } & common);
+
+export type proposals = {
+  transfers: transfer[];
+};
 
 abstract class Versioned {
   readonly version: string;
