@@ -6,7 +6,7 @@ let meta = {
   name: "TzSafe",
   description:
     "TzSafe is a multisig wallet aiming at providing better assurance of security and management of ownership than a traditional single-signed wallet",
-  version: "0.1.1",
+  version: "0.3.0",
   license: {
     name: "MIT",
   },
