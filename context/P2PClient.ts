@@ -125,6 +125,7 @@ class P2PClient extends WalletClient {
       //     this.changeFavicon(true);
       //   }
       //   break;
+
       default:
         await this.respond({
           type: BeaconMessageType.Error,
@@ -136,6 +137,26 @@ class P2PClient extends WalletClient {
         console.warn("Unknown message type", message);
     }
   };
+
+  async abortRequest(id: string) {
+    return this.respond({
+      type: BeaconMessageType.Error,
+      errorType: BeaconErrorType.ABORTED_ERROR,
+      version: BEACON_VERSION,
+      id,
+      senderId: await this.beaconId,
+    });
+  }
+
+  async transactionResponse(id: string, transactionHash: string) {
+    return this.respond({
+      type: BeaconMessageType.OperationResponse,
+      version: BEACON_VERSION,
+      id,
+      senderId: await this.beaconId,
+      transactionHash,
+    });
+  }
 }
 
 export default P2PClient;

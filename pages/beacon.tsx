@@ -58,7 +58,7 @@ const Beacon = () => {
           </h1>
         </div>
       </div>
-      <main className="min-h-fit grow px-4 text-white sm:px-6 lg:px-8">
+      <main className="mx-auto min-h-fit w-full max-w-7xl grow px-4 text-white sm:px-6 lg:px-8">
         {(() => {
           if (!data) return null;
 

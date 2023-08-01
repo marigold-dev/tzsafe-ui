@@ -3,6 +3,7 @@ import { char2Bytes } from "@taquito/tzip16";
 import {
   AppMetadata,
   BeaconMessageType,
+  NetworkType,
   OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
   TezosOperationType,
@@ -10,6 +11,7 @@ import {
 import { Formik } from "formik";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
+import { PREFERED_NETWORK } from "../context/config";
 import { makeDelegateMichelson } from "../context/delegate";
 import { AppStateContext } from "../context/state";
 import { State } from "../pages/beacon";
@@ -50,12 +52,16 @@ const PoeModal = () => {
   const state = useContext(AppStateContext)!;
   const walletTokens = useWalletTokens();
   const [currentMetadata, setCurrentMetadata] = useState<
-    undefined | AppMetadata
+    undefined | [string, AppMetadata]
   >();
   const [message, setMessage] = useState<
     undefined | ProofOfEventChallengeRequestOutput
   >();
   const [transfers, setTransfers] = useState<transfer[] | undefined>();
+  const [transactionLoading, setTransactionLoading] = useState(false);
+  const [transactionError, setTransactionError] = useState<undefined | string>(
+    undefined
+  );
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [currentState, setCurrentState] = useState(State.IDLE);
 
@@ -71,7 +77,8 @@ const PoeModal = () => {
 
     const challengeCb = setMessage;
     const transactionCb = async (message: OperationRequestOutput) => {
-      setCurrentMetadata(message.appMetadata);
+      setCurrentMetadata([message.id, message.appMetadata]);
+
       setTransfers(
         message.operationDetails.flatMap<transfer>(detail => {
           switch (detail.kind) {
@@ -112,16 +119,6 @@ const PoeModal = () => {
       );
 
       setCurrentState(State.TRANSACTION);
-
-      // const cc = await state.connection.contract.at(state.currentContract);
-
-      // const versioned = VersionedApi(
-      //   state.contracts[state.currentContract].version,
-      //   state.currentContract
-      // );
-      // setTimeoutAndHash(
-      //   await versioned.submitTxProposals(cc, state.connection, { transfers })
-      // );
     };
 
     const tinyEmitter = state.p2pClient.on(
@@ -138,6 +135,15 @@ const PoeModal = () => {
   }, [state.p2pClient]);
 
   if (!message && !transfers) return null;
+
+  const reset = () => {
+    setTransfers(undefined);
+    setCurrentMetadata(undefined);
+    setTimeoutAndHash([false, ""]);
+    setTransactionError(undefined);
+    setMessage(undefined);
+    setCurrentState(State.IDLE);
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
@@ -164,10 +170,7 @@ const PoeModal = () => {
                   <div className="mt-4">
                     <button
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={() => {
-                        setMessage(undefined);
-                        setCurrentState(State.IDLE);
-                      }}
+                      onClick={reset}
                     >
                       Close
                     </button>
@@ -177,12 +180,79 @@ const PoeModal = () => {
             case State.TRANSACTION:
               if (!transfers) return null;
 
+              if (transactionLoading)
+                return (
+                  <div className="flex w-full flex-col items-center justify-center">
+                    <Spinner />
+                    <span className="mt-4 text-zinc-400">
+                      Sending and waiting for transaction confirmation (It may
+                      take a few minutes)
+                    </span>
+                  </div>
+                );
+
+              if (timeoutAndHash[0])
+                return (
+                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                    <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+                      The wallet {"can't"} confirm that the transaction has been
+                      validated. You can check it in{" "}
+                      <a
+                        className="text-zinc-200 hover:text-zinc-300"
+                        href={`https://${
+                          PREFERED_NETWORK === NetworkType.GHOSTNET
+                            ? "ghostnet."
+                            : ""
+                        }tzkt.io/${timeoutAndHash[1]}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        the explorer
+                      </a>
+                      , and if it is, {"it'll"} appear in the proposals
+                    </div>
+                    <button
+                      className="mt-6 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+                      onClick={reset}
+                    >
+                      Close
+                    </button>
+                  </div>
+                );
+
+              if (!!transactionError)
+                return (
+                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                    <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+                      {transactionError}
+                    </div>
+                    <button
+                      className="mt-6 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+                      onClick={reset}
+                    >
+                      Close
+                    </button>
+                  </div>
+                );
+
+              if (!timeoutAndHash[0] && !!timeoutAndHash[1])
+                return (
+                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                    <p>Succesfully created the proposal!</p>
+                    <button
+                      className="mt-6 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
+                      onClick={reset}
+                    >
+                      Close
+                    </button>
+                  </div>
+                );
               return (
                 <>
                   <div className="col-span-2 flex w-full flex-col items-center justify-center">
                     <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
-                      from {currentMetadata?.name}
+                      from {currentMetadata?.[1].name}
                     </div>
                     <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
                       <section className="w-full text-white">
@@ -208,12 +278,18 @@ const PoeModal = () => {
                         </div>
                       </section>
                     </div>
-                    <div className="flex w-2/3 justify-between md:w-1/3">
+                    <div className="mt-6 flex w-2/3 justify-between md:w-1/3">
                       <button
                         className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
-                        onClick={e => {
+                        onClick={async e => {
+                          if (!currentMetadata) return;
+
                           e.preventDefault();
-                          // closeModal();
+
+                          await state.p2pClient?.abortRequest(
+                            currentMetadata[0]
+                          );
+                          reset();
                         }}
                       >
                         Cancel
@@ -221,6 +297,57 @@ const PoeModal = () => {
                       <button
                         className="hover:border-offset-2 hover:border-offset-gray-800 my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                         type="submit"
+                        onClick={async () => {
+                          if (!state.currentContract || !currentMetadata)
+                            return;
+
+                          setTransactionLoading(true);
+
+                          let hash;
+                          try {
+                            const cc = await state.connection.contract.at(
+                              state.currentContract
+                            );
+                            const versioned = VersionedApi(
+                              state.contracts[state.currentContract].version,
+                              state.currentContract
+                            );
+                            const timeoutAndHash =
+                              await versioned.submitTxProposals(
+                                cc,
+                                state.connection,
+                                { transfers }
+                              );
+
+                            hash = timeoutAndHash[1];
+
+                            setTimeoutAndHash(timeoutAndHash);
+
+                            if (timeoutAndHash[0]) {
+                              setTransactionLoading(false);
+                              return;
+                            }
+                          } catch (e) {
+                            setTransactionLoading(false);
+                            setTransactionError(
+                              "Failed to create the transaction. Please try again later"
+                            );
+                            return;
+                          }
+
+                          try {
+                            await state.p2pClient?.transactionResponse(
+                              currentMetadata[0],
+                              hash
+                            );
+                          } catch (e) {
+                            setTransactionError(
+                              `The proposal has been created, but we couldn't notify ${currentMetadata[1].name} of it`
+                            );
+                          }
+
+                          setTransactionLoading(false);
+                        }}
                       >
                         Confirm
                       </button>
