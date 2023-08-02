@@ -8,7 +8,7 @@ import Modal from "../components/modal";
 import ProposalSignForm from "../components/proposalSignForm";
 import fetchVersion from "../context/metadata";
 import { getProposals } from "../context/proposals";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 import { proposal, version } from "../types/display";
 import { canExecute, canReject } from "../utils/proposals";
 import useIsOwner from "../utils/useIsOwner";
@@ -19,6 +19,7 @@ const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
 const Proposals = () => {
   const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
   const isOwner = useIsOwner();
   const walletTokens = useWalletTokens();
 
@@ -32,7 +33,6 @@ const Proposals = () => {
     state: 0,
     proposal: [undefined, 0],
   });
-  const [refresher, setRefresher] = useState(0);
 
   useEffect(() => {
     if (!state.currentContract) return;
@@ -69,7 +69,7 @@ const Proposals = () => {
     })();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract, refresher]);
+  }, [state.currentContract, state.proposalRefresher]);
 
   const filteredProposals = useMemo(
     () => [
@@ -81,6 +81,8 @@ const Proposals = () => {
   );
 
   const currentContract = state.currentContract ?? "";
+
+  console.log(state.proposalRefresher);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -95,7 +97,7 @@ const Proposals = () => {
             state={openModal.proposal[0]}
             id={openModal.proposal[1]}
             closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
-            onSuccess={() => setRefresher(v => v + 1)}
+            onSuccess={() => dispatch({ type: "refreshProposals" })}
             walletTokens={walletTokens ?? []}
           />
         )}

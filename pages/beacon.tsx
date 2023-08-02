@@ -73,6 +73,7 @@ const Beacon = () => {
               </p>
             );
 
+          // TODO: Pourquoi ça crash quand je retourne le message
           switch (validationState) {
             case State.LOADING:
               return <Spinner />;

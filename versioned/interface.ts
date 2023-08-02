@@ -68,7 +68,8 @@ abstract class Versioned {
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: proposals
+    proposals: proposals,
+    convertTezToMutez?: boolean
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(

@@ -31,8 +31,12 @@ class Version0_0_9 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: proposals
+    proposals: proposals,
+    convertTezToMutez: boolean = true
   ): Promise<[boolean, string]> {
+    // Avoid unused variable
+    let _ = convertTezToMutez;
+
     let params = cc.methods
       .create_proposal(
         proposals.transfers.map(x => {

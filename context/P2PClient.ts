@@ -1,5 +1,4 @@
 import {
-  BEACON_VERSION,
   BeaconErrorType,
   BeaconMessageType,
   WalletClient,
@@ -65,7 +64,6 @@ class P2PClient extends WalletClient {
     await this.respond({
       type: BeaconMessageType.Error,
       errorType: BeaconErrorType.NOT_GRANTED_ERROR,
-      version: BEACON_VERSION,
       id: this.permissionMessage.id,
       senderId: await this.beaconId,
     });
@@ -130,7 +128,6 @@ class P2PClient extends WalletClient {
         await this.respond({
           type: BeaconMessageType.Error,
           errorType: BeaconErrorType.UNKNOWN_ERROR,
-          version: BEACON_VERSION,
           id: message.id,
           senderId: await this.beaconId,
         });
@@ -142,7 +139,6 @@ class P2PClient extends WalletClient {
     return this.respond({
       type: BeaconMessageType.Error,
       errorType: BeaconErrorType.ABORTED_ERROR,
-      version: BEACON_VERSION,
       id,
       senderId: await this.beaconId,
     });
@@ -151,7 +147,6 @@ class P2PClient extends WalletClient {
   async transactionResponse(id: string, transactionHash: string) {
     return this.respond({
       type: BeaconMessageType.OperationResponse,
-      version: BEACON_VERSION,
       id,
       senderId: await this.beaconId,
       transactionHash,

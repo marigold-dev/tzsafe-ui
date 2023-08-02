@@ -34,6 +34,8 @@ type tezosState = {
       [id: string]: p2pData;
     };
   };
+  // Increasing this number will trigger a useEffect in the proposal page
+  proposalRefresher: number;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -72,6 +74,7 @@ let emptyState = (): tezosState => {
     hasBanner: true,
     delegatorAddresses: undefined,
     connectedDapps: {},
+    proposalRefresher: 0,
   };
 };
 
@@ -125,6 +128,9 @@ type action =
   | {
       type: "removeDapp";
       payload: string;
+    }
+  | {
+      type: "refreshProposals";
     };
 
 const saveState = (state: tezosState) => {
@@ -324,6 +330,8 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
+    case "refreshProposals":
+      return { ...state, proposalRefresher: state.proposalRefresher + 1 };
     default: {
       throw "notImplemented";
     }

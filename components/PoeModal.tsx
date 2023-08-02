@@ -13,7 +13,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
 import { makeDelegateMichelson } from "../context/delegate";
-import { AppStateContext } from "../context/state";
+import { AppDispatchContext, AppStateContext } from "../context/state";
 import { State } from "../pages/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
@@ -50,6 +50,8 @@ export const transferToProposalContent = (
 };
 const PoeModal = () => {
   const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
+
   const walletTokens = useWalletTokens();
   const [currentMetadata, setCurrentMetadata] = useState<
     undefined | [string, AppMetadata]
@@ -102,11 +104,9 @@ const PoeModal = () => {
                         lambda: makeDelegateMichelson({
                           bakerAddress: detail.delegate,
                         }),
-                        metadata: char2Bytes(
-                          JSON.stringify({
-                            baker_address: detail.delegate,
-                          })
-                        ),
+                        metadata: JSON.stringify({
+                          baker_address: detail.delegate,
+                        }),
                       },
                     },
                   ]
@@ -316,7 +316,8 @@ const PoeModal = () => {
                               await versioned.submitTxProposals(
                                 cc,
                                 state.connection,
-                                { transfers }
+                                { transfers },
+                                false
                               );
 
                             hash = timeoutAndHash[1];
@@ -345,6 +346,7 @@ const PoeModal = () => {
                               `The proposal has been created, but we couldn't notify ${currentMetadata[1].name} of it`
                             );
                           }
+                          dispatch({ type: "refreshProposals" });
 
                           setTransactionLoading(false);
                         }}
