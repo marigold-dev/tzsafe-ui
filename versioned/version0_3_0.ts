@@ -1,12 +1,17 @@
-import { Parser } from "@taquito/michel-codec";
-import { emitMicheline } from "@taquito/michel-codec";
+import {
+  emitMicheline,
+  Parser,
+  packDataBytes,
+  MichelsonType,
+} from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import {
   BigMapAbstraction,
   Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { char2Bytes, bytes2Char, num2PaddedHex } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
@@ -29,6 +34,137 @@ import { proposals, timeoutAndHash, Versioned } from "./interface";
 function convert(x: string): string {
   return char2Bytes(x);
 }
+
+const proposals_type: MichelsonType = {
+  prim: "list",
+  args: [
+    {
+      prim: "or",
+      args: [
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "set",
+                  args: [
+                    {
+                      prim: "address",
+                    },
+                  ],
+                  annots: ["%add_owners"],
+                },
+                {
+                  prim: "int",
+                  annots: ["%adjust_effective_period"],
+                },
+              ],
+            },
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "nat",
+                  annots: ["%adjust_threshold"],
+                },
+                {
+                  prim: "pair",
+                  args: [
+                    {
+                      prim: "address",
+                      annots: ["%target"],
+                    },
+                    {
+                      prim: "unit",
+                      annots: ["%parameter"],
+                    },
+                    {
+                      prim: "mutez",
+                      annots: ["%amount"],
+                    },
+                  ],
+                  annots: ["%execute"],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "pair",
+                  args: [
+                    {
+                      prim: "option",
+                      args: [
+                        {
+                          prim: "lambda",
+                          args: [
+                            {
+                              prim: "unit",
+                            },
+                            {
+                              prim: "operation",
+                            },
+                          ],
+                        },
+                      ],
+                      annots: ["%lambda"],
+                    },
+                    {
+                      prim: "option",
+                      args: [
+                        {
+                          prim: "bytes",
+                        },
+                      ],
+                      annots: ["%metadata"],
+                    },
+                  ],
+                  annots: ["%execute_lambda"],
+                },
+                {
+                  prim: "set",
+                  args: [
+                    {
+                      prim: "address",
+                    },
+                  ],
+                  annots: ["%remove_owners"],
+                },
+              ],
+            },
+            {
+              prim: "pair",
+              args: [
+                {
+                  prim: "address",
+                  annots: ["%target"],
+                },
+                {
+                  prim: "unit",
+                  annots: ["%parameter"],
+                },
+                {
+                  prim: "mutez",
+                  annots: ["%amount"],
+                },
+              ],
+              annots: ["%transfer"],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 class Version0_3_0 extends Versioned {
   async submitTxProposals(
     cc: Contract,
@@ -217,20 +353,23 @@ class Version0_3_0 extends Versioned {
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
-    let proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    let b_proposal = proposal.toString(16);
-    let prop: any = await proposals.proposals.get(b_proposal);
-    let batch = t.wallet.batch();
+    const proposals: { proposals: BigMapAbstraction } = await cc.storage();
+    const b_proposal = num2PaddedHex(proposal);
+    const prop: any = await proposals.proposals.get(b_proposal);
+    const batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
         cc.methods.sign_proposal(b_proposal, prop.contents, result)
       );
     }
     if (resolve) {
-      console.log(prop.contents);
+      const schema = new Schema(proposals_type);
+      const proposals_data = schema.Encode(prop.contents);
+      const packed = packDataBytes(proposals_data, proposals_type).bytes;
+
       await batch.withContractCall(
-        // PoE
-        cc.methods.resolve_proposal(b_proposal, prop.contents)
+        // resolve proposal
+        cc.methods.proof_of_event_challenge(b_proposal, packed)
       );
     }
     let op = await batch.send();
