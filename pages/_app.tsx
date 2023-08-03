@@ -29,7 +29,7 @@ import {
 import "../styles/globals.css";
 import Proposals from "./proposals";
 
-ReactGA.initialize(GA_TRACKING_ID);
+if (GA_TRACKING_ID != "") ReactGA.initialize(GA_TRACKING_ID);
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -109,7 +109,9 @@ export default function App({ Component, pageProps }: AppProps) {
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET
               ? "tzsafe.marigold.dev"
-              : "ghostnet.tzsafe.marigold.dev"}
+              : PREFERED_NETWORK === NetworkType.GHOSTNET
+              ? "ghostnet.tzsafe.marigold.dev"
+              : "a valid URL"}
           </Banner>
           <NavBar />
           {Object.entries(state.contracts).length > 0 && (

@@ -9,12 +9,16 @@ export const IPFS_NODE = "ipfs.gcp.marigold.dev";
 export const PREFERED_NETWORK =
   process.env.NEXT_PUBLIC_NETWORK_TYPE === "mainnet"
     ? NetworkType.MAINNET
-    : NetworkType.GHOSTNET;
+    : process.env.NEXT_PUBLIC_NETWORK_TYPE === "ghostnet"
+    ? NetworkType.GHOSTNET
+    : NetworkType.CUSTOM;
 
 export const GA_TRACKING_ID =
   process.env.NEXT_PUBLIC_NETWORK_TYPE === "mainnet"
     ? "G-QG5J5XRFF9"
-    : "G-32ZN7LBFPN";
+    : process.env.NEXT_PUBLIC_NETWORK_TYPE === "ghostnet"
+    ? "G-32ZN7LBFPN"
+    : "";
 
 export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
 

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "env-cmd -f ./deploy/.env.dev next dev",
+    "sandbox": "env-cmd -f ./deploy/.env.sandbox next dev --port 4000",
     "build": "next build",
     "start": "next start --port 80",
     "lint": "next lint",
@@ -30,6 +31,7 @@
     "@types/uuid": "^9.0.1",
     "assert-never": "^1.2.1",
     "bignumber.js": "^9.1.1",
+    "env-cmd": "^10.1.0",
     "eslint": "8.28.0",
     "eslint-config-next": "13.0.5",
     "formik": "^2.2.9",
