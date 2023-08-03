@@ -60,7 +60,7 @@ const Proposals = () => {
         getProposalsId(state.contracts[state.currentContract].version, cc)
       );
       let proposals: [number, any][] = bigmap.map(({ key, value }) => [
-        Number.parseInt(key),
+        Number(`0x${key}`),
         { ui: toProposal(version, value), og: value },
       ]);
 
