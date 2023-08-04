@@ -223,7 +223,7 @@ const PoeModal = () => {
               if (!!transactionError)
                 return (
                   <div className="col-span-2 flex w-full flex-col items-center justify-center">
-                    <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+                    <div className="mb-2 mt-4 text-center text-xl font-medium text-white">
                       {transactionError}
                     </div>
                     <button

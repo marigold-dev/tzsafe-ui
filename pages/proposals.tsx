@@ -82,8 +82,6 @@ const Proposals = () => {
 
   const currentContract = state.currentContract ?? "";
 
-  console.log(state.proposalRefresher);
-
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Proposals - TzSafe"} />
