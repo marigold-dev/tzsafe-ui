@@ -29,7 +29,7 @@ import {
 import "../styles/globals.css";
 import Proposals from "./proposals";
 
-if (GA_TRACKING_ID != "") ReactGA.initialize(GA_TRACKING_ID);
+if (GA_TRACKING_ID !== undefined) ReactGA.initialize(GA_TRACKING_ID);
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(

@@ -18,7 +18,7 @@ export const GA_TRACKING_ID =
     ? "G-QG5J5XRFF9"
     : process.env.NEXT_PUBLIC_NETWORK_TYPE === "ghostnet"
     ? "G-32ZN7LBFPN"
-    : "";
+    : undefined;
 
 export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
 
