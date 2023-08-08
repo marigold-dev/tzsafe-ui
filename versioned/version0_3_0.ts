@@ -35,7 +35,7 @@ function convert(x: string): string {
   return char2Bytes(x);
 }
 
-const proposals_type: MichelsonType = {
+const proposalsType: MichelsonType = {
   prim: "list",
   args: [
     {
@@ -354,22 +354,22 @@ class Version0_3_0 extends Versioned {
     resolve: boolean
   ): Promise<timeoutAndHash> {
     const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const b_proposal = num2PaddedHex(proposal);
-    const prop: any = await proposals.proposals.get(b_proposal);
+    const bProposal = num2PaddedHex(proposal);
+    const prop: any = await proposals.proposals.get(bProposal);
     const batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal(b_proposal, prop.contents, result)
+        cc.methods.sign_proposal(bProposal, prop.contents, result)
       );
     }
     if (resolve) {
-      const schema = new Schema(proposals_type);
-      const proposals_data = schema.Encode(prop.contents);
-      const packed = packDataBytes(proposals_data, proposals_type).bytes;
+      const schema = new Schema(proposalsType);
+      const proposalsData = schema.Encode(prop.contents);
+      const packed = packDataBytes(proposalsData, proposalsType).bytes;
 
       await batch.withContractCall(
         // resolve proposal
-        cc.methods.proof_of_event_challenge(b_proposal, packed)
+        cc.methods.proof_of_event_challenge(bProposal, packed)
       );
     }
     let op = await batch.send();
@@ -379,11 +379,7 @@ class Version0_3_0 extends Versioned {
       DEFAULT_TIMEOUT
     );
 
-    if (confirmationValue === -1) {
-      return [true, op.opHash];
-    }
-
-    return [false, op.opHash];
+    return [confirmationValue === -1, op.opHash];
   }
 
   async submitSettingsProposals(

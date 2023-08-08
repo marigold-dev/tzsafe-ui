@@ -237,11 +237,7 @@ class Version0_1_1 extends Versioned {
       DEFAULT_TIMEOUT
     );
 
-    if (confirmationValue === -1) {
-      return [true, op.opHash];
-    }
-
-    return [false, op.opHash];
+    return [confirmationValue === -1, op.opHash];
   }
 
   async submitSettingsProposals(
