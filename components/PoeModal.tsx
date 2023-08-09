@@ -1,8 +1,7 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { char2Bytes } from "@taquito/tzip16";
+import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import {
   AppMetadata,
-  BeaconMessageType,
   NetworkType,
   OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
@@ -12,6 +11,7 @@ import { Formik } from "formik";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
+import { makeContractExecution } from "../context/contractExecution";
 import { makeDelegateMichelson } from "../context/delegate";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { State } from "../pages/beacon";
@@ -82,40 +82,107 @@ const PoeModal = () => {
       setCurrentMetadata([message.id, message.appMetadata]);
 
       setTransfers(
-        message.operationDetails.flatMap<transfer>(detail => {
-          switch (detail.kind) {
-            case TezosOperationType.TRANSACTION:
-              return [
-                {
-                  type: "transfer",
-                  values: {
-                    to: detail.destination,
-                    amount: detail.amount,
-                    parameters: detail.parameters,
-                  },
-                },
-              ];
-            case TezosOperationType.DELEGATION:
-              return !!detail.delegate
-                ? [
-                    {
-                      type: "lambda",
-                      values: {
-                        lambda: makeDelegateMichelson({
-                          bakerAddress: detail.delegate,
-                        }),
-                        metadata: JSON.stringify({
-                          baker_address: detail.delegate,
-                        }),
-                      },
-                    },
-                  ]
-                : [];
+        (
+          await Promise.all(
+            message.operationDetails.map(async detail => {
+              switch (detail.kind) {
+                case TezosOperationType.TRANSACTION:
+                  if (!!detail.parameters) {
+                    try {
+                      const contract = await state.connection.contract.at(
+                        detail.destination
+                      );
 
-            default:
-              return [];
-          }
-        })
+                      const value = contract.methodsObject[
+                        detail.parameters.entrypoint
+                      ](detail.parameters.value).toTransferParams().parameter
+                        ?.value;
+
+                      console.log(
+                        "VALUE:",
+                        contract.methodsObject[detail.parameters.entrypoint](
+                          detail.parameters.value
+                        ),
+                        contract.methodsObject[detail.parameters.entrypoint](
+                          detail.parameters.value
+                        ).toTransferParams(),
+                        value
+                      );
+
+                      if (!value) return undefined;
+                      const param = emitMicheline(value as Expr);
+
+                      const parser = new Parser();
+
+                      console.log(
+                        contract.entrypoints.entrypoints[
+                          detail.parameters.entrypoint
+                        ]
+                      );
+                      const type = emitMicheline(
+                        parser.parseJSON(
+                          contract.entrypoints.entrypoints[
+                            detail.parameters.entrypoint
+                          ]
+                        ),
+                        {
+                          indent: "",
+                          newline: "",
+                        }
+                      );
+
+                      const aze = makeContractExecution({
+                        address: detail.destination,
+                        amount: Number(detail.amount),
+                        entrypoint: detail.parameters.entrypoint,
+                        type,
+                        param,
+                      });
+                      console.log(aze);
+                      return undefined;
+                      // return {
+                      //   type: "contract",
+                      //   values: {
+                      //     lambda: "",
+                      //     metadata: "",
+                      //   },
+                      // };
+                    } catch (e) {
+                      console.log("Error while converting contract call", e);
+
+                      return undefined;
+                    }
+                  } else
+                    return {
+                      type: "transfer",
+                      values: {
+                        to: detail.destination,
+                        amount: detail.amount,
+                        parameters: {},
+                      },
+                    };
+
+                case TezosOperationType.DELEGATION:
+                  return !!detail.delegate
+                    ? {
+                        type: "lambda",
+                        values: {
+                          lambda: makeDelegateMichelson({
+                            bakerAddress: detail.delegate,
+                          }),
+                          metadata: JSON.stringify({
+                            baker_address: detail.delegate,
+                          }),
+                        },
+                      }
+                    : undefined;
+
+                default:
+                  return undefined;
+              }
+            })
+          )
+        ).filter(v => !!v) as transfer[]
       );
 
       setCurrentState(State.TRANSACTION);

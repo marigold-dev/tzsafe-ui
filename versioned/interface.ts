@@ -31,7 +31,7 @@ type common = {
 
 export type transfer =
   | ({
-      type: "contract" | "fa1.2-transfer" | "fa1.2-approve";
+      type: "fa1.2-transfer" | "fa1.2-approve";
       values: { [key: string]: string };
     } & common)
   | {
@@ -44,6 +44,13 @@ export type transfer =
     }
   | {
       type: "lambda";
+      values: {
+        lambda: string;
+        metadata: any;
+      };
+    }
+  | {
+      type: "contract";
       values: {
         lambda: string;
         metadata: any;
