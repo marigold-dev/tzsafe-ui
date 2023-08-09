@@ -270,11 +270,7 @@ class Version0_1_1 extends Versioned {
       DEFAULT_TIMEOUT
     );
 
-    if (transacValue === -1) {
-      return [true, op.opHash];
-    }
-
-    return [false, op.opHash];
+    return [transacValue === -1, op.opHash];
   }
   static override toContractState(
     contract: any,
