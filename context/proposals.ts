@@ -1,4 +1,4 @@
-import { mutezTransfer } from "../types/display";
+import { mutezTransfer, tokenTransfer } from "../types/display";
 import { API_URL } from "./config";
 
 async function getProposals(bigmap: string) {
@@ -7,14 +7,27 @@ async function getProposals(bigmap: string) {
   return json;
 }
 async function getTransfers(address: string): Promise<mutezTransfer[]> {
-  try {
-    let res = await fetch(
-      `${API_URL}/v1/operations/transactions?target=${address}&status=applied&amount.gt=0`
-    );
-    return await res.json();
-  } catch (e) {
-    console.log(e);
-    return [];
-  }
+  return fetch(
+    `${API_URL}/v1/operations/transactions?target=${address}&status=applied&amount.gt=0`
+  )
+    .then(res => res.json())
+    .catch(e => {
+      console.log(e);
+
+      return Promise.resolve([]);
+    });
 }
-export { getProposals, getTransfers };
+
+function getTokenTransfers(address: string): Promise<tokenTransfer[]> {
+  return fetch(
+    `${API_URL}/v1/tokens/transfers?anyof.to_.to=${address}&sort.desc=id`
+  )
+    .then(res => res.json())
+    .catch(e => {
+      console.log(e);
+
+      return Promise.resolve([]);
+    });
+}
+
+export { getProposals, getTransfers, getTokenTransfers };

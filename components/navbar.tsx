@@ -1,3 +1,4 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -45,7 +46,15 @@ const NavBar = (_: React.PropsWithChildren) => {
                   alt="Tzsafe logo"
                   className="h-16 w-auto"
                 />
-                <span className="ml-4 text-xs">BETA</span>
+                <div>
+                  <p className="ml-4 text-xs">BETA</p>
+
+                  <p className="ml-4 mt-1 text-xs">
+                    {PREFERED_NETWORK === NetworkType.GHOSTNET
+                      ? "Ghostnet"
+                      : "Mainnet"}
+                  </p>
+                </div>
               </Link>
             </div>
             <div className="hidden md:block">
@@ -103,11 +112,6 @@ const NavBar = (_: React.PropsWithChildren) => {
                             "..." +
                             state?.address.slice(33)}
                         </span>
-                        <span className="font-xs block text-white">
-                          {PREFERED_NETWORK === "mainnet"
-                            ? "Mainnet"
-                            : "Ghostnet"}
-                        </span>
                       </div>
                     </button>
                   </div>
@@ -144,10 +148,11 @@ const NavBar = (_: React.PropsWithChildren) => {
                 <div className="flex items-center">
                   <div className="md:ml-3">
                     <div className="text-base font-medium leading-none text-white">
-                      <Alias address={state.address} length={3} />
-                    </div>
-                    <div className="text-right text-sm font-medium leading-none text-white">
-                      {PREFERED_NETWORK === "mainnet" ? "Mainnet" : "Ghostnet"}
+                      <Alias
+                        address={state.address}
+                        length={3}
+                        className="block w-28 truncate text-right"
+                      />
                     </div>
                   </div>
                 </div>

@@ -1,3 +1,6 @@
+import { NetworkType } from "@airgap/beacon-sdk";
+import { PREFERED_NETWORK } from "../context/config";
+
 const Footer = ({
   shouldRemovePadding,
 }: React.PropsWithChildren<{ shouldRemovePadding: boolean }>) => {
@@ -31,6 +34,17 @@ const Footer = ({
             rel="noreferrer"
           >
             Documentation
+          </a>
+          <a
+            href={`https://${
+              PREFERED_NETWORK === NetworkType.MAINNET ? "ghostnet." : ""
+            }tzsafe.marigold.dev/`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {PREFERED_NETWORK === NetworkType.MAINNET
+              ? "TzSafe Ghostnet"
+              : "TzSafe Mainnet"}
           </a>
         </div>
         <a href="https://tzkt.io/" target="_blank" rel="noreferrer">

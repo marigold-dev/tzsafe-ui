@@ -1,5 +1,5 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
-import { useContext, useState } from "react";
+import { useContext, useState, useMemo } from "react";
 import { AppStateContext } from "../context/state";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
@@ -7,6 +7,7 @@ import { signers } from "../versioned/apis";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
   labelOfProposalContentLambda,
+  contentToData,
 } from "./RenderProposalContentLambda";
 import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
@@ -42,6 +43,10 @@ const ProposalCard = ({
   shouldResolve = false,
   metadataRender = false,
 }: ProposalCardProps) => {
+  const rows = useMemo(
+    () => content.map(v => contentToData(v, walletTokens)),
+    [content]
+  );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -167,18 +172,14 @@ const ProposalCard = ({
             <span className="justify-self-center">Amount</span>
             <span className="justify-self-center">Address</span>
             <span className="justify-self-end">Entrypoint</span>
-            <span className="justify-self-end">Params/Token</span>
+            <span className="justify-self-end">Params/Tokens</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {content.map((v, i) =>
+            {rows.map((v, i) =>
               metadataRender ? (
-                <RenderProposalContentMetadata key={i} content={v} />
+                <RenderProposalContentMetadata key={i} content={content[i]} />
               ) : (
-                <RenderProposalContentLambda
-                  key={i}
-                  content={v}
-                  walletTokens={walletTokens}
-                />
+                <RenderProposalContentLambda key={i} data={v} />
               )
             )}
           </div>
@@ -205,6 +206,7 @@ const ProposalCard = ({
                 <span>
                   <span>{proposalDate.toLocaleDateString()}</span>
                   <span className="hidden lg:inline">
+                    {" "}
                     -{" "}
                     {`${proposalDate
                       .getHours()

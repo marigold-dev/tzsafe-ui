@@ -28,6 +28,9 @@ import {
 } from "../context/state";
 import "../styles/globals.css";
 import Proposals from "./proposals";
+import ReactGA from "react-ga4";
+
+ReactGA.initialize(GA_TRACKING_ID);
 
 ReactGA.initialize(GA_TRACKING_ID);
 
