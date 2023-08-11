@@ -23,7 +23,6 @@ const LoginButton = () => {
         address: userAddress,
         balance: balance!.toString(),
       });
-      console.log("#5");
     } catch (error) {
       console.log(error);
     }
