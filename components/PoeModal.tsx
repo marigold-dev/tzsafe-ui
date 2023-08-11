@@ -1,5 +1,6 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import {
   AppMetadata,
   NetworkType,
@@ -7,7 +8,6 @@ import {
   ProofOfEventChallengeRequestOutput,
   TezosOperationType,
 } from "beacon-wallet";
-import { Formik } from "formik";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
@@ -28,11 +28,16 @@ import Tooltip from "./Tooltip";
 export const transferToProposalContent = (
   transfer: transfer
 ): proposalContent => {
-  if (transfer.type !== "lambda" && transfer.type !== "transfer")
+  if (
+    transfer.type !== "lambda" &&
+    transfer.type !== "transfer" &&
+    transfer.type !== "contract"
+  )
     throw new Error(`${transfer.type} is not handled`);
 
   switch (transfer.type) {
     case "lambda":
+    case "contract":
       return {
         executeLambda: {
           metadata: transfer.values.metadata,
@@ -93,32 +98,23 @@ const PoeModal = () => {
                         detail.destination
                       );
 
-                      const value = contract.methodsObject[
-                        detail.parameters.entrypoint
-                      ](detail.parameters.value).toTransferParams().parameter
-                        ?.value;
-
-                      console.log(
-                        "VALUE:",
-                        contract.methodsObject[detail.parameters.entrypoint](
-                          detail.parameters.value
-                        ),
-                        contract.methodsObject[detail.parameters.entrypoint](
-                          detail.parameters.value
-                        ).toTransferParams(),
-                        value
+                      const methodSchema = new Schema(
+                        contract.entrypoints.entrypoints[
+                          detail.parameters.entrypoint
+                        ]
                       );
+
+                      const value = contract.methods[
+                        detail.parameters.entrypoint
+                      ](
+                        methodSchema.Execute(detail.parameters.value)
+                      ).toTransferParams().parameter?.value;
 
                       if (!value) return undefined;
                       const param = emitMicheline(value as Expr);
 
                       const parser = new Parser();
 
-                      console.log(
-                        contract.entrypoints.entrypoints[
-                          detail.parameters.entrypoint
-                        ]
-                      );
                       const type = emitMicheline(
                         parser.parseJSON(
                           contract.entrypoints.entrypoints[
@@ -131,22 +127,24 @@ const PoeModal = () => {
                         }
                       );
 
-                      const aze = makeContractExecution({
-                        address: detail.destination,
-                        amount: Number(detail.amount),
-                        entrypoint: detail.parameters.entrypoint,
-                        type,
-                        param,
-                      });
-                      console.log(aze);
-                      return undefined;
-                      // return {
-                      //   type: "contract",
-                      //   values: {
-                      //     lambda: "",
-                      //     metadata: "",
-                      //   },
-                      // };
+                      return {
+                        type: "contract",
+                        values: {
+                          lambda: makeContractExecution({
+                            address: detail.destination,
+                            amount: Number(detail.amount),
+                            entrypoint: detail.parameters.entrypoint,
+                            type,
+                            param,
+                          }),
+                          metadata: JSON.stringify({
+                            mutez_amount: detail.amount,
+                            contract_address: detail.destination,
+                            entrypoint: detail.parameters.entrypoint,
+                            payload: emitMicheline(detail.parameters.value),
+                          }),
+                        },
+                      };
                     } catch (e) {
                       console.log("Error while converting contract call", e);
 
