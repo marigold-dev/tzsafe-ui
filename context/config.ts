@@ -11,11 +11,6 @@ export const PREFERED_NETWORK =
     ? NetworkType.MAINNET
     : NetworkType.GHOSTNET;
 
-export const GA_TRACKING_ID =
-  process.env.NEXT_PUBLIC_NETWORK_TYPE === "mainnet"
-    ? "G-QG5J5XRFF9"
-    : "G-32ZN7LBFPN";
-
 export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
 
 export const DEFAULT_TIMEOUT = 60000;
