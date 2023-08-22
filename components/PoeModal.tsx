@@ -462,28 +462,34 @@ const PoeModal = () => {
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={async () => {
                         if (
-                          !state.p2pClient!.hasReceivedPermissionRequest() ||
+                          !state.p2pClient!.hasReceivedProofOfEventRequest() ||
                           !state.currentContract
                         )
                           return;
 
                         setCurrentState(State.LOADING);
 
-                        await state.p2pClient!.approvePoeChallenge();
+                        try {
+                          await state.p2pClient!.approvePoeChallenge();
 
-                        const contract = await state.connection.wallet.at(
-                          state.currentContract
-                        );
+                          const contract = await state.connection.wallet.at(
+                            state.currentContract
+                          );
 
-                        const op = await contract.methodsObject
-                          .proof_of_event_challenge(
-                            state.p2pClient!.proofOfEvent.data
-                          )
-                          .send();
+                          const op = await contract.methodsObject
+                            .proof_of_event_challenge(
+                              state.p2pClient!.proofOfEvent.data
+                            )
+                            .send();
 
-                        await op.confirmation(1);
-
-                        setCurrentState(State.AUTHORIZED);
+                          await op.confirmation(1);
+                          setCurrentState(State.AUTHORIZED);
+                        } catch (e) {
+                          console.log(e);
+                          setTransactionError(
+                            "Failed to create and sign the Proof Of Event transaction"
+                          );
+                        }
                       }}
                     >
                       Accept
