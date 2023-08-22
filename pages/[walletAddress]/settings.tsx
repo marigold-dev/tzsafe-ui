@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import { useContext, useEffect, useState } from "react";
-import Meta from "../components/meta";
-import SignersForm from "../components/signersForm";
-import { AppDispatchContext, AppStateContext } from "../context/state";
-import useIsOwner from "../utils/useIsOwner";
+import Meta from "../../components/meta";
+import SignersForm from "../../components/signersForm";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
+import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;

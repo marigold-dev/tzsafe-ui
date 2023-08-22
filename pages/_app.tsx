@@ -25,7 +25,7 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
-import Proposals from "./proposals";
+import Proposals from "./[walletAddress]/proposals";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -42,20 +42,25 @@ export default function App({ Component, pageProps }: AppProps) {
     if (!path) return;
 
     if (
-      ![
-        "/settings",
-        "/proposals",
-        "/history",
-        "/fund-wallet",
-        "/new-proposal",
-      ].includes(path)
+      path === "/" &&
+      Object.values(state.contracts).length > 0 &&
+      !!state.currentContract
+    ) {
+      router.replace(`/${state.currentContract}/proposals`);
+      return;
+    }
+
+    if (
+      path.includes("settings") ||
+      path.includes("proposals") ||
+      path.includes("history") ||
+      path.includes("fund-wallet") ||
+      path.includes("new-proposal")
     )
       return;
 
-    if (Object.values(state.contracts).length > 0) return;
-
     router.replace("/");
-  }, [path, state]);
+  }, [path, state.currentContract, state.contracts, router]);
 
   useEffect(() => {
     (async () => {
@@ -128,11 +133,7 @@ export default function App({ Component, pageProps }: AppProps) {
               </button>
             )}
 
-            {path === "/" && !!state.currentContract ? (
-              <Proposals />
-            ) : (
-              <Component {...pageProps} />
-            )}
+            <Component {...pageProps} />
           </div>
           <Footer
             shouldRemovePadding={Object.entries(state.contracts).length === 0}

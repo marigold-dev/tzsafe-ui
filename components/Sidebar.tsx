@@ -6,9 +6,11 @@ import {
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
 import { tzip16 } from "@taquito/tzip16";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import React, {
   forwardRef,
   useContext,
@@ -107,6 +109,7 @@ const Sidebar = ({
   isOpen: boolean;
   onClose: () => void;
 }) => {
+  const router = useRouter();
   const path = usePathname();
 
   const [isClient, setIsClient] = useState(false);
@@ -119,6 +122,24 @@ const Sidebar = ({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (!router.query.walletAddress) return;
+    if (Array.isArray(router.query.walletAddress)) return;
+    if (router.query.walletAddress === state.currentContract) return;
+
+    if (
+      validateAddress(router.query.walletAddress) !== ValidationResult.VALID
+    ) {
+      router.push("/");
+      return;
+    }
+
+    dispatch({
+      type: "setCurrentContract",
+      payload: router.query.walletAddress,
+    });
+  }, [router.query.walletAddress, state.currentContract, dispatch, router]);
 
   useEffect(() => {
     const entries = Object.entries(state.contracts);
@@ -183,6 +204,7 @@ const Sidebar = ({
       </button>
       <Select.Root
         onValueChange={payload => {
+          router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
           dispatch({
             type: "setCurrentContract",
             payload,
@@ -249,7 +271,7 @@ const Sidebar = ({
 
       <div className="mt-8 flex flex-col space-y-4">
         <Link
-          href="/proposals"
+          href={`/${state.currentContract}/proposals`}
           className={linkClass(path === "/proposals")}
           onClick={onClose}
         >
@@ -268,7 +290,7 @@ const Sidebar = ({
           <span>Proposals</span>
         </Link>
         <Link
-          href="/new-proposal"
+          href={`/${state.currentContract}/new-proposal`}
           className={linkClass(path === "/new-proposal", !isOwner)}
           onClick={onClose}
         >
@@ -287,7 +309,7 @@ const Sidebar = ({
           <span>New proposal</span>
         </Link>
         <Link
-          href="/fund-wallet"
+          href={`/${state.currentContract}/fund-wallet`}
           className={linkClass(path === "/fund-wallet", !state.address)}
           onClick={onClose}
         >
@@ -426,7 +448,7 @@ const Sidebar = ({
           <span>Fund wallet</span>
         </Link>
         <Link
-          href="/settings"
+          href={`/${state.currentContract}/settings`}
           className={linkClass(path === "/settings")}
           onClick={onClose}
         >
@@ -445,7 +467,7 @@ const Sidebar = ({
           <span>Settings</span>
         </Link>
         <Link
-          href="/history"
+          href={`/${state.currentContract}/history`}
           className={linkClass(path === "/history")}
           onClick={onClose}
         >
