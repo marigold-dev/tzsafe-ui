@@ -1,19 +1,19 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import { useContext, useEffect, useMemo, useState } from "react";
-import ProposalCard from "../components/ProposalCard";
-import Spinner from "../components/Spinner";
-import Meta from "../components/meta";
-import Modal from "../components/modal";
-import ProposalSignForm from "../components/proposalSignForm";
-import fetchVersion from "../context/metadata";
-import { getProposals } from "../context/proposals";
-import { AppStateContext } from "../context/state";
-import { proposal, version } from "../types/display";
-import { canExecute, canReject } from "../utils/proposals";
-import useIsOwner from "../utils/useIsOwner";
-import useWalletTokens from "../utils/useWalletTokens";
-import { getProposalsId, signers, toProposal } from "../versioned/apis";
+import ProposalCard from "../../components/ProposalCard";
+import Spinner from "../../components/Spinner";
+import Meta from "../../components/meta";
+import Modal from "../../components/modal";
+import ProposalSignForm from "../../components/proposalSignForm";
+import fetchVersion from "../../context/metadata";
+import { getProposals } from "../../context/proposals";
+import { AppStateContext } from "../../context/state";
+import { proposal, version } from "../../types/display";
+import { canExecute, canReject } from "../../utils/proposals";
+import useIsOwner from "../../utils/useIsOwner";
+import useWalletTokens from "../../utils/useWalletTokens";
+import { getProposalsId, signers, toProposal } from "../../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 

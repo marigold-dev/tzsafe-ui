@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import Meta from "../components/meta";
-import TopUp from "../components/topUpForm";
-import { AppStateContext } from "../context/state";
+import Meta from "../../components/meta";
+import TopUp from "../../components/topUpForm";
+import { AppStateContext } from "../../context/state";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;

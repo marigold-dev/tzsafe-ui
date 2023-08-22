@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
-import Meta from "../components/meta";
-import TransferForm from "../components/transferForm";
-import { AppStateContext } from "../context/state";
-import useIsOwner from "../utils/useIsOwner";
+import Meta from "../../components/meta";
+import TransferForm from "../../components/transferForm";
+import { AppStateContext } from "../../context/state";
+import useIsOwner from "../../utils/useIsOwner";
 
 const CreateProposal = () => {
   const state = useContext(AppStateContext)!;
