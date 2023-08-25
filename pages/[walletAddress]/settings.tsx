@@ -34,11 +34,9 @@ const Settings = () => {
   useEffect(() => {
     if (canDelete) return;
 
-    setIsDeleting(true);
-
     const timeoutId = setTimeout(() => {
-      setCanDelete(true);
       setIsDeleting(false);
+      setCanDelete(true);
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
@@ -58,6 +56,7 @@ const Settings = () => {
             onClick={() => {
               if (!state.currentContract) return;
 
+              setIsDeleting(true);
               setCanDelete(false);
               dispatch!({
                 type: "removeContract",
@@ -65,7 +64,7 @@ const Settings = () => {
               });
             }}
           >
-            {isDeleting ? `Delete wallet` : `Deleting wallet`}
+            {isDeleting ? `Deleting wallet` : `Delete wallet`}
           </button>
         </div>
       </div>
@@ -80,7 +79,19 @@ const Settings = () => {
               disabled={!isOwner}
               address={state.currentContract}
               contract={
-                state.contracts[state.currentContract] ?? contractStorage
+                state.contracts[state.currentContract] ??
+                (!!contractStorage
+                  ? {
+                      effective_period:
+                        contractStorage.effective_period.toString(),
+                      owners: contractStorage.owners,
+                      proposal_counter:
+                        contractStorage.proposal_counter.toString(),
+                      threshold: contractStorage.threshold.toNumber(),
+                      version: contractStorage.version.toString(),
+                      balance: contractStorage.balance.toString(),
+                    }
+                  : undefined)
               }
               closeModal={console.log}
             />

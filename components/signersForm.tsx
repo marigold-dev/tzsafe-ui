@@ -86,7 +86,7 @@ const DelegatorHelper = ({
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
-  contract: contractStorage | storageAndVersion | undefined;
+  contract: contractStorage | undefined;
   disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
@@ -106,7 +106,9 @@ const SignersForm: FC<{
     )
       return undefined;
 
-    return secondsToDuration(props.contract?.effective_period ?? 0).toObject();
+    return secondsToDuration(
+      Number(props.contract?.effective_period ?? 0)
+    ).toObject();
   }, [props.contract]);
 
   useEffect(() => {
@@ -148,9 +150,7 @@ const SignersForm: FC<{
     minutes: duration?.minutes?.toString(),
     requiredSignatures: !props.contract
       ? 0
-      : "owners" in props.contract
-      ? (props.contract as storageAndVersion).threshold.toNumber()
-      : props.contract.threshold,
+      : (props.contract as contractStorage).threshold,
     bakerAddress: undefined,
   };
 
@@ -181,9 +181,7 @@ const SignersForm: FC<{
 
     if (
       !!effectivePeriod &&
-      Number(effectivePeriod) !=
-        (props.contract.effective_period.toNumber?.() ??
-          Number(props.contract.effective_period))
+      Number(effectivePeriod) != Number(props.contract?.effective_period ?? 0)
     ) {
       ops.push({ adjustEffectivePeriod: Number(effectivePeriod) });
     }
