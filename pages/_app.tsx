@@ -43,10 +43,10 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!path) return;
+    if (!path || !state.currentContract) return;
 
     if (
-      path === "/" &&
+      (path === "/" || path === "") &&
       Object.values(state.contracts).length > 0 &&
       !!state.currentContract
     ) {
@@ -57,7 +57,7 @@ export default function App({ Component, pageProps }: AppProps) {
     router.replace("/");
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state.currentContract]);
 
   useEffect(() => {
     (async () => {
