@@ -29,3 +29,14 @@ export const fetchContract = async (
     balance,
   };
 };
+
+export const isTzSafeContract = async (
+  connection: TezosToolkit,
+  address: string
+) => {
+  const contract = await connection.contract.at(address, tzip16);
+  const storage: any = await contract.storage();
+  let version = await fetchVersion(contract!);
+
+  return version !== "unknown version";
+};

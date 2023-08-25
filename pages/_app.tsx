@@ -1,7 +1,11 @@
 import {
+  AnalyticsInterface,
   BeaconEvent,
   defaultEventCallbacks,
   NetworkType,
+  P2PPairingRequest,
+  PostMessagePairingRequest,
+  WalletConnectPairingRequest,
 } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
@@ -25,6 +29,7 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
+import { isTzSafeContract } from "../utils/fetchContract";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -49,34 +54,36 @@ export default function App({ Component, pageProps }: AppProps) {
       return;
     }
 
-    if (
-      path.includes("settings") ||
-      path.includes("proposals") ||
-      path.includes("history") ||
-      path.includes("fund-wallet") ||
-      path.includes("new-proposal")
-    )
-      return;
-
     router.replace("/");
-  }, [path, state.currentContract, state.contracts, router]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (!router.query.walletAddress) return;
-    if (Array.isArray(router.query.walletAddress)) return;
-    if (router.query.walletAddress === state.currentContract) return;
+    (async () => {
+      if (!router.query.walletAddress) return;
+      if (Array.isArray(router.query.walletAddress)) return;
+      if (router.query.walletAddress === state.currentContract) return;
 
-    if (
-      validateAddress(router.query.walletAddress) !== ValidationResult.VALID
-    ) {
-      router.replace("/");
-      return;
-    }
+      if (
+        validateAddress(router.query.walletAddress) !== ValidationResult.VALID
+      ) {
+        router.replace("/");
+        return;
+      }
 
-    dispatch({
-      type: "setCurrentContract",
-      payload: router.query.walletAddress,
-    });
+      const isTzsafe = await isTzSafeContract(
+        state.connection,
+        router.query.walletAddress
+      );
+
+      if (isTzsafe)
+        dispatch({
+          type: "setCurrentContract",
+          payload: router.query.walletAddress,
+        });
+      else router.replace("/");
+    })();
   }, [router.query.walletAddress, state.currentContract, dispatch, router]);
 
   useEffect(() => {
@@ -87,15 +94,6 @@ export default function App({ Component, pageProps }: AppProps) {
         const wallet = new BeaconWallet({
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
-          disableDefaultEvents: false,
-          eventHandlers: {
-            [BeaconEvent.PAIR_INIT]: {
-              handler: defaultEventCallbacks.PAIR_INIT,
-            },
-            [BeaconEvent.PAIR_SUCCESS]: {
-              handler: defaultEventCallbacks.PAIR_SUCCESS,
-            },
-          },
         });
         dispatch!({ type: "beaconConnect", payload: wallet });
 
@@ -118,6 +116,13 @@ export default function App({ Component, pageProps }: AppProps) {
     setHasSidebar(false);
   }, [path]);
 
+  const isSidebarHidden =
+    Object.values(state.contracts).length === 0 &&
+    (path === "/" ||
+      path === "/new-wallet" ||
+      path === "/import-wallet" ||
+      path === "/address-book");
+
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
@@ -131,10 +136,12 @@ export default function App({ Component, pageProps }: AppProps) {
           </Banner>
           <NavBar />
 
-          <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
+          {isSidebarHidden ? null : (
+            <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
+          )}
 
           <div
-            className={`pb-28 pt-20 ${"md:pl-72"} ${
+            className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
               state.hasBanner ? "mt-12" : ""
             }`}
           >

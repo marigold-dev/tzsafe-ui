@@ -6,6 +6,7 @@ const LinkComponent: FC<{
   path: any;
   text: String;
   onClick?: () => void;
+  className?: string;
 }> = props => {
   const route = usePathname();
 
@@ -13,7 +14,7 @@ const LinkComponent: FC<{
     <Link
       href={props.path}
       onClick={props.onClick}
-      className={`${
+      className={`${props.className ?? ""} ${
         route?.toString == props.path
           ? "bg-zinc-900"
           : "text-zinc-300 hover:bg-zinc-700 hover:text-white"

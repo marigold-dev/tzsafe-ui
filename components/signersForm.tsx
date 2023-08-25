@@ -700,8 +700,10 @@ const SignersForm: FC<{
                   <ErrorMessage name="minutes" render={renderError} />
                 </div>
               </div>
-              {/* @ts-ignore*/}
-              {!!errors.proposalDuration
+              {props.disabled
+                ? null
+                : // @ts-ignore
+                !!errors.proposalDuration
                 ? // @ts-ignore
                   renderError(errors.proposalDuration)
                 : currentDuration < PROPOSAL_DURATION_WARNING
