@@ -5,8 +5,6 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
-import { tzip16 } from "@taquito/tzip16";
-import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,9 +16,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import { version } from "../types/display";
+import { fetchContract, storageAndVersion } from "../utils/fetchContract";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
@@ -78,13 +75,15 @@ const SelectedItem = ({
 };
 
 const FixedTrigger = forwardRef<any, any>((props: any, ref: any) => {
-  const { children, onClick, onPointerDown, ...rest } = props;
+  const { children, onClick, onPointerDown, disabled, ...rest } = props;
 
   return (
     <button
       ref={ref}
       {...rest}
-      className="radix-state-delayed-open:bg-zinc-50 radix-state-instant-open:bg-zinc-50 radix-state-on:bg-zinc-900 radix-state-open:bg-zinc-900 group inline-flex w-full select-none items-center justify-between rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-900 focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75"
+      className={`radix-state-delayed-open:bg-zinc-50 radix-state-instant-open:bg-zinc-50 radix-state-on:bg-zinc-900 radix-state-open:bg-zinc-900 group inline-flex w-full select-none items-center justify-between rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 ${
+        disabled ? "cursor-default" : "hover:bg-zinc-900"
+      } focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75`}
       onClick={e => {
         if ((e.target as HTMLLinkElement).dataset.name === "copy") return;
 
@@ -116,30 +115,15 @@ const Sidebar = ({
 
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
+  const [contractStorage, setContractStorage] = useState<
+    storageAndVersion | undefined
+  >(undefined);
 
   const isOwner = useIsOwner();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    if (!router.query.walletAddress) return;
-    if (Array.isArray(router.query.walletAddress)) return;
-    if (router.query.walletAddress === state.currentContract) return;
-
-    if (
-      validateAddress(router.query.walletAddress) !== ValidationResult.VALID
-    ) {
-      router.push("/");
-      return;
-    }
-
-    dispatch({
-      type: "setCurrentContract",
-      payload: router.query.walletAddress,
-    });
-  }, [router.query.walletAddress, state.currentContract, dispatch, router]);
 
   useEffect(() => {
     const entries = Object.entries(state.contracts);
@@ -158,17 +142,18 @@ const Sidebar = ({
     (async () => {
       if (!state.currentContract) return;
 
-      let c = await state.connection.contract.at(state.currentContract, tzip16);
-      let balance = await state.connection.tz.getBalance(state.currentContract);
+      const storage = await fetchContract(
+        state.connection,
+        state.currentContract
+      );
 
-      let cc = await c.storage();
-      let version = await (state.contracts[state.currentContract]
-        ? Promise.resolve<version>(
-            state.contracts[state.currentContract].version
-          )
-        : fetchVersion(c));
+      const updatedContract = toStorage(
+        storage.version,
+        storage,
+        storage.balance
+      );
 
-      const updatedContract = toStorage(version, cc, balance);
+      setContractStorage(storage);
 
       state.contracts[state.currentContract]
         ? dispatch({
@@ -211,21 +196,32 @@ const Sidebar = ({
           });
         }}
         value={currentContract}
+        disabled={Object.values(state.contracts).length === 0}
       >
         <Select.Trigger asChild aria-label="Wallets">
-          <FixedTrigger>
+          <FixedTrigger disabled={Object.values(state.contracts).length === 0}>
             <SelectedItem
               name={state.aliases[currentContract]}
               address={currentContract}
-              balance={state.contracts[currentContract]?.balance}
+              balance={
+                state.contracts[currentContract]?.balance ??
+                contractStorage?.balance.toString()
+              }
               threshold={
                 !!state.contracts[currentContract]
                   ? `${state.contracts[currentContract].threshold}/${
                       signers(state.contracts[currentContract]).length
                     }`
+                  : !!contractStorage
+                  ? `${contractStorage.threshold.toNumber()}/${
+                      contractStorage.owners.length
+                    }`
                   : "0/0"
               }
-              version={state.contracts[currentContract]?.version}
+              version={
+                state.contracts[currentContract]?.version ??
+                contractStorage?.version
+              }
             />
             <Select.Icon className="ml-2">
               <ChevronDownIcon />

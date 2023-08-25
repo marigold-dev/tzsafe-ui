@@ -3,19 +3,42 @@ import { useContext, useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
+import { fetchContract, storageAndVersion } from "../../utils/fetchContract";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
-  const [canDelete, setCanDelete] = useState(true);
+  const [canDelete, setCanDelete] = useState(
+    !!state.currentContract && !!state.contracts[state.currentContract]
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
   const isOwner = useIsOwner();
+  const [contractStorage, setContractStorage] = useState<
+    storageAndVersion | undefined
+  >(undefined);
+
+  useEffect(() => {
+    (async () => {
+      if (!state.currentContract) return;
+
+      const storage = await fetchContract(
+        state.connection,
+        state.currentContract
+      );
+
+      setContractStorage(storage);
+    })();
+  }, [state.currentContract]);
 
   useEffect(() => {
     if (canDelete) return;
 
+    setIsDeleting(true);
+
     const timeoutId = setTimeout(() => {
       setCanDelete(true);
+      setIsDeleting(false);
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
@@ -42,7 +65,7 @@ const Settings = () => {
               });
             }}
           >
-            {canDelete ? `Delete wallet` : `Deleting wallet`}
+            {isDeleting ? `Delete wallet` : `Deleting wallet`}
           </button>
         </div>
       </div>
@@ -56,7 +79,9 @@ const Settings = () => {
             <SignersForm
               disabled={!isOwner}
               address={state.currentContract}
-              contract={state.contracts[state.currentContract]}
+              contract={
+                state.contracts[state.currentContract] ?? contractStorage
+              }
               closeModal={console.log}
             />
           )}

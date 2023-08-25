@@ -5,11 +5,11 @@ import {
 } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
-import Autocomplete from "../components/Autocomplete";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
@@ -25,7 +25,6 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
-import Proposals from "./[walletAddress]/proposals";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -61,6 +60,24 @@ export default function App({ Component, pageProps }: AppProps) {
 
     router.replace("/");
   }, [path, state.currentContract, state.contracts, router]);
+
+  useEffect(() => {
+    if (!router.query.walletAddress) return;
+    if (Array.isArray(router.query.walletAddress)) return;
+    if (router.query.walletAddress === state.currentContract) return;
+
+    if (
+      validateAddress(router.query.walletAddress) !== ValidationResult.VALID
+    ) {
+      router.replace("/");
+      return;
+    }
+
+    dispatch({
+      type: "setCurrentContract",
+      payload: router.query.walletAddress,
+    });
+  }, [router.query.walletAddress, state.currentContract, dispatch, router]);
 
   useEffect(() => {
     (async () => {
@@ -113,25 +130,23 @@ export default function App({ Component, pageProps }: AppProps) {
               : "ghostnet.tzsafe.marigold.dev"}
           </Banner>
           <NavBar />
-          {Object.entries(state.contracts).length > 0 && (
-            <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
-          )}
+
+          <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
+
           <div
-            className={`pb-28 pt-20 ${
-              Object.entries(state.contracts).length === 0 ? "" : "md:pl-72"
-            } ${state.hasBanner ? "mt-12" : ""}`}
+            className={`pb-28 pt-20 ${"md:pl-72"} ${
+              state.hasBanner ? "mt-12" : ""
+            }`}
           >
-            {Object.entries(state.contracts).length > 0 && (
-              <button
-                className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
-                onClick={() => {
-                  setHasSidebar(true);
-                }}
-              >
-                <span className="text-xs">Open sidebar</span>
-                <ArrowRightIcon className="h-4 w-4" />
-              </button>
-            )}
+            <button
+              className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
+              onClick={() => {
+                setHasSidebar(true);
+              }}
+            >
+              <span className="text-xs">Open sidebar</span>
+              <ArrowRightIcon className="h-4 w-4" />
+            </button>
 
             <Component {...pageProps} />
           </div>
