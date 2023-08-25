@@ -158,7 +158,9 @@ function Basic() {
                 Cancel
               </Link>
               <button
-                className="my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none "
+                className={`${
+                  !state.address ? "pointer-events-none opacity-50" : ""
+                } my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none`}
                 type="submit"
               >
                 Continue

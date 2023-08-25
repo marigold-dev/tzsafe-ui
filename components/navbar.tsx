@@ -14,7 +14,7 @@ const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();
-  const state = useContext(AppStateContext);
+  const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext);
 
   const disconnectWallet = async (): Promise<void> => {

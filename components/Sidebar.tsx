@@ -268,7 +268,7 @@ const Sidebar = ({
       <div className="mt-8 flex flex-col space-y-4">
         <Link
           href={`/${state.currentContract}/proposals`}
-          className={linkClass(path === "/proposals")}
+          className={linkClass(path?.includes("/proposals") ?? false)}
           onClick={onClose}
         >
           <svg
@@ -287,7 +287,10 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/new-proposal`}
-          className={linkClass(path === "/new-proposal", !isOwner)}
+          className={linkClass(
+            path?.includes("/new-proposal") ?? false,
+            !isOwner
+          )}
           onClick={onClose}
         >
           <svg
@@ -306,7 +309,10 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/fund-wallet`}
-          className={linkClass(path === "/fund-wallet", !state.address)}
+          className={linkClass(
+            path?.includes("/fund-wallet") ?? false,
+            !state.address
+          )}
           onClick={onClose}
         >
           <svg
@@ -445,7 +451,7 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/settings`}
-          className={linkClass(path === "/settings")}
+          className={linkClass(path?.includes("/settings") ?? false)}
           onClick={onClose}
         >
           <svg
@@ -464,7 +470,7 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/history`}
-          className={linkClass(path === "/history")}
+          className={linkClass(path?.includes("/history") ?? false)}
           onClick={onClose}
         >
           <svg

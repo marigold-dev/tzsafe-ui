@@ -6,6 +6,7 @@ import Stepper from "../components/stepper";
 import { PREFERED_NETWORK } from "../context/config";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import { connectWallet } from "../utils/connectWallet";
 
 function Import() {
   let router = useRouter();
@@ -15,10 +16,20 @@ function Import() {
   });
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [formStatus, setFormStatus] = useState("");
-  const state = useContext(AppStateContext);
-  const dispatch = useContext(AppDispatchContext);
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
 
-  useEffect(() => {}, [state, dispatch, router]);
+  useEffect(() => {
+    (async () => {
+      if (!state?.address && state?.beaconWallet) {
+        try {
+          await connectWallet(state, dispatch);
+        } catch (e) {
+          router.replace("/");
+        }
+      }
+    })();
+  }, [router, dispatch, state]);
 
   return (
     <div className="h-full grow">
