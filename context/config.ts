@@ -6,7 +6,7 @@ export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "https://api.ghostnet.tzkt.io";
 export const IPFS = "https://ipfs-proxy.gcp.marigold.dev";
 export const IPFS_NODE = "ipfs.gcp.marigold.dev";
-export const PREFERED_NETWORK =
+export const PREFERED_NETWORK: NetworkType =
   process.env.NEXT_PUBLIC_NETWORK_TYPE === "mainnet"
     ? NetworkType.MAINNET
     : NetworkType.GHOSTNET;

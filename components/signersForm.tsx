@@ -31,6 +31,7 @@ import {
   parseIntOr,
   secondsToDuration,
 } from "../utils/adaptiveTime";
+import { storageAndVersion } from "../utils/fetchContract";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";
@@ -85,7 +86,7 @@ const DelegatorHelper = ({
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
-  contract: contractStorage;
+  contract: contractStorage | storageAndVersion | undefined;
   disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
@@ -100,12 +101,12 @@ const SignersForm: FC<{
   const duration = useMemo(() => {
     if (
       ["0.0.6", "0.0.8", "0.0.9", "unknown version"].includes(
-        props.contract.version
+        props.contract?.version ?? "unknown version"
       )
     )
       return undefined;
 
-    return secondsToDuration(props.contract.effective_period).toObject();
+    return secondsToDuration(props.contract?.effective_period ?? 0).toObject();
   }, [props.contract]);
 
   useEffect(() => {
@@ -133,14 +134,23 @@ const SignersForm: FC<{
     validatorsError?: string;
     bakerAddress: string | undefined;
   } = {
-    validators: signers(props.contract).map(x => ({
+    validators: (!props.contract
+      ? []
+      : "owners" in props.contract
+      ? props.contract.owners
+      : signers(props.contract)
+    ).map((x: string) => ({
       address: x,
       name: state.aliases[x] || "",
     })),
     days: duration?.days?.toString(),
     hours: duration?.hours?.toString(),
     minutes: duration?.minutes?.toString(),
-    requiredSignatures: props.contract.threshold,
+    requiredSignatures: !props.contract
+      ? 0
+      : "owners" in props.contract
+      ? (props.contract as storageAndVersion).threshold.toNumber()
+      : props.contract.threshold,
     bakerAddress: undefined,
   };
 
@@ -153,15 +163,21 @@ const SignersForm: FC<{
       oldBakerAddress,
     }: { bakerAddress: string | undefined; oldBakerAddress: string | undefined }
   ) {
-    let initialSigners = new Set(signers(props.contract));
-    let input = new Set(txs.map(x => x.address));
-    let removed = new Set(
+    if (!props.contract) return [];
+
+    const initialSigners = new Set<string>(
+      "owners" in props.contract
+        ? props.contract.owners
+        : signers(props.contract)
+    );
+    const input = new Set(txs.map(x => x.address));
+    const removed = new Set(
       [...initialSigners.values()].filter(x => !input.has(x))
     );
-    let added = new Set(
+    const added = new Set(
       [...input.values()].filter(x => !initialSigners.has(x))
     );
-    let ops: ownersForm[] = [];
+    const ops: ownersForm[] = [];
 
     if (
       !!effectivePeriod &&
@@ -213,6 +229,8 @@ const SignersForm: FC<{
   }
 
   const updateSettings = async (ops: ownersForm[]) => {
+    if (!props.contract) return;
+
     let cc = await state.connection.contract.at(props.address);
     let api = VersionedApi(props.contract.version, props.address);
     setTimeoutAndHash(
@@ -594,6 +612,7 @@ const SignersForm: FC<{
                         );
                       })}
                     {values.validators.length > 0 &&
+                      !!state.address &&
                       !values.validators.find(
                         v => v.address === state.address
                       ) &&
@@ -621,7 +640,9 @@ const SignersForm: FC<{
               <label className="mr-4 text-lg text-white">Threshold </label>
               <Field
                 disabled={props.disabled}
-                className="mt-2 w-full rounded p-2 text-center"
+                className={`mt-2 w-full rounded p-2 text-center ${
+                  props.disabled ? "bg-zinc-500" : ""
+                }`}
                 as="select"
                 component="select"
                 name="requiredSignatures"

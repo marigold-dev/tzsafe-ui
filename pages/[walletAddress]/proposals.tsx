@@ -1,5 +1,6 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
+import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
@@ -10,6 +11,7 @@ import fetchVersion from "../../context/metadata";
 import { getProposals } from "../../context/proposals";
 import { AppStateContext } from "../../context/state";
 import { proposal, version } from "../../types/display";
+import { fetchContract, storageAndVersion } from "../../utils/fetchContract";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
@@ -33,6 +35,9 @@ const Proposals = () => {
     proposal: [undefined, 0],
   });
   const [refresher, setRefresher] = useState(0);
+  const [contractStorage, setContractStorage] = useState<
+    storageAndVersion | undefined
+  >(undefined);
 
   useEffect(() => {
     if (!state.currentContract) return;
@@ -47,21 +52,19 @@ const Proposals = () => {
     (async () => {
       if (!state.currentContract) return;
 
-      let c = await state.connection.contract.at(state.currentContract, tzip16);
-
-      let cc = await c.storage();
-      let version = await (state.contracts[state.currentContract]
-        ? Promise.resolve<version>(
-            state.contracts[state.currentContract].version
-          )
-        : fetchVersion(c));
-
-      let bigmap: { key: string; value: any }[] = await getProposals(
-        getProposalsId(state.contracts[state.currentContract].version, cc)
+      const storage = await fetchContract(
+        state.connection,
+        state.currentContract
       );
-      let proposals: [number, any][] = bigmap.map(({ key, value }) => [
+
+      setContractStorage(storage);
+
+      const bigmap: { key: string; value: any }[] = await getProposals(
+        getProposalsId(storage.version, storage)
+      );
+      const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
-        { ui: toProposal(version, value), og: value },
+        { ui: toProposal(storage.version, value), og: value },
       ]);
 
       setProposals(proposals);
@@ -89,8 +92,14 @@ const Proposals = () => {
         {!!openModal.state && (
           <ProposalSignForm
             address={currentContract}
-            threshold={state.contracts[currentContract]?.threshold}
-            version={state.contracts[currentContract]?.version}
+            threshold={
+              contractStorage?.threshold.toNumber() ??
+              state.contracts[currentContract]?.threshold
+            }
+            version={
+              contractStorage?.version ??
+              state.contracts[currentContract]?.version
+            }
             proposal={proposals.find(x => x[0] === openModal.proposal[1])![1]}
             state={openModal.proposal[0]}
             id={openModal.proposal[1]}
@@ -131,8 +140,11 @@ const Proposals = () => {
                 .sort((a, b) => b[0] - a[0])
                 .map(x => {
                   const effectivePeriod =
-                    state.contracts[currentContract]?.effective_period;
-                  const threshold = state.contracts[currentContract]?.threshold;
+                    state.contracts[currentContract]?.effective_period ??
+                    contractStorage?.effective_period.toNumber();
+                  const threshold =
+                    state.contracts[currentContract]?.threshold ??
+                    contractStorage?.threshold.toNumber();
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
@@ -143,7 +155,9 @@ const Proposals = () => {
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
 
-                  const allSigners = signers(state.contracts[currentContract]);
+                  const allSigners =
+                    signers(state.contracts[currentContract]) ??
+                    contractStorage?.owners;
                   const signatures = x[1].ui.signatures.filter(({ signer }) =>
                     allSigners.includes(signer)
                   );
