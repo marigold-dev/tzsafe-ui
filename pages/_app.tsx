@@ -54,6 +54,9 @@ export default function App({ Component, pageProps }: AppProps) {
       return;
     }
 
+    if (Object.values(state.contracts).length > 0 && !!state.currentContract)
+      return;
+
     router.replace("/");
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

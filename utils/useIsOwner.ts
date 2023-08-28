@@ -7,9 +7,9 @@ const useIsOwner = () => {
   const isOwner = useMemo(
     () =>
       state.contracts[state.currentContract ?? ""]?.owners?.includes(
-        state.address
+        state.address!
       ) ?? false,
-    [state]
+    [state.currentContract, state.address, state.contracts]
   );
 
   return isOwner;

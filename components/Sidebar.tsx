@@ -189,6 +189,7 @@ const Sidebar = ({
       </button>
       <Select.Root
         onValueChange={payload => {
+          console.log("New path:", `/${payload}/${path?.split("/")[2] ?? ""}`);
           router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
           dispatch({
             type: "setCurrentContract",
