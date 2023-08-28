@@ -115,9 +115,6 @@ const Sidebar = ({
 
   let state = useContext(AppStateContext)!;
   let dispatch = useContext(AppDispatchContext)!;
-  const [contractStorage, setContractStorage] = useState<
-    storageAndVersion | undefined
-  >(undefined);
 
   const isOwner = useIsOwner();
 
@@ -142,18 +139,13 @@ const Sidebar = ({
     (async () => {
       if (!state.currentContract) return;
 
-      const storage = await fetchContract(
-        state.connection,
-        state.currentContract
-      );
+      const storage = state.contracts[state.currentContract];
 
       const updatedContract = toStorage(
         storage.version,
         storage,
-        storage.balance
+        new BigNumber(storage.balance)
       );
-
-      setContractStorage(storage);
 
       state.contracts[state.currentContract]
         ? dispatch({
@@ -204,25 +196,15 @@ const Sidebar = ({
             <SelectedItem
               name={state.aliases[currentContract]}
               address={currentContract}
-              balance={
-                state.contracts[currentContract]?.balance ??
-                contractStorage?.balance.toString()
-              }
+              balance={state.contracts[currentContract]?.balance}
               threshold={
                 !!state.contracts[currentContract]
                   ? `${state.contracts[currentContract].threshold}/${
                       signers(state.contracts[currentContract]).length
                     }`
-                  : !!contractStorage
-                  ? `${contractStorage.threshold.toNumber()}/${
-                      contractStorage.owners.length
-                    }`
                   : "0/0"
               }
-              version={
-                state.contracts[currentContract]?.version ??
-                contractStorage?.version
-              }
+              version={state.contracts[currentContract]?.version}
             />
             <Select.Icon className="ml-2">
               <ChevronDownIcon />

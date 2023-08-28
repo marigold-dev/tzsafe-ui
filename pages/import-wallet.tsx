@@ -20,6 +20,8 @@ function Import() {
   const dispatch = useContext(AppDispatchContext)!;
 
   useEffect(() => {
+    if (!!state.address) return;
+
     (async () => {
       if (!state?.address && state?.beaconWallet) {
         try {

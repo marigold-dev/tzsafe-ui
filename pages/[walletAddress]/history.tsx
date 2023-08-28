@@ -98,6 +98,7 @@ const History = () => {
             },
           })
         : null;
+
       const bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );

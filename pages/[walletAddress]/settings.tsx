@@ -16,20 +16,11 @@ const Settings = () => {
     !!state.currentContract && !!state.contracts[state.currentContract]
   );
   const [isDeleting, setIsDeleting] = useState(false);
-  const [contractStorage, setContractStorage] = useState<
-    storageAndVersion | undefined
-  >(undefined);
 
   useEffect(() => {
     (async () => {
       if (!state.currentContract) return;
 
-      const storage = await fetchContract(
-        state.connection,
-        state.currentContract
-      );
-
-      setContractStorage(storage);
       setCanDelete(
         !!state.currentContract && !!state.contracts[state.currentContract]
       );
@@ -56,7 +47,7 @@ const Settings = () => {
 
           <button
             className={`${
-              canDelete ? "" : "pointer-events-none opacity-50"
+              !isDeleting || !canDelete ? "" : "pointer-events-none opacity-50"
             } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
               if (!state.currentContract) return;
@@ -85,26 +76,9 @@ const Settings = () => {
             </h2>
           ) : (
             <SignersForm
-              disabled={
-                !isOwner &&
-                (!contractStorage?.owners.includes(state.address!) ?? true)
-              }
+              disabled={!isOwner}
               address={state.currentContract}
-              contract={
-                state.contracts[state.currentContract] ??
-                (!!contractStorage
-                  ? {
-                      effective_period:
-                        contractStorage.effective_period.toString(),
-                      owners: contractStorage.owners,
-                      proposal_counter:
-                        contractStorage.proposal_counter.toString(),
-                      threshold: contractStorage.threshold.toNumber(),
-                      version: contractStorage.version.toString(),
-                      balance: contractStorage.balance.toString(),
-                    }
-                  : undefined)
-              }
+              contract={state.contracts[state.currentContract]}
               closeModal={console.log}
             />
           )}
