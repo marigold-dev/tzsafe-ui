@@ -52,12 +52,7 @@ const Proposals = () => {
     (async () => {
       if (!state.currentContract) return;
 
-      const storage = await fetchContract(
-        state.connection,
-        state.currentContract
-      );
-
-      setContractStorage(storage);
+      const storage = state.contracts[state.currentContract];
 
       const bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(storage.version, storage)

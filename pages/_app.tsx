@@ -29,7 +29,7 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
-import { isTzSafeContract } from "../utils/fetchContract";
+import { fetchContract, isTzSafeContract } from "../utils/fetchContract";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -80,12 +80,22 @@ export default function App({ Component, pageProps }: AppProps) {
         router.query.walletAddress
       );
 
-      if (isTzsafe)
+      if (isTzsafe) {
+        const storage = await fetchContract(
+          state.connection,
+          router.query.walletAddress
+        );
+
+        dispatch({
+          type: "setCurrentStorage",
+          payload: storage,
+        });
+
         dispatch({
           type: "setCurrentContract",
           payload: router.query.walletAddress,
         });
-      else router.replace("/");
+      } else router.replace("/");
     })();
   }, [router.query.walletAddress, state.currentContract, dispatch, router]);
 

@@ -291,6 +291,7 @@ function TopUp(props: {
                 },
               })
             : null;
+
           setResult(true);
         } catch (e) {
           console.log(e);

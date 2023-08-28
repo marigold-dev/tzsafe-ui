@@ -19,6 +19,7 @@ type tezosState = {
   address: string | null;
   balance: string | null;
   currentContract: string | null;
+  currentStorage: contractStorage | null;
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
@@ -55,6 +56,7 @@ let emptyState = (): tezosState => {
     balance: null,
     address: null,
     currentContract: null,
+    currentStorage: null,
     accountInfo: null,
     connection,
     favouriteContract: null,
@@ -84,6 +86,10 @@ type action =
   | {
       type: "updateContract";
       payload: { address: string; contract: contractStorage };
+    }
+  | {
+      type: "setCurrentStorage";
+      payload: contractStorage;
     }
   | {
       type: "setCurrentContract";
@@ -193,6 +199,14 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         currentContract: action.payload,
       };
+    case "setCurrentStorage": {
+      const newState = {
+        ...state,
+        currentStorage: action.payload,
+      };
+
+      return newState;
+    }
     case "init": {
       return {
         ...action.payload,

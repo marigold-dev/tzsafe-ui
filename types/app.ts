@@ -1,12 +1,8 @@
 import { version } from "./display";
 
 type contractStorage = { version: version } & {
+  [key: string]: any;
   balance: string;
-  effective_period: string;
-  owners: string[];
-  proposal_counter: string;
-  proposal_map: string;
   threshold: number;
-  version: string;
 };
 export { type contractStorage };
