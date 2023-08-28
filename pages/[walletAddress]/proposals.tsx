@@ -214,9 +214,11 @@ const Proposals = () => {
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.resolver}
                       isSignable={
-                        isOwner &&
                         !!state.address &&
                         !!state.currentContract &&
+                        (isOwner ||
+                          (contractStorage?.owners.includes(state.address) ??
+                            false)) &&
                         (!hasSigned || shouldResolve)
                       }
                       shouldResolve={shouldResolve}

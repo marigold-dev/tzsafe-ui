@@ -9,11 +9,13 @@ import useIsOwner from "../../utils/useIsOwner";
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+  const router = useRouter();
+  const isOwner = useIsOwner();
+
   const [canDelete, setCanDelete] = useState(
     !!state.currentContract && !!state.contracts[state.currentContract]
   );
   const [isDeleting, setIsDeleting] = useState(false);
-  const isOwner = useIsOwner();
   const [contractStorage, setContractStorage] = useState<
     storageAndVersion | undefined
   >(undefined);
@@ -28,11 +30,14 @@ const Settings = () => {
       );
 
       setContractStorage(storage);
+      setCanDelete(
+        !!state.currentContract && !!state.contracts[state.currentContract]
+      );
     })();
   }, [state.currentContract]);
 
   useEffect(() => {
-    if (canDelete) return;
+    if (!isDeleting) return;
 
     const timeoutId = setTimeout(() => {
       setIsDeleting(false);
@@ -40,7 +45,7 @@ const Settings = () => {
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [canDelete]);
+  }, [isDeleting]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -62,6 +67,10 @@ const Settings = () => {
                 type: "removeContract",
                 address: state.currentContract,
               });
+
+              const addresses = Object.keys(state.contracts);
+              if (addresses.length === 0) return;
+              router.replace(`/${addresses[0]}/settings`);
             }}
           >
             {isDeleting ? `Deleting wallet` : `Delete wallet`}
@@ -76,7 +85,10 @@ const Settings = () => {
             </h2>
           ) : (
             <SignersForm
-              disabled={!isOwner}
+              disabled={
+                !isOwner &&
+                (!contractStorage?.owners.includes(state.address!) ?? true)
+              }
               address={state.currentContract}
               contract={
                 state.contracts[state.currentContract] ??
