@@ -31,7 +31,6 @@ import {
   parseIntOr,
   secondsToDuration,
 } from "../utils/adaptiveTime";
-import { storageAndVersion } from "../utils/fetchContract";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
 import ContractLoader from "./contractLoader";

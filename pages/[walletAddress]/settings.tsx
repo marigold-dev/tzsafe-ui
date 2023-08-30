@@ -3,7 +3,6 @@ import { useContext, useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
-import { fetchContract, storageAndVersion } from "../../utils/fetchContract";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
@@ -25,7 +24,7 @@ const Settings = () => {
         !!state.currentContract && !!state.contracts[state.currentContract]
       );
     })();
-  }, [state.currentContract]);
+  }, [state.currentContract, state.contracts]);
 
   useEffect(() => {
     if (!isDeleting) return;
@@ -78,7 +77,9 @@ const Settings = () => {
             <SignersForm
               disabled={!isOwner}
               address={state.currentContract}
-              contract={state.contracts[state.currentContract]}
+              contract={
+                state.contracts[state.currentContract] ?? state.currentStorage
+              }
               closeModal={console.log}
             />
           )}

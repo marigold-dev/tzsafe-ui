@@ -38,7 +38,7 @@ const NavBar = (_: React.PropsWithChildren) => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link
-                href={"/"}
+                href="/"
                 className="flex items-center text-xl font-bold tracking-wider text-white"
               >
                 <Image

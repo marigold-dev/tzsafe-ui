@@ -105,7 +105,7 @@ function Success() {
         Address: {address.address}
       </p>
       <Link
-        href={`/proposals`}
+        href={`/${address.address}/proposals`}
         onClick={() => {
           dispatch!({ type: "setCurrentContract", payload: address.address });
         }}

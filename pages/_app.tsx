@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
+import Spinner from "../components/Spinner";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
 import { PREFERED_NETWORK } from "../context/config";
@@ -54,19 +55,22 @@ export default function App({ Component, pageProps }: AppProps) {
       return;
     }
 
-    if (Object.values(state.contracts).length > 0 && !!state.currentContract)
-      return;
-
-    router.replace("/");
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract]);
+  }, [state.currentContract, path]);
 
   useEffect(() => {
     (async () => {
-      if (!router.query.walletAddress) return;
-      if (Array.isArray(router.query.walletAddress)) return;
-      if (router.query.walletAddress === state.currentContract) return;
+      if (
+        !router.query.walletAddress ||
+        Array.isArray(router.query.walletAddress)
+      )
+        return;
+
+      if (
+        router.query.walletAddress === state.currentContract &&
+        !!state.currentStorage
+      )
+        return;
 
       if (
         validateAddress(router.query.walletAddress) !== ValidationResult.VALID
@@ -75,29 +79,37 @@ export default function App({ Component, pageProps }: AppProps) {
         return;
       }
 
-      const isTzsafe = await isTzSafeContract(
+      if (!!state.contracts[router.query.walletAddress]) return;
+
+      const storage = await fetchContract(
         state.connection,
         router.query.walletAddress
       );
 
-      if (isTzsafe) {
-        const storage = await fetchContract(
-          state.connection,
-          router.query.walletAddress
-        );
+      if (!storage) {
+        router.replace("/");
+        return;
+      }
 
-        dispatch({
-          type: "setCurrentStorage",
-          payload: storage,
-        });
+      console.log("HERE pas vrai ?");
+      dispatch({
+        type: "setCurrentStorage",
+        payload: storage,
+      });
 
-        dispatch({
-          type: "setCurrentContract",
-          payload: router.query.walletAddress,
-        });
-      } else router.replace("/");
+      dispatch({
+        type: "setCurrentContract",
+        payload: router.query.walletAddress,
+      });
     })();
-  }, [router.query.walletAddress, state.currentContract, dispatch, router]);
+  }, [
+    router.query.walletAddress,
+    state.currentContract,
+    dispatch,
+    router,
+    state.currentStorage,
+    state.connection,
+  ]);
 
   useEffect(() => {
     (async () => {
@@ -168,7 +180,14 @@ export default function App({ Component, pageProps }: AppProps) {
               <ArrowRightIcon className="h-4 w-4" />
             </button>
 
-            <Component {...pageProps} />
+            {!!state.contracts[state.currentContract ?? ""] ||
+            !!state.currentStorage ? (
+              <Component {...pageProps} />
+            ) : (
+              <div className="mt-12 flex w-full items-center justify-center">
+                <Spinner />
+              </div>
+            )}
           </div>
           <Footer
             shouldRemovePadding={Object.entries(state.contracts).length === 0}
