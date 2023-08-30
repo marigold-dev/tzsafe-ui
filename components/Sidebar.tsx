@@ -171,8 +171,6 @@ const Sidebar = ({
 
   const currentContract = state.currentContract ?? "";
 
-  console.log("CONTRACT:", currentContract);
-
   return (
     <aside
       className={`fixed bottom-0 left-0 ${

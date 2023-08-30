@@ -1,10 +1,18 @@
-import { useContext } from "react";
+import { useRouter } from "next/router";
+import { useContext, useEffect } from "react";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
 import { AppStateContext } from "../../context/state";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!!state.address) return;
+
+    router.replace("/");
+  }, []);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
