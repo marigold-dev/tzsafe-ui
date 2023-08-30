@@ -11,7 +11,6 @@ import fetchVersion from "../../context/metadata";
 import { getProposals } from "../../context/proposals";
 import { AppStateContext } from "../../context/state";
 import { proposal, version } from "../../types/display";
-import { fetchContract, storageAndVersion } from "../../utils/fetchContract";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
@@ -35,9 +34,6 @@ const Proposals = () => {
     proposal: [undefined, 0],
   });
   const [refresher, setRefresher] = useState(0);
-  const [contractStorage, setContractStorage] = useState<
-    storageAndVersion | undefined
-  >(undefined);
 
   useEffect(() => {
     if (!state.currentContract) return;
@@ -52,14 +48,26 @@ const Proposals = () => {
     (async () => {
       if (!state.currentContract) return;
 
-      const storage = state.contracts[state.currentContract];
+      const c = await state.connection.contract.at(
+        state.currentContract,
+        tzip16
+      );
+
+      const cc = await c.storage();
+
+      const version = await (state.contracts[state.currentContract]
+        ? Promise.resolve<version>(
+            state.contracts[state.currentContract].version
+          )
+        : fetchVersion(c));
 
       const bigmap: { key: string; value: any }[] = await getProposals(
-        getProposalsId(storage.version, storage)
+        getProposalsId(version, cc)
       );
+
       const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number.parseInt(key),
-        { ui: toProposal(storage.version, value), og: value },
+        { ui: toProposal(version, value), og: value },
       ]);
 
       setProposals(proposals);
@@ -88,12 +96,12 @@ const Proposals = () => {
           <ProposalSignForm
             address={currentContract}
             threshold={
-              contractStorage?.threshold.toNumber() ??
-              state.contracts[currentContract]?.threshold
+              state.contracts[currentContract]?.threshold ??
+              state.currentStorage?.threshold
             }
             version={
-              contractStorage?.version ??
-              state.contracts[currentContract]?.version
+              state.contracts[currentContract]?.version ??
+              state.currentStorage?.version
             }
             proposal={proposals.find(x => x[0] === openModal.proposal[1])![1]}
             state={openModal.proposal[0]}
@@ -136,10 +144,10 @@ const Proposals = () => {
                 .map(x => {
                   const effectivePeriod =
                     state.contracts[currentContract]?.effective_period ??
-                    contractStorage?.effective_period.toNumber();
+                    state.currentStorage?.effective_period;
                   const threshold =
                     state.contracts[currentContract]?.threshold ??
-                    contractStorage?.threshold.toNumber();
+                    state.currentStorage?.threshold;
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
@@ -152,7 +160,9 @@ const Proposals = () => {
 
                   const allSigners =
                     signers(state.contracts[currentContract]) ??
-                    contractStorage?.owners;
+                    (!!state.currentStorage
+                      ? signers(state.currentStorage)
+                      : []);
                   const signatures = x[1].ui.signatures.filter(({ signer }) =>
                     allSigners.includes(signer)
                   );
@@ -211,9 +221,7 @@ const Proposals = () => {
                       isSignable={
                         !!state.address &&
                         !!state.currentContract &&
-                        (isOwner ||
-                          (contractStorage?.owners.includes(state.address) ??
-                            false)) &&
+                        isOwner &&
                         (!hasSigned || shouldResolve)
                       }
                       shouldResolve={shouldResolve}

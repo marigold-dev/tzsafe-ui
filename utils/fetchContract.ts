@@ -1,39 +1,23 @@
 import { TezosToolkit } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
-import BigNumber from "bignumber.js";
 import fetchVersion from "../context/metadata";
 import { contractStorage } from "../types/app";
-import { version } from "../types/display";
-
-export type storageAndVersion = {
-  effective_period: BigNumber;
-  owners: string[];
-  proposal_counter: BigNumber;
-  threshold: BigNumber;
-  version: version;
-  balance: BigNumber;
-  proposals: any;
-};
+import { toStorage } from "../versioned/apis";
 
 export const fetchContract = async (
   connection: TezosToolkit,
   address: string
-): Promise<contractStorage> => {
-  const c = await connection.contract.at(address, tzip16);
-  const balance = await connection.tz.getBalance(address);
+): Promise<contractStorage | undefined> => {
+  let c = await connection.contract.at(address, tzip16);
+  let version = await fetchVersion(c);
 
-  const cc = (await c.storage()) as storageAndVersion;
-  const version = await fetchVersion(c);
+  if (version === "unknown version") return undefined;
 
-  return {
-    balance: balance.toString(),
-    effective_period: cc.effective_period.toString(),
-    owners: cc.owners,
-    proposal_counter: cc.proposal_counter.toString(),
-    proposal_map: cc.proposals.toString(),
-    threshold: cc.threshold.toNumber(),
-    version,
-  };
+  let balance = await connection.tz.getBalance(address);
+
+  let cc = await c.storage();
+
+  return toStorage(version, cc, balance);
 };
 
 export const isTzSafeContract = async (
@@ -41,7 +25,7 @@ export const isTzSafeContract = async (
   address: string
 ) => {
   const contract = await connection.contract.at(address, tzip16);
-  const storage: any = await contract.storage();
+
   let version = await fetchVersion(contract!);
 
   return version !== "unknown version";

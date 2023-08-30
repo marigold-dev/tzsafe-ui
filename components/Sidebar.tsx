@@ -5,6 +5,7 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
+import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,8 +17,10 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import { fetchContract, storageAndVersion } from "../utils/fetchContract";
+import { version } from "../types/display";
+import { fetchContract } from "../utils/fetchContract";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
@@ -139,13 +142,17 @@ const Sidebar = ({
     (async () => {
       if (!state.currentContract) return;
 
-      const storage = state.contracts[state.currentContract];
+      let c = await state.connection.contract.at(state.currentContract, tzip16);
+      let balance = await state.connection.tz.getBalance(state.currentContract);
 
-      const updatedContract = toStorage(
-        storage.version,
-        storage,
-        new BigNumber(storage.balance)
-      );
+      let cc = await c.storage();
+      let version = await (state.contracts[state.currentContract]
+        ? Promise.resolve<version>(
+            state.contracts[state.currentContract].version
+          )
+        : fetchVersion(c));
+
+      const updatedContract = toStorage(version, cc, balance);
 
       state.contracts[state.currentContract]
         ? dispatch({
@@ -164,6 +171,8 @@ const Sidebar = ({
 
   const currentContract = state.currentContract ?? "";
 
+  console.log("CONTRACT:", currentContract);
+
   return (
     <aside
       className={`fixed bottom-0 left-0 ${
@@ -180,12 +189,20 @@ const Sidebar = ({
         <ArrowLeftIcon className="h-4 w-4" />
       </button>
       <Select.Root
-        onValueChange={payload => {
-          console.log("New path:", `/${payload}/${path?.split("/")[2] ?? ""}`);
+        onValueChange={async payload => {
           router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
           dispatch({
             type: "setCurrentContract",
             payload,
+          });
+
+          const storage = await fetchContract(state.connection, payload);
+
+          if (!storage) return;
+
+          dispatch({
+            type: "setCurrentStorage",
+            payload: storage,
           });
         }}
         value={currentContract}
@@ -196,15 +213,25 @@ const Sidebar = ({
             <SelectedItem
               name={state.aliases[currentContract]}
               address={currentContract}
-              balance={state.contracts[currentContract]?.balance}
+              balance={
+                state.contracts[currentContract]?.balance ??
+                state.currentStorage?.balance
+              }
               threshold={
                 !!state.contracts[currentContract]
                   ? `${state.contracts[currentContract].threshold}/${
                       signers(state.contracts[currentContract]).length
                     }`
+                  : !!state.currentStorage
+                  ? `${state.currentStorage.threshold}/${
+                      signers(state.currentStorage).length
+                    }`
                   : "0/0"
               }
-              version={state.contracts[currentContract]?.version}
+              version={
+                state.contracts[currentContract]?.version ??
+                state.currentStorage?.version
+              }
             />
             <Select.Icon className="ml-2">
               <ChevronDownIcon />
