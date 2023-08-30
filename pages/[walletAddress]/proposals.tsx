@@ -1,6 +1,5 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
