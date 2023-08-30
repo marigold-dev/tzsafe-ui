@@ -75,32 +75,41 @@ export default function App({ Component, pageProps }: AppProps) {
       if (
         validateAddress(router.query.walletAddress) !== ValidationResult.VALID
       ) {
-        router.replace("/");
+        router.replace(
+          `/invalid-contract?address=${router.query.walletAddress}`
+        );
         return;
       }
 
       if (!!state.contracts[router.query.walletAddress]) return;
 
-      const storage = await fetchContract(
-        state.connection,
-        router.query.walletAddress
-      );
+      try {
+        const storage = await fetchContract(
+          state.connection,
+          router.query.walletAddress
+        );
 
-      if (!storage) {
-        router.replace("/");
-        return;
+        if (!storage) {
+          router.replace(
+            `/invalid-contract?address=${router.query.walletAddress}`
+          );
+          return;
+        }
+
+        dispatch({
+          type: "setCurrentStorage",
+          payload: storage,
+        });
+
+        dispatch({
+          type: "setCurrentContract",
+          payload: router.query.walletAddress,
+        });
+      } catch (e) {
+        router.replace(
+          `/invalid-contract?address=${router.query.walletAddress}`
+        );
       }
-
-      console.log("HERE pas vrai ?");
-      dispatch({
-        type: "setCurrentStorage",
-        payload: storage,
-      });
-
-      dispatch({
-        type: "setCurrentContract",
-        payload: router.query.walletAddress,
-      });
     })();
   }, [
     router.query.walletAddress,
