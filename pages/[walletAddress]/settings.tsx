@@ -59,8 +59,11 @@ const Settings = () => {
               });
 
               const addresses = Object.keys(state.contracts);
-              if (addresses.length === 0) return;
-              router.replace(`/${addresses[0]}/settings`);
+              if (addresses.length === 0) {
+                router.replace(`/`);
+              } else {
+                router.replace(`/${addresses[0]}/settings`);
+              }
             }}
           >
             {isDeleting ? `Deleting wallet` : `Delete wallet`}

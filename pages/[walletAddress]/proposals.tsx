@@ -150,7 +150,10 @@ const Proposals = () => {
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
-                      Number(effectivePeriod) * 1000
+                      (!!effectivePeriod?.toNumber
+                        ? effectivePeriod.toNumber()
+                        : Number(effectivePeriod)) *
+                        1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
 

@@ -89,7 +89,7 @@ type action =
     }
   | {
       type: "setCurrentStorage";
-      payload: contractStorage;
+      payload: contractStorage & { address: string };
     }
   | {
       type: "setCurrentContract";
@@ -243,13 +243,14 @@ function reducer(state: tezosState, action: action): tezosState {
           : state.favouriteContract;
 
       const addresses = Object.keys(contracts);
+      const currentContract = addresses.length > 0 ? addresses[0] : null;
 
       localStorage.setItem(
         "app_state",
         JSON.stringify({
           contracts,
           aliases,
-          currentContract: addresses.length > 0 ? addresses[0] : null,
+          currentContract,
         })
       );
 
@@ -257,7 +258,7 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts,
         favouriteContract: fav,
-        currentContract: addresses.length > 0 ? addresses[0] : null,
+        currentContract,
         aliases,
       };
     }

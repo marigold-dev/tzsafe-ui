@@ -63,15 +63,11 @@ export default function App({ Component, pageProps }: AppProps) {
     (async () => {
       if (
         !router.query.walletAddress ||
-        Array.isArray(router.query.walletAddress)
-      ) {
-        setIsFetching(false);
-        return;
-      }
-
-      if (
-        router.query.walletAddress === state.currentContract &&
-        !!state.currentStorage
+        Array.isArray(router.query.walletAddress) ||
+        (router.query.walletAddress === state.currentContract &&
+          !!state.currentStorage) ||
+        !!state.contracts[router.query.walletAddress] ||
+        state.currentStorage?.address === router.query.walletAddress
       ) {
         setIsFetching(false);
         return;
@@ -84,11 +80,6 @@ export default function App({ Component, pageProps }: AppProps) {
         router.replace(
           `/invalid-contract?address=${router.query.walletAddress}`
         );
-        return;
-      }
-
-      if (!!state.contracts[router.query.walletAddress]) {
-        setIsFetching(false);
         return;
       }
 
@@ -108,7 +99,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
         dispatch({
           type: "setCurrentStorage",
-          payload: storage,
+          payload: { ...storage, address: router.query.walletAddress },
         });
 
         dispatch({
