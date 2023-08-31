@@ -30,7 +30,7 @@ import {
   AppDispatchContext,
 } from "../context/state";
 import "../styles/globals.css";
-import { fetchContract, isTzSafeContract } from "../utils/fetchContract";
+import { fetchContract } from "../utils/fetchContract";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -38,6 +38,7 @@ export default function App({ Component, pageProps }: AppProps) {
     emptyState()
   );
 
+  const [isFetching, setIsFetching] = useState(true);
   const [hasSidebar, setHasSidebar] = useState(false);
 
   const path = usePathname();
@@ -63,25 +64,33 @@ export default function App({ Component, pageProps }: AppProps) {
       if (
         !router.query.walletAddress ||
         Array.isArray(router.query.walletAddress)
-      )
+      ) {
+        setIsFetching(false);
         return;
+      }
 
       if (
         router.query.walletAddress === state.currentContract &&
         !!state.currentStorage
-      )
+      ) {
+        setIsFetching(false);
         return;
+      }
 
       if (
         validateAddress(router.query.walletAddress) !== ValidationResult.VALID
       ) {
+        setIsFetching(false);
         router.replace(
           `/invalid-contract?address=${router.query.walletAddress}`
         );
         return;
       }
 
-      if (!!state.contracts[router.query.walletAddress]) return;
+      if (!!state.contracts[router.query.walletAddress]) {
+        setIsFetching(false);
+        return;
+      }
 
       try {
         const storage = await fetchContract(
@@ -90,6 +99,7 @@ export default function App({ Component, pageProps }: AppProps) {
         );
 
         if (!storage) {
+          setIsFetching(false);
           router.replace(
             `/invalid-contract?address=${router.query.walletAddress}`
           );
@@ -105,7 +115,9 @@ export default function App({ Component, pageProps }: AppProps) {
           type: "setCurrentContract",
           payload: router.query.walletAddress,
         });
+        setIsFetching(false);
       } catch (e) {
+        setIsFetching(false);
         router.replace(
           `/invalid-contract?address=${router.query.walletAddress}`
         );
@@ -190,7 +202,8 @@ export default function App({ Component, pageProps }: AppProps) {
             </button>
 
             {!!state.contracts[state.currentContract ?? ""] ||
-            !!state.currentStorage ? (
+            !!state.currentStorage ||
+            !isFetching ? (
               <Component {...pageProps} />
             ) : (
               <div className="mt-12 flex w-full items-center justify-center">
