@@ -200,7 +200,7 @@ const Sidebar = ({
 
           dispatch({
             type: "setCurrentStorage",
-            payload: storage,
+            payload: { ...storage, address: payload },
           });
         }}
         value={currentContract}
