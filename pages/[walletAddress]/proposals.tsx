@@ -150,18 +150,15 @@ const Proposals = () => {
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
-                      (!!effectivePeriod.toNumber
-                        ? effectivePeriod.toNumber()
-                        : Number(effectivePeriod)) *
-                        1000
+                      Number(effectivePeriod) * 1000
                   );
                   const hasDeadlinePassed = Date.now() >= deadline.getTime();
 
-                  const allSigners =
-                    signers(state.contracts[currentContract]) ??
-                    (!!state.currentStorage
-                      ? signers(state.currentStorage)
-                      : []);
+                  const allSigners = !!state.contracts[currentContract]
+                    ? signers(state.contracts[currentContract])
+                    : !!state.currentStorage
+                    ? signers(state.currentStorage)
+                    : [];
                   const signatures = x[1].ui.signatures.filter(({ signer }) =>
                     allSigners.includes(signer)
                   );
@@ -191,7 +188,7 @@ const Proposals = () => {
                         ) : shouldResolve ? (
                           <span>
                             <span className="hidden lg:inline">
-                              Waiting for resolution
+                              Waiting resolution
                             </span>
                             <span className="lg:hidden">Pending</span>
                           </span>
