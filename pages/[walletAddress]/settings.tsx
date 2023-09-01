@@ -46,7 +46,7 @@ const Settings = () => {
 
           <button
             className={`${
-              !isDeleting || !canDelete ? "" : "pointer-events-none opacity-50"
+              canDelete && !isDeleting ? "" : "pointer-events-none opacity-50"
             } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
               if (!state.currentContract) return;
