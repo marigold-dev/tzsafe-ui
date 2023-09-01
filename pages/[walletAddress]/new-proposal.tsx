@@ -14,7 +14,7 @@ const CreateProposal = () => {
   useEffect(() => {
     if (isOwner) return;
 
-    router.replace("/proposals");
+    router.replace(`/${router.query.walletAddress}/proposals`);
   }, [isOwner, router]);
 
   return (
@@ -34,7 +34,9 @@ const CreateProposal = () => {
           ) : (
             <TransferForm
               address={state.currentContract}
-              contract={state.contracts[state.currentContract]}
+              contract={
+                state.contracts[state.currentContract] ?? state.currentStorage
+              }
               closeModal={console.log}
             />
           )}
