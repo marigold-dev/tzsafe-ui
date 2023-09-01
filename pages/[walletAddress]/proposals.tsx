@@ -1,6 +1,13 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import { useContext, useEffect, useMemo, useReducer, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
@@ -78,12 +85,14 @@ const Proposals = () => {
     },
   });
 
+  const previousRefresherRef = useRef(-1);
   const [refresher, setRefresher] = useState(0);
 
   useEffect(() => {
     if (
       !globalState.currentContract ||
-      globalState.currentContract === state.currentAddress
+      (globalState.currentContract === state.currentAddress &&
+        previousRefresherRef.current === refresher)
     )
       return;
 
@@ -93,6 +102,8 @@ const Proposals = () => {
     }
 
     dispatch({ type: "setLoading", payload: true });
+
+    previousRefresherRef.current = refresher;
 
     (async () => {
       if (!globalState.currentContract) return;
