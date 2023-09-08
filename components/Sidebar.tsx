@@ -24,6 +24,7 @@ import { fetchContract } from "../utils/fetchContract";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
+import Spinner from "./Spinner";
 
 type selectItemProps = {
   name: string | undefined;
@@ -107,9 +108,11 @@ FixedTrigger.displayName = "FixedTrigger";
 const Sidebar = ({
   isOpen,
   onClose,
+  isLoading,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  isLoading: boolean;
 }) => {
   const router = useRouter();
   const path = usePathname();
@@ -208,29 +211,40 @@ const Sidebar = ({
       >
         <Select.Trigger asChild aria-label="Wallets">
           <FixedTrigger disabled={Object.values(state.contracts).length === 0}>
-            <SelectedItem
-              name={state.aliases[currentContract]}
-              address={currentContract}
-              balance={
-                state.contracts[currentContract]?.balance ??
-                state.currentStorage?.balance
-              }
-              threshold={
-                !!state.contracts[currentContract]
-                  ? `${state.contracts[currentContract].threshold}/${
-                      signers(state.contracts[currentContract]).length
-                    }`
-                  : !!state.currentStorage
-                  ? `${state.currentStorage.threshold}/${
-                      signers(state.currentStorage).length
-                    }`
-                  : "0/0"
-              }
-              version={
-                state.contracts[currentContract]?.version ??
-                state.currentStorage?.version
-              }
-            />
+            {isLoading ? (
+              <SelectedItem
+                name={"-"}
+                address={""}
+                balance={"0"}
+                threshold={"0/0"}
+                version={"0.0.0"}
+              />
+            ) : (
+              <SelectedItem
+                name={state.aliases[currentContract]}
+                address={currentContract}
+                balance={
+                  state.contracts[currentContract]?.balance ??
+                  state.currentStorage?.balance
+                }
+                threshold={
+                  !!state.contracts[currentContract]
+                    ? `${state.contracts[currentContract].threshold}/${
+                        signers(state.contracts[currentContract]).length
+                      }`
+                    : !!state.currentStorage
+                    ? `${state.currentStorage.threshold}/${
+                        signers(state.currentStorage).length
+                      }`
+                    : "0/0"
+                }
+                version={
+                  state.contracts[currentContract]?.version ??
+                  state.currentStorage?.version
+                }
+              />
+            )}
+
             <Select.Icon className="ml-2">
               <ChevronDownIcon />
             </Select.Icon>
