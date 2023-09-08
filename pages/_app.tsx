@@ -28,6 +28,7 @@ import {
   init,
   AppStateContext,
   AppDispatchContext,
+  contractStorage,
 } from "../context/state";
 import "../styles/globals.css";
 import { fetchContract } from "../utils/fetchContract";
@@ -61,6 +62,12 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     (async () => {
+      if (
+        router.pathname.includes("[walletAddress]") &&
+        !router.query.walletAddress
+      )
+        return;
+
       if (
         !router.query.walletAddress ||
         Array.isArray(router.query.walletAddress) ||
@@ -109,9 +116,11 @@ export default function App({ Component, pageProps }: AppProps) {
           return;
         }
 
+        storage.address = router.query.walletAddress;
+
         dispatch({
           type: "setCurrentStorage",
-          payload: { ...storage, address: router.query.walletAddress },
+          payload: storage as contractStorage & { address: string },
         });
 
         dispatch({
@@ -186,7 +195,11 @@ export default function App({ Component, pageProps }: AppProps) {
           <NavBar />
 
           {isSidebarHidden ? null : (
-            <Sidebar isOpen={hasSidebar} onClose={() => setHasSidebar(false)} />
+            <Sidebar
+              isOpen={hasSidebar}
+              onClose={() => setHasSidebar(false)}
+              isLoading={isFetching}
+            />
           )}
 
           <div
@@ -213,9 +226,7 @@ export default function App({ Component, pageProps }: AppProps) {
               </div>
             )}
           </div>
-          <Footer
-            shouldRemovePadding={Object.entries(state.contracts).length === 0}
-          />
+          <Footer shouldRemovePadding={isSidebarHidden} />
         </div>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
