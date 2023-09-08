@@ -2,17 +2,30 @@ import { useRouter } from "next/router";
 import { useContext, useEffect } from "react";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
-import { AppStateContext } from "../../context/state";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
+  const disptach = useContext(AppDispatchContext)!;
   const router = useRouter();
 
   useEffect(() => {
-    if (!!state.address) return;
+    if (
+      !router.query.walletAddress ||
+      Array.isArray(router.query.walletAddress) ||
+      !!state.address
+    )
+      return;
 
-    router.replace("/");
-  }, []);
+    if (state.currentContract !== router.query.walletAddress) {
+      disptach({
+        type: "setCurrentContract",
+        payload: router.query.walletAddress,
+      });
+    }
+
+    router.replace(`/${router.query.walletAddress}/proposals`);
+  }, [router.query.walletAddress, state.address]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
