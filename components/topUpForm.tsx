@@ -1,5 +1,4 @@
-import { NetworkType } from "@airgap/beacon-sdk";
-import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { OpKind } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
@@ -282,15 +281,24 @@ function TopUp(props: {
           const cc = await c.storage();
           const version = await fetchVersion(c);
 
-          state.contracts[props.address]
-            ? dispatch({
-                type: "updateContract",
-                payload: {
-                  address: props.address,
-                  contract: toStorage(version, cc, balance),
-                },
-              })
-            : null;
+          const storage = toStorage(version, cc, balance);
+
+          if (!!state.contracts[props.address]) {
+            dispatch({
+              type: "updateContract",
+              payload: {
+                address: props.address,
+                contract: toStorage(version, cc, balance),
+              },
+            });
+          } else {
+            storage.address = props.address;
+
+            dispatch({
+              type: "setCurrentStorage",
+              payload: storage as contractStorage & { address: string },
+            });
+          }
 
           setResult(true);
         } catch (e) {
