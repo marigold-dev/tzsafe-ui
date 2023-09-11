@@ -159,11 +159,16 @@ export default function App({ Component, pageProps }: AppProps) {
         if (activeAccount && state?.accountInfo == null) {
           const userAddress = await wallet.getPKH();
           const balance = await state?.connection.tz.getBalance(userAddress);
-          dispatch!({
+          dispatch({
             type: "login",
             accountInfo: activeAccount!,
             address: userAddress,
             balance: balance!.toString(),
+          });
+        } else {
+          dispatch({
+            type: "setAttemptedInitialLogin",
+            payload: true,
           });
         }
       }
@@ -217,12 +222,12 @@ export default function App({ Component, pageProps }: AppProps) {
               <ArrowRightIcon className="h-4 w-4" />
             </button>
 
-            {!isFetching ? (
-              <Component {...pageProps} />
-            ) : (
+            {isFetching || !state.attemptedInitialLogin ? (
               <div className="mt-12 flex w-full items-center justify-center">
                 <Spinner />
               </div>
+            ) : (
+              <Component {...pageProps} />
             )}
           </div>
           <Footer shouldRemovePadding={isSidebarHidden} />

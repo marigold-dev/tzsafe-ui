@@ -27,6 +27,7 @@ type tezosState = {
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
+  attemptedInitialLogin: boolean;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -63,6 +64,7 @@ let emptyState = (): tezosState => {
     aliasTrie: new Trie<string>(),
     hasBanner: true,
     delegatorAddresses: undefined,
+    attemptedInitialLogin: false,
   };
 };
 
@@ -110,6 +112,10 @@ type action =
     }
   | {
       type: "setBanner";
+      payload: boolean;
+    }
+  | {
+      type: "setAttemptedInitialLogin";
       payload: boolean;
     };
 
@@ -219,6 +225,7 @@ function reducer(state: tezosState, action: action): tezosState {
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
+        attemptedInitialLogin: true,
       };
     }
     case "logout": {
