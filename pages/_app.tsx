@@ -146,7 +146,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     (async () => {
-      if (state!.beaconWallet === null) {
+      if (state!.beaconWallet === null && !state.attemptedInitialLogin) {
         let a = init();
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
