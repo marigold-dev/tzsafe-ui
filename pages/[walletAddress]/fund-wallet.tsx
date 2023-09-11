@@ -13,7 +13,8 @@ const TopUpPage = () => {
     if (
       !router.query.walletAddress ||
       Array.isArray(router.query.walletAddress) ||
-      !!state.address
+      !!state.address ||
+      !state.attemptedInitialLogin
     )
       return;
 
@@ -25,7 +26,7 @@ const TopUpPage = () => {
     }
 
     router.replace(`/${router.query.walletAddress}/proposals`);
-  }, [router.query.walletAddress, state.address]);
+  }, [router.query.walletAddress, state.address, state.attemptedInitialLogin]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
