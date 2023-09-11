@@ -291,7 +291,10 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
+    case "setAttemptedInitialLogin":
+      return { ...state, attemptedInitialLogin: true };
     default: {
+      console.log(action);
       throw "notImplemented";
     }
   }
