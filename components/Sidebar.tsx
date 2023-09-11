@@ -36,9 +36,13 @@ type selectItemProps = {
 };
 
 const linkClass = (isActive: boolean, isDisabled: boolean = false) =>
-  `${isActive ? "text-zinc-100" : "text-zinc-400"} ${
+  `${
     // There's a bug with opacity, so I set manually text color
-    isDisabled ? "pointer-events-none text-[#707078]" : ""
+    isDisabled
+      ? "pointer-events-none text-[#707078]"
+      : isActive
+      ? "text-zinc-100"
+      : "text-zinc-400"
   } hover:text-zinc-100 flex items-center space-x-3`;
 
 const SelectedItem = ({
