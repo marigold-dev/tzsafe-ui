@@ -217,8 +217,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <ArrowRightIcon className="h-4 w-4" />
             </button>
 
-            {(!isFetching && !!state.contracts[state.currentContract ?? ""]) ||
-            !!state.currentStorage ? (
+            {!isFetching ? (
               <Component {...pageProps} />
             ) : (
               <div className="mt-12 flex w-full items-center justify-center">
