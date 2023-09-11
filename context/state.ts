@@ -217,6 +217,8 @@ function reducer(state: tezosState, action: action): tezosState {
       return {
         ...action.payload,
         attemptedInitialLogin: state.attemptedInitialLogin,
+        currentContract: state.currentContract,
+        currentStorage: state.currentStorage,
         aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
     }
