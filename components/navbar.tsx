@@ -21,6 +21,7 @@ const NavBar = (_: React.PropsWithChildren) => {
     if (state?.beaconWallet) {
       await state.beaconWallet.clearActiveAccount();
     }
+
     dispatch!({ type: "logout" });
     router.replace("/");
   };
@@ -122,9 +123,9 @@ const NavBar = (_: React.PropsWithChildren) => {
                     aria-labelledby="user-menu-button"
                   >
                     <button
-                      onClick={e => {
+                      onClick={async e => {
                         e.preventDefault();
-                        disconnectWallet();
+                        await disconnectWallet();
                       }}
                       className="text-md block px-4 py-2 text-dark"
                       role="menuitem"
