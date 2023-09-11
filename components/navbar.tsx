@@ -23,7 +23,6 @@ const NavBar = (_: React.PropsWithChildren) => {
     }
 
     dispatch!({ type: "logout" });
-    router.replace("/");
   };
 
   const closeMenu = () => setMenuOpen(false);
