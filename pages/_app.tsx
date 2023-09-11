@@ -146,7 +146,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     (async () => {
-      if (state!.beaconWallet === null && !state.attemptedInitialLogin) {
+      if (state!.beaconWallet === null) {
         let a = init();
         dispatch({ type: "init", payload: a });
         const wallet = new BeaconWallet({
@@ -154,6 +154,8 @@ export default function App({ Component, pageProps }: AppProps) {
           preferredNetwork: PREFERED_NETWORK,
         });
         dispatch!({ type: "beaconConnect", payload: wallet });
+
+        if (state.attemptedInitialLogin) return;
 
         const activeAccount = await wallet.client.getActiveAccount();
         if (activeAccount && state?.accountInfo == null) {
