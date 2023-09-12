@@ -21,10 +21,10 @@ const dispatch: { [key: string]: version } = {
 type typeHash = string;
 type codeHash = string;
 
-// Before 0.0.10, the version is stored on the contract so tzip16 won't failed to retrieve it
+// Before 0.0.11, the version is stored on the contract so tzip16 won't failed to retrieve it
+// typeHash and codeHash are provided by tzkt API
 const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
-  "-357299388:-2016479992": "0.0.10",
-  "-483287042:793087855": "0.0.11",
+  "-483287042:521053333": "0.0.11",
   "-483287042:-426350137": "0.1.1",
 };
 
