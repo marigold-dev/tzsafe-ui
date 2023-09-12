@@ -137,7 +137,11 @@ function reducer(state: tezosState, action: action): tezosState {
       };
       localStorage.setItem(
         "app_state",
-        JSON.stringify({ contracts, aliases, favouriteContract: fav })
+        JSON.stringify({
+          contracts,
+          aliases,
+          currentContract: state.currentContract,
+        })
       );
       return {
         ...state,
@@ -217,7 +221,8 @@ function reducer(state: tezosState, action: action): tezosState {
       return {
         ...action.payload,
         attemptedInitialLogin: state.attemptedInitialLogin,
-        currentContract: state.currentContract,
+        currentContract:
+          state.currentContract ?? action.payload.currentContract,
         currentStorage: state.currentStorage,
         aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
@@ -297,7 +302,6 @@ function reducer(state: tezosState, action: action): tezosState {
     case "setAttemptedInitialLogin":
       return { ...state, attemptedInitialLogin: action.payload };
     default: {
-      console.log(action);
       throw "notImplemented";
     }
   }

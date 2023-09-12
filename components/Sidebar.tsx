@@ -133,17 +133,6 @@ const Sidebar = ({
   }, []);
 
   useEffect(() => {
-    const entries = Object.entries(state.contracts);
-
-    if (entries.length === 0 || !!state.currentContract) return;
-
-    dispatch({
-      type: "setCurrentContract",
-      payload: entries[0][0],
-    });
-  }, [state.contracts]);
-
-  useEffect(() => {
     if (!state.currentContract) return;
 
     (async () => {
