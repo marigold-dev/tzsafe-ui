@@ -40,14 +40,14 @@ function Success() {
               },
             })
             .send();
-          let result1 = await deploy?.contract();
-          let c = await result1!.storage();
-          let ct = await state?.connection.contract.at(
+          const result1 = await deploy?.contract();
+          const c = await result1!.storage();
+          const ct = await state?.connection.contract.at(
             result1?.address!,
             tzip16
           )!;
-          let version = await fetchVersion(ct);
-          let balance = await state?.connection.tz.getBalance(
+          const version = await fetchVersion(ct);
+          const balance = await state?.connection.tz.getBalance(
             result1!.address!
           );
           setAddress({ address: result1?.address!, status: 1 });
