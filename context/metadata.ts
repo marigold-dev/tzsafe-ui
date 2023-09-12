@@ -17,11 +17,17 @@ const dispatch: { [key: string]: version } = {
   "0.1.1": "0.1.1",
 };
 
-const VERSION_HASH: { [k: string]: version } = {
-  "-357299388-2016479992": "0.0.10",
-  "-483287042793087855": "0.0.11",
-  "-483287042-426350137": "0.1.1",
+// Those values are from tzkt api: /v1/contracts
+type typeHash = string;
+type codeHash = string;
+
+// Before 0.0.10, the version is stored on the contract so tzip16 won't failed to retrieve it
+const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
+  "-357299388:-2016479992": "0.0.10",
+  "-483287042:793087855": "0.0.11",
+  "-483287042:-426350137": "0.1.1",
 };
+
 async function fetchVersion(
   metadata: ContractAbstraction<ContractProvider> & {
     tzip16(
@@ -43,7 +49,7 @@ async function fetchVersion(
             ([{ typeHash, codeHash }]: {
               typeHash: number;
               codeHash: number;
-            }[]) => VERSION_HASH[`${typeHash}${codeHash}`] ?? "unknown version"
+            }[]) => VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version"
           )
       );
 
@@ -53,16 +59,3 @@ async function fetchVersion(
   }
 }
 export default fetchVersion;
-
-// async function fetchVersion(address: string): Promise<version> {
-//   try {
-// const { typeHash, codeHash } = (await fetch(
-// `${API_URL}/v1/contracts?address=${address}`
-// ).then(r => r.json())) as { typeHash: number; codeHash: number };
-
-//     return VERSION_HASH[`${typeHash}${codeHash}`] ?? "unknown version";
-//   } catch {
-//     return "unknown version";
-//   }
-// }
-// export default fetchVersion;
