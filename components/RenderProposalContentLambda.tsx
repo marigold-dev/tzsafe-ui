@@ -119,7 +119,10 @@ export const contentToData = (
     const parser = new Parser();
 
     const [type, lambda] = parseLambda(
-      parser.parseMichelineExpression(content.executeLambda.content ?? "")
+      // Required for version 0.0.10
+      typeof content.executeLambda.content === "string"
+        ? parser.parseMichelineExpression(content.executeLambda.content ?? "")
+        : content.executeLambda.content ?? null
     );
 
     if (type === LambdaType.LAMBDA_EXECUTION) {
@@ -404,7 +407,10 @@ export const labelOfProposalContentLambda = (content: proposalContent) => {
     const parser = new Parser();
 
     const [type, _] = parseLambda(
-      parser.parseMichelineExpression(content.executeLambda.content ?? "")
+      // Required for version 0.0.10
+      typeof content.executeLambda.content === "string"
+        ? parser.parseMichelineExpression(content.executeLambda.content ?? "")
+        : content.executeLambda.content ?? null
     );
 
     return type === LambdaType.FA2
