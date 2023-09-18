@@ -9,8 +9,6 @@ import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
-import ReactGA from "react-ga4";
-import Autocomplete from "../components/Autocomplete";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/footer";
@@ -28,8 +26,6 @@ import {
 } from "../context/state";
 import "../styles/globals.css";
 import Proposals from "./proposals";
-
-if (GA_TRACKING_ID !== undefined) ReactGA.initialize(GA_TRACKING_ID);
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
