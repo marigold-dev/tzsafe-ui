@@ -19,6 +19,7 @@ type tezosState = {
   address: string | null;
   balance: string | null;
   currentContract: string | null;
+  currentStorage: contractStorage | null;
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
@@ -26,6 +27,7 @@ type tezosState = {
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
+  attemptedInitialLogin: boolean;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -55,12 +57,14 @@ let emptyState = (): tezosState => {
     balance: null,
     address: null,
     currentContract: null,
+    currentStorage: null,
     accountInfo: null,
     connection,
     favouriteContract: null,
     aliasTrie: new Trie<string>(),
     hasBanner: true,
     delegatorAddresses: undefined,
+    attemptedInitialLogin: false,
   };
 };
 
@@ -86,6 +90,10 @@ type action =
       payload: { address: string; contract: contractStorage };
     }
   | {
+      type: "setCurrentStorage";
+      payload: contractStorage & { address: string };
+    }
+  | {
       type: "setCurrentContract";
       payload: string;
     }
@@ -104,6 +112,10 @@ type action =
     }
   | {
       type: "setBanner";
+      payload: boolean;
+    }
+  | {
+      type: "setAttemptedInitialLogin";
       payload: boolean;
     };
 
@@ -125,7 +137,11 @@ function reducer(state: tezosState, action: action): tezosState {
       };
       localStorage.setItem(
         "app_state",
-        JSON.stringify({ contracts, aliases, favouriteContract: fav })
+        JSON.stringify({
+          contracts,
+          aliases,
+          currentContract: state.currentContract,
+        })
       );
       return {
         ...state,
@@ -193,9 +209,21 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         currentContract: action.payload,
       };
+    case "setCurrentStorage": {
+      const newState = {
+        ...state,
+        currentStorage: action.payload,
+      };
+
+      return newState;
+    }
     case "init": {
       return {
         ...action.payload,
+        attemptedInitialLogin: state.attemptedInitialLogin,
+        currentContract:
+          state.currentContract ?? action.payload.currentContract,
+        currentStorage: state.currentStorage,
         aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
     }
@@ -205,6 +233,7 @@ function reducer(state: tezosState, action: action): tezosState {
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
+        attemptedInitialLogin: true,
       };
     }
     case "logout": {
@@ -229,13 +258,14 @@ function reducer(state: tezosState, action: action): tezosState {
           : state.favouriteContract;
 
       const addresses = Object.keys(contracts);
+      const currentContract = addresses.length > 0 ? addresses[0] : null;
 
       localStorage.setItem(
         "app_state",
         JSON.stringify({
           contracts,
           aliases,
-          currentContract: addresses.length > 0 ? addresses[0] : null,
+          currentContract,
         })
       );
 
@@ -243,7 +273,7 @@ function reducer(state: tezosState, action: action): tezosState {
         ...state,
         contracts,
         favouriteContract: fav,
-        currentContract: addresses.length > 0 ? addresses[0] : null,
+        currentContract,
         aliases,
       };
     }
@@ -269,6 +299,8 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
+    case "setAttemptedInitialLogin":
+      return { ...state, attemptedInitialLogin: action.payload };
     default: {
       throw "notImplemented";
     }

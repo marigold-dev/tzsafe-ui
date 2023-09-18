@@ -85,7 +85,7 @@ const DelegatorHelper = ({
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
-  contract: contractStorage;
+  contract: contractStorage | undefined;
   disabled?: boolean;
 }> = props => {
   const state = useContext(AppStateContext)!;
@@ -100,12 +100,14 @@ const SignersForm: FC<{
   const duration = useMemo(() => {
     if (
       ["0.0.6", "0.0.8", "0.0.9", "unknown version"].includes(
-        props.contract.version
+        props.contract?.version ?? "unknown version"
       )
     )
       return undefined;
 
-    return secondsToDuration(props.contract.effective_period).toObject();
+    return secondsToDuration(
+      Number(props.contract?.effective_period ?? 0)
+    ).toObject();
   }, [props.contract]);
 
   useEffect(() => {
@@ -133,14 +135,21 @@ const SignersForm: FC<{
     validatorsError?: string;
     bakerAddress: string | undefined;
   } = {
-    validators: signers(props.contract).map(x => ({
+    validators: (!props.contract
+      ? []
+      : "owners" in props.contract
+      ? props.contract.owners
+      : signers(props.contract)
+    ).map((x: string) => ({
       address: x,
       name: state.aliases[x] || "",
     })),
     days: duration?.days?.toString(),
     hours: duration?.hours?.toString(),
     minutes: duration?.minutes?.toString(),
-    requiredSignatures: props.contract.threshold,
+    requiredSignatures: !props.contract
+      ? 0
+      : (props.contract as contractStorage).threshold,
     bakerAddress: undefined,
   };
 
@@ -153,21 +162,25 @@ const SignersForm: FC<{
       oldBakerAddress,
     }: { bakerAddress: string | undefined; oldBakerAddress: string | undefined }
   ) {
-    let initialSigners = new Set(signers(props.contract));
-    let input = new Set(txs.map(x => x.address));
-    let removed = new Set(
+    if (!props.contract) return [];
+
+    const initialSigners = new Set<string>(
+      "owners" in props.contract
+        ? props.contract.owners
+        : signers(props.contract)
+    );
+    const input = new Set(txs.map(x => x.address));
+    const removed = new Set(
       [...initialSigners.values()].filter(x => !input.has(x))
     );
-    let added = new Set(
+    const added = new Set(
       [...input.values()].filter(x => !initialSigners.has(x))
     );
-    let ops: ownersForm[] = [];
+    const ops: ownersForm[] = [];
 
     if (
       !!effectivePeriod &&
-      Number(effectivePeriod) !=
-        (props.contract.effective_period.toNumber?.() ??
-          Number(props.contract.effective_period))
+      Number(effectivePeriod) != Number(props.contract?.effective_period ?? 0)
     ) {
       ops.push({ adjustEffectivePeriod: Number(effectivePeriod) });
     }
@@ -213,6 +226,8 @@ const SignersForm: FC<{
   }
 
   const updateSettings = async (ops: ownersForm[]) => {
+    if (!props.contract) return;
+
     let cc = await state.connection.contract.at(props.address);
     let api = VersionedApi(props.contract.version, props.address);
     setTimeoutAndHash(
@@ -256,7 +271,7 @@ const SignersForm: FC<{
           <button
             className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
             onClick={() => {
-              router.push("/proposals");
+              router.push(`/${state.currentContract}/proposals`);
             }}
           >
             Go to proposals
@@ -598,6 +613,7 @@ const SignersForm: FC<{
                         );
                       })}
                     {values.validators.length > 0 &&
+                      !!state.address &&
                       !values.validators.find(
                         v => v.address === state.address
                       ) &&
@@ -625,7 +641,9 @@ const SignersForm: FC<{
               <label className="mr-4 text-lg text-white">Threshold </label>
               <Field
                 disabled={props.disabled}
-                className="mt-2 w-full rounded p-2 text-center"
+                className={`mt-2 w-full rounded p-2 text-center ${
+                  props.disabled ? "bg-zinc-500" : ""
+                }`}
                 as="select"
                 component="select"
                 name="requiredSignatures"
@@ -683,8 +701,10 @@ const SignersForm: FC<{
                   <ErrorMessage name="minutes" render={renderError} />
                 </div>
               </div>
-              {/* @ts-ignore*/}
-              {!!errors.proposalDuration
+              {props.disabled
+                ? null
+                : // @ts-ignore
+                !!errors.proposalDuration
                 ? // @ts-ignore
                   renderError(errors.proposalDuration)
                 : currentDuration < PROPOSAL_DURATION_WARNING

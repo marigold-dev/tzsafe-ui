@@ -1,10 +1,32 @@
-import { useContext } from "react";
-import Meta from "../components/meta";
-import TopUp from "../components/topUpForm";
-import { AppStateContext } from "../context/state";
+import { useRouter } from "next/router";
+import { useContext, useEffect } from "react";
+import Meta from "../../components/meta";
+import TopUp from "../../components/topUpForm";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
+  const disptach = useContext(AppDispatchContext)!;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (
+      !router.query.walletAddress ||
+      Array.isArray(router.query.walletAddress) ||
+      !!state.address ||
+      !state.attemptedInitialLogin
+    )
+      return;
+
+    if (state.currentContract !== router.query.walletAddress) {
+      disptach({
+        type: "setCurrentContract",
+        payload: router.query.walletAddress,
+      });
+    }
+
+    router.replace(`/${router.query.walletAddress}/proposals`);
+  }, [router.query.walletAddress, state.address, state.attemptedInitialLogin]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">

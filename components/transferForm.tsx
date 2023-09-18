@@ -415,7 +415,7 @@ function TransferForm(
           <button
             className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
             onClick={() => {
-              router.push("/proposals");
+              router.push(`/${state.currentContract}/proposals`);
             }}
           >
             Go to proposals
