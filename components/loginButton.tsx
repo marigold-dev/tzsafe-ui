@@ -1,37 +1,15 @@
 import { useContext } from "react";
-import { PREFERED_NETWORK, RPC_URL } from "../context/config";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import { connectWallet } from "../utils/connectWallet";
 
 const LoginButton = () => {
-  const state = useContext(AppStateContext);
-  const dispatch = useContext(AppDispatchContext);
-
-  const connectWallet = async (): Promise<void> => {
-    try {
-      await state?.beaconWallet!.requestPermissions({
-        network: {
-          type: PREFERED_NETWORK,
-          rpcUrl: RPC_URL,
-        },
-      });
-      const userAddress: string = await state?.beaconWallet!.getPKH()!;
-      const balance = await state?.connection.tz.getBalance(userAddress);
-      let s = await state?.beaconWallet!.client.getActiveAccount();
-      dispatch!({
-        type: "login",
-        accountInfo: s!,
-        address: userAddress,
-        balance: balance!.toString(),
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const state = useContext(AppStateContext)!;
+  const dispatch = useContext(AppDispatchContext)!;
 
   return (
     <button
       onClick={async () => {
-        await connectWallet();
+        await connectWallet(state, dispatch);
       }}
       type="button"
       className="rounded-full p-1 text-primary hover:text-white focus:ring-white focus:ring-offset-2  focus:ring-offset-gray-800 md:bg-primary md:px-2 md:text-black"

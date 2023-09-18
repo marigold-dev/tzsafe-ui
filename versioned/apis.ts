@@ -18,6 +18,7 @@ import Version0_0_9 from "./version0_0_9";
 import Version0_0_10 from "./version0_0_10";
 import Version0_0_11 from "./version0_0_11";
 import Version0_1_1 from "./version0_1_1";
+import Version0_3_0 from "./version0_3_0";
 
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
@@ -31,6 +32,7 @@ const dispatch: {
   "0.0.10": (version, address) => new Version0_0_10(version, address),
   "0.0.11": (version, address) => new Version0_0_11(version, address),
   "0.1.1": (version, address) => new Version0_1_1(version, address),
+  "0.3.0": (version, address) => new Version0_3_0(version, address),
   "unknown version": () => {
     throw new Error("not implemented!");
   },
@@ -44,6 +46,7 @@ const dispatchUi: {
   "0.0.10": Version0_0_10,
   "0.0.11": Version0_0_11,
   "0.1.1": Version0_1_1,
+  "0.3.0": Version0_3_0,
   "unknown version": () => {
     throw new Error("not implemented!");
   },
@@ -92,6 +95,7 @@ function map2Object(x: any): any {
 
   return x;
 }
+
 let lambdaTable: {
   [key: string]: <acc, t extends Expr>(acc: acc, item: t) => acc;
 } = {
@@ -161,6 +165,7 @@ function matchLambda<acc extends { [key: string]: acc[typeof key] }>(
     return null;
   }
 }
+
 export {
   toStorage,
   signers,

@@ -152,6 +152,11 @@ class P2PClient extends WalletClient {
       transactionHash,
     });
   }
+
+  async disconnectAll() {
+    const peers = await this.getPeers();
+    return Promise.all(peers.map(peer => this.sendDisconnectToPeer(peer)));
+  }
 }
 
 export default P2PClient;

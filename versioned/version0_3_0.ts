@@ -1,12 +1,17 @@
-import { Parser } from "@taquito/michel-codec";
-import { emitMicheline } from "@taquito/michel-codec";
+import {
+  emitMicheline,
+  Parser,
+  packDataBytes,
+  MichelsonType,
+} from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import {
   BigMapAbstraction,
   Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { char2Bytes, bytes2Char, num2PaddedHex } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
@@ -18,7 +23,7 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/Proposal0_1_1";
+} from "../types/Proposal0_3_0";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
@@ -29,16 +34,143 @@ import { proposals, timeoutAndHash, Versioned } from "./interface";
 function convert(x: string): string {
   return char2Bytes(x);
 }
-class Version0_1_1 extends Versioned {
+
+const proposalsType: MichelsonType = {
+  prim: "list",
+  args: [
+    {
+      prim: "or",
+      args: [
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "set",
+                  args: [
+                    {
+                      prim: "address",
+                    },
+                  ],
+                  annots: ["%add_owners"],
+                },
+                {
+                  prim: "int",
+                  annots: ["%adjust_effective_period"],
+                },
+              ],
+            },
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "nat",
+                  annots: ["%adjust_threshold"],
+                },
+                {
+                  prim: "pair",
+                  args: [
+                    {
+                      prim: "address",
+                      annots: ["%target"],
+                    },
+                    {
+                      prim: "unit",
+                      annots: ["%parameter"],
+                    },
+                    {
+                      prim: "mutez",
+                      annots: ["%amount"],
+                    },
+                  ],
+                  annots: ["%execute"],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "pair",
+                  args: [
+                    {
+                      prim: "option",
+                      args: [
+                        {
+                          prim: "lambda",
+                          args: [
+                            {
+                              prim: "unit",
+                            },
+                            {
+                              prim: "operation",
+                            },
+                          ],
+                        },
+                      ],
+                      annots: ["%lambda"],
+                    },
+                    {
+                      prim: "option",
+                      args: [
+                        {
+                          prim: "bytes",
+                        },
+                      ],
+                      annots: ["%metadata"],
+                    },
+                  ],
+                  annots: ["%execute_lambda"],
+                },
+                {
+                  prim: "set",
+                  args: [
+                    {
+                      prim: "address",
+                    },
+                  ],
+                  annots: ["%remove_owners"],
+                },
+              ],
+            },
+            {
+              prim: "pair",
+              args: [
+                {
+                  prim: "address",
+                  annots: ["%target"],
+                },
+                {
+                  prim: "unit",
+                  annots: ["%parameter"],
+                },
+                {
+                  prim: "mutez",
+                  annots: ["%amount"],
+                },
+              ],
+              annots: ["%transfer"],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+class Version0_3_0 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: proposals,
-    convertTezToMutez: boolean = true
+    proposals: proposals
   ): Promise<[boolean, string]> {
-    // Avoid unused variable
-    let _ = convertTezToMutez;
-
     let params = cc.methods
       .create_proposal(
         proposals.transfers.map(x => {
@@ -47,9 +179,7 @@ class Version0_1_1 extends Versioned {
               return {
                 transfer: {
                   target: x.values.to,
-                  amount: convertTezToMutez
-                    ? tezToMutez(Number(x.values.amount))
-                    : Number(x.values.amount),
+                  amount: tezToMutez(Number(x.values.amount)),
                   parameter: {},
                 },
               };
@@ -223,17 +353,23 @@ class Version0_1_1 extends Versioned {
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
-    let proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    let prop: any = await proposals.proposals.get(BigNumber(proposal));
-    let batch = t.wallet.batch();
+    const proposals: { proposals: BigMapAbstraction } = await cc.storage();
+    const bProposal = num2PaddedHex(proposal);
+    const prop: any = await proposals.proposals.get(bProposal);
+    const batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
+        cc.methods.sign_proposal(bProposal, prop.contents, result)
       );
     }
     if (resolve) {
+      const schema = new Schema(proposalsType);
+      const proposalsData = schema.Encode(prop.contents);
+      const packed = packDataBytes(proposalsData, proposalsType).bytes;
+
       await batch.withContractCall(
-        cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
+        // resolve proposal
+        cc.methods.proof_of_event_challenge(bProposal, packed)
       );
     }
     let op = await batch.send();
@@ -290,7 +426,7 @@ class Version0_1_1 extends Versioned {
       effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.1.1",
+      version: "0.3.0",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -383,4 +519,4 @@ class Version0_1_1 extends Versioned {
   }
 }
 
-export default Version0_1_1;
+export default Version0_3_0;

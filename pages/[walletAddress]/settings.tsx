@@ -1,26 +1,43 @@
 import { getSenderId } from "@airgap/beacon-sdk";
 import { Cross1Icon } from "@radix-ui/react-icons";
+import { useRouter } from "next/router";
 import { useContext, useEffect, useMemo, useState } from "react";
-import Meta from "../components/meta";
-import SignersForm from "../components/signersForm";
-import { AppDispatchContext, AppStateContext } from "../context/state";
-import useIsOwner from "../utils/useIsOwner";
+import Meta from "../../components/meta";
+import SignersForm from "../../components/signersForm";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
+import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
-  const [canDelete, setCanDelete] = useState(true);
+  const router = useRouter();
   const isOwner = useIsOwner();
 
+  const [canDelete, setCanDelete] = useState(
+    !!state.currentContract && !!state.contracts[state.currentContract]
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
+
   useEffect(() => {
-    if (canDelete) return;
+    (async () => {
+      if (!state.currentContract) return;
+
+      setCanDelete(
+        !!state.currentContract && !!state.contracts[state.currentContract]
+      );
+    })();
+  }, [state.currentContract, state.contracts]);
+
+  useEffect(() => {
+    if (!isDeleting) return;
 
     const timeoutId = setTimeout(() => {
+      setIsDeleting(false);
       setCanDelete(true);
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [canDelete]);
+  }, [isDeleting]);
 
   const connectedDapps = useMemo(
     () =>
@@ -37,19 +54,27 @@ const Settings = () => {
 
           <button
             className={`${
-              canDelete ? "" : "pointer-events-none opacity-50"
+              canDelete && !isDeleting ? "" : "pointer-events-none opacity-50"
             } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
               if (!state.currentContract) return;
 
+              setIsDeleting(true);
               setCanDelete(false);
               dispatch!({
                 type: "removeContract",
                 address: state.currentContract,
               });
+
+              const addresses = Object.keys(state.contracts);
+              if (addresses.length === 0) {
+                router.replace(`/`);
+              } else {
+                router.replace(`/${addresses[0]}/settings`);
+              }
             }}
           >
-            {canDelete ? `Delete wallet` : `Deleting wallet`}
+            {isDeleting ? `Deleting wallet` : `Delete wallet`}
           </button>
         </div>
       </div>
@@ -117,7 +142,9 @@ const Settings = () => {
               <SignersForm
                 disabled={!isOwner}
                 address={state.currentContract}
-                contract={state.contracts[state.currentContract]}
+                contract={
+                  state.contracts[state.currentContract] ?? state.currentStorage
+                }
                 closeModal={console.log}
               />
             </>

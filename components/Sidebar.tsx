@@ -9,6 +9,7 @@ import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import React, {
   forwardRef,
   useContext,
@@ -19,9 +20,11 @@ import React, {
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
+import { fetchContract } from "../utils/fetchContract";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
+import Spinner from "./Spinner";
 
 type selectItemProps = {
   name: string | undefined;
@@ -33,9 +36,13 @@ type selectItemProps = {
 };
 
 const linkClass = (isActive: boolean, isDisabled: boolean = false) =>
-  `${isActive ? "text-zinc-100" : "text-zinc-400"} ${
+  `${
     // There's a bug with opacity, so I set manually text color
-    isDisabled ? "pointer-events-none text-[#707078]" : ""
+    isDisabled
+      ? "pointer-events-none text-[#707078]"
+      : isActive
+      ? "text-zinc-100"
+      : "text-zinc-400"
   } hover:text-zinc-100 flex items-center space-x-3`;
 
 const SelectedItem = ({
@@ -76,13 +83,15 @@ const SelectedItem = ({
 };
 
 const FixedTrigger = forwardRef<any, any>((props: any, ref: any) => {
-  const { children, onClick, onPointerDown, ...rest } = props;
+  const { children, onClick, onPointerDown, disabled, ...rest } = props;
 
   return (
     <button
       ref={ref}
       {...rest}
-      className="radix-state-delayed-open:bg-zinc-50 radix-state-instant-open:bg-zinc-50 radix-state-on:bg-zinc-900 radix-state-open:bg-zinc-900 group inline-flex w-full select-none items-center justify-between rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 hover:bg-zinc-900 focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75"
+      className={`radix-state-delayed-open:bg-zinc-50 radix-state-instant-open:bg-zinc-50 radix-state-on:bg-zinc-900 radix-state-open:bg-zinc-900 group inline-flex w-full select-none items-center justify-between rounded-md bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-100 ${
+        disabled ? "cursor-default" : "hover:bg-zinc-900"
+      } focus:outline-none focus-visible:ring focus-visible:ring-red-500 focus-visible:ring-opacity-75`}
       onClick={e => {
         if ((e.target as HTMLLinkElement).dataset.name === "copy") return;
 
@@ -103,10 +112,13 @@ FixedTrigger.displayName = "FixedTrigger";
 const Sidebar = ({
   isOpen,
   onClose,
+  isLoading,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  isLoading: boolean;
 }) => {
+  const router = useRouter();
   const path = usePathname();
 
   const [isClient, setIsClient] = useState(false);
@@ -119,17 +131,6 @@ const Sidebar = ({
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    const entries = Object.entries(state.contracts);
-
-    if (entries.length === 0 || !!state.currentContract) return;
-
-    dispatch({
-      type: "setCurrentContract",
-      payload: entries[0][0],
-    });
-  }, [state.contracts]);
 
   useEffect(() => {
     if (!state.currentContract) return;
@@ -182,29 +183,61 @@ const Sidebar = ({
         <ArrowLeftIcon className="h-4 w-4" />
       </button>
       <Select.Root
-        onValueChange={payload => {
+        onValueChange={async payload => {
+          router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
           dispatch({
             type: "setCurrentContract",
             payload,
           });
+
+          const storage = await fetchContract(state.connection, payload);
+
+          if (!storage) return;
+
+          dispatch({
+            type: "setCurrentStorage",
+            payload: { ...storage, address: payload },
+          });
         }}
         value={currentContract}
+        disabled={Object.values(state.contracts).length === 0}
       >
         <Select.Trigger asChild aria-label="Wallets">
-          <FixedTrigger>
-            <SelectedItem
-              name={state.aliases[currentContract]}
-              address={currentContract}
-              balance={state.contracts[currentContract]?.balance}
-              threshold={
-                !!state.contracts[currentContract]
-                  ? `${state.contracts[currentContract].threshold}/${
-                      signers(state.contracts[currentContract]).length
-                    }`
-                  : "0/0"
-              }
-              version={state.contracts[currentContract]?.version}
-            />
+          <FixedTrigger disabled={Object.values(state.contracts).length === 0}>
+            {isLoading ? (
+              <SelectedItem
+                name={"-"}
+                address={""}
+                balance={"0"}
+                threshold={"0/0"}
+                version={"0.0.0"}
+              />
+            ) : (
+              <SelectedItem
+                name={state.aliases[currentContract]}
+                address={currentContract}
+                balance={
+                  state.contracts[currentContract]?.balance ??
+                  state.currentStorage?.balance
+                }
+                threshold={
+                  !!state.contracts[currentContract]
+                    ? `${state.contracts[currentContract].threshold}/${
+                        signers(state.contracts[currentContract]).length
+                      }`
+                    : !!state.currentStorage
+                    ? `${state.currentStorage.threshold}/${
+                        signers(state.currentStorage).length
+                      }`
+                    : "0/0"
+                }
+                version={
+                  state.contracts[currentContract]?.version ??
+                  state.currentStorage?.version
+                }
+              />
+            )}
+
             <Select.Icon className="ml-2">
               <ChevronDownIcon />
             </Select.Icon>
@@ -249,8 +282,8 @@ const Sidebar = ({
 
       <div className="mt-8 flex flex-col space-y-4">
         <Link
-          href="/proposals"
-          className={linkClass(path === "/proposals")}
+          href={`/${state.currentContract}/proposals`}
+          className={linkClass(path?.includes("/proposals") ?? false)}
           onClick={onClose}
         >
           <svg
@@ -268,8 +301,11 @@ const Sidebar = ({
           <span>Proposals</span>
         </Link>
         <Link
-          href="/new-proposal"
-          className={linkClass(path === "/new-proposal", !isOwner)}
+          href={`/${state.currentContract}/new-proposal`}
+          className={linkClass(
+            path?.includes("/new-proposal") ?? false,
+            !isOwner
+          )}
           onClick={onClose}
         >
           <svg
@@ -287,8 +323,11 @@ const Sidebar = ({
           <span>New proposal</span>
         </Link>
         <Link
-          href="/fund-wallet"
-          className={linkClass(path === "/fund-wallet", !state.address)}
+          href={`/${state.currentContract}/fund-wallet`}
+          className={linkClass(
+            path?.includes("/fund-wallet") ?? false,
+            !state.address
+          )}
           onClick={onClose}
         >
           <svg
@@ -426,8 +465,8 @@ const Sidebar = ({
           <span>Fund wallet</span>
         </Link>
         <Link
-          href="/settings"
-          className={linkClass(path === "/settings")}
+          href={`/${state.currentContract}/settings`}
+          className={linkClass(path?.includes("/settings") ?? false)}
           onClick={onClose}
         >
           <svg
@@ -445,8 +484,8 @@ const Sidebar = ({
           <span>Settings</span>
         </Link>
         <Link
-          href="/history"
-          className={linkClass(path === "/history")}
+          href={`/${state.currentContract}/history`}
+          className={linkClass(path?.includes("/history") ?? false)}
           onClick={onClose}
         >
           <svg

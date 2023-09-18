@@ -22,6 +22,7 @@ type tezosState = {
   address: string | null;
   balance: string | null;
   currentContract: string | null;
+  currentStorage: contractStorage | null;
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
@@ -36,6 +37,7 @@ type tezosState = {
   };
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
+  attemptedInitialLogin: boolean;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -67,6 +69,7 @@ let emptyState = (): tezosState => {
     balance: null,
     address: null,
     currentContract: null,
+    currentStorage: null,
     accountInfo: null,
     connection,
     favouriteContract: null,
@@ -75,6 +78,7 @@ let emptyState = (): tezosState => {
     delegatorAddresses: undefined,
     connectedDapps: {},
     proposalRefresher: 0,
+    attemptedInitialLogin: false,
   };
 };
 
@@ -99,6 +103,10 @@ type action =
   | {
       type: "updateContract";
       payload: { address: string; contract: contractStorage };
+    }
+  | {
+      type: "setCurrentStorage";
+      payload: contractStorage & { address: string };
     }
   | {
       type: "setCurrentContract";
@@ -131,6 +139,10 @@ type action =
     }
   | {
       type: "refreshProposals";
+    }
+  | {
+      type: "setAttemptedInitialLogin";
+      payload: boolean;
     };
 
 const saveState = (state: tezosState) => {
@@ -267,6 +279,10 @@ function reducer(state: tezosState, action: action): tezosState {
     case "init": {
       return {
         ...action.payload,
+        attemptedInitialLogin: state.attemptedInitialLogin,
+        currentContract:
+          state.currentContract ?? action.payload.currentContract,
+        currentStorage: state.currentStorage,
         aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
     }
@@ -276,6 +292,7 @@ function reducer(state: tezosState, action: action): tezosState {
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
+        attemptedInitialLogin: true,
       };
     }
     case "logout": {
@@ -300,12 +317,13 @@ function reducer(state: tezosState, action: action): tezosState {
           : state.favouriteContract;
 
       const addresses = Object.keys(contracts);
+      const currentContract = addresses.length > 0 ? addresses[0] : null;
 
       const newState = {
         ...state,
         contracts,
         favouriteContract: fav,
-        currentContract: addresses.length > 0 ? addresses[0] : null,
+        currentContract,
         aliases,
       };
 
@@ -332,6 +350,8 @@ function reducer(state: tezosState, action: action): tezosState {
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
       return { ...state, proposalRefresher: state.proposalRefresher + 1 };
+    case "setAttemptedInitialLogin":
+      return { ...state, attemptedInitialLogin: action.payload };
     default: {
       throw "notImplemented";
     }

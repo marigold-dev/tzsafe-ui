@@ -73,6 +73,7 @@ type version =
   | "0.0.10"
   | "0.0.11"
   | "0.1.1"
+  | "0.3.0"
   | "unknown version";
 
 export enum TransferType {

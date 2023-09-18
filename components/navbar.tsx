@@ -14,15 +14,15 @@ const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();
-  const state = useContext(AppStateContext);
+  const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext);
 
   const disconnectWallet = async (): Promise<void> => {
     if (state?.beaconWallet) {
       await state.beaconWallet.clearActiveAccount();
     }
+
     dispatch!({ type: "logout" });
-    router.replace("/");
   };
 
   const closeMenu = () => setMenuOpen(false);
@@ -38,7 +38,7 @@ const NavBar = (_: React.PropsWithChildren) => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link
-                href={"/"}
+                href="/"
                 className="flex items-center text-xl font-bold tracking-wider text-white"
               >
                 <Image
@@ -50,9 +50,11 @@ const NavBar = (_: React.PropsWithChildren) => {
                   <p className="ml-4 text-xs">BETA</p>
 
                   <p className="ml-4 mt-1 text-xs">
-                    {PREFERED_NETWORK === NetworkType.GHOSTNET
+                    {PREFERED_NETWORK === NetworkType.MAINNET
+                      ? "Mainnet"
+                      : PREFERED_NETWORK === NetworkType.GHOSTNET
                       ? "Ghostnet"
-                      : "Mainnet"}
+                      : "Custom"}
                   </p>
                 </div>
               </Link>
@@ -122,9 +124,9 @@ const NavBar = (_: React.PropsWithChildren) => {
                     aria-labelledby="user-menu-button"
                   >
                     <button
-                      onClick={e => {
+                      onClick={async e => {
                         e.preventDefault();
-                        disconnectWallet();
+                        await disconnectWallet();
                       }}
                       className="text-md block px-4 py-2 text-dark"
                       role="menuitem"

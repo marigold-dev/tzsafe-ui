@@ -389,7 +389,11 @@ function TransferForm(
           <a
             className="text-zinc-200 hover:text-zinc-300"
             href={`https://${
-              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+              PREFERED_NETWORK === NetworkType.MAINNET
+                ? ""
+                : PREFERED_NETWORK === NetworkType.GHOSTNET
+                ? "ghostnet."
+                : `${PREFERED_NETWORK}.`
             }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
@@ -411,7 +415,7 @@ function TransferForm(
           <button
             className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
             onClick={() => {
-              router.push("/proposals");
+              router.push(`/${state.currentContract}/proposals`);
             }}
           >
             Go to proposals

@@ -1,5 +1,4 @@
-import { NetworkType } from "@airgap/beacon-sdk";
-import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { OpKind } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
@@ -21,14 +20,14 @@ import {
 } from "../context/state";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
-import { toStorage } from "../versioned/apis";
+import { signers, toStorage } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import { fa1_2Token } from "./FA1_2";
 import { fa2Token } from "./FA2Transfer";
 import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
 import ContractLoader from "./contractLoader";
-import renderError from "./formUtils";
+import renderError, { renderWarning } from "./formUtils";
 
 const FETCH_COUNT = 20;
 
@@ -282,15 +281,25 @@ function TopUp(props: {
           const cc = await c.storage();
           const version = await fetchVersion(c);
 
-          state.contracts[props.address]
-            ? dispatch({
-                type: "updateContract",
-                payload: {
-                  address: props.address,
-                  contract: toStorage(version, cc, balance),
-                },
-              })
-            : null;
+          const storage = toStorage(version, cc, balance);
+
+          if (!!state.contracts[props.address]) {
+            dispatch({
+              type: "updateContract",
+              payload: {
+                address: props.address,
+                contract: toStorage(version, cc, balance),
+              },
+            });
+          } else {
+            storage.address = props.address;
+
+            dispatch({
+              type: "setCurrentStorage",
+              payload: storage as contractStorage & { address: string },
+            });
+          }
+
           setResult(true);
         } catch (e) {
           console.log(e);
@@ -501,6 +510,11 @@ function TopUp(props: {
                 </section>
               )}
             </FieldArray>
+            {!signers(
+              state.contracts[state.currentContract ?? ""] ??
+                state.currentStorage
+            ).includes(state.address ?? "") &&
+              renderWarning("You're not the owner of this wallet")}
             <div className="mt-4 flex w-full justify-center">
               <button
                 className="my-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
