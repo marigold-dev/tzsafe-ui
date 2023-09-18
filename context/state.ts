@@ -276,6 +276,11 @@ function reducer(state: tezosState, action: action): tezosState {
       saveState(newState);
 
       return newState;
+    case "setCurrentStorage":
+      return {
+        ...state,
+        currentStorage: action.payload,
+      };
     case "init": {
       return {
         ...action.payload,
@@ -353,7 +358,7 @@ function reducer(state: tezosState, action: action): tezosState {
     case "setAttemptedInitialLogin":
       return { ...state, attemptedInitialLogin: action.payload };
     default: {
-      throw "notImplemented";
+      throw `notImplemented: ${action.type}`;
     }
   }
 }

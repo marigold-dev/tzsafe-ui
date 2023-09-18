@@ -17,6 +17,7 @@ type props<T> = {
   renderOption?: (option: option<T>) => React.ReactNode;
   className?: string;
   error?: string;
+  withSearch?: boolean;
   clearInputOnClose?: boolean;
 };
 
@@ -34,6 +35,7 @@ const Select = <T,>({
   error,
   loading = false,
   withSeeMore = false,
+  withSearch = true,
   clearInputOnClose = false,
 }: props<T>) => {
   const [searchValue, setSearchValue] = useState("");
@@ -78,24 +80,27 @@ const Select = <T,>({
         className="relative mt-1 max-h-52 space-y-1 overflow-y-auto overscroll-contain rounded bg-zinc-700"
         style={{ zIndex: 2 }}
       >
-        <div className="sticky top-0 z-[1] bg-zinc-700 px-2 pt-2">
-          <input
-            type="text"
-            className=" mb-2 w-full rounded px-2 py-1 text-sm text-zinc-900"
-            placeholder="Search"
-            onChange={e => {
-              setSearchValue(e.target.value);
-              onSearch(e.target.value);
-            }}
-            value={searchValue}
-          />
-        </div>
+        {withSearch && (
+          <div className="sticky top-0 z-[1] bg-zinc-700 px-2 pt-2">
+            <input
+              type="text"
+              className=" mb-2 w-full rounded px-2 py-1 text-sm text-zinc-900"
+              placeholder="Search"
+              onChange={e => {
+                setSearchValue(e.target.value);
+                onSearch(e.target.value);
+              }}
+              value={searchValue}
+            />
+          </div>
+        )}
+
         {loading ? (
           <div className="flex h-full w-full items-center justify-center p-2">
             <Spinner />
           </div>
         ) : (
-          <div className="space-y-2 px-2 pb-2">
+          <div className={`${!withSearch ? "mt-2" : ""} space-y-2 px-2 pb-2`}>
             {!!error ? (
               <p className="py-2 text-center text-red-500">{error}</p>
             ) : options.length === 0 ? (
@@ -104,7 +109,9 @@ const Select = <T,>({
               options.map(v => (
                 <Ariakit.SelectItem
                   key={v.id}
-                  className="combobox-item cursor-pointer rounded p-2"
+                  className={`combobox-item cursor-pointer rounded ${
+                    v.id === value?.id ? "bg-zinc-600" : ""
+                  } p-2`}
                   value={v.value}
                   setValueOnClick
                 >
