@@ -283,7 +283,10 @@ const Sidebar = ({
       <div className="mt-8 flex flex-col space-y-4">
         <Link
           href={`/${state.currentContract}/proposals`}
-          className={linkClass(path?.includes("/proposals") ?? false)}
+          className={linkClass(
+            path?.includes("/proposals") ?? false,
+            isLoading
+          )}
           onClick={onClose}
         >
           <svg
@@ -304,7 +307,7 @@ const Sidebar = ({
           href={`/${state.currentContract}/new-proposal`}
           className={linkClass(
             path?.includes("/new-proposal") ?? false,
-            !isOwner
+            !isOwner || isLoading
           )}
           onClick={onClose}
         >
@@ -326,7 +329,7 @@ const Sidebar = ({
           href={`/${state.currentContract}/fund-wallet`}
           className={linkClass(
             path?.includes("/fund-wallet") ?? false,
-            !state.address
+            !state.address || isLoading
           )}
           onClick={onClose}
         >
@@ -466,7 +469,7 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/settings`}
-          className={linkClass(path?.includes("/settings") ?? false)}
+          className={linkClass(path?.includes("/settings") ?? false, isLoading)}
           onClick={onClose}
         >
           <svg
@@ -485,7 +488,7 @@ const Sidebar = ({
         </Link>
         <Link
           href={`/${state.currentContract}/history`}
-          className={linkClass(path?.includes("/history") ?? false)}
+          className={linkClass(path?.includes("/history") ?? false, isLoading)}
           onClick={onClose}
         >
           <svg
@@ -506,7 +509,7 @@ const Sidebar = ({
           href="https://docs.tzsafe.marigold.dev"
           target="_blank"
           rel="noreferrer"
-          className={linkClass(false)}
+          className={linkClass(false, isLoading)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
