@@ -55,7 +55,9 @@ const ProposalCard = ({
   const proposalDate = new Date(proposer.timestamp);
   const resolveDate = new Date(resolver?.timestamp ?? 0);
 
-  const allSigners = signers(state.contracts[currentContract]);
+  const allSigners = signers(
+    state.contracts[currentContract] ?? state.currentStorage
+  );
 
   return (
     <div
@@ -228,31 +230,33 @@ const ProposalCard = ({
               </span>
               <span className="justify-self-end">Proposed</span>
             </div>
-            {activities.map(({ signer, hasApproved }, i) => (
-              <div
-                key={i}
-                className={`relative grid grid-cols-3 ${
-                  !allSigners.includes(signer)
-                    ? "before:absolute before:left-0 before:right-0 before:top-1/2 before:h-px before:w-full before:translate-y-px before:bg-zinc-300"
-                    : ""
-                }`}
-              >
-                <span className="w-full justify-self-start font-light text-zinc-500">
-                  -
-                </span>
-                <span className="justify-self-center">
-                  <span className="hidden lg:inline">
-                    <Alias address={signer} />
+            {activities.map(({ signer, hasApproved }, i) => {
+              return (
+                <div
+                  key={i}
+                  className={`relative grid grid-cols-3 ${
+                    !allSigners.includes(signer)
+                      ? "before:absolute before:left-0 before:right-0 before:top-1/2 before:h-px before:w-full before:translate-y-px before:bg-zinc-300"
+                      : ""
+                  }`}
+                >
+                  <span className="w-full justify-self-start font-light text-zinc-500">
+                    -
                   </span>
-                  <span className="lg:hidden">
-                    <Alias address={signer} length={3} />
+                  <span className="justify-self-center">
+                    <span className="hidden lg:inline">
+                      <Alias address={signer} />
+                    </span>
+                    <span className="lg:hidden">
+                      <Alias address={signer} length={3} />
+                    </span>
                   </span>
-                </span>
-                <span className="justify-self-end">
-                  {hasApproved ? "Approved" : "Rejected"}
-                </span>
-              </div>
-            ))}
+                  <span className="justify-self-end">
+                    {hasApproved ? "Approved" : "Rejected"}
+                  </span>
+                </div>
+              );
+            })}
             {!!resolver && (
               <div className="grid grid-cols-3">
                 <span className="justify-self-start font-light">
