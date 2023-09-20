@@ -46,11 +46,7 @@ export default function App({ Component, pageProps }: AppProps) {
       contracts.length > 0 &&
       !!state.currentContract
     ) {
-      router.replace(
-        `/${
-          state.attemptedInitialLogin ? state.currentContract : contracts[0]
-        }/proposals`
-      );
+      router.replace(`/${contracts[0]}/proposals`);
       return;
     }
 
