@@ -8,10 +8,15 @@ function Home() {
 
       <div>
         <div>
-          <div className="mx-auto  flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-extrabold text-white">
               Welcome to TzSafe
             </h1>
+            <p className="mt-6 w-full text-white lg:w-3/5">
+              Tzsafe is a multisig wallet aiming at providing better assurance
+              of security and management of ownership than a traditional
+              single-signed wallet.
+            </p>
           </div>
         </div>
         <main className="grow">

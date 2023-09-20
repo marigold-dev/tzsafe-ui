@@ -2,34 +2,34 @@ import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
-import Alias from "../components/Alias";
-import HistoryFaToken from "../components/HistoryFaToken";
-import ProposalCard from "../components/ProposalCard";
-import Spinner from "../components/Spinner";
-import Meta from "../components/meta";
-import Modal from "../components/modal";
-import ProposalSignForm from "../components/proposalSignForm";
-import fetchVersion from "../context/metadata";
+import Alias from "../../components/Alias";
+import HistoryFaToken from "../../components/HistoryFaToken";
+import ProposalCard from "../../components/ProposalCard";
+import Spinner from "../../components/Spinner";
+import Meta from "../../components/meta";
+import Modal from "../../components/modal";
+import ProposalSignForm from "../../components/proposalSignForm";
+import fetchVersion from "../../context/metadata";
 import {
   getProposals,
   getTokenTransfers,
   getTransfers,
-} from "../context/proposals";
+} from "../../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
-} from "../context/state";
+} from "../../context/state";
 import {
   TransferType,
   mutezTransfer,
   proposal,
   tokenTransfer,
   version,
-} from "../types/display";
-import { mutezToTez } from "../utils/tez";
-import useWalletTokens from "../utils/useWalletTokens";
-import { getProposalsId, toProposal, toStorage } from "../versioned/apis";
+} from "../../types/display";
+import { mutezToTez } from "../../utils/tez";
+import useWalletTokens from "../../utils/useWalletTokens";
+import { getProposalsId, toProposal, toStorage } from "../../versioned/apis";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
@@ -88,6 +88,7 @@ const History = () => {
           )
         : fetchVersion(c));
       const updatedContract = toStorage(version, cc, balance);
+
       state.contracts[state.currentContract]
         ? dispatch({
             type: "updateContract",
@@ -97,6 +98,7 @@ const History = () => {
             },
           })
         : null;
+
       const bigmap: { key: string; value: any }[] = await getProposals(
         getProposalsId(version, cc)
       );
