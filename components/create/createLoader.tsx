@@ -11,23 +11,24 @@ import { toStorage } from "../../versioned/apis";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
-  let state = useContext(AppStateContext);
-  let dispatch = useContext(AppDispatchContext);
-  let [address, setAddress] = useState({ status: 0, address: "" });
-  let [loading, setLoading] = useState(true);
+  const state = useContext(AppStateContext);
+  const dispatch = useContext(AppDispatchContext);
+  const [address, setAddress] = useState({ status: 0, address: "" });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       if (loading && address.status == 0) {
         try {
-          let metablob = await fromIpfs();
-          let deploy = await state?.connection.wallet
+          const metablob = await fromIpfs();
+          const deploy = await state?.connection.wallet
             .originate({
               code: contract,
               storage: {
                 proposal_counter: 0,
                 proposals: [],
                 owners: formState!.validators.map(x => x.address),
+                archives: [],
                 threshold: formState!.requiredSignatures,
                 effective_period: Math.ceil(
                   durationOfDaysHoursMinutes(

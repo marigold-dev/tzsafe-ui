@@ -113,14 +113,15 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return c.owners;
     }
     if (c.version === "unknown version") {
       return [];
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
   static proposalCounter(c: contractStorage): BigNumber {
@@ -131,15 +132,15 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
-      // TODO: owners???
       return c.owners;
     }
     if (c.version === "unknown version") {
       return BigNumber(0);
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
   static lambdaForm(c: contractStorage): {
@@ -185,7 +186,8 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return {
         values: {
@@ -226,7 +228,7 @@ abstract class Versioned {
     if (c.version === "unknown version") {
       return { fields: [], values: {} };
     }
-    let _: never = c.version;
+
     throw new Error("Invalid version");
   }
 
@@ -279,7 +281,8 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return {
         values: {
@@ -316,7 +319,7 @@ abstract class Versioned {
     if (c.version === "unknown version") {
       return { fields: [], values: {} };
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
 

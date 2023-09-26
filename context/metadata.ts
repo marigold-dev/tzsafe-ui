@@ -16,6 +16,7 @@ const dispatch: { [key: string]: version } = {
   "0.0.11": "0.0.11",
   "0.1.1": "0.1.1",
   "0.3.0": "0.3.0",
+  "0.3.1": "0.3.1",
 };
 
 // Those values are from tzkt api: /v1/contracts
@@ -27,6 +28,8 @@ type codeHash = string;
 const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   "-483287042:521053333": "0.0.11",
   "-483287042:-426350137": "0.1.1",
+  "-933474574:1358594366": "0.3.0",
+  "1576695458:46756700": "0.3.1",
 };
 
 async function fetchVersion(

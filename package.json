@@ -11,7 +11,8 @@
     "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/",
     "prepare": "husky install",
     "dev:test": "vitest",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "tsc"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
