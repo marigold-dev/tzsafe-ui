@@ -42,17 +42,18 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     if (!path || !state.currentContract) return;
 
+    const contracts = Object.keys(state.contracts);
     if (
       (path === "/" || path === "") &&
-      Object.values(state.contracts).length > 0 &&
+      contracts.length > 0 &&
       !!state.currentContract
     ) {
-      router.replace(`/${state.currentContract}/proposals`);
+      router.replace(`/${contracts[0]}/proposals`);
       return;
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract, path]);
+  }, [state.currentContract, path, state.attemptedInitialLogin]);
 
   useEffect(() => {
     (async () => {
