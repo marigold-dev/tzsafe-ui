@@ -96,8 +96,14 @@ const History = () => {
           })
         : null;
 
+      cc.version = version;
+
       const bigmap: { key: string; value: any }[] =
-        await Versioned.proposalsHistory(cc, getProposalsId(version, cc));
+        await Versioned.proposalsHistory(
+          cc,
+          state.currentContract,
+          getProposalsId(version, cc)
+        );
       const response = await Promise.all([
         getTransfers(state.currentContract),
         getTokenTransfers(state.currentContract),
