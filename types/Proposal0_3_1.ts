@@ -6,9 +6,7 @@ type content =
   | { transfer: { amount: number; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }
-  | { change_threshold: number }
   | { adjust_threshold: number }
-  | { execute: string }
   | { adjust_effective_period: number };
 
 type proposal = {

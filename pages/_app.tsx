@@ -164,7 +164,6 @@ export default function App({ Component, pageProps }: AppProps) {
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
         });
-        setDebugEnabled(true);
 
         dispatch!({ type: "beaconConnect", payload: wallet });
         dispatch!({ type: "p2pConnect", payload: p2pClient });
