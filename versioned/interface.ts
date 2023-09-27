@@ -1,11 +1,20 @@
 import { Parser } from "@taquito/michel-codec";
+import { unpackDataBytes } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { API_URL } from "../context/config";
+import { proposalSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
 import { ownersForm } from "./forms";
+
+type proofOfEvent = {
+  payload: {
+    payload: string;
+    challenge_id: string;
+  };
+};
 
 export type timeoutAndHash = [boolean, string];
 
@@ -93,9 +102,24 @@ abstract class Versioned {
 
   static proposalsHistory(
     c: contractStorage,
+    address: string,
     bigmapId: string
   ): Promise<Array<{ key: string; value: any }>> {
     if (c.version === "0.3.1") {
+      fetch(
+        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event`
+      )
+        .then(res => res.json())
+        .then((events: Array<proofOfEvent>) => {
+          console.log(
+            events.map(event =>
+              proposalSchema_0_3_1.Execute(
+                unpackDataBytes({ bytes: event.payload.payload })
+              )
+            )
+          );
+          return [];
+        });
       return Promise.resolve([]);
     } else {
       return fetch(

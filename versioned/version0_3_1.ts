@@ -1,10 +1,4 @@
-import {
-  emitMicheline,
-  Parser,
-  packDataBytes,
-  MichelsonType,
-} from "@taquito/michel-codec";
-import { Schema } from "@taquito/michelson-encoder";
+import { emitMicheline, Parser, packDataBytes } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
   Contract,
@@ -23,6 +17,8 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
+  arrayProposalSchema,
+  proposalsType,
 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
@@ -34,109 +30,6 @@ import { proposals, timeoutAndHash, Versioned } from "./interface";
 function convert(x: string): string {
   return char2Bytes(x);
 }
-
-const proposalsType: MichelsonType = {
-  prim: "list",
-  args: [
-    {
-      prim: "or",
-      args: [
-        {
-          prim: "or",
-          args: [
-            {
-              prim: "or",
-              args: [
-                {
-                  prim: "set",
-                  args: [
-                    {
-                      prim: "address",
-                    },
-                  ],
-                  annots: ["%add_owners"],
-                },
-                {
-                  prim: "int",
-                  annots: ["%adjust_effective_period"],
-                },
-              ],
-            },
-            {
-              prim: "or",
-              args: [
-                {
-                  prim: "nat",
-                  annots: ["%adjust_threshold"],
-                },
-                {
-                  prim: "pair",
-                  args: [
-                    {
-                      prim: "lambda",
-                      args: [
-                        {
-                          prim: "unit",
-                        },
-                        {
-                          prim: "list",
-                          args: [
-                            {
-                              prim: "operation",
-                            },
-                          ],
-                        },
-                      ],
-                      annots: ["%lambda"],
-                    },
-                    {
-                      prim: "option",
-                      args: [
-                        {
-                          prim: "bytes",
-                        },
-                      ],
-                      annots: ["%metadata"],
-                    },
-                  ],
-                  annots: ["%execute_lambda"],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          prim: "or",
-          args: [
-            {
-              prim: "set",
-              args: [
-                {
-                  prim: "address",
-                },
-              ],
-              annots: ["%remove_owners"],
-            },
-            {
-              prim: "pair",
-              args: [
-                {
-                  prim: "address",
-                  annots: ["%target"],
-                },
-                {
-                  prim: "mutez",
-                  annots: ["%amount"],
-                },
-              ],
-              annots: ["%transfer"],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-};
 
 class Version0_3_0 extends Versioned {
   async submitTxProposals(
@@ -331,9 +224,7 @@ class Version0_3_0 extends Versioned {
     const prop: any = await proposals.proposals.get(proposalId);
     const batch = t.wallet.batch();
 
-    const proposalSchema = new Schema(proposalsType);
-
-    const proposalData = proposalSchema.Encode(prop.contents);
+    const proposalData = arrayProposalSchema.Encode(prop.contents);
 
     const proposalBytes = packDataBytes(proposalData, proposalsType).bytes;
 
