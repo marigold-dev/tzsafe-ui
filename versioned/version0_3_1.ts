@@ -23,7 +23,7 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/Proposal0_3_0";
+} from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
@@ -73,42 +73,14 @@ const proposalsType: MichelsonType = {
                   prim: "pair",
                   args: [
                     {
-                      prim: "address",
-                      annots: ["%target"],
-                    },
-                    {
-                      prim: "unit",
-                      annots: ["%parameter"],
-                    },
-                    {
-                      prim: "mutez",
-                      annots: ["%amount"],
-                    },
-                  ],
-                  annots: ["%execute"],
-                },
-              ],
-            },
-          ],
-        },
-        {
-          prim: "or",
-          args: [
-            {
-              prim: "or",
-              args: [
-                {
-                  prim: "pair",
-                  args: [
-                    {
-                      prim: "option",
+                      prim: "lambda",
                       args: [
                         {
-                          prim: "lambda",
+                          prim: "unit",
+                        },
+                        {
+                          prim: "list",
                           args: [
-                            {
-                              prim: "unit",
-                            },
                             {
                               prim: "operation",
                             },
@@ -129,16 +101,21 @@ const proposalsType: MichelsonType = {
                   ],
                   annots: ["%execute_lambda"],
                 },
+              ],
+            },
+          ],
+        },
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "set",
+              args: [
                 {
-                  prim: "set",
-                  args: [
-                    {
-                      prim: "address",
-                    },
-                  ],
-                  annots: ["%remove_owners"],
+                  prim: "address",
                 },
               ],
+              annots: ["%remove_owners"],
             },
             {
               prim: "pair",
@@ -146,10 +123,6 @@ const proposalsType: MichelsonType = {
                 {
                   prim: "address",
                   annots: ["%target"],
-                },
-                {
-                  prim: "unit",
-                  annots: ["%parameter"],
                 },
                 {
                   prim: "mutez",
@@ -354,22 +327,29 @@ class Version0_3_0 extends Versioned {
     resolve: boolean
   ): Promise<timeoutAndHash> {
     const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const bProposal = num2PaddedHex(proposal);
-    const prop: any = await proposals.proposals.get(bProposal);
+    const proposalId = num2PaddedHex(proposal);
+    const prop: any = await proposals.proposals.get(proposalId);
     const batch = t.wallet.batch();
+
+    const proposalSchema = new Schema(proposalsType);
+
+    const proposalData = proposalSchema.Encode(prop.contents);
+
+    const proposalBytes = packDataBytes(proposalData, proposalsType).bytes;
+
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal(bProposal, prop.contents, result)
+        cc.methodsObject.sign_proposal({
+          agreement: result,
+          challenge_id: proposalId,
+          payload: proposalBytes,
+        })
       );
     }
     if (resolve) {
-      const schema = new Schema(proposalsType);
-      const proposalsData = schema.Encode(prop.contents);
-      const packed = packDataBytes(proposalsData, proposalsType).bytes;
-
       await batch.withContractCall(
         // resolve proposal
-        cc.methods.proof_of_event_challenge(bProposal, packed)
+        cc.methods.proof_of_event_challenge(proposalId, proposalBytes)
       );
     }
     let op = await batch.send();
@@ -426,7 +406,7 @@ class Version0_3_0 extends Versioned {
       effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.3.0",
+      version: "0.3.1",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -477,10 +457,6 @@ class Version0_3_0 extends Versioned {
       return {
         removeOwners: content.remove_owners,
       };
-    } else if ("change_threshold" in content) {
-      return {
-        changeThreshold: content.change_threshold,
-      };
     } else if ("adjust_threshold" in content) {
       return {
         changeThreshold: content.adjust_threshold,
@@ -489,10 +465,8 @@ class Version0_3_0 extends Versioned {
       return {
         adjustEffectivePeriod: content.adjust_effective_period,
       };
-    } else if ("execute" in content) {
-      return { execute: content.execute };
     }
-    let never: never = content;
+
     throw new Error("unknown proposal");
   }
   static override getProposalsId(_contract: c1): string {

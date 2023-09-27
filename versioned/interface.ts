@@ -2,6 +2,7 @@ import { Parser } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { API_URL } from "../context/config";
 import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
 import { ownersForm } from "./forms";
@@ -44,6 +45,14 @@ abstract class Versioned {
     this.version = version;
     this.contractAddress = contractAddress;
   }
+
+  abstract submitTxProposals(
+    cc: Contract,
+    t: TezosToolkit,
+    proposals: proposals,
+    convertTezToMutez?: boolean
+  ): Promise<timeoutAndHash>;
+
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -63,6 +72,7 @@ abstract class Versioned {
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash>;
+
   static toContractState(_contract: any, _balance: BigNumber): contractStorage {
     throw new Error("not implemented!");
   }
@@ -72,6 +82,28 @@ abstract class Versioned {
   static toProposal(_proposal: any): proposal {
     throw new Error("not implemented!");
   }
+
+  static proposals(
+    bigmapId: string
+  ): Promise<Array<{ key: string; value: any }>> {
+    return fetch(
+      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true`
+    ).then(res => res.json());
+  }
+
+  static proposalsHistory(
+    c: contractStorage,
+    bigmapId: string
+  ): Promise<Array<{ key: string; value: any }>> {
+    if (c.version === "0.3.1") {
+      return Promise.resolve([]);
+    } else {
+      return fetch(
+        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"excuted":{}}, {"rejected":{}}]`
+      ).then(res => res.json());
+    }
+  }
+
   static signers(c: contractStorage): string[] {
     if (typeof c == "undefined") {
       return [];
@@ -95,6 +127,7 @@ abstract class Versioned {
 
     throw new Error("unknown version");
   }
+
   static proposalCounter(c: contractStorage): BigNumber {
     if (
       c.version === "0.0.6" ||
@@ -114,6 +147,7 @@ abstract class Versioned {
 
     throw new Error("unknown version");
   }
+
   static lambdaForm(c: contractStorage): {
     values: { [key: string]: string };
     fields: {

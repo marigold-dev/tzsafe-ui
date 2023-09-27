@@ -14,13 +14,13 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import fetchVersion from "../../context/metadata";
-import { getProposals } from "../../context/proposals";
 import { AppStateContext } from "../../context/state";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
 import { getProposalsId, signers, toProposal } from "../../versioned/apis";
+import { Versioned } from "../../versioned/interface";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
@@ -121,7 +121,7 @@ const Proposals = () => {
           )
         : fetchVersion(c));
 
-      const bigmap: { key: string; value: any }[] = await getProposals(
+      const bigmap: { key: string; value: any }[] = await Versioned.proposals(
         getProposalsId(version, cc)
       );
 
@@ -132,7 +132,10 @@ const Proposals = () => {
 
       dispatch({
         type: "setProposals",
-        payload: { proposals, address: globalState.currentContract },
+        payload: {
+          proposals: proposals.sort((a, b) => b[0] - a[0]),
+          address: globalState.currentContract,
+        },
       });
     })();
 
@@ -140,10 +143,8 @@ const Proposals = () => {
   }, [globalState.currentContract, refresher, state.currentAddress]);
 
   const currentContract = globalState.currentContract ?? "";
-  // Can't memo it, otherwise you'll be able to see the UI being rerendered after the loading
-  const filteredProposals = state.proposals.filter(
-    ([_, proposal]) => "Proposing" === proposal.ui.status
-  );
+
+  console.log(state.proposals);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -196,107 +197,105 @@ const Proposals = () => {
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
-          ) : filteredProposals.length === 0 ? (
+          ) : state.proposals.length === 0 ? (
             <h2 className="text-center text-xl text-zinc-600">
               {"There's currently no proposal"}
             </h2>
           ) : (
             <div className="space-y-6">
-              {filteredProposals
-                .sort((a, b) => b[0] - a[0])
-                .map(x => {
-                  const effectivePeriod =
-                    globalState.contracts[currentContract]?.effective_period ??
-                    globalState.currentStorage?.effective_period;
-                  const threshold =
-                    globalState.contracts[currentContract]?.threshold ??
-                    globalState.currentStorage?.threshold;
+              {state.proposals.map(x => {
+                const effectivePeriod =
+                  globalState.contracts[currentContract]?.effective_period ??
+                  globalState.currentStorage?.effective_period;
+                const threshold =
+                  globalState.contracts[currentContract]?.threshold ??
+                  globalState.currentStorage?.threshold;
 
-                  const deadline = new Date(
-                    new Date(x[1].ui.timestamp).getTime() +
-                      (!!effectivePeriod?.toNumber
-                        ? effectivePeriod.toNumber()
-                        : Number(effectivePeriod)) *
-                        1000
-                  );
-                  const hasDeadlinePassed = Date.now() >= deadline.getTime();
+                const deadline = new Date(
+                  new Date(x[1].ui.timestamp).getTime() +
+                    (!!effectivePeriod?.toNumber
+                      ? effectivePeriod.toNumber()
+                      : Number(effectivePeriod)) *
+                      1000
+                );
+                const hasDeadlinePassed = Date.now() >= deadline.getTime();
 
-                  const allSigners = !!globalState.contracts[currentContract]
-                    ? signers(globalState.contracts[currentContract])
-                    : !!globalState.currentStorage
-                    ? signers(globalState.currentStorage)
-                    : [];
-                  const signatures = x[1].ui.signatures.filter(({ signer }) =>
-                    allSigners.includes(signer)
-                  );
+                const allSigners = !!globalState.contracts[currentContract]
+                  ? signers(globalState.contracts[currentContract])
+                  : !!globalState.currentStorage
+                  ? signers(globalState.currentStorage)
+                  : [];
+                const signatures = x[1].ui.signatures.filter(({ signer }) =>
+                  allSigners.includes(signer)
+                );
 
-                  const isExecutable = canExecute(signatures, threshold);
+                const isExecutable = canExecute(signatures, threshold);
 
-                  const isRejectable = canReject(
-                    signatures,
-                    threshold,
-                    allSigners.length
-                  );
+                const isRejectable = canReject(
+                  signatures,
+                  threshold,
+                  allSigners.length
+                );
 
-                  const shouldResolve =
-                    hasDeadlinePassed || isExecutable || isRejectable;
+                const shouldResolve =
+                  hasDeadlinePassed || isExecutable || isRejectable;
 
-                  const hasSigned = !!signatures.find(
-                    x => x.signer == globalState.address
-                  );
+                const hasSigned = !!signatures.find(
+                  x => x.signer == globalState.address
+                );
 
-                  return (
-                    <ProposalCard
-                      id={x[0]}
-                      key={x[0]}
-                      status={
-                        hasDeadlinePassed ? (
-                          "Expired"
-                        ) : shouldResolve ? (
-                          <span>
-                            <span className="hidden lg:inline">
-                              Waiting resolution
-                            </span>
-                            <span className="lg:hidden">Pending</span>
+                return (
+                  <ProposalCard
+                    id={x[0]}
+                    key={x[0]}
+                    status={
+                      hasDeadlinePassed ? (
+                        "Expired"
+                      ) : shouldResolve ? (
+                        <span>
+                          <span className="hidden lg:inline">
+                            Waiting resolution
                           </span>
-                        ) : hasSigned ? (
-                          <span>
-                            <span className="hidden lg:inline">
-                              Waiting for signers
-                            </span>
-                            <span className="lg:hidden">Pending</span>
+                          <span className="lg:hidden">Pending</span>
+                        </span>
+                      ) : hasSigned ? (
+                        <span>
+                          <span className="hidden lg:inline">
+                            Waiting for signers
                           </span>
-                        ) : (
-                          x[1].ui.status
-                        )
-                      }
-                      walletTokens={walletTokens}
-                      date={deadline}
-                      activities={x[1].ui.signatures.map(
-                        ({ signer, result }) => ({
-                          hasApproved: result,
-                          signer,
-                        })
-                      )}
-                      content={x[1].ui.content}
-                      proposer={x[1].og.proposer}
-                      resolver={x[1].og.resolver}
-                      isSignable={
-                        !!globalState.address &&
-                        !!globalState.currentContract &&
-                        isOwner &&
-                        (!hasSigned || shouldResolve)
-                      }
-                      shouldResolve={shouldResolve}
-                      setCloseModal={arg => {
-                        dispatch({
-                          type: "setOpenModal",
-                          payload: { proposal: [arg, x[0]], state: 4 },
-                        });
-                      }}
-                    />
-                  );
-                })}
+                          <span className="lg:hidden">Pending</span>
+                        </span>
+                      ) : (
+                        x[1].ui.status
+                      )
+                    }
+                    walletTokens={walletTokens}
+                    date={deadline}
+                    activities={x[1].ui.signatures.map(
+                      ({ signer, result }) => ({
+                        hasApproved: result,
+                        signer,
+                      })
+                    )}
+                    content={x[1].ui.content}
+                    proposer={x[1].og.proposer}
+                    resolver={x[1].og.resolver}
+                    isSignable={
+                      !!globalState.address &&
+                      !!globalState.currentContract &&
+                      isOwner &&
+                      (!hasSigned || shouldResolve)
+                    }
+                    shouldResolve={shouldResolve}
+                    setCloseModal={arg => {
+                      dispatch({
+                        type: "setOpenModal",
+                        payload: { proposal: [arg, x[0]], state: 4 },
+                      });
+                    }}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
