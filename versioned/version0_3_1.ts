@@ -312,7 +312,7 @@ class Version0_3_0 extends Versioned {
                     ? bytes2Char(content.execute_lambda.metadata)
                     : "No meta supplied",
                   lambda: emitMicheline(
-                    JSON.parse(content.execute_lambda.lambda)
+                    content.execute_lambda.lambda.map(str => JSON.parse(str))
                   ),
                 },
                 null,
@@ -329,7 +329,11 @@ class Version0_3_0 extends Versioned {
                 2
               ),
           content: content.execute_lambda.lambda
-            ? emitMicheline(JSON.parse(content.execute_lambda.lambda || ""))
+            ? emitMicheline(
+                (content.execute_lambda.lambda ?? [""]).map(str =>
+                  JSON.parse(str)
+                )
+              )
             : "",
         },
       };
