@@ -19,11 +19,13 @@ export const makeContractExecution = ({
   }
   return `{
       DROP;
+      NIL operation ;
       PUSH address "${address}";
       CONTRACT ${michelson_entrypoint} ${type};
       IF_NONE { PUSH string "contract dosen't exist"; FAILWITH } { };
       PUSH mutez ${amount};
       PUSH ${type} ${param} ;
-      TRANSFER_TOKENS
+      TRANSFER_TOKENS ;
+      CONS ;
   }`;
 };
