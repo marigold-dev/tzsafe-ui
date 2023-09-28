@@ -365,6 +365,7 @@ class Version0_3_0 extends Versioned {
   }
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
+
     const status: { [key: string]: status } = {
       proposing: "Proposing",
       executed: "Executed",
