@@ -98,16 +98,16 @@ const History = () => {
 
       cc.version = version;
 
-      const bigmap: { key: string; value: any }[] =
-        await Versioned.proposalsHistory(
-          cc,
-          state.currentContract,
-          getProposalsId(version, cc)
-        );
+      const bigmap = await Versioned.proposalsHistory(
+        cc,
+        state.currentContract,
+        getProposalsId(version, cc)
+      );
       const response = await Promise.all([
         getTransfers(state.currentContract),
         getTokenTransfers(state.currentContract),
       ]);
+      console.log("HEL:", bigmap);
       const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number(`0x${key}`),
         { ui: toProposal(version, value), og: value },

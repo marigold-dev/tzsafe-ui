@@ -108,7 +108,6 @@ class P2PClient extends WalletClient {
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
         break;
       case BeaconMessageType.ProofOfEventChallengeRecorded:
-        console.log("NOICE");
         break;
       case BeaconMessageType.OperationRequest:
         this.events.emit(Event.INCOMING_OPERATION, message);

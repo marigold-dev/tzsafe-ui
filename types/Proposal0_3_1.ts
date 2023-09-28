@@ -34,6 +34,128 @@ type contractStorage = {
   version: "0.3.1";
 };
 
+export const eventType: MichelsonType = {
+  prim: "pair",
+  args: [
+    {
+      prim: "or",
+      args: [
+        {
+          prim: "or",
+          args: [
+            { prim: "unit", annots: ["%executed"] },
+            { prim: "unit", annots: ["%expired"] },
+          ],
+        },
+        {
+          prim: "or",
+          args: [
+            { prim: "unit", annots: ["%proposing"] },
+            { prim: "unit", annots: ["%rejected"] },
+          ],
+        },
+      ],
+      annots: ["%state"],
+    },
+    {
+      prim: "map",
+      args: [{ prim: "address" }, { prim: "bool" }],
+      annots: ["%signatures"],
+    },
+    {
+      prim: "pair",
+      args: [
+        { prim: "address", annots: ["%actor"] },
+        { prim: "timestamp", annots: ["%timestamp"] },
+      ],
+      annots: ["%proposer"],
+    },
+    {
+      prim: "option",
+      args: [
+        {
+          prim: "pair",
+          args: [
+            { prim: "address", annots: ["%actor"] },
+            { prim: "timestamp", annots: ["%timestamp"] },
+          ],
+        },
+      ],
+      annots: ["%resolver"],
+    },
+    {
+      prim: "list",
+      args: [
+        {
+          prim: "or",
+          args: [
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "or",
+                  args: [
+                    {
+                      prim: "set",
+                      args: [{ prim: "address" }],
+                      annots: ["%add_owners"],
+                    },
+                    { prim: "int", annots: ["%adjust_effective_period"] },
+                  ],
+                },
+                {
+                  prim: "or",
+                  args: [
+                    { prim: "nat", annots: ["%adjust_threshold"] },
+                    {
+                      prim: "pair",
+                      args: [
+                        {
+                          prim: "lambda",
+                          args: [
+                            { prim: "unit" },
+                            { prim: "list", args: [{ prim: "operation" }] },
+                          ],
+                          annots: ["%lambda"],
+                        },
+                        {
+                          prim: "option",
+                          args: [{ prim: "bytes" }],
+                          annots: ["%metadata"],
+                        },
+                      ],
+                      annots: ["%execute_lambda"],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              prim: "or",
+              args: [
+                {
+                  prim: "set",
+                  args: [{ prim: "address" }],
+                  annots: ["%remove_owners"],
+                },
+                {
+                  prim: "pair",
+                  args: [
+                    { prim: "address", annots: ["%target"] },
+                    { prim: "mutez", annots: ["%amount"] },
+                  ],
+                  annots: ["%transfer"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      annots: ["%contents"],
+    },
+  ],
+};
+
 export const proposalsType: MichelsonType = {
   prim: "list",
   args: [
@@ -138,6 +260,6 @@ export const proposalsType: MichelsonType = {
 };
 
 export const arrayProposalSchema = new Schema(proposalsType);
-export const proposalSchema = new Schema(proposalsType.args[0]);
+export const proofOfEventSchema = new Schema(eventType);
 
 export { type content, type proposal, type contractStorage };

@@ -135,8 +135,6 @@ const Proposals = () => {
 
   const currentContract = globalState.currentContract ?? "";
 
-  console.log(state.proposals);
-
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Proposals - TzSafe"} />

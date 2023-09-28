@@ -4,7 +4,7 @@ import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { API_URL } from "../context/config";
-import { proposalSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
+import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
 import { proposal } from "../types/display";
 import { ownersForm } from "./forms";
@@ -135,21 +135,20 @@ abstract class Versioned {
     bigmapId: string
   ): Promise<Array<{ key: string; value: any }>> {
     if (c.version === "0.3.1") {
-      fetch(
+      return fetch(
         `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event`
       )
         .then(res => res.json())
-        .then((events: Array<proofOfEvent>) => {
-          console.log(
-            events.map(event =>
-              proposalSchema_0_3_1.Execute(
-                unpackDataBytes({ bytes: event.payload.payload })
-              )
-            )
-          );
-          return [];
-        });
-      return Promise.resolve([]);
+        .then((events: Array<proofOfEvent>) =>
+          events.map(event => ({
+            key: event.payload.challenge_id,
+            value: proposalSchema_0_3_1.Execute(
+              unpackDataBytes({
+                bytes: event.payload.payload,
+              })
+            ),
+          }))
+        );
     } else {
       return fetch(
         `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"excuted":{}}, {"rejected":{}}]`
