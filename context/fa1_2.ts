@@ -24,8 +24,8 @@ export const makeFa1_2ApproveMichelson = ({
     IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
     PUSH mutez 0 ;
     PUSH (pair (address :spender) (nat :value)) (Pair "${spenderAddress}" ${amount}) ;
-    TRANSFER_TOKENS;
-    CONS;
+    TRANSFER_TOKENS ;
+    CONS ;
 }`;
 
 export const makeFa1_2TransferMichelson = ({
@@ -41,6 +41,6 @@ export const makeFa1_2TransferMichelson = ({
     IF_NONE { PUSH string "contract dosen't exist" ; FAILWITH } { } ;
     PUSH mutez 0 ;
     PUSH  (pair (address :from) (pair (address :to) (nat :amount))) (Pair "${walletAddress}" (Pair "${targetAddress}" ${amount})) ;
-    TRANSFER_TOKENS
+    TRANSFER_TOKENS ;
     CONS ;
 }`;
