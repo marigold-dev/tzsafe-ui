@@ -12,7 +12,8 @@ import {
   encodeKeyHash,
 } from "@taquito/utils";
 import { assertNever } from "assert-never";
-import { makeContractExecution } from "../context/contractExecution";
+import { version } from "../types/display";
+import { Versioned } from "../versioned/interface";
 
 type michelsonType =
   | "address"
@@ -539,6 +540,7 @@ function evalTaquitoParam(
 }
 
 function genLambda(
+  version: version,
   props: {
     address: string;
     amount: number;
@@ -579,13 +581,15 @@ function genLambda(
     indent: "",
     newline: "",
   });
-  const lambda = makeContractExecution({
+
+  const lambda = Versioned.generateExecuteContractMichelson(version, {
     address: props.address,
     entrypoint,
     type,
     amount: props.amount,
     param,
   });
+
   props.setField(
     lambda,
     JSON.stringify(

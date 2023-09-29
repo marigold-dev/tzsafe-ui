@@ -9,6 +9,7 @@ import {
 } from "formik";
 import React, { useContext, useEffect } from "react";
 import { AppStateContext } from "../context/state";
+import { version } from "../types/display";
 import {
   parseContract,
   genLambda,
@@ -525,7 +526,12 @@ function ExecuteForm(
         validate={values => {
           props.onShapeChange(values);
           try {
-            genLambda(props, values);
+            genLambda(
+              state.contracts[state.currentContract ?? ""]?.version ??
+                state.currentStorage?.version,
+              props,
+              values
+            );
           } catch (e) {
             // setSubmitError((e as Error).message);
           }

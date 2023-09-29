@@ -107,7 +107,7 @@ const History = () => {
         getTransfers(state.currentContract),
         getTokenTransfers(state.currentContract),
       ]);
-      console.log("HEL:", bigmap);
+
       const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number(`0x${key}`),
         { ui: toProposal(version, value), og: value },

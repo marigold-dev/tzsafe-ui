@@ -4,7 +4,7 @@ import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 type content =
-  | { execute_lambda: { metadata?: string; lambda: Array<string> } }
+  | { execute_lambda: { metadata?: string; lambda: string } }
   | { transfer: { amount: number; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }
