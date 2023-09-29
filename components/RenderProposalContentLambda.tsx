@@ -3,7 +3,7 @@ import { Parser } from "@taquito/michel-codec";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
-import { proposalContent } from "../types/display";
+import { proposalContent, version } from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
@@ -37,6 +37,7 @@ type data = {
 };
 
 export const contentToData = (
+  version: version,
   content: proposalContent,
   walletTokens: walletToken[]
 ): data => {
@@ -119,6 +120,7 @@ export const contentToData = (
     const parser = new Parser();
 
     const [type, lambda] = parseLambda(
+      version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
         ? parser.parseMichelineExpression(content.executeLambda.content ?? "")
@@ -390,7 +392,10 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
   );
 };
 
-export const labelOfProposalContentLambda = (content: proposalContent) => {
+export const labelOfProposalContentLambda = (
+  version: version,
+  content: proposalContent
+) => {
   if ("changeThreshold" in content) {
     return "Update threshold";
   } else if ("adjustEffectivePeriod" in content) {
@@ -407,6 +412,7 @@ export const labelOfProposalContentLambda = (content: proposalContent) => {
     const parser = new Parser();
 
     const [type, _] = parseLambda(
+      version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
         ? parser.parseMichelineExpression(content.executeLambda.content ?? "")

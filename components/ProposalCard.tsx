@@ -43,10 +43,6 @@ const ProposalCard = ({
   shouldResolve = false,
   metadataRender = false,
 }: ProposalCardProps) => {
-  const rows = useMemo(
-    () => content.map(v => contentToData(v, walletTokens)),
-    [content]
-  );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -57,6 +53,19 @@ const ProposalCard = ({
 
   const allSigners = signers(
     state.contracts[currentContract] ?? state.currentStorage
+  );
+
+  const rows = useMemo(
+    () =>
+      content.map(v =>
+        contentToData(
+          state.contracts[state.currentContract ?? ""].version ??
+            state.currentStorage?.version,
+          v,
+          walletTokens
+        )
+      ),
+    [content, state.currentContract, state.currentStorage, state.contracts]
   );
 
   return (
@@ -83,18 +92,26 @@ const ProposalCard = ({
             minWidth: "7rem",
           }}
           title={content
-            .map(
+            .map(v =>
               metadataRender
-                ? labelOfProposalContentMetadata
-                : labelOfProposalContentLambda
+                ? labelOfProposalContentMetadata(v)
+                : labelOfProposalContentLambda(
+                    state.contracts[state.currentContract ?? ""].version ??
+                      state.currentStorage?.version,
+                    v
+                  )
             )
             .join(", ")}
         >
           {content
-            .map(
+            .map(v =>
               metadataRender
-                ? labelOfProposalContentMetadata
-                : labelOfProposalContentLambda
+                ? labelOfProposalContentMetadata(v)
+                : labelOfProposalContentLambda(
+                    state.contracts[state.currentContract ?? ""].version ??
+                      state.currentStorage?.version,
+                    v
+                  )
             )
             .join(", ")}
         </span>

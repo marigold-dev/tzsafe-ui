@@ -93,7 +93,7 @@ const DROP_OP_IN_IF_BRANCH_LAMBDA = p.parseMichelineExpression(`{
 
 describe("parseLambda 1", () => {
   it("should parse the set delegate lambda", () => {
-    const [lambdaType, data] = parseLambda(DELEGATE_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", DELEGATE_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.DELEGATE);
     expect(data).toMatchObject({
@@ -104,7 +104,7 @@ describe("parseLambda 1", () => {
   });
 
   it("should parse the unset delegate lambda", () => {
-    const [lambdaType, data] = parseLambda(UN_DELEGATE_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", UN_DELEGATE_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.UNDELEGATE);
     expect(data).toMatchObject({
@@ -115,7 +115,7 @@ describe("parseLambda 1", () => {
   });
 
   it("should parse the default entrypoint lambda", () => {
-    const [lambdaType, data] = parseLambda(DEFAULT_ENTRYPOINT_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", DEFAULT_ENTRYPOINT_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.CONTRACT_EXECUTION);
     expect(data).toMatchObject({
@@ -163,7 +163,7 @@ describe("parseLambda 1", () => {
   });
 
   it("should parse the fa2 lambda", () => {
-    const [lambdaType, data] = parseLambda(FA2_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", FA2_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.FA2);
     expect(data).toMatchObject({
@@ -220,7 +220,7 @@ describe("parseLambda 1", () => {
   });
 
   it("should parse the fa1.2 approve lambda", () => {
-    const [lambdaType, data] = parseLambda(FA1_2_APPROVE_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", FA1_2_APPROVE_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.FA1_2_APPROVE);
     expect(data).toMatchObject({
@@ -245,7 +245,7 @@ describe("parseLambda 1", () => {
   });
 
   it("should parse the fa1.2 transfer lambda", () => {
-    const [lambdaType, data] = parseLambda(FA1_2_TRANSFER_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", FA1_2_TRANSFER_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.FA1_2_TRANSFER);
     expect(data).toMatchObject({
@@ -279,14 +279,17 @@ describe("parseLambda 1", () => {
 
 describe("parseLambda 2", () => {
   it("should be parse as lambda execution 1", () => {
-    const [lambdaType, data] = parseLambda(DROP_DELEGATE_LAMBDA);
+    const [lambdaType, data] = parseLambda("0.0.10", DROP_DELEGATE_LAMBDA);
 
     expect(lambdaType).toBe(LambdaType.LAMBDA_EXECUTION);
     expect(data).toBeUndefined;
   });
 
   it("should be parse as lambda execution 2", () => {
-    const [lambdaType, data] = parseLambda(DROP_OP_IN_IF_BRANCH_LAMBDA);
+    const [lambdaType, data] = parseLambda(
+      "0.0.10",
+      DROP_OP_IN_IF_BRANCH_LAMBDA
+    );
 
     expect(lambdaType).toBe(LambdaType.LAMBDA_EXECUTION);
     expect(data).toBeUndefined;

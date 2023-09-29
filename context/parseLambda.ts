@@ -4,6 +4,7 @@ import {
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
+import { version } from "../types/display";
 import { decodeB58 } from "../utils/contractParam";
 
 export type primitiveName = "string" | "number" | "list";
@@ -127,89 +128,180 @@ const parsePrimPattern = <T>(
 };
 
 const parseDelegate = (
+  version: version,
   lambda: Expr[]
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  const delegate_instr_size = 4;
+  if (version === "0.3.1") {
+    const delegate_instr_size = 6;
 
-  if (lambda.length != delegate_instr_size)
-    return [false, undefined, undefined];
+    if (lambda.length != delegate_instr_size)
+      return [false, undefined, undefined];
 
-  // parse DROP
-  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+    // parse DROP
+    const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
-  // parse PUSH key_hash
-  const [isParsedKeyHash, address] = isParsedDrop
-    ? parsePrimPattern(lambda, 1, "PUSH", expr => {
-        // @ts-expect-error
-        if (expr.args?.[0].prim === "key_hash") {
-          //@ts-expect-error
-          const address = !!expr?.args?.[1].string
-            ? //@ts-expect-error
-              (expr?.args?.[1].string as string)
-            : encodePubKey(
-                //@ts-expect-error
-                formatBytes(expr?.args?.[1].bytes)
-              );
-          return [true, address];
-        } else {
-          return failParse;
-        }
-      })
-    : failParse;
+    const [isNil] = isDrop
+      ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
+      : failParse;
 
-  // parse SOME
-  const [isParsedOpt] = isParsedKeyHash
-    ? parsePrimPattern(lambda, 2, "SOME", () => succParse)
-    : failParse;
+    // parse PUSH key_hash
+    const [isKeyHash, address] = isNil
+      ? parsePrimPattern(lambda, 2, "PUSH", expr => {
+          // @ts-expect-error
+          if (expr.args?.[0].prim === "key_hash") {
+            //@ts-expect-error
+            const address = !!expr?.args?.[1].string
+              ? //@ts-expect-error
+                (expr?.args?.[1].string as string)
+              : encodePubKey(
+                  //@ts-expect-error
+                  formatBytes(expr?.args?.[1].bytes)
+                );
+            return [true, address];
+          } else {
+            return failParse;
+          }
+        })
+      : failParse;
 
-  // parse SET_DELEGATE
-  const [isParsedSetDelegate] = isParsedOpt
-    ? parsePrimPattern(lambda, 3, "SET_DELEGATE", () => succParse)
-    : failParse;
+    // parse SOME
+    const [isOpt] = isKeyHash
+      ? parsePrimPattern(lambda, 3, "SOME", () => succParse)
+      : failParse;
 
-  if (isParsedSetDelegate) {
-    return [true, LambdaType.DELEGATE, !!address ? { address } : undefined];
+    // parse SET_DELEGATE
+    const [isSetDelegate] = isOpt
+      ? parsePrimPattern(lambda, 4, "SET_DELEGATE", () => succParse)
+      : failParse;
+
+    const [isCons] = isSetDelegate
+      ? parsePrimPattern(lambda, 5, "CONS", () => succParse)
+      : failParse;
+
+    if (isCons) {
+      return [true, LambdaType.DELEGATE, !!address ? { address } : undefined];
+    } else {
+      return [false, undefined, undefined];
+    }
   } else {
-    return [false, undefined, undefined];
+    const delegate_instr_size = 4;
+
+    if (lambda.length != delegate_instr_size)
+      return [false, undefined, undefined];
+
+    // parse DROP
+    const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+    // parse PUSH key_hash
+    const [isParsedKeyHash, address] = isParsedDrop
+      ? parsePrimPattern(lambda, 1, "PUSH", expr => {
+          // @ts-expect-error
+          if (expr.args?.[0].prim === "key_hash") {
+            //@ts-expect-error
+            const address = !!expr?.args?.[1].string
+              ? //@ts-expect-error
+                (expr?.args?.[1].string as string)
+              : encodePubKey(
+                  //@ts-expect-error
+                  formatBytes(expr?.args?.[1].bytes)
+                );
+            return [true, address];
+          } else {
+            return failParse;
+          }
+        })
+      : failParse;
+
+    // parse SOME
+    const [isParsedOpt] = isParsedKeyHash
+      ? parsePrimPattern(lambda, 2, "SOME", () => succParse)
+      : failParse;
+
+    // parse SET_DELEGATE
+    const [isParsedSetDelegate] = isParsedOpt
+      ? parsePrimPattern(lambda, 3, "SET_DELEGATE", () => succParse)
+      : failParse;
+
+    if (isParsedSetDelegate) {
+      return [true, LambdaType.DELEGATE, !!address ? { address } : undefined];
+    } else {
+      return [false, undefined, undefined];
+    }
   }
 };
 
 const parseUnDelegate = (
+  version: version,
   lambda: Expr[]
 ): [true, LambdaType] | [false, undefined] => {
-  const undelegate_instr_size = 3;
+  if (version === "0.3.1") {
+    const undelegate_instr_size = 5;
 
-  if (lambda.length != undelegate_instr_size) return [false, undefined];
+    if (lambda.length != undelegate_instr_size) return [false, undefined];
 
-  // parse DROP
-  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+    // parse DROP
+    const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
-  // parse NONE
-  const [isParsedOpt] = isParsedDrop
-    ? parsePrimPattern(lambda, 1, "NONE", () => succParse)
-    : failParse;
+    const [isdNil] = isDrop
+      ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
+      : failParse;
 
-  // parse SET_DELEGATE
-  const [isParsedSetDelegate] = isParsedOpt
-    ? parsePrimPattern(lambda, 2, "SET_DELEGATE", () => succParse)
-    : failParse;
+    // parse NONE
+    const [isOpt] = isdNil
+      ? parsePrimPattern(lambda, 2, "NONE", () => succParse)
+      : failParse;
 
-  if (isParsedSetDelegate) {
-    return [true, LambdaType.UNDELEGATE];
+    // parse SET_DELEGATE
+    const [isSetDelegate] = isOpt
+      ? parsePrimPattern(lambda, 3, "SET_DELEGATE", () => succParse)
+      : failParse;
+
+    // parse SET_DELEGATE
+    const [isCons] = isSetDelegate
+      ? parsePrimPattern(lambda, 3, "CONS", () => succParse)
+      : failParse;
+
+    if (isCons) {
+      return [true, LambdaType.UNDELEGATE];
+    } else {
+      return [false, undefined];
+    }
   } else {
-    return [false, undefined];
+    const undelegate_instr_size = 3;
+
+    if (lambda.length != undelegate_instr_size) return [false, undefined];
+
+    // parse DROP
+    const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+    // parse NONE
+    const [isParsedOpt] = isParsedDrop
+      ? parsePrimPattern(lambda, 1, "NONE", () => succParse)
+      : failParse;
+
+    // parse SET_DELEGATE
+    const [isParsedSetDelegate] = isParsedOpt
+      ? parsePrimPattern(lambda, 2, "SET_DELEGATE", () => succParse)
+      : failParse;
+
+    if (isParsedSetDelegate) {
+      return [true, LambdaType.UNDELEGATE];
+    } else {
+      return [false, undefined];
+    }
   }
 };
 
 export const parseLambda = (
+  version: version,
   lambda: Expr | null
 ): [LambdaType, output | undefined] => {
   if (!lambda) return lambdaExec;
   if (!Array.isArray(lambda)) return lambdaExec;
 
-  const [isDelegate, type, delegateData] = parseDelegate(lambda);
+  const [isDelegate, type, delegateData] = parseDelegate(version, lambda);
 
   if (isDelegate) {
     return [
@@ -225,7 +317,7 @@ export const parseLambda = (
       },
     ];
   } else {
-    const [isUnDelegate, type] = parseUnDelegate(lambda);
+    const [isUnDelegate, type] = parseUnDelegate(version, lambda);
     if (isUnDelegate) {
       return [
         type,
@@ -242,140 +334,287 @@ export const parseLambda = (
     }
   }
 
-  // FA1.2 and FA2 is a special case of contract_execution. There number of instrucions is the same as regular contract execution
-  const contract_execution_instr_size = 7;
-  if (lambda.length != contract_execution_instr_size)
-    return [LambdaType.LAMBDA_EXECUTION, undefined];
+  if (version === "0.3.1") {
+    const contract_execution_instr_size = 9;
 
-  // parse DROP
-  const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+    if (lambda.length != contract_execution_instr_size)
+      return [LambdaType.LAMBDA_EXECUTION, undefined];
 
-  // parse PUSH address
-  const [isParsedPushAddr, contractAddress] = isParsedDrop
-    ? parsePrimPattern(lambda, 1, "PUSH", expr => {
-        //@ts-expect-error
-        if (expr.args?.[0]?.prim !== "address") {
-          return failParse;
-        } else {
+    // parse DROP
+    const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+    const [isNil] = isDrop
+      ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
+      : failParse;
+
+    // parse PUSH address
+    const [isPushAddr, contractAddress] = isNil
+      ? parsePrimPattern(lambda, 2, "PUSH", expr => {
           //@ts-expect-error
-          if (!!expr.args?.[1]?.bytes) {
-            const addr = encodePubKey(
-              //@ts-expect-error
-              expr.args[1].bytes
-            );
+          if (expr.args?.[0]?.prim !== "address") {
+            return failParse;
+          } else {
+            //@ts-expect-error
+            if (!!expr.args?.[1]?.bytes) {
+              const addr = encodePubKey(
+                //@ts-expect-error
+                expr.args[1].bytes
+              );
 
-            return validateAddress(addr) === ValidationResult.VALID
-              ? [true, addr]
-              : failParse;
-          } else if (
-            //@ts-expect-error
-            !!expr.args?.[1]?.string
+              return validateAddress(addr) === ValidationResult.VALID
+                ? [true, addr]
+                : failParse;
+            } else if (
+              //@ts-expect-error
+              !!expr.args?.[1]?.string
+            ) {
+              //@ts-expect-error
+              return [true, expr.args?.[1]?.string as string];
+            } else {
+              return failParse;
+            }
+          }
+        })
+      : failParse;
+
+    // parse CONTRACT
+    const [isContract, entrypoint] = isPushAddr
+      ? parsePrimPattern(lambda, 3, "CONTRACT", expr => {
+          return [true, parseContractEntrypoint(expr)];
+        })
+      : failParse;
+
+    // parse IF_NONE
+    const [isIfNone] = isContract
+      ? parsePrimPattern(lambda, 4, "IF_NONE", expr => {
+          //@ts-expect-error
+          const arg0 = expr.args[0];
+
+          //@ts-expect-error
+          const arg1 = expr.args[1];
+
+          if (
+            !(
+              Array.isArray(arg0) &&
+              arg0.length == 2 &&
+              "prim" in arg0[0] &&
+              arg0[0].prim === "PUSH" &&
+              "prim" in arg0[1] &&
+              arg0[1].prim === "FAILWITH"
+            )
+          )
+            return failParse;
+
+          if (!(Array.isArray(arg1) && arg1.length == 0)) return failParse;
+
+          return succParse;
+        })
+      : failParse;
+
+    // parse PUSH mutez
+    const [isParsedMutez, mutez] = isIfNone
+      ? parsePrimPattern(lambda, 5, "PUSH", expr => {
+          if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
+            return [true, Number((expr.args[1] as IntLiteral).int)];
+          else return failParse;
+        })
+      : failParse;
+
+    const entrypointSignature = JSON.stringify(entrypoint);
+
+    const lambdaType = !isParsedMutez
+      ? LambdaType.LAMBDA_EXECUTION
+      : entrypointSignature === FA2_SIGNATURE
+      ? LambdaType.FA2
+      : entrypointSignature === FA1_2_APPROVE_SIGNATURE
+      ? LambdaType.FA1_2_APPROVE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      ? LambdaType.FA1_2_TRANSFER
+      : LambdaType.CONTRACT_EXECUTION;
+
+    // parse PUSH data
+    const [isPushData, data] = isParsedMutez
+      ? parsePrimPattern(lambda, 6, "PUSH", expr => {
+          if (
+            !!entrypoint &&
+            JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
+              JSON.stringify(entrypoint.params)
           ) {
-            //@ts-expect-error
-            return [true, expr.args?.[1]?.string as string];
+            const data =
+              lambdaType === LambdaType.CONTRACT_EXECUTION
+                ? !!expr.args?.[1] && !!expr.args?.[0]
+                  ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
+                  : "Unit"
+                : rawDataToData(expr.args![1], entrypoint.params);
+            return [true, data];
           } else {
             return failParse;
           }
-        }
-      })
-    : failParse;
+        })
+      : failParse;
 
-  // parse CONTRACT
-  const [isParsedContrEp, entrypoint] = isParsedPushAddr
-    ? parsePrimPattern(lambda, 2, "CONTRACT", expr => {
-        return [true, parseContractEntrypoint(expr)];
-      })
-    : failParse;
+    // Parse TRANSFER_TOKENS
+    const [isTransfer] = isPushData
+      ? parsePrimPattern(lambda, 7, "TRANSFER_TOKENS", expr => succParse)
+      : failParse;
 
-  // parse IF_NONE
-  const [isParsedIfNone] = isParsedContrEp
-    ? parsePrimPattern(lambda, 3, "IF_NONE", expr => {
-        //@ts-expect-error
-        const arg0 = expr.args[0];
+    const [isCons] = isTransfer
+      ? parsePrimPattern(lambda, 8, "CONS", expr => succParse)
+      : failParse;
 
-        //@ts-expect-error
-        const arg1 = expr.args[1];
+    if (
+      isCons &&
+      !!contractAddress &&
+      !!data &&
+      !!entrypoint &&
+      mutez !== undefined
+    )
+      return [
+        lambdaType,
+        {
+          contractAddress,
+          entrypoint,
+          mutez,
+          data,
+        },
+      ];
+    else return lambdaExec;
+  } else {
+    // FA1.2 and FA2 is a special case of contract_execution. There number of instrucions is the same as regular contract execution
+    const contract_execution_instr_size = 7;
+    if (lambda.length != contract_execution_instr_size)
+      return [LambdaType.LAMBDA_EXECUTION, undefined];
 
-        if (
-          !(
-            Array.isArray(arg0) &&
-            arg0.length == 2 &&
-            "prim" in arg0[0] &&
-            arg0[0].prim === "PUSH" &&
-            "prim" in arg0[1] &&
-            arg0[1].prim === "FAILWITH"
+    // parse DROP
+    const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+    // parse PUSH address
+    const [isParsedPushAddr, contractAddress] = isParsedDrop
+      ? parsePrimPattern(lambda, 1, "PUSH", expr => {
+          //@ts-expect-error
+          if (expr.args?.[0]?.prim !== "address") {
+            return failParse;
+          } else {
+            //@ts-expect-error
+            if (!!expr.args?.[1]?.bytes) {
+              const addr = encodePubKey(
+                //@ts-expect-error
+                expr.args[1].bytes
+              );
+
+              return validateAddress(addr) === ValidationResult.VALID
+                ? [true, addr]
+                : failParse;
+            } else if (
+              //@ts-expect-error
+              !!expr.args?.[1]?.string
+            ) {
+              //@ts-expect-error
+              return [true, expr.args?.[1]?.string as string];
+            } else {
+              return failParse;
+            }
+          }
+        })
+      : failParse;
+
+    // parse CONTRACT
+    const [isParsedContrEp, entrypoint] = isParsedPushAddr
+      ? parsePrimPattern(lambda, 2, "CONTRACT", expr => {
+          return [true, parseContractEntrypoint(expr)];
+        })
+      : failParse;
+
+    // parse IF_NONE
+    const [isParsedIfNone] = isParsedContrEp
+      ? parsePrimPattern(lambda, 3, "IF_NONE", expr => {
+          //@ts-expect-error
+          const arg0 = expr.args[0];
+
+          //@ts-expect-error
+          const arg1 = expr.args[1];
+
+          if (
+            !(
+              Array.isArray(arg0) &&
+              arg0.length == 2 &&
+              "prim" in arg0[0] &&
+              arg0[0].prim === "PUSH" &&
+              "prim" in arg0[1] &&
+              arg0[1].prim === "FAILWITH"
+            )
           )
-        )
-          return failParse;
+            return failParse;
 
-        if (!(Array.isArray(arg1) && arg1.length == 0)) return failParse;
+          if (!(Array.isArray(arg1) && arg1.length == 0)) return failParse;
 
-        return succParse;
-      })
-    : failParse;
+          return succParse;
+        })
+      : failParse;
 
-  // parse PUSH mutez
-  const [isParsedMutez, mutez] = isParsedIfNone
-    ? parsePrimPattern(lambda, 4, "PUSH", expr => {
-        if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
-          return [true, Number((expr.args[1] as IntLiteral).int)];
-        else return failParse;
-      })
-    : failParse;
+    // parse PUSH mutez
+    const [isParsedMutez, mutez] = isParsedIfNone
+      ? parsePrimPattern(lambda, 4, "PUSH", expr => {
+          if (!!expr.args && (expr.args[0] as Prim).prim === "mutez")
+            return [true, Number((expr.args[1] as IntLiteral).int)];
+          else return failParse;
+        })
+      : failParse;
 
-  const entrypointSignature = JSON.stringify(entrypoint);
+    const entrypointSignature = JSON.stringify(entrypoint);
 
-  const lambdaType = !isParsedMutez
-    ? LambdaType.LAMBDA_EXECUTION
-    : entrypointSignature === FA2_SIGNATURE
-    ? LambdaType.FA2
-    : entrypointSignature === FA1_2_APPROVE_SIGNATURE
-    ? LambdaType.FA1_2_APPROVE
-    : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
-    ? LambdaType.FA1_2_TRANSFER
-    : LambdaType.CONTRACT_EXECUTION;
+    const lambdaType = !isParsedMutez
+      ? LambdaType.LAMBDA_EXECUTION
+      : entrypointSignature === FA2_SIGNATURE
+      ? LambdaType.FA2
+      : entrypointSignature === FA1_2_APPROVE_SIGNATURE
+      ? LambdaType.FA1_2_APPROVE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      ? LambdaType.FA1_2_TRANSFER
+      : LambdaType.CONTRACT_EXECUTION;
 
-  // parse PUSH data
-  const [isParsedPushParam, data] = isParsedMutez
-    ? parsePrimPattern(lambda, 5, "PUSH", expr => {
-        if (
-          !!entrypoint &&
-          JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
-            JSON.stringify(entrypoint.params)
-        ) {
-          const data =
-            lambdaType === LambdaType.CONTRACT_EXECUTION
-              ? !!expr.args?.[1] && !!expr.args?.[0]
-                ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
-                : "Unit"
-              : rawDataToData(expr.args![1], entrypoint.params);
-          return [true, data];
-        } else {
-          return failParse;
-        }
-      })
-    : failParse;
+    // parse PUSH data
+    const [isParsedPushParam, data] = isParsedMutez
+      ? parsePrimPattern(lambda, 5, "PUSH", expr => {
+          if (
+            !!entrypoint &&
+            JSON.stringify(argToParam(expr.args?.[0]! as Prim)) ===
+              JSON.stringify(entrypoint.params)
+          ) {
+            const data =
+              lambdaType === LambdaType.CONTRACT_EXECUTION
+                ? !!expr.args?.[1] && !!expr.args?.[0]
+                  ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
+                  : "Unit"
+                : rawDataToData(expr.args![1], entrypoint.params);
+            return [true, data];
+          } else {
+            return failParse;
+          }
+        })
+      : failParse;
 
-  // Parse TRANSFER_TOKENS
-  const [isParsedTransfer] = isParsedPushParam
-    ? parsePrimPattern(lambda, 6, "TRANSFER_TOKENS", expr => succParse)
-    : failParse;
+    // Parse TRANSFER_TOKENS
+    const [isParsedTransfer] = isParsedPushParam
+      ? parsePrimPattern(lambda, 6, "TRANSFER_TOKENS", expr => succParse)
+      : failParse;
 
-  if (
-    isParsedTransfer &&
-    !!contractAddress &&
-    !!data &&
-    !!entrypoint &&
-    mutez !== undefined
-  )
-    return [
-      lambdaType,
-      {
-        contractAddress,
-        entrypoint,
-        mutez,
-        data,
-      },
-    ];
-  else return lambdaExec;
+    if (
+      isParsedTransfer &&
+      !!contractAddress &&
+      !!data &&
+      !!entrypoint &&
+      mutez !== undefined
+    )
+      return [
+        lambdaType,
+        {
+          contractAddress,
+          entrypoint,
+          mutez,
+          data,
+        },
+      ];
+    else return lambdaExec;
+  }
 };

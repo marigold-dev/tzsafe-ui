@@ -38,10 +38,6 @@ function ProposalSignForm({
   walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
-  const rows = useMemo(
-    () => proposal.ui.content.map(v => contentToData(v, walletTokens)),
-    [proposal.ui.content]
-  );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -50,6 +46,24 @@ function ProposalSignForm({
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
+
+  const rows = useMemo(
+    () =>
+      proposal.ui.content.map(v =>
+        contentToData(
+          state.contracts[state.currentContract ?? ""].version ??
+            state.currentStorage?.version,
+          v,
+          walletTokens
+        )
+      ),
+    [
+      proposal.ui.content,
+      state.currentContract,
+      state.contracts,
+      state.currentStorage,
+    ]
+  );
 
   async function sign(
     proposal: number,
