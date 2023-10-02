@@ -225,12 +225,19 @@ export const contentToData = (
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
       const address = (lambda?.data as { address?: string }).address;
+      const meta = JSON.parse(metadata.meta ?? "{}") as {
+        old_baker_address: string;
+      };
       data = {
         type: type === LambdaType.DELEGATE ? "Delegate" : "UnDelegate",
         label: type === LambdaType.DELEGATE ? "Delegate" : "Undelegate",
         metadata: undefined,
         amount: undefined,
-        addresses: !!address ? [address] : undefined,
+        addresses: !!address
+          ? [address]
+          : meta.old_baker_address
+          ? [meta.old_baker_address]
+          : undefined,
         entrypoints: undefined,
         params: undefined,
         rawParams: undefined,

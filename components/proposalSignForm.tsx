@@ -242,7 +242,7 @@ function ProposalSignForm({
                   ))
                 : []}
             </div>
-            <ul className="mt-4 text-xs font-light leading-3 text-yellow-500">
+            <ul className="mt-4 list-disc space-y-2 text-xs font-light leading-3 text-yellow-500">
               {isSignOrResolve &&
                 !!rows.find(
                   v =>
@@ -251,7 +251,7 @@ function ProposalSignForm({
                 ) && (
                   <li className="mt-1">
                     The proposal duration is short, which may limit your ability
-                    to execute proposals once they have been executed.
+                    to execute proposals once they have been executed
                   </li>
                 )}
               {isSignOrResolve &&
@@ -264,7 +264,7 @@ function ProposalSignForm({
                 ) && (
                   <li className="mt-1">
                     Your ownership will be revoked, resulting in your removal
-                    from the list of owners.
+                    from the list of owners
                   </li>
                 )}
               {isSignOrResolve &&

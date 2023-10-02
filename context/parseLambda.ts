@@ -244,12 +244,12 @@ const parseUnDelegate = (
     // parse DROP
     const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
-    const [isdNil] = isDrop
+    const [isNil] = isDrop
       ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
       : failParse;
 
     // parse NONE
-    const [isOpt] = isdNil
+    const [isOpt] = isNil
       ? parsePrimPattern(lambda, 2, "NONE", () => succParse)
       : failParse;
 
@@ -260,7 +260,7 @@ const parseUnDelegate = (
 
     // parse SET_DELEGATE
     const [isCons] = isSetDelegate
-      ? parsePrimPattern(lambda, 3, "CONS", () => succParse)
+      ? parsePrimPattern(lambda, 4, "CONS", () => succParse)
       : failParse;
 
     if (isCons) {
