@@ -9,7 +9,6 @@ import {
 } from "formik";
 import React, { useContext, useEffect } from "react";
 import { AppStateContext } from "../context/state";
-import { version } from "../types/display";
 import {
   parseContract,
   genLambda,
