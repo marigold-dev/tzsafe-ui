@@ -18,6 +18,10 @@ import {
 } from "../context/config";
 import { API_URL } from "../context/config";
 import {
+  generateDelegateMichelson,
+  generateUndelegateMichelson,
+} from "../context/generateLambda";
+import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
@@ -29,7 +33,6 @@ import {
 } from "../utils/adaptiveTime";
 import { signers, VersionedApi } from "../versioned/apis";
 import { ownersForm } from "../versioned/forms";
-import { Versioned } from "../versioned/interface";
 import ContractLoader from "./contractLoader";
 import renderError, { renderWarning } from "./formUtils";
 
@@ -196,7 +199,7 @@ const SignersForm: FC<{
     }
     if (!!bakerAddress && bakerAddress !== oldBakerAddress) {
       const lambda = parser.parseMichelineExpression(
-        Versioned.generateDelegateMichelson(version, { bakerAddress })
+        generateDelegateMichelson(version, { bakerAddress })
       );
       ops.push({
         execute_lambda: {
@@ -210,7 +213,7 @@ const SignersForm: FC<{
       });
     } else if (bakerAddress === "" && !!oldBakerAddress) {
       const lambda = parser.parseMichelineExpression(
-        Versioned.generateUndelegateMichelson(version)
+        generateUndelegateMichelson(version)
       );
 
       ops.push({

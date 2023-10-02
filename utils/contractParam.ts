@@ -12,8 +12,8 @@ import {
   encodeKeyHash,
 } from "@taquito/utils";
 import { assertNever } from "assert-never";
+import { generateExecuteContractMichelson } from "../context/generateLambda";
 import { version } from "../types/display";
-import { Versioned } from "../versioned/interface";
 
 type michelsonType =
   | "address"
@@ -582,7 +582,7 @@ function genLambda(
     newline: "",
   });
 
-  const lambda = Versioned.generateExecuteContractMichelson(version, {
+  const lambda = generateExecuteContractMichelson(version, {
     address: props.address,
     entrypoint,
     type,
