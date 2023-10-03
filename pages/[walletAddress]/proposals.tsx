@@ -69,6 +69,18 @@ const reducer = (state: state, action: action): state => {
       };
   }
 };
+
+const emptyProposal = {
+  og: {},
+  ui: {
+    author: "",
+    status: "Executed",
+    timestamp: "0",
+    signatures: [],
+    content: [],
+  } as proposal,
+};
+
 const Proposals = () => {
   const globalState = useContext(AppStateContext)!;
   const isOwner = useIsOwner();
@@ -162,7 +174,7 @@ const Proposals = () => {
             proposal={
               state.proposals.find(
                 x => x[0] === state.openModal.proposal[1]
-              )![1]
+              )?.[1] ?? emptyProposal
             }
             state={state.openModal.proposal[0]}
             id={state.openModal.proposal[1]}
