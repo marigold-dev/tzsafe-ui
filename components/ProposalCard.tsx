@@ -59,7 +59,7 @@ const ProposalCard = ({
     () =>
       content.map(v =>
         contentToData(
-          state.contracts[state.currentContract ?? ""].version ??
+          state.contracts[state.currentContract ?? ""]?.version ??
             state.currentStorage?.version,
           v,
           walletTokens
@@ -96,7 +96,7 @@ const ProposalCard = ({
               metadataRender
                 ? labelOfProposalContentMetadata(v)
                 : labelOfProposalContentLambda(
-                    state.contracts[state.currentContract ?? ""].version ??
+                    state.contracts[state.currentContract ?? ""]?.version ??
                       state.currentStorage?.version,
                     v
                   )
@@ -108,7 +108,7 @@ const ProposalCard = ({
               metadataRender
                 ? labelOfProposalContentMetadata(v)
                 : labelOfProposalContentLambda(
-                    state.contracts[state.currentContract ?? ""].version ??
+                    state.contracts[state.currentContract ?? ""]?.version ??
                       state.currentStorage?.version,
                     v
                   )

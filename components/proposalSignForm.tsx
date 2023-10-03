@@ -51,7 +51,7 @@ function ProposalSignForm({
     () =>
       proposal.ui.content.map(v =>
         contentToData(
-          state.contracts[state.currentContract ?? ""].version ??
+          state.contracts[state.currentContract ?? ""]?.version ??
             state.currentStorage?.version,
           v,
           walletTokens
