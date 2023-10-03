@@ -1,6 +1,5 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import Alias from "../../components/Alias";
 import HistoryFaToken from "../../components/HistoryFaToken";
@@ -10,11 +9,7 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import fetchVersion from "../../context/metadata";
-import {
-  getProposals,
-  getTokenTransfers,
-  getTransfers,
-} from "../../context/proposals";
+import { getTokenTransfers, getTransfers } from "../../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -30,6 +25,7 @@ import {
 import { mutezToTez } from "../../utils/tez";
 import useWalletTokens from "../../utils/useWalletTokens";
 import { getProposalsId, toProposal, toStorage } from "../../versioned/apis";
+import { Versioned } from "../../versioned/interface";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
@@ -81,7 +77,8 @@ const History = () => {
         state.currentContract
       );
 
-      const cc = await c.storage();
+      const cc = (await c.storage()) as contractStorage;
+
       const version = await (state.contracts[state.currentContract]
         ? Promise.resolve<version>(
             state.contracts[state.currentContract].version
@@ -99,13 +96,18 @@ const History = () => {
           })
         : null;
 
-      const bigmap: { key: string; value: any }[] = await getProposals(
+      cc.version = version;
+
+      const bigmap = await Versioned.proposalsHistory(
+        cc,
+        state.currentContract,
         getProposalsId(version, cc)
       );
       const response = await Promise.all([
         getTransfers(state.currentContract),
         getTokenTransfers(state.currentContract),
       ]);
+
       const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number(`0x${key}`),
         { ui: toProposal(version, value), og: value },
@@ -121,11 +123,7 @@ const History = () => {
 
   const filteredProposals = useMemo(
     () =>
-      [
-        ...proposals.filter(
-          ([_, proposal]) => !("Proposing" === proposal.ui.status)
-        ),
-      ]
+      proposals
         .concat(
           transfers[0].map(
             x =>

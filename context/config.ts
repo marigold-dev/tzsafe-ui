@@ -17,8 +17,8 @@ export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
 
 export const DEFAULT_TIMEOUT = 60000;
 export const MODAL_TIMEOUT = 2000;
-// 10 minutes
-export const PROPOSAL_DURATION_WARNING = 600000;
+// 10 minutes -> Cotnract times are in seconds
+export const PROPOSAL_DURATION_WARNING = 600;
 
 export const MARIGOLD_LOGO_URL =
   "https://uploads-ssl.webflow.com/616ab4741d375d1642c19027/61793ee65c891c190fcaa1d0_Vector(1).png";

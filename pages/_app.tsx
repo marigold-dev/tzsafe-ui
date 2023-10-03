@@ -147,6 +147,7 @@ export default function App({ Component, pageProps }: AppProps) {
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
         });
+
         dispatch!({ type: "beaconConnect", payload: wallet });
 
         if (state.attemptedInitialLogin) return;

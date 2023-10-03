@@ -18,9 +18,9 @@ import {
 } from "../context/config";
 import { API_URL } from "../context/config";
 import {
-  makeDelegateMichelson,
-  makeUndelegateMichelson,
-} from "../context/delegate";
+  generateDelegateMichelson,
+  generateUndelegateMichelson,
+} from "../context/generateLambda";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -164,6 +164,10 @@ const SignersForm: FC<{
   ) {
     if (!props.contract) return [];
 
+    const version =
+      state.contracts[state.currentContract ?? ""]?.version ??
+      state.currentStorage?.version;
+
     const initialSigners = new Set<string>(
       "owners" in props.contract
         ? props.contract.owners
@@ -195,7 +199,7 @@ const SignersForm: FC<{
     }
     if (!!bakerAddress && bakerAddress !== oldBakerAddress) {
       const lambda = parser.parseMichelineExpression(
-        makeDelegateMichelson({ bakerAddress })
+        generateDelegateMichelson(version, { bakerAddress })
       );
       ops.push({
         execute_lambda: {
@@ -208,7 +212,9 @@ const SignersForm: FC<{
         },
       });
     } else if (bakerAddress === "" && !!oldBakerAddress) {
-      const lambda = parser.parseMichelineExpression(makeUndelegateMichelson());
+      const lambda = parser.parseMichelineExpression(
+        generateUndelegateMichelson(version)
+      );
 
       ops.push({
         execute_lambda: {

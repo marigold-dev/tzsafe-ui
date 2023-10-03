@@ -1,10 +1,19 @@
-import { Parser } from "@taquito/michel-codec";
+import { Parser, unpackDataBytes } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
+import { API_URL } from "../context/config";
+import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
-import { proposal } from "../types/display";
+import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
+
+type proofOfEvent = {
+  payload: {
+    payload: string;
+    challenge_id: string;
+  };
+};
 
 export type timeoutAndHash = [boolean, string];
 
@@ -38,12 +47,20 @@ export type proposals =
     };
 
 abstract class Versioned {
-  readonly version: string;
+  readonly version: version;
   readonly contractAddress: string;
-  constructor(version: string, contractAddress: string) {
+  constructor(version: version, contractAddress: string) {
     this.version = version;
     this.contractAddress = contractAddress;
   }
+
+  abstract submitTxProposals(
+    cc: Contract,
+    t: TezosToolkit,
+    proposals: proposals,
+    convertTezToMutez?: boolean
+  ): Promise<timeoutAndHash>;
+
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -63,6 +80,7 @@ abstract class Versioned {
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash>;
+
   static toContractState(_contract: any, _balance: BigNumber): contractStorage {
     throw new Error("not implemented!");
   }
@@ -72,6 +90,42 @@ abstract class Versioned {
   static toProposal(_proposal: any): proposal {
     throw new Error("not implemented!");
   }
+
+  static proposals(
+    bigmapId: string
+  ): Promise<Array<{ key: string; value: any }>> {
+    return fetch(
+      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true`
+    ).then(res => res.json());
+  }
+
+  static proposalsHistory(
+    c: contractStorage,
+    address: string,
+    bigmapId: string
+  ): Promise<Array<{ key: string; value: any }>> {
+    if (c.version === "0.3.1") {
+      return fetch(
+        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event`
+      )
+        .then(res => res.json())
+        .then((events: Array<proofOfEvent>) =>
+          events.map(event => ({
+            key: event.payload.challenge_id,
+            value: proposalSchema_0_3_1.Execute(
+              unpackDataBytes({
+                bytes: event.payload.payload,
+              })
+            ),
+          }))
+        );
+    } else {
+      return fetch(
+        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}]`
+      ).then(res => res.json());
+    }
+  }
+
   static signers(c: contractStorage): string[] {
     if (typeof c == "undefined") {
       return [];
@@ -84,16 +138,18 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return c.owners;
     }
     if (c.version === "unknown version") {
       return [];
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
+
   static proposalCounter(c: contractStorage): BigNumber {
     if (
       c.version === "0.0.6" ||
@@ -102,17 +158,18 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
-      // TODO: owners???
       return c.owners;
     }
     if (c.version === "unknown version") {
       return BigNumber(0);
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
+
   static lambdaForm(c: contractStorage): {
     values: { [key: string]: string };
     fields: {
@@ -156,7 +213,8 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return {
         values: {
@@ -197,7 +255,7 @@ abstract class Versioned {
     if (c.version === "unknown version") {
       return { fields: [], values: {} };
     }
-    let _: never = c.version;
+
     throw new Error("Invalid version");
   }
 
@@ -250,7 +308,8 @@ abstract class Versioned {
       c.version === "0.0.10" ||
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
-      c.version === "0.3.0"
+      c.version === "0.3.0" ||
+      c.version === "0.3.1"
     ) {
       return {
         values: {
@@ -287,7 +346,7 @@ abstract class Versioned {
     if (c.version === "unknown version") {
       return { fields: [], values: {} };
     }
-    let _: never = c.version;
+
     throw new Error("unknown version");
   }
 
