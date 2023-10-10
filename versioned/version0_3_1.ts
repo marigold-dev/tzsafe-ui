@@ -33,7 +33,7 @@ function convert(x: string): string {
   return char2Bytes(x);
 }
 
-class Version0_3_0 extends Versioned {
+class Version0_3_1 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -232,7 +232,7 @@ class Version0_3_0 extends Versioned {
     const proposalBytes = packDataBytes(proposalData, proposalsType).bytes;
 
     if (typeof result != "undefined") {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methodsObject.sign_proposal({
           agreement: result,
           challenge_id: proposalId,
@@ -241,7 +241,7 @@ class Version0_3_0 extends Versioned {
       );
     }
     if (resolve) {
-      await batch.withContractCall(
+      batch.withContractCall(
         // resolve proposal
         cc.methods.proof_of_event_challenge(proposalId, proposalBytes)
       );
@@ -389,4 +389,4 @@ class Version0_3_0 extends Versioned {
   }
 }
 
-export default Version0_3_0;
+export default Version0_3_1;

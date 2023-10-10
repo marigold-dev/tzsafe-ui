@@ -1,6 +1,6 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress } from "@taquito/utils";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useReducer, useState } from "react";
 import Alias from "../../components/Alias";
 import HistoryFaToken from "../../components/HistoryFaToken";
 import ProposalCard from "../../components/ProposalCard";
@@ -29,68 +29,168 @@ import { Versioned } from "../../versioned/interface";
 
 const emptyProps: [number, { og: any; ui: proposal }][] = [];
 
+type proposals = [number, { og: any; ui: proposal }][];
+
+type openModal = {
+  state: number;
+  proposal: [boolean | undefined, number];
+};
+
+type state = {
+  isLoading: boolean;
+  isInvalid: boolean;
+  canFetchMore: boolean;
+  isFetchingMore: boolean;
+  proposals: proposals;
+  transfers: [mutezTransfer[], tokenTransfer[]];
+  openModal: openModal;
+  offset: number;
+  currentAddress: string | null;
+};
+
+type action =
+  | { type: "setLoading"; payload: boolean }
+  | { type: "setInvalid"; payload: boolean }
+  | {
+      type: "setProposals";
+      payload: {
+        proposals: proposals;
+        address: string;
+        transfers: [mutezTransfer[], tokenTransfer[]];
+      };
+    }
+  | {
+      type: "appendProposals";
+      payload: {
+        proposals: proposals;
+        transfers: [mutezTransfer[], tokenTransfer[]];
+      };
+    }
+  | { type: "setOpenModal"; payload: openModal }
+  | { type: "setCanFetchMore"; payload: boolean }
+  | { type: "setIsFetchingMore"; payload: boolean }
+  | { type: "fetchMore" }
+  | { type: "stopLoadings" }
+  | { type: "setOpenModalState"; payload: number };
+
+const reducer = (state: state, action: action): state => {
+  switch (action.type) {
+    case "setLoading":
+      return { ...state, isLoading: action.payload };
+    case "setInvalid":
+      return { ...state, isInvalid: action.payload };
+    case "appendProposals":
+      return {
+        ...state,
+        proposals: state.proposals.concat(action.payload.proposals),
+        transfers: [
+          state.transfers[0].concat(action.payload.transfers[0]),
+          state.transfers[1].concat(action.payload.transfers[1]),
+        ],
+        isFetchingMore: false,
+      };
+    case "setProposals":
+      return {
+        ...state,
+        proposals: action.payload.proposals,
+        transfers: action.payload.transfers,
+        currentAddress: action.payload.address,
+        isLoading: false,
+      };
+    case "setOpenModal":
+      return { ...state, openModal: action.payload };
+    case "setOpenModalState":
+      return {
+        ...state,
+        openModal: {
+          ...state.openModal,
+          state: action.payload,
+        },
+      };
+    case "setCanFetchMore":
+      return {
+        ...state,
+        canFetchMore: action.payload,
+      };
+    case "setIsFetchingMore":
+      return {
+        ...state,
+        isFetchingMore: action.payload,
+      };
+
+    case "fetchMore":
+      return {
+        ...state,
+        isFetchingMore: true,
+        offset: state.offset + Versioned.FETCH_COUNT,
+      };
+    case "stopLoadings":
+      return {
+        ...state,
+        isFetchingMore: false,
+        isLoading: false,
+      };
+  }
+};
 const getLatestTimestamp = (og: {
   resolver: { timestamp: string } | undefined;
   proposer: { timestamp: string };
 }) => (!!og.resolver ? og.resolver.timestamp : og.proposer.timestamp);
 
 const History = () => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const globalState = useContext(AppStateContext)!;
+  const globalDispatch = useContext(AppDispatchContext)!;
 
   const walletTokens = useWalletTokens();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [invalid, setInvalid] = useState(false);
-  const [contract, setContract] = useState<contractStorage>(
-    state.contracts[state.currentContract ?? ""]
-  );
-  const [proposals, setProposals] = useState(emptyProps);
-  const [transfers, setTransfers] = useState<
-    [mutezTransfer[], tokenTransfer[]]
-  >([[], []]);
-  const [openModal, setCloseModal] = useState<{
-    state: number;
-    proposal: [boolean | undefined, number];
-  }>({
-    state: 0,
-    proposal: [undefined, 0],
+  const [state, dispatch] = useReducer<typeof reducer>(reducer, {
+    isLoading: true,
+    isInvalid: false,
+    canFetchMore: true,
+    isFetchingMore: false,
+    currentAddress: globalState.currentContract,
+    proposals: [],
+    transfers: [[], []],
+    openModal: {
+      state: 0,
+      proposal: [undefined, 0],
+    },
+    offset: 0,
   });
 
   useEffect(() => {
-    if (!state.currentContract) return;
+    if (!globalState.currentContract) return;
 
-    if (validateContractAddress(state.currentContract) !== 3) {
-      setInvalid(true);
+    if (validateContractAddress(globalState.currentContract) !== 3) {
+      dispatch({ type: "setInvalid", payload: true });
       return;
     }
 
     (async () => {
-      setIsLoading(true);
-      if (!state.currentContract) return;
+      if (!globalState.currentContract) return;
 
-      const c = await state.connection.contract.at(
-        state.currentContract,
+      const c = await globalState.connection.contract.at(
+        globalState.currentContract,
         tzip16
       );
-      const balance = await state.connection.tz.getBalance(
-        state.currentContract
+      const balance = await globalState.connection.tz.getBalance(
+        globalState.currentContract
       );
 
       const cc = (await c.storage()) as contractStorage;
 
-      const version = await (state.contracts[state.currentContract]
+      const version = await (globalState.contracts[globalState.currentContract]
         ? Promise.resolve<version>(
-            state.contracts[state.currentContract].version
+            globalState.contracts[globalState.currentContract].version
           )
         : fetchVersion(c));
       const updatedContract = toStorage(version, cc, balance);
 
-      state.contracts[state.currentContract]
-        ? dispatch({
+      globalState.contracts[globalState.currentContract]
+        ? globalDispatch({
             type: "updateContract",
             payload: {
-              address: state.currentContract,
+              address: globalState.currentContract,
               contract: updatedContract,
             },
           })
@@ -100,32 +200,54 @@ const History = () => {
 
       const bigmap = await Versioned.proposalsHistory(
         cc,
-        state.currentContract,
-        getProposalsId(version, cc)
+        globalState.currentContract,
+        getProposalsId(version, cc),
+        state.offset
       );
+
       const response = await Promise.all([
-        getTransfers(state.currentContract),
-        getTokenTransfers(state.currentContract),
+        getTransfers(globalState.currentContract, state.offset),
+        getTokenTransfers(globalState.currentContract, state.offset),
       ]);
+
+      if (
+        bigmap.length < Versioned.FETCH_COUNT &&
+        response[0].length < Versioned.FETCH_COUNT &&
+        response[1].length < Versioned.FETCH_COUNT
+      ) {
+        dispatch({ type: "setCanFetchMore", payload: false });
+      }
 
       const proposals: [number, any][] = bigmap.map(({ key, value }) => [
         Number(`0x${key}`),
         { ui: toProposal(version, value), og: value },
       ]);
-      setContract(updatedContract);
-      setTransfers(response);
-      setProposals(proposals);
-      setIsLoading(false);
+
+      dispatch(
+        state.isLoading
+          ? {
+              type: "setProposals",
+              payload: {
+                proposals,
+                address: globalState.currentContract,
+                transfers: response,
+              },
+            }
+          : {
+              type: "appendProposals",
+              payload: { proposals, transfers: response },
+            }
+      );
     })();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract]);
+  }, [globalState.currentContract, state.offset]);
 
   const filteredProposals = useMemo(
     () =>
-      proposals
+      state.proposals
         .concat(
-          transfers[0].map(
+          state.transfers[0].map(
             x =>
               [
                 TransferType.MUTEZ,
@@ -134,7 +256,7 @@ const History = () => {
           )
         )
         .concat(
-          transfers[1].map(
+          state.transfers[1].map(
             x =>
               [
                 x.token.standard === "fa2"
@@ -157,22 +279,38 @@ const History = () => {
 
           return date2 - date1;
         }),
-    [proposals, transfers]
+    [state.proposals, state.transfers]
   );
 
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"History - TzSafe"} />
-      <Modal opened={!!openModal.state}>
-        {!!openModal.state && (
+      <Modal opened={!!state.openModal.state}>
+        {!!state.openModal.state && (
           <ProposalSignForm
-            address={state.currentContract ?? ""}
-            threshold={contract.threshold}
-            version={contract.version}
-            proposal={proposals.find(x => x[0] === openModal.proposal[1])![1]}
-            state={openModal.proposal[0]}
-            id={openModal.proposal[1]}
-            closeModal={() => setCloseModal((s: any) => ({ ...s, state: 0 }))}
+            address={globalState.currentContract ?? ""}
+            threshold={
+              (
+                globalState.contracts[globalState.currentContract ?? ""] ??
+                globalState.currentStorage
+              ).threshold
+            }
+            version={
+              (
+                globalState.contracts[globalState.currentContract ?? ""] ??
+                globalState.currentStorage
+              ).version
+            }
+            proposal={
+              state.proposals.find(
+                x => x[0] === state.openModal.proposal[1]
+              )![1]
+            }
+            state={state.openModal.proposal[0]}
+            id={state.openModal.proposal[1]}
+            closeModal={() =>
+              dispatch({ type: "setOpenModalState", payload: 0 })
+            }
             walletTokens={walletTokens ?? []}
           />
         )}
@@ -184,17 +322,17 @@ const History = () => {
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {!state.currentContract ? (
+          {!globalState.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
             </h2>
-          ) : invalid ? (
+          ) : state.isInvalid ? (
             <div className="mx-auto flex w-full items-center justify-center bg-graybg p-2 shadow">
               <p className="mx-auto text-xl font-bold text-gray-800">
-                Invalid contract address: {state.currentContract}
+                Invalid contract address: {globalState.currentContract}
               </p>
             </div>
-          ) : isLoading || !walletTokens ? (
+          ) : state.isLoading || !walletTokens ? (
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
@@ -279,9 +417,24 @@ const History = () => {
                           walletTokens={walletTokens}
                         />
                       );
-                      break;
                   }
                 })}
+                {state.canFetchMore && (
+                  <div className="mt-4 flex w-full items-center justify-center">
+                    {state.isFetchingMore ? (
+                      <Spinner />
+                    ) : (
+                      <button
+                        className="mx-auto rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
+                        onClick={() => {
+                          dispatch({ type: "fetchMore" });
+                        }}
+                      >
+                        See more
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )
           )}
