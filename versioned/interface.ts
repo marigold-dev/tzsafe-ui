@@ -50,7 +50,7 @@ abstract class Versioned {
   readonly version: version;
   readonly contractAddress: string;
 
-  public static FETCH_COUNT = 5;
+  public static FETCH_COUNT = 20;
 
   constructor(version: version, contractAddress: string) {
     this.version = version;
