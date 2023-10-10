@@ -49,6 +49,9 @@ export type proposals =
 abstract class Versioned {
   readonly version: version;
   readonly contractAddress: string;
+
+  public static FETCH_COUNT = 5;
+
   constructor(version: version, contractAddress: string) {
     this.version = version;
     this.contractAddress = contractAddress;
@@ -92,21 +95,24 @@ abstract class Versioned {
   }
 
   static proposals(
-    bigmapId: string
+    bigmapId: string,
+    offset: number
   ): Promise<Array<{ key: string; value: any }>> {
     return fetch(
-      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true`
+      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`
     ).then(res => res.json());
   }
 
   static proposalsHistory(
     c: contractStorage,
     address: string,
-    bigmapId: string
+    bigmapId: string,
+    offset: number
   ): Promise<Array<{ key: string; value: any }>> {
+    const common = `&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`;
     if (c.version === "0.3.1") {
       return fetch(
-        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event`
+        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
         .then((events: Array<proofOfEvent>) =>
@@ -121,7 +127,7 @@ abstract class Versioned {
         );
     } else {
       return fetch(
-        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}]`
+        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}]${common}`
       ).then(res => res.json());
     }
   }

@@ -57,7 +57,10 @@ async function fetchVersion(
     const version = await metadata
       .tzip16()
       .getMetadata()
-      .then(metadata => metadata.metadata.version ?? "unknown version")
+      .then(metadata => {
+        console.log("HERE:", metadata);
+        return metadata?.metadata?.version ?? "unknown version";
+      })
       .catch(_ =>
         fetch(`${API_URL}/v1/contracts?address=${metadata.address}`)
           .then(r => r.json())
