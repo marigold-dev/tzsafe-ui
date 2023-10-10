@@ -4,6 +4,7 @@ import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { makeWertWidget } from "../../context/wert";
+import { tezToMutez } from "../../utils/tez";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
@@ -25,6 +26,23 @@ const TopUpPage = () => {
       contract: state.currentContract ?? "",
     });
   }, [state.currentContract]);
+
+  // useEffect(() => {
+  //   const aze = async () => {
+  //     const contract = await state.connection.contract.at(
+  //       state.currentContract ?? ""
+  //     );
+  //
+  //     const params = await contract.methods
+  //       .default()
+  //       .toTransferParams({ amount: 10 });
+  //
+  //     console.log(params);
+  //     await state.connection.wallet.transfer(params).send();
+  //   };
+  //
+  //   aze();
+  // }, []);
 
   useEffect(() => {
     if (
