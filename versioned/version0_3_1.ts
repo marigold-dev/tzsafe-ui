@@ -305,19 +305,24 @@ class Version0_3_1 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      const contentLambda = content.execute_lambda.lambda;
+      const metadata = content.execute_lambda.metadata;
+
+      const meta = !!metadata
+        ? bytes2Char(typeof metadata === "string" ? metadata : metadata.Some)
+        : "No meta supplied";
+
+      const lambda = Array.isArray(contentLambda)
+        ? contentLambda
+        : JSON.parse(contentLambda ?? "");
       return {
         executeLambda: {
-          metadata: !!content.execute_lambda.lambda
+          metadata: !!lambda
             ? JSON.stringify(
                 {
                   status: "Non-executed;",
-                  meta: content.execute_lambda.metadata
-                    ? bytes2Char(content.execute_lambda.metadata)
-                    : "No meta supplied",
-
-                  lambda: emitMicheline(
-                    JSON.parse(content.execute_lambda.lambda ?? "")
-                  ),
+                  meta,
+                  lambda,
                 },
                 null,
                 2
@@ -325,16 +330,12 @@ class Version0_3_1 extends Versioned {
             : JSON.stringify(
                 {
                   status: "Executed; lambda unavailable",
-                  meta: content.execute_lambda.metadata
-                    ? bytes2Char(content.execute_lambda.metadata)
-                    : "No meta supplied",
+                  meta,
                 },
                 null,
                 2
               ),
-          content: content.execute_lambda.lambda
-            ? emitMicheline(JSON.parse(content.execute_lambda.lambda))
-            : "",
+          content: content.execute_lambda.lambda ? emitMicheline(lambda) : "",
         },
       };
     } else if ("transfer" in content) {
@@ -376,15 +377,18 @@ class Version0_3_1 extends Versioned {
       closed: "Rejected",
       expired: "Expired",
     };
+
     return {
       timestamp: prop.proposer.timestamp,
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
-      signatures: [...Object.entries(prop.signatures)].map(([k, v]) => ({
-        signer: k,
-        result: v,
-      })),
+      signatures: [...prop.signatures.entries()].map(([k, v]) => {
+        return {
+          signer: k,
+          result: v,
+        };
+      }),
     };
   }
 }

@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import { v4 as uuidV4 } from "uuid";
-import { API_URL, THUMBNAIL_URL } from "../context/config";
+import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
@@ -133,7 +133,7 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${API_URL}/v1/tokens/balances?account=${
+        `${TZKT_API_URL}/v1/tokens/balances?account=${
           state.currentContract
         }&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
           !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""

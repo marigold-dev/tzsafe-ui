@@ -1,6 +1,6 @@
 import { tzip16 } from "@taquito/tzip16";
-import { validateContractAddress } from "@taquito/utils";
-import { useContext, useEffect, useMemo, useReducer, useState } from "react";
+import { validateContractAddress, ValidationResult } from "@taquito/utils";
+import { useContext, useEffect, useMemo, useReducer, useRef } from "react";
 import Alias from "../../components/Alias";
 import HistoryFaToken from "../../components/HistoryFaToken";
 import ProposalCard from "../../components/ProposalCard";
@@ -27,8 +27,6 @@ import useWalletTokens from "../../utils/useWalletTokens";
 import { getProposalsId, toProposal, toStorage } from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
 
-const emptyProps: [number, { og: any; ui: proposal }][] = [];
-
 type proposals = [number, { og: any; ui: proposal }][];
 
 type openModal = {
@@ -46,6 +44,7 @@ type state = {
   openModal: openModal;
   offset: number;
   currentAddress: string | null;
+  refreshCount: number;
 };
 
 type action =
@@ -70,6 +69,7 @@ type action =
   | { type: "setCanFetchMore"; payload: boolean }
   | { type: "setIsFetchingMore"; payload: boolean }
   | { type: "fetchMore" }
+  | { type: "resetRefresh" }
   | { type: "stopLoadings" }
   | { type: "setOpenModalState"; payload: number };
 
@@ -117,7 +117,13 @@ const reducer = (state: state, action: action): state => {
         ...state,
         isFetchingMore: action.payload,
       };
-
+    case "resetRefresh":
+      return {
+        ...state,
+        refreshCount: state.refreshCount + 1,
+        isLoading: true,
+        offset: 0,
+      };
     case "fetchMore":
       return {
         ...state,
@@ -156,15 +162,38 @@ const History = () => {
       proposal: [undefined, 0],
     },
     offset: 0,
+    refreshCount: 0,
   });
+
+  const previousRefresherRef = useRef(-1);
+  useEffect(() => {
+    if (!globalState.currentContract) return;
+
+    if (globalState.currentContract === state.currentAddress) return;
+
+    dispatch({ type: "resetRefresh" });
+  }, [globalState.currentContract]);
 
   useEffect(() => {
     if (!globalState.currentContract) return;
 
-    if (validateContractAddress(globalState.currentContract) !== 3) {
+    if (
+      !globalState.currentContract ||
+      (globalState.currentContract === state.currentAddress &&
+        previousRefresherRef.current === state.refreshCount &&
+        !state.isFetchingMore)
+    )
+      return;
+
+    if (
+      validateContractAddress(globalState.currentContract) !==
+      ValidationResult.VALID
+    ) {
       dispatch({ type: "setInvalid", payload: true });
       return;
     }
+
+    previousRefresherRef.current = state.refreshCount;
 
     (async () => {
       if (!globalState.currentContract) return;
@@ -218,24 +247,26 @@ const History = () => {
         dispatch({ type: "setCanFetchMore", payload: false });
       }
 
-      const proposals: [number, any][] = bigmap.map(({ key, value }) => [
-        Number(`0x${key}`),
-        { ui: toProposal(version, value), og: value },
-      ]);
+      const proposals: [number, any][] = bigmap.map(({ key, value }) => {
+        return [
+          Number(`0x${key}`),
+          { ui: toProposal(version, value), og: value },
+        ];
+      });
 
       dispatch(
-        state.isLoading
+        state.isFetchingMore
           ? {
+              type: "appendProposals",
+              payload: { proposals, transfers: response },
+            }
+          : {
               type: "setProposals",
               payload: {
                 proposals,
                 address: globalState.currentContract,
                 transfers: response,
               },
-            }
-          : {
-              type: "appendProposals",
-              payload: { proposals, transfers: response },
             }
       );
     })();
@@ -343,7 +374,7 @@ const History = () => {
           ) : (
             filteredProposals.length > 0 && (
               <div className="space-y-6">
-                {filteredProposals.map((x, i) => {
+                {filteredProposals.map(x => {
                   switch (x[0]) {
                     case TransferType.MUTEZ:
                       return (
@@ -402,7 +433,10 @@ const History = () => {
                           status={x[1].ui.status}
                           date={
                             !!x[1].og.resolver
-                              ? new Date(x[1].og.resolver.timestamp)
+                              ? new Date(
+                                  x[1].og.resolver.timestamp ??
+                                    x[1].og.resolver.Some.timestamp
+                                )
                               : new Date(x[1].ui.timestamp)
                           }
                           activities={x[1].ui.signatures.map(
