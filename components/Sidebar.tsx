@@ -20,11 +20,9 @@ import React, {
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
-import { fetchContract } from "../utils/fetchContract";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import Copy from "./Copy";
-import Spinner from "./Spinner";
 
 type selectItemProps = {
   name: string | undefined;
@@ -184,20 +182,8 @@ const Sidebar = ({
       </button>
       <Select.Root
         onValueChange={async payload => {
+          // State update is done in _app
           router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
-          dispatch({
-            type: "setCurrentContract",
-            payload,
-          });
-
-          const storage = await fetchContract(state.connection, payload);
-
-          if (!storage) return;
-
-          dispatch({
-            type: "setCurrentStorage",
-            payload: { ...storage, address: payload },
-          });
         }}
         value={currentContract}
         disabled={Object.values(state.contracts).length === 0}

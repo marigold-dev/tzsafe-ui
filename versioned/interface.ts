@@ -2,7 +2,7 @@ import { Parser, unpackDataBytes } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { API_URL } from "../context/config";
+import { TZKT_API_URL } from "../context/config";
 import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
@@ -99,7 +99,7 @@ abstract class Versioned {
     offset: number
   ): Promise<Array<{ key: string; value: any }>> {
     return fetch(
-      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`
+      `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`
     ).then(res => res.json());
   }
 
@@ -112,7 +112,7 @@ abstract class Versioned {
     const common = `&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`;
     if (c.version === "0.3.1") {
       return fetch(
-        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
         .then((events: Array<proofOfEvent>) =>
@@ -127,7 +127,7 @@ abstract class Versioned {
         );
     } else {
       return fetch(
-        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}]${common}`
+        `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}, {"expired": {}}]${common}`
       ).then(res => res.json());
     }
   }

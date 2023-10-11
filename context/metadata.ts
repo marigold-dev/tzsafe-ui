@@ -5,7 +5,7 @@ import {
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
 import { version } from "../types/display";
-import { API_URL } from "./config";
+import { TZKT_API_URL } from "./config";
 
 declare const ABSTRACTION_KEY: unique symbol;
 const dispatch: { [key: string]: version } = {
@@ -58,11 +58,10 @@ async function fetchVersion(
       .tzip16()
       .getMetadata()
       .then(metadata => {
-        console.log("HERE:", metadata);
         return metadata?.metadata?.version ?? "unknown version";
       })
       .catch(_ =>
-        fetch(`${API_URL}/v1/contracts?address=${metadata.address}`)
+        fetch(`${TZKT_API_URL}/v1/contracts?address=${metadata.address}`)
           .then(r => r.json())
           .then(
             ([{ typeHash, codeHash }]: {

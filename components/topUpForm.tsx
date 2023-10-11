@@ -11,7 +11,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
+import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
 import fetchVersion from "../context/metadata";
 import {
   AppDispatchContext,
@@ -99,7 +99,7 @@ function TopUp(props: {
     (value: string, offset: number) =>
       promiseWithTimeout(
         fetch(
-          `${API_URL}/v1/tokens/balances?account=${state.address}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.in=fa1.2,fa2`
+          `${TZKT_API_URL}/v1/tokens/balances?account=${state.address}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.in=fa1.2,fa2`
         )
           .catch(e => {
             console.log(e);

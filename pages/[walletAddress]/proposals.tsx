@@ -1,6 +1,6 @@
 import { tzip16 } from "@taquito/tzip16";
-import { validateContractAddress } from "@taquito/utils";
-import { useContext, useEffect, useReducer, useRef, useState } from "react";
+import { validateContractAddress, ValidationResult } from "@taquito/utils";
+import { useContext, useEffect, useReducer, useRef } from "react";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
@@ -42,6 +42,7 @@ type action =
   | { type: "setIsFetchingMore"; payload: boolean }
   | { type: "fetchMore" }
   | { type: "refresh" }
+  | { type: "resetRefresh" }
   | { type: "stopLoadings" }
   | { type: "setOpenModalState"; payload: number };
 
@@ -89,6 +90,13 @@ const reducer = (state: state, action: action): state => {
         ...state,
         refreshCount: state.refreshCount + 1,
         isLoading: true,
+      };
+    case "resetRefresh":
+      return {
+        ...state,
+        refreshCount: state.refreshCount + 1,
+        isLoading: true,
+        offset: 0,
       };
     case "fetchMore":
       return {
@@ -139,6 +147,14 @@ const Proposals = () => {
   const previousRefresherRef = useRef(-1);
 
   useEffect(() => {
+    if (!globalState.currentContract) return;
+
+    if (globalState.currentContract === state.currentAddress) return;
+
+    dispatch({ type: "resetRefresh" });
+  }, [globalState.currentContract]);
+
+  useEffect(() => {
     if (
       !globalState.currentContract ||
       (globalState.currentContract === state.currentAddress &&
@@ -147,7 +163,10 @@ const Proposals = () => {
     )
       return;
 
-    if (validateContractAddress(globalState.currentContract) !== 3) {
+    if (
+      validateContractAddress(globalState.currentContract) !==
+      ValidationResult.VALID
+    ) {
       dispatch({ type: "setInvalid", payload: true });
       return;
     }
