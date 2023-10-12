@@ -383,7 +383,11 @@ class Version0_3_1 extends Versioned {
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
-      signatures: [...prop.signatures.entries()].map(([k, v]) => {
+      signatures: [
+        ...(prop.signatures?.entries
+          ? prop.signatures.entries()
+          : Object.entries(prop.signatures)),
+      ].map(([k, v]) => {
         return {
           signer: k,
           result: v,
