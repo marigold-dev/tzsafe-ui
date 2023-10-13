@@ -248,10 +248,12 @@ const Proposals = () => {
             }
             state={state.openModal.proposal[0]}
             id={state.openModal.proposal[1]}
-            closeModal={() =>
-              dispatch({ type: "setOpenModalState", payload: 0 })
-            }
-            onSuccess={() => dispatch({ type: "refresh" })}
+            closeModal={success => {
+              if (success) {
+                dispatch({ type: "refresh" });
+              }
+              dispatch({ type: "setOpenModalState", payload: 0 });
+            }}
             walletTokens={walletTokens ?? []}
           />
         )}

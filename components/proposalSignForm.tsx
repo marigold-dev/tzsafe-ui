@@ -34,7 +34,7 @@ function ProposalSignForm({
   threshold: number;
   id: number;
   state: boolean | undefined;
-  closeModal: () => void;
+  closeModal: (success: boolean) => void;
   walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
@@ -112,7 +112,7 @@ function ProposalSignForm({
         <div className="w-full space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
-            onClick={closeModal}
+            onClick={() => closeModal(false)}
           >
             Close
           </button>
@@ -195,6 +195,7 @@ function ProposalSignForm({
       onSubmit={async values => {
         setLoading(true);
 
+        let success = true;
         try {
           await sign(
             id,
@@ -206,12 +207,13 @@ function ProposalSignForm({
           setResult(true);
           setLoading(false);
         } catch (e) {
+          success = false;
           console.log("Sign error: ", e);
           setResult(false);
         }
         setLoading(false);
         setTimeout(() => {
-          closeModal();
+          closeModal(success);
         }, MODAL_TIMEOUT);
       }}
     >
@@ -329,7 +331,7 @@ function ProposalSignForm({
             className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
             onClick={e => {
               e.preventDefault();
-              closeModal();
+              closeModal(false);
             }}
           >
             Cancel
