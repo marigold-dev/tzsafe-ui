@@ -7,12 +7,17 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import fetchVersion from "../../context/metadata";
-import { AppStateContext } from "../../context/state";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
-import { getProposalsId, signers, toProposal } from "../../versioned/apis";
+import {
+  getProposalsId,
+  signers,
+  toProposal,
+  toStorage,
+} from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
 
 type proposals = [number, { og: any; ui: proposal }][];
@@ -126,6 +131,7 @@ const emptyProposal = {
 
 const Proposals = () => {
   const globalState = useContext(AppStateContext)!;
+  const globalDispatch = useContext(AppDispatchContext)!;
   const isOwner = useIsOwner();
   const walletTokens = useWalletTokens();
 
@@ -203,6 +209,19 @@ const Proposals = () => {
         { ui: toProposal(version, value), og: value },
       ]);
 
+      if (globalState.contracts[globalState.currentContract ?? ""]) {
+        const balance = await globalState.connection.tz.getBalance(
+          globalState.currentContract
+        );
+
+        globalDispatch({
+          type: "updateContract",
+          payload: {
+            address: globalState.currentContract,
+            contract: toStorage(version, cc, balance),
+          },
+        });
+      }
       dispatch(
         state.isLoading
           ? {
