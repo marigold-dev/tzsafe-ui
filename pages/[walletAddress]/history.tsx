@@ -249,7 +249,7 @@ const History = () => {
 
       const proposals: [number, any][] = bigmap.map(({ key, value }) => {
         return [
-          Number(`0x${key}`),
+          Number.parseInt(key),
           { ui: toProposal(version, value), og: value },
         ];
       });
@@ -417,6 +417,7 @@ const History = () => {
                     case TransferType.FA1_2:
                       return (
                         <HistoryFaToken
+                          key={(x[1] as any).timestamp}
                           transferType={x[0]}
                           token={x[1] as any}
                         />

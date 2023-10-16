@@ -224,12 +224,12 @@ class Version0_1_1 extends Versioned {
     let prop: any = await proposals.proposals.get(BigNumber(proposal));
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
       );
     }
