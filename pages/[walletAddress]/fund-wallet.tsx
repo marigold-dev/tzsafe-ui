@@ -38,6 +38,19 @@ const TopUpPage = () => {
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <button
+            onClick={() => {
+              //@ts-ignore
+              showMtpModal({
+                lang: "en",
+                mode: "dark",
+                tabs: ["buy"],
+                nets: ["tezos_mainnet"],
+              });
+            }}
+          >
+            SALUT MON POTE
+          </button>
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar

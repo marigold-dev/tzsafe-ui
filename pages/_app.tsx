@@ -5,6 +5,7 @@ import { validateAddress, ValidationResult } from "@taquito/utils";
 import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
+import Script from "next/script";
 import { useReducer, useEffect, useState } from "react";
 import Banner from "../components/Banner";
 import Sidebar from "../components/Sidebar";
@@ -185,6 +186,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
+        <Script src="https://widget.mtpelerin.com/mtp-widget.js" />
         <div className="relative min-h-screen">
           <div id="modal" />
           <Banner>
