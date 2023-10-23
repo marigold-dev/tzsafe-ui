@@ -1,6 +1,10 @@
 import { Parser, Expr } from "@taquito/michel-codec";
 import { describe, expect, it } from "vitest";
-import { decodeB58, toRightAssociative } from "../utils/contractParam";
+import {
+  decodeB58,
+  toRightAssociativePairType,
+  toRightAssociativePairData,
+} from "../utils/contractParam";
 
 const p = new Parser();
 
@@ -387,7 +391,39 @@ describe("decodeB58 address on complicated pair data structure", () => {
   });
 });
 
-describe("test pair for right associative 1", () => {
+describe("decodeB58 address on complicated pair data structure 2", () => {
+  it("should be present in string representation", () => {
+    const instr = p.parseMichelineExpression(
+      ` { PUSH (pair string (pair string (pair string address))) (Pair "abc" "123"  "xyz" 0x000083d72f98dc41baa8b71136f05e2bc1dfd524862f)}`
+    )!;
+    const [type, data] = testData(instr);
+    const newData = decodeB58(type, data);
+
+    expect(JSON.stringify(newData)).toMatchObject(
+      JSON.stringify({
+        prim: "Pair",
+        args: [
+          { string: "abc" },
+          {
+            prim: "Pair",
+            args: [
+              { string: "123" },
+              {
+                prim: "Pair",
+                args: [
+                  { string: "xyz" },
+                  { string: "tz1Xf8zdT3DbAX9cHw3c3CXh79rc4nK4gCe8" },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+    );
+  });
+});
+
+describe("test pair type for right associative 1", () => {
   it("should be right associative", () => {
     const expr = {
       prim: "pair",
@@ -411,7 +447,7 @@ describe("test pair for right associative 1", () => {
         },
       ],
     };
-    toRightAssociative(expr);
+    toRightAssociativePairType(expr);
     expect(JSON.stringify(expr)).toMatchObject(
       JSON.stringify({
         prim: "pair",
@@ -444,7 +480,7 @@ describe("test pair for right associative 1", () => {
   });
 });
 
-describe("test pair for right associative 2", () => {
+describe("test pair type for right associative 2", () => {
   it("should be right associative", () => {
     const expr = {
       prim: "pair",
@@ -463,7 +499,7 @@ describe("test pair for right associative 2", () => {
         },
       ],
     };
-    toRightAssociative(expr);
+    toRightAssociativePairType(expr);
     expect(JSON.stringify(expr)).toMatchObject(
       JSON.stringify({
         prim: "pair",
@@ -486,6 +522,75 @@ describe("test pair for right associative 2", () => {
                   {
                     prim: "address",
                   },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+    );
+  });
+});
+
+describe("test pair data for right associative", () => {
+  it("should be present in string representation", () => {
+    const expr: Expr = {
+      prim: "Pair",
+      args: [
+        { string: "abc" },
+        { string: "123" },
+        { string: "xyz" },
+        { bytes: "000083d72f98dc41baa8b71136f05e2bc1dfd524862f" },
+      ],
+    };
+    const data = toRightAssociativePairData(expr);
+    expect(JSON.stringify(data)).toMatchObject(
+      JSON.stringify({
+        prim: "Pair",
+        args: [
+          { string: "abc" },
+          {
+            prim: "Pair",
+            args: [
+              { string: "123" },
+              {
+                prim: "Pair",
+                args: [
+                  { string: "xyz" },
+                  { bytes: "000083d72f98dc41baa8b71136f05e2bc1dfd524862f" },
+                ],
+              },
+            ],
+          },
+        ],
+      })
+    );
+  });
+});
+
+describe("test pair data for right associative 2", () => {
+  it("should be present in string representation", () => {
+    const expr: Expr = [
+      { string: "abc" },
+      { string: "123" },
+      { string: "xyz" },
+      { bytes: "000083d72f98dc41baa8b71136f05e2bc1dfd524862f" },
+    ];
+    const data = toRightAssociativePairData(expr);
+    expect(JSON.stringify(data)).toMatchObject(
+      JSON.stringify({
+        prim: "Pair",
+        args: [
+          { string: "abc" },
+          {
+            prim: "Pair",
+            args: [
+              { string: "123" },
+              {
+                prim: "Pair",
+                args: [
+                  { string: "xyz" },
+                  { bytes: "000083d72f98dc41baa8b71136f05e2bc1dfd524862f" },
                 ],
               },
             ],
