@@ -46,6 +46,7 @@ const TopUpPage = () => {
                 mode: "dark",
                 tabs: ["buy"],
                 nets: ["tezos_mainnet"],
+                env: "development",
               });
             }}
           >
