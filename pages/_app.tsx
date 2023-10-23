@@ -176,6 +176,8 @@ export default function App({ Component, pageProps }: AppProps) {
           const balance = await state?.connection.tz.getBalance(userAddress);
           dispatch({
             type: "login",
+            // TODO: FIX
+            //@ts-ignore
             accountInfo: activeAccount!,
             address: userAddress,
             balance: balance!.toString(),

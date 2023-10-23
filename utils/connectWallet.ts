@@ -18,6 +18,8 @@ export const connectWallet = async (
   let s = await state?.beaconWallet!.client.getActiveAccount();
   dispatch!({
     type: "login",
+    // TODO: Fix
+    // @ts-ignore
     accountInfo: s!,
     address: userAddress,
     balance: balance!.toString(),

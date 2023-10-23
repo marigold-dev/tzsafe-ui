@@ -482,6 +482,8 @@ function TransferForm(
 
         values.transfers.forEach((element, idx) => {
           Object.entries(element.values).forEach(([labl, value]) => {
+            if (!("fields" in element)) return;
+
             let field = element.fields.find(x => x.field === labl);
             let validate =
               field?.placeholder !== value ? field?.validate(value) : undefined;
@@ -947,6 +949,8 @@ function TransferForm(
                             </section>
                           );
                         }
+
+                        if (!("fields" in transfer)) return;
 
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"

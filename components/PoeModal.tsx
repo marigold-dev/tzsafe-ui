@@ -1,18 +1,20 @@
-import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
-import { Schema } from "@taquito/michelson-encoder";
 import {
   AppMetadata,
   NetworkType,
   OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
   TezosOperationType,
-} from "beacon-wallet";
+} from "@airgap/beacon-sdk";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
-import { makeContractExecution } from "../context/contractExecution";
-import { makeDelegateMichelson } from "../context/delegate";
+import {
+  generateDelegateMichelson,
+  generateExecuteContractMichelson,
+} from "../context/generateLambda";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { State } from "../pages/beacon";
 import { proposalContent } from "../types/display";
@@ -72,10 +74,14 @@ const PoeModal = () => {
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [currentState, setCurrentState] = useState(State.IDLE);
 
+  const version =
+    state.contracts[state.currentContract ?? ""].version ??
+    state.currentStorage?.version;
+
   const rows = useMemo(
     () =>
       (transfers ?? []).map(t =>
-        contentToData(transferToProposalContent(t), walletTokens ?? [])
+        contentToData(version, transferToProposalContent(t), walletTokens ?? [])
       ),
     [transfers]
   );
@@ -130,7 +136,7 @@ const PoeModal = () => {
                       return {
                         type: "contract",
                         values: {
-                          lambda: makeContractExecution({
+                          lambda: generateExecuteContractMichelson(version, {
                             address: detail.destination,
                             amount: Number(detail.amount),
                             entrypoint: detail.parameters.entrypoint,
@@ -165,7 +171,7 @@ const PoeModal = () => {
                     ? {
                         type: "lambda",
                         values: {
-                          lambda: makeDelegateMichelson({
+                          lambda: generateDelegateMichelson(version, {
                             bakerAddress: detail.delegate,
                           }),
                           metadata: JSON.stringify({

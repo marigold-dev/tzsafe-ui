@@ -6,7 +6,7 @@ import {
   WalletClientOptions,
   BeaconRequestOutputMessage,
   ProofOfEventChallengeRequestOutput,
-} from "beacon-wallet";
+} from "@airgap/beacon-sdk";
 import { TinyEmitter } from "tiny-emitter";
 import { buf2Hex } from "../utils/strings";
 
