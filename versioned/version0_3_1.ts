@@ -10,9 +10,11 @@ import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
 import { DEFAULT_TIMEOUT } from "../context/config";
-import { makeFa1_2ApproveMichelson } from "../context/fa1_2";
-import { makeFa1_2TransferMichelson } from "../context/fa1_2";
-import { makeFa2Michelson } from "../context/fa2";
+import {
+  generateFA1_2ApproveMichelson,
+  generateFA1_2TransferMichelson,
+  generateFA2Michelson,
+} from "../context/generateLambda";
 import {
   content,
   proposal as p1,
@@ -31,7 +33,7 @@ function convert(x: string): string {
   return char2Bytes(x);
 }
 
-class Version0_3_0 extends Versioned {
+class Version0_3_1 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -80,7 +82,8 @@ class Version0_3_0 extends Versioned {
               const parser = new Parser();
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa2Michelson(
+                generateFA2Michelson(
+                  this.version,
                   x.values.map(value => {
                     const token = value.token as unknown as fa2Token;
 
@@ -121,7 +124,7 @@ class Version0_3_0 extends Versioned {
               const token = x.values.token as unknown as fa1_2Token;
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa1_2ApproveMichelson({
+                generateFA1_2ApproveMichelson(this.version, {
                   spenderAddress: x.values.spenderAddress,
                   amount: BigNumber(x.values.amount)
                     .multipliedBy(
@@ -155,7 +158,7 @@ class Version0_3_0 extends Versioned {
               const token = x.values.token as unknown as fa1_2Token;
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa1_2TransferMichelson({
+                generateFA1_2TransferMichelson(this.version, {
                   walletAddress: cc.address,
                   amount: BigNumber(x.values.amount)
                     .multipliedBy(
@@ -229,7 +232,7 @@ class Version0_3_0 extends Versioned {
     const proposalBytes = packDataBytes(proposalData, proposalsType).bytes;
 
     if (typeof result != "undefined") {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methodsObject.sign_proposal({
           agreement: result,
           challenge_id: proposalId,
@@ -238,7 +241,7 @@ class Version0_3_0 extends Versioned {
       );
     }
     if (resolve) {
-      await batch.withContractCall(
+      batch.withContractCall(
         // resolve proposal
         cc.methods.proof_of_event_challenge(proposalId, proposalBytes)
       );
@@ -302,18 +305,24 @@ class Version0_3_0 extends Versioned {
   }
   private static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
+      const contentLambda = content.execute_lambda.lambda;
+      const metadata = content.execute_lambda.metadata;
+
+      const meta = !!metadata
+        ? bytes2Char(typeof metadata === "string" ? metadata : metadata.Some)
+        : "No meta supplied";
+
+      const lambda = Array.isArray(contentLambda)
+        ? contentLambda
+        : JSON.parse(contentLambda ?? "");
       return {
         executeLambda: {
-          metadata: !!content.execute_lambda.lambda
+          metadata: !!lambda
             ? JSON.stringify(
                 {
                   status: "Non-executed;",
-                  meta: content.execute_lambda.metadata
-                    ? bytes2Char(content.execute_lambda.metadata)
-                    : "No meta supplied",
-                  lambda: emitMicheline(
-                    JSON.parse(content.execute_lambda.lambda)
-                  ),
+                  meta,
+                  lambda,
                 },
                 null,
                 2
@@ -321,16 +330,14 @@ class Version0_3_0 extends Versioned {
             : JSON.stringify(
                 {
                   status: "Executed; lambda unavailable",
-                  meta: content.execute_lambda.metadata
-                    ? bytes2Char(content.execute_lambda.metadata)
-                    : "No meta supplied",
+
+                  meta,
                 },
                 null,
                 2
               ),
-          content: content.execute_lambda.lambda
-            ? emitMicheline(JSON.parse(content.execute_lambda.lambda || ""))
-            : "",
+
+          content: content.execute_lambda.lambda ? emitMicheline(lambda) : "",
         },
       };
     } else if ("transfer" in content) {
@@ -372,17 +379,25 @@ class Version0_3_0 extends Versioned {
       closed: "Rejected",
       expired: "Expired",
     };
+
     return {
       timestamp: prop.proposer.timestamp,
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
-      signatures: [...Object.entries(prop.signatures)].map(([k, v]) => ({
-        signer: k,
-        result: v,
-      })),
+
+      signatures: [
+        ...(prop.signatures?.entries
+          ? prop.signatures.entries()
+          : Object.entries(prop.signatures)),
+      ].map(([k, v]) => {
+        return {
+          signer: k,
+          result: v,
+        };
+      }),
     };
   }
 }
 
-export default Version0_3_0;
+export default Version0_3_1;

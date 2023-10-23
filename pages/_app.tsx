@@ -1,4 +1,4 @@
-import { LocalStorage, NetworkType, setDebugEnabled } from "@airgap/beacon-sdk";
+import { LocalStorage, NetworkType } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { validateAddress, ValidationResult } from "@taquito/utils";

@@ -1,12 +1,11 @@
-import { Parser } from "@taquito/michel-codec";
-import { unpackDataBytes } from "@taquito/michel-codec";
+import { Parser, unpackDataBytes } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { API_URL } from "../context/config";
+import { TZKT_API_URL } from "../context/config";
 import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { contractStorage } from "../types/app";
-import { proposal } from "../types/display";
+import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
 
 type proofOfEvent = {
@@ -76,9 +75,12 @@ export type proposals = {
 };
 
 abstract class Versioned {
-  readonly version: string;
+  readonly version: version;
   readonly contractAddress: string;
-  constructor(version: string, contractAddress: string) {
+
+  public static FETCH_COUNT = 20;
+
+  constructor(version: version, contractAddress: string) {
     this.version = version;
     this.contractAddress = contractAddress;
   }
@@ -122,21 +124,25 @@ abstract class Versioned {
   }
 
   static proposals(
-    bigmapId: string
+    bigmapId: string,
+    offset: number
   ): Promise<Array<{ key: string; value: any }>> {
     return fetch(
-      `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true`
+      `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.proposing=%7B%7D&active=true&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`
     ).then(res => res.json());
   }
 
   static proposalsHistory(
     c: contractStorage,
     address: string,
-    bigmapId: string
+
+    bigmapId: string,
+    offset: number
   ): Promise<Array<{ key: string; value: any }>> {
+    const common = `&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`;
     if (c.version === "0.3.1") {
       return fetch(
-        `${API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event`
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
         .then((events: Array<proofOfEvent>) =>
@@ -151,7 +157,7 @@ abstract class Versioned {
         );
     } else {
       return fetch(
-        `${API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"excuted":{}}, {"rejected":{}}]`
+        `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}, {"expired": {}}]${common}`
       ).then(res => res.json());
     }
   }

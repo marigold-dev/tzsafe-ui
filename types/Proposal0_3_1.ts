@@ -1,10 +1,15 @@
-import { MichelsonType } from "@taquito/michel-codec";
+import { MichelsonType, Expr } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { MichelsonMap } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 type content =
-  | { execute_lambda: { metadata?: string; lambda: Array<string> } }
+  | {
+      execute_lambda: {
+        metadata?: string | { Some: string };
+        lambda: string | Array<Expr>;
+      };
+    }
   | { transfer: { amount: number; target: string; parameter: {} } }
   | { add_owners: string[] }
   | { remove_owners: string[] }

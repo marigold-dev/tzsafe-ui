@@ -9,7 +9,6 @@ import {
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
-import { makeFa2Michelson } from "../context/fa2";
 import {
   content,
   proposal as p1,
@@ -79,7 +78,8 @@ class Version0_0_9 extends Versioned {
               const parser = new Parser();
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa2Michelson(
+                generateFA2Michelson(
+                  this.version,
                   x.values.map(value => ({
                     walletAddress: cc.address,
                     targetAddress: value.targetAddress,
@@ -300,3 +300,15 @@ class Version0_0_9 extends Versioned {
 }
 
 export default Version0_0_9;
+function generateFA2Michelson(
+  version: string,
+  arg1: {
+    walletAddress: string;
+    targetAddress: string;
+    tokenId: number;
+    amount: number;
+    fa2Address: string;
+  }[]
+): string {
+  throw new Error("Function not implemented.");
+}

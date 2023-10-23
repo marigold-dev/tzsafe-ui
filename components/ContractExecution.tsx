@@ -525,7 +525,12 @@ function ExecuteForm(
         validate={values => {
           props.onShapeChange(values);
           try {
-            genLambda(props, values);
+            genLambda(
+              state.contracts[state.currentContract ?? ""]?.version ??
+                state.currentStorage?.version,
+              props,
+              values
+            );
           } catch (e) {
             // setSubmitError((e as Error).message);
           }
