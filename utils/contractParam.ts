@@ -878,16 +878,19 @@ function decodeB58(type: Expr, data: Expr): Expr {
       case "pair": {
         toRightAssociativePairType(type);
         data = toRightAssociativePairData(data);
-
-        if ("prim" in data && !!data.args) {
+        if ("prim" in data && "args" in data) {
           let new_data = type.args?.map((v, i) => {
-            //@ts-expect-error
-            if (!data.args?.[i]) throw new Error("Internal: should have args");
-            //@ts-expect-error
-            const d = decodeB58(v, data.args[i]);
-            return d;
+            if ("prim" in data && "args" in data) {
+              if (!data.args?.[i])
+                throw new Error("Internal: should have args");
+              const d = decodeB58(v, data.args[i]);
+              return d;
+            } else {
+              throw new Error("Internal: data should be a prim or array");
+            }
           });
           data.args = new_data;
+
           return data;
         } else {
           throw new Error("Internal: data should be a prim or array");
@@ -897,12 +900,14 @@ function decodeB58(type: Expr, data: Expr): Expr {
         if ("prim" in data) {
           if (data.prim === "Some" && !!data.args) {
             let new_data = type.args?.map((v, i) => {
-              //@ts-expect-error
-              if (!data.args?.[i])
-                throw new Error("Internal: should have args");
-              //@ts-expect-error
-              const d = decodeB58(v, data.args[i]);
-              return d;
+              if ("prim" in data) {
+                if (!data.args?.[i])
+                  throw new Error("Internal: should have args");
+                const d = decodeB58(v, data.args[i]);
+                return d;
+              } else {
+                throw new Error("Internal: data should be a prim");
+              }
             });
             data.args = new_data;
           }
