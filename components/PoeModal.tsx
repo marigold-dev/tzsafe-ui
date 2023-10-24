@@ -75,7 +75,7 @@ const PoeModal = () => {
   const [currentState, setCurrentState] = useState(State.IDLE);
 
   const version =
-    state.contracts[state.currentContract ?? ""].version ??
+    state.contracts[state.currentContract ?? ""]?.version ??
     state.currentStorage?.version;
 
   const rows = useMemo(

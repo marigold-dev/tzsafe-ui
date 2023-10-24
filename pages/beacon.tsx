@@ -1,22 +1,39 @@
 import bs58check from "bs58check";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Alias from "../components/Alias";
 import Select from "../components/Select";
 import Spinner from "../components/Spinner";
+import renderError from "../components/formUtils";
 import Meta from "../components/meta";
 import { Event } from "../context/P2PClient";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { p2pData } from "../versioned/interface";
 
 export enum State {
+  LOADING = -10,
   IDLE = -1,
-  LOADING = 0,
+  CODE = 0,
   AUTHORIZE = 10,
   AUTHORIZED = 20,
   REFUSED = 30,
   TRANSACTION = 40,
+}
+
+function decodeData(data: string): p2pData {
+  try {
+    const decoded = JSON.parse(
+      new TextDecoder().decode(bs58check.decode(data))
+    );
+
+    if ("name" in decoded && "id" in decoded && "relayServer" in decoded)
+      return decoded as p2pData;
+  } catch {
+    throw new Error("The code is not valid");
+  }
+
+  throw new Error("The code is not valid");
 }
 
 const Beacon = () => {
@@ -29,9 +46,12 @@ const Beacon = () => {
   const [selectedWallet, setSelectedWallet] = useState({
     id: state.currentContract ?? "",
     value: state.currentContract ?? "",
-    label: state.aliases[state.currentContract ?? ""],
+    label: state.aliases[state.currentContract ?? ""] ?? state.currentContract,
   });
   const [validationState, setValidationState] = useState(State.LOADING);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [code, setCode] = useState<undefined | string>(undefined);
+  const [error, setError] = useState<undefined | string>(undefined);
 
   useEffect(() => {
     if (!state.currentContract) {
@@ -39,42 +59,86 @@ const Beacon = () => {
       return;
     }
 
-    if (
-      !searchParams.has("data") ||
-      !searchParams.has("type") ||
-      !state.currentContract ||
-      !state.p2pClient
-    )
-      return;
+    if (!state.currentContract || !state.p2pClient) return;
 
-    const data = JSON.parse(
-      new TextDecoder().decode(bs58check.decode(searchParams.get("data")!))
-    ) as p2pData;
+    if (!searchParams.has("data") && !searchParams.has("type") && !code) {
+      setValidationState(State.CODE);
+      return;
+    }
+
+    const data = decodeData((searchParams.get("data") ?? code) as string);
+
+    console.log(data);
 
     setData(data);
 
-    (async () => {
-      state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
-        setValidationState(State.AUTHORIZE);
-      });
+    state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
+      setValidationState(State.AUTHORIZE);
+    });
 
-      state.p2pClient!.addPeer(data);
-    })();
-  }, [searchParams, state.currentContract, state.p2pClient]);
+    state.p2pClient!.addPeer(data).then(() => console.log("Added"));
+  }, [searchParams, state.currentContract, state.p2pClient, code]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Connect - TzSafe"} />
 
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-start px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">
-            {!data ? <Spinner /> : `Connect to ${data?.name}`}
+            {validationState === State.CODE ? (
+              `Please enter the beacon code`
+            ) : !data ? (
+              <Spinner />
+            ) : (
+              `Connect to ${data?.name}`
+            )}
           </h1>
+          {validationState === State.CODE && (
+            <p className="mt-2 text-sm text-zinc-400 lg:w-1/2">
+              To obtain the code, go on the beacon connection modal in the Dapp,
+              click on {`"Show QR code"`}, then {`"beacon"`} and click on Copy
+              to clipboard. You can then paste the code below
+            </p>
+          )}
         </div>
       </div>
       <main className="mx-auto min-h-fit w-full max-w-7xl grow px-4 text-white sm:px-6 lg:px-8">
         {(() => {
+          if (validationState === State.CODE)
+            return (
+              <>
+                <section className="flex space-x-4">
+                  <input
+                    className="xl:text-md relative h-fit min-h-fit w-full rounded p-2 text-sm text-zinc-900 xl:w-full"
+                    placeholder="46uj6hGagm..."
+                    ref={inputRef}
+                  />
+                  <button
+                    type="button"
+                    className={
+                      "mx-none block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:self-end"
+                    }
+                    onClick={e => {
+                      e.preventDefault();
+                      if (!inputRef.current) return;
+
+                      try {
+                        decodeData(inputRef.current.value);
+                        setCode(inputRef.current.value);
+                        setValidationState(State.LOADING);
+                      } catch (e) {
+                        setError((e as Error).message);
+                      }
+                    }}
+                  >
+                    Connect
+                  </button>
+                </section>
+                {renderError(error, true)}
+              </>
+            );
+
           if (!data) return null;
 
           if (
@@ -88,7 +152,6 @@ const Beacon = () => {
               </p>
             );
 
-          // TODO: Pourquoi ça crash quand je retourne le message
           switch (validationState) {
             case State.LOADING:
               return <Spinner />;
