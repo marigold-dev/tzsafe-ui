@@ -18,7 +18,10 @@
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "^4.0.4",
+    "@airgap/beacon-sdk": "^v4.0.13-beta.0",
+    "@airgap/beacon-types": "file:../../beacon-sdk/packages/beacon-types",
+    "@airgap/beacon-wallet": "file:../../beacon-sdk/packages/beacon-wallet",
+    "@airgap/beacon-dapp": "file:../../beacon-sdk/packages/beacon-dapp",
     "@ariakit/react": "^0.1.8",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-select": "^1.2.0",
@@ -63,7 +66,8 @@
   "overrides": {
     "@airgap/beacon-sdk": {
       "@airgap/beacon-types": "file:../../beacon-sdk/packages/beacon-types",
-      "@airgap/beacon-wallet": "file:../../beacon-sdk/packages/beacon-wallet"
+      "@airgap/beacon-wallet": "file:../../beacon-sdk/packages/beacon-wallet",
+      "@airgap/beacon-dapp": "file:../../beacon-sdk/packages/beacon-dapp"
     }
   }
 }

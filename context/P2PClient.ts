@@ -6,6 +6,7 @@ import {
   WalletClientOptions,
   BeaconRequestOutputMessage,
   ProofOfEventChallengeRequestOutput,
+  ConnectionContext,
 } from "@airgap/beacon-sdk";
 import { TinyEmitter } from "tiny-emitter";
 import { buf2Hex } from "../utils/strings";
@@ -89,7 +90,10 @@ class P2PClient extends WalletClient {
     });
   }
 
-  handleMessages = async (message: BeaconRequestOutputMessage) => {
+  handleMessages = async (
+    message: BeaconRequestOutputMessage,
+    context: ConnectionContext
+  ) => {
     console.log("Message", message);
     switch (message.type) {
       case BeaconMessageType.PermissionRequest:

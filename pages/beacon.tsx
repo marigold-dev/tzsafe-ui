@@ -68,15 +68,13 @@ const Beacon = () => {
 
     const data = decodeData((searchParams.get("data") ?? code) as string);
 
-    console.log(data);
-
     setData(data);
 
     state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
       setValidationState(State.AUTHORIZE);
     });
 
-    state.p2pClient!.addPeer(data).then(() => console.log("Added"));
+    state.p2pClient!.addPeer(data);
   }, [searchParams, state.currentContract, state.p2pClient, code]);
 
   return (
@@ -96,7 +94,7 @@ const Beacon = () => {
           </h1>
           {validationState === State.CODE && (
             <p className="mt-2 text-sm text-zinc-400 lg:w-1/2">
-              To obtain the code, go on the beacon connection modal in the Dapp,
+              To obtain the code, go to the beacon connection modal in the Dapp,
               click on {`"Show QR code"`}, then {`"beacon"`} and click on Copy
               to clipboard. You can then paste the code below
             </p>
@@ -215,7 +213,7 @@ const Beacon = () => {
                         setValidationState(State.AUTHORIZED);
                         dispatch({
                           type: "addDapp",
-                          payload: data,
+                          payload: { data, address: selectedWallet.value },
                         });
                       }}
                     >
@@ -229,7 +227,8 @@ const Beacon = () => {
               return (
                 <p>
                   {data?.name} has been authorized to connect to{" "}
-                  {state.aliases[state.currentContract ?? ""]}
+                  {state.aliases[selectedWallet.value ?? ""] ??
+                    selectedWallet.value}
                 </p>
               );
             case State.REFUSED:

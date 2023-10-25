@@ -131,7 +131,10 @@ type action =
     }
   | {
       type: "addDapp";
-      payload: p2pData;
+      payload: {
+        data: p2pData;
+        address: string;
+      };
     }
   | {
       type: "removeDapp";
@@ -170,22 +173,14 @@ function reducer(state: tezosState, action: action): tezosState {
       return { ...state, p2pClient: action.payload };
     }
     case "addDapp": {
-      if (!state.currentContract) return state;
+      state.connectedDapps[action.payload.address] ??= {};
 
-      const newState = {
-        ...state,
-        connectedDapps: {
-          ...state.connectedDapps,
-          [state.currentContract]: {
-            ...state.connectedDapps[state.currentContract],
-            [action.payload.id]: action.payload,
-          },
-        },
-      };
+      state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
+        action.payload.data;
 
-      saveState(newState);
+      saveState(state);
 
-      return newState;
+      return state;
     }
     case "removeDapp": {
       if (

@@ -151,7 +151,7 @@ export default function App({ Component, pageProps }: AppProps) {
         });
 
         await p2pClient.init();
-        await p2pClient.connect(p2pClient.handleMessages).catch(console.log);
+        await p2pClient.connect(p2pClient.handleMessages);
 
         // Connect stored peers
         Object.values(state.connectedDapps)
@@ -163,6 +163,7 @@ export default function App({ Component, pageProps }: AppProps) {
         const wallet = new BeaconWallet({
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
+          storage: new LocalStorage("WALLET"),
         });
 
         dispatch!({ type: "beaconConnect", payload: wallet });
