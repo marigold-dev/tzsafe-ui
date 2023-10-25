@@ -1,9 +1,9 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Parser } from "@taquito/michel-codec";
+import { Parser, emitMicheline } from "@taquito/michel-codec";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
-import { proposalContent } from "../types/display";
+import { proposalContent, version } from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
@@ -37,6 +37,7 @@ type data = {
 };
 
 export const contentToData = (
+  version: version,
   content: proposalContent,
   walletTokens: walletToken[]
 ): data => {
@@ -119,6 +120,7 @@ export const contentToData = (
     const parser = new Parser();
 
     const [type, lambda] = parseLambda(
+      version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
         ? parser.parseMichelineExpression(content.executeLambda.content ?? "")
@@ -132,7 +134,9 @@ export const contentToData = (
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
-        params: metadata.lambda,
+        params: Array.isArray(metadata.lambda)
+          ? emitMicheline(metadata.lambda)
+          : metadata.lambda,
       };
     } else if (type === LambdaType.CONTRACT_EXECUTION) {
       data = {
@@ -223,12 +227,19 @@ export const contentToData = (
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
       const address = (lambda?.data as { address?: string }).address;
+      const meta = JSON.parse(metadata.meta ?? "{}") as {
+        old_baker_address: string;
+      };
       data = {
         type: type === LambdaType.DELEGATE ? "Delegate" : "UnDelegate",
         label: type === LambdaType.DELEGATE ? "Delegate" : "Undelegate",
         metadata: undefined,
         amount: undefined,
-        addresses: !!address ? [address] : undefined,
+        addresses: !!address
+          ? [address]
+          : meta.old_baker_address
+          ? [meta.old_baker_address]
+          : undefined,
         entrypoints: undefined,
         params: undefined,
         rawParams: undefined,
@@ -390,7 +401,10 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
   );
 };
 
-export const labelOfProposalContentLambda = (content: proposalContent) => {
+export const labelOfProposalContentLambda = (
+  version: version,
+  content: proposalContent
+) => {
   if ("changeThreshold" in content) {
     return "Update threshold";
   } else if ("adjustEffectivePeriod" in content) {
@@ -407,6 +421,7 @@ export const labelOfProposalContentLambda = (content: proposalContent) => {
     const parser = new Parser();
 
     const [type, _] = parseLambda(
+      version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
         ? parser.parseMichelineExpression(content.executeLambda.content ?? "")

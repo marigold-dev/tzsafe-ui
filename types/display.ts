@@ -1,5 +1,3 @@
-import { BigNumber } from "bignumber.js";
-
 type lambda = { executeLambda: { metadata?: string; content?: string } };
 type execute = { execute: string };
 type transfer = { transfer: { amount: number; destination: string } };
@@ -73,6 +71,8 @@ type version =
   | "0.0.10"
   | "0.0.11"
   | "0.1.1"
+  | "0.3.0"
+  | "0.3.1"
   | "unknown version";
 
 export enum TransferType {

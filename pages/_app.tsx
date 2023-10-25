@@ -1,12 +1,4 @@
-import {
-  AnalyticsInterface,
-  BeaconEvent,
-  defaultEventCallbacks,
-  NetworkType,
-  P2PPairingRequest,
-  PostMessagePairingRequest,
-  WalletConnectPairingRequest,
-} from "@airgap/beacon-sdk";
+import { NetworkType } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { validateAddress, ValidationResult } from "@taquito/utils";
@@ -154,6 +146,7 @@ export default function App({ Component, pageProps }: AppProps) {
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
         });
+
         dispatch!({ type: "beaconConnect", payload: wallet });
 
         if (state.attemptedInitialLogin) return;
@@ -198,7 +191,9 @@ export default function App({ Component, pageProps }: AppProps) {
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET
               ? "tzsafe.marigold.dev"
-              : "ghostnet.tzsafe.marigold.dev"}
+              : PREFERED_NETWORK === NetworkType.GHOSTNET
+              ? "ghostnet.tzsafe.marigold.dev"
+              : "a valid URL"}
           </Banner>
           <NavBar />
 

@@ -11,9 +11,11 @@ import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
 import { DEFAULT_TIMEOUT } from "../context/config";
-import { makeFa1_2ApproveMichelson } from "../context/fa1_2";
-import { makeFa1_2TransferMichelson } from "../context/fa1_2";
-import { makeFa2Michelson } from "../context/fa2";
+import {
+  generateFA1_2ApproveMichelson,
+  generateFA1_2TransferMichelson,
+  generateFA2Michelson,
+} from "../context/generateLambda";
 import {
   content,
   proposal as p1,
@@ -78,7 +80,8 @@ class Version0_1_1 extends Versioned {
               const parser = new Parser();
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa2Michelson(
+                generateFA2Michelson(
+                  this.version,
                   x.values.map(value => {
                     const token = value.token as unknown as fa2Token;
 
@@ -119,7 +122,7 @@ class Version0_1_1 extends Versioned {
               const token = x.values.token as unknown as fa1_2Token;
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa1_2ApproveMichelson({
+                generateFA1_2ApproveMichelson(this.version, {
                   spenderAddress: x.values.spenderAddress,
                   amount: BigNumber(x.values.amount)
                     .multipliedBy(
@@ -153,7 +156,7 @@ class Version0_1_1 extends Versioned {
               const token = x.values.token as unknown as fa1_2Token;
 
               const michelsonCode = parser.parseMichelineExpression(
-                makeFa1_2TransferMichelson({
+                generateFA1_2TransferMichelson(this.version, {
                   walletAddress: cc.address,
                   amount: BigNumber(x.values.amount)
                     .multipliedBy(
@@ -221,12 +224,12 @@ class Version0_1_1 extends Versioned {
     let prop: any = await proposals.proposals.get(BigNumber(proposal));
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
       );
     }
     if (resolve) {
-      await batch.withContractCall(
+      batch.withContractCall(
         cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
       );
     }
@@ -237,11 +240,7 @@ class Version0_1_1 extends Versioned {
       DEFAULT_TIMEOUT
     );
 
-    if (confirmationValue === -1) {
-      return [true, op.opHash];
-    }
-
-    return [false, op.opHash];
+    return [confirmationValue === -1, op.opHash];
   }
 
   async submitSettingsProposals(
@@ -274,11 +273,7 @@ class Version0_1_1 extends Versioned {
       DEFAULT_TIMEOUT
     );
 
-    if (transacValue === -1) {
-      return [true, op.opHash];
-    }
-
-    return [false, op.opHash];
+    return [transacValue === -1, op.opHash];
   }
   static override toContractState(
     contract: any,

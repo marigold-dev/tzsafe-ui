@@ -1,14 +1,13 @@
 import { mutezTransfer, tokenTransfer } from "../types/display";
-import { API_URL } from "./config";
+import { Versioned } from "../versioned/interface";
+import { TZKT_API_URL } from "./config";
 
-async function getProposals(bigmap: string) {
-  let result = await fetch(`${API_URL}/v1/bigmaps/${bigmap}/keys`);
-  let json = await result.json();
-  return json;
-}
-async function getTransfers(address: string): Promise<mutezTransfer[]> {
+function getTransfers(
+  address: string,
+  offset: number
+): Promise<mutezTransfer[]> {
   return fetch(
-    `${API_URL}/v1/operations/transactions?target=${address}&status=applied&amount.gt=0`
+    `${TZKT_API_URL}/v1/operations/transactions?target=${address}&status=applied&amount.gt=0&limit=${Versioned.FETCH_COUNT}&offset=${offset}&sort.desc=id`
   )
     .then(res => res.json())
     .catch(e => {
@@ -18,9 +17,12 @@ async function getTransfers(address: string): Promise<mutezTransfer[]> {
     });
 }
 
-function getTokenTransfers(address: string): Promise<tokenTransfer[]> {
+function getTokenTransfers(
+  address: string,
+  offset: number
+): Promise<tokenTransfer[]> {
   return fetch(
-    `${API_URL}/v1/tokens/transfers?anyof.to_.to=${address}&sort.desc=id`
+    `${TZKT_API_URL}/v1/tokens/transfers?anyof.to_.to=${address}&sort.desc=id&limit=${Versioned.FETCH_COUNT}&offset=${offset}`
   )
     .then(res => res.json())
     .catch(e => {
@@ -30,4 +32,4 @@ function getTokenTransfers(address: string): Promise<tokenTransfer[]> {
     });
 }
 
-export { getProposals, getTransfers, getTokenTransfers };
+export { getTransfers, getTokenTransfers };

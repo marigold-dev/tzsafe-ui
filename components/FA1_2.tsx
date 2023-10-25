@@ -1,6 +1,6 @@
 import { Field, useFormikContext } from "formik";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { API_URL, THUMBNAIL_URL } from "../context/config";
+import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
 import { AppStateContext } from "../context/state";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
@@ -103,7 +103,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
     (value: string, offset: number) =>
       promiseWithTimeout(
         fetch(
-          `${API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
+          `${TZKT_API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
         )
           .catch(e => {
             console.log(e);

@@ -16,11 +16,11 @@ import {
   PREFERED_NETWORK,
   PROPOSAL_DURATION_WARNING,
 } from "../context/config";
-import { API_URL } from "../context/config";
+import { TZKT_API_URL } from "../context/config";
 import {
-  makeDelegateMichelson,
-  makeUndelegateMichelson,
-} from "../context/delegate";
+  generateDelegateMichelson,
+  generateUndelegateMichelson,
+} from "../context/generateLambda";
 import {
   AppDispatchContext,
   AppStateContext,
@@ -121,7 +121,7 @@ const SignersForm: FC<{
   useEffect(() => {
     if (!!state.delegatorAddresses) return;
 
-    fetch(`${API_URL}/v1/delegates?select.values=address`)
+    fetch(`${TZKT_API_URL}/v1/delegates?select.values=address`)
       .then(res => res.json())
       .then(payload => dispatch({ type: "setDelegatorAddresses", payload }));
   }, [state.delegatorAddresses]);
@@ -164,6 +164,10 @@ const SignersForm: FC<{
   ) {
     if (!props.contract) return [];
 
+    const version =
+      state.contracts[state.currentContract ?? ""]?.version ??
+      state.currentStorage?.version;
+
     const initialSigners = new Set<string>(
       "owners" in props.contract
         ? props.contract.owners
@@ -195,7 +199,7 @@ const SignersForm: FC<{
     }
     if (!!bakerAddress && bakerAddress !== oldBakerAddress) {
       const lambda = parser.parseMichelineExpression(
-        makeDelegateMichelson({ bakerAddress })
+        generateDelegateMichelson(version, { bakerAddress })
       );
       ops.push({
         execute_lambda: {
@@ -208,7 +212,9 @@ const SignersForm: FC<{
         },
       });
     } else if (bakerAddress === "" && !!oldBakerAddress) {
-      const lambda = parser.parseMichelineExpression(makeUndelegateMichelson());
+      const lambda = parser.parseMichelineExpression(
+        generateUndelegateMichelson(version)
+      );
 
       ops.push({
         execute_lambda: {
@@ -244,7 +250,11 @@ const SignersForm: FC<{
           <a
             className="text-zinc-200 hover:text-zinc-300"
             href={`https://${
-              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+              PREFERED_NETWORK === NetworkType.MAINNET
+                ? ""
+                : PREFERED_NETWORK === NetworkType.GHOSTNET
+                ? "ghostnet."
+                : `${PREFERED_NETWORK}.`
             }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
@@ -433,7 +443,7 @@ const SignersForm: FC<{
           else {
             try {
               const account = await fetch(
-                `${API_URL}/v1/accounts/${values.bakerAddress}`
+                `${TZKT_API_URL}/v1/accounts/${values.bakerAddress}`
               ).then(res => res.json());
 
               if (account.type !== "delegate" || !account.activationLevel)

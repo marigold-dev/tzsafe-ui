@@ -34,14 +34,10 @@ function ProposalSignForm({
   threshold: number;
   id: number;
   state: boolean | undefined;
-  closeModal: () => void;
+  closeModal: (success: boolean) => void;
   walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
-  const rows = useMemo(
-    () => proposal.ui.content.map(v => contentToData(v, walletTokens)),
-    [proposal.ui.content]
-  );
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -50,6 +46,24 @@ function ProposalSignForm({
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
+
+  const rows = useMemo(
+    () =>
+      proposal.ui.content.map(v =>
+        contentToData(
+          state.contracts[state.currentContract ?? ""]?.version ??
+            state.currentStorage?.version,
+          v,
+          walletTokens
+        )
+      ),
+    [
+      proposal.ui.content,
+      state.currentContract,
+      state.contracts,
+      state.currentStorage,
+    ]
+  );
 
   async function sign(
     proposal: number,
@@ -80,7 +94,11 @@ function ProposalSignForm({
           <a
             className="text-zinc-200 hover:text-zinc-300"
             href={`https://${
-              PREFERED_NETWORK === NetworkType.GHOSTNET ? "ghostnet." : ""
+              PREFERED_NETWORK === NetworkType.MAINNET
+                ? ""
+                : PREFERED_NETWORK === NetworkType.GHOSTNET
+                ? "ghostnet."
+                : `${PREFERED_NETWORK}.`
             }tzkt.io/${timeoutAndHash[1]}`}
             target="_blank"
             rel="noreferrer"
@@ -94,7 +112,7 @@ function ProposalSignForm({
         <div className="w-full space-x-4">
           <button
             className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
-            onClick={closeModal}
+            onClick={() => closeModal(false)}
           >
             Close
           </button>
@@ -177,6 +195,7 @@ function ProposalSignForm({
       onSubmit={async values => {
         setLoading(true);
 
+        let success = true;
         try {
           await sign(
             id,
@@ -188,12 +207,13 @@ function ProposalSignForm({
           setResult(true);
           setLoading(false);
         } catch (e) {
+          success = false;
           console.log("Sign error: ", e);
           setResult(false);
         }
         setLoading(false);
         setTimeout(() => {
-          closeModal();
+          closeModal(success);
         }, MODAL_TIMEOUT);
       }}
     >
@@ -224,7 +244,7 @@ function ProposalSignForm({
                   ))
                 : []}
             </div>
-            <ul className="mt-4 text-xs font-light leading-3 text-yellow-500">
+            <ul className="mt-4 list-disc space-y-2 text-xs font-light leading-3 text-yellow-500">
               {isSignOrResolve &&
                 !!rows.find(
                   v =>
@@ -233,7 +253,7 @@ function ProposalSignForm({
                 ) && (
                   <li className="mt-1">
                     The proposal duration is short, which may limit your ability
-                    to execute proposals once they have been executed.
+                    to execute proposals once they have been executed
                   </li>
                 )}
               {isSignOrResolve &&
@@ -246,7 +266,7 @@ function ProposalSignForm({
                 ) && (
                   <li className="mt-1">
                     Your ownership will be revoked, resulting in your removal
-                    from the list of owners.
+                    from the list of owners
                   </li>
                 )}
               {isSignOrResolve &&
@@ -311,7 +331,7 @@ function ProposalSignForm({
             className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
             onClick={e => {
               e.preventDefault();
-              closeModal();
+              closeModal(false);
             }}
           >
             Cancel
