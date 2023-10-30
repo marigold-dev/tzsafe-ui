@@ -1,6 +1,7 @@
 import { Expr, Prim, IntLiteral, emitMicheline } from "@taquito/michel-codec";
 import {
   encodePubKey,
+  encodeKeyHash,
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
@@ -155,9 +156,9 @@ const parseDelegate = (
             const address = !!expr?.args?.[1].string
               ? //@ts-expect-error
                 (expr?.args?.[1].string as string)
-              : encodePubKey(
+              : encodeKeyHash(
                   //@ts-expect-error
-                  formatBytes(expr?.args?.[1].bytes)
+                  expr?.args?.[1].bytes
                 );
             return [true, address];
           } else {
@@ -203,9 +204,9 @@ const parseDelegate = (
             const address = !!expr?.args?.[1].string
               ? //@ts-expect-error
                 (expr?.args?.[1].string as string)
-              : encodePubKey(
+              : encodeKeyHash(
                   //@ts-expect-error
-                  formatBytes(expr?.args?.[1].bytes)
+                  expr?.args?.[1].bytes
                 );
             return [true, address];
           } else {
