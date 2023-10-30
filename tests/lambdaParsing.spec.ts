@@ -88,14 +88,14 @@ const FA1_2_TRANSFER_LAMBDA = {
 const DELEGATE_LAMBDA = {
   old: p.parseMichelineExpression(`{
   DROP ;
-  PUSH key_hash "baker_addr" ;
+  PUSH key_hash 0x0044b31e005479eba6449274d8c6dc423946f97607 ;
   SOME ;
   SET_DELEGATE ;
 }`)!,
   new: p.parseMichelineExpression(`{
   DROP ;
   NIL operation;
-  PUSH key_hash "baker_addr" ;
+  PUSH key_hash 0x0044b31e005479eba6449274d8c6dc423946f97607 ;
   SOME ;
   SET_DELEGATE ;
   CONS ;
@@ -211,7 +211,7 @@ describe("parseLambda old", () => {
     expect(lambdaType).toBe(LambdaType.DELEGATE);
     expect(data).toMatchObject({
       contractAddress: "",
-      data: { address: "baker_addr" },
+      data: { address: "tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP" },
       entrypoint: { name: "", params: { name: "", type: "" } },
     });
   });
@@ -417,7 +417,7 @@ describe("parseLambda new", () => {
     expect(lambdaType).toBe(LambdaType.DELEGATE);
     expect(data).toMatchObject({
       contractAddress: "",
-      data: { address: "baker_addr" },
+      data: { address: "tz1RuHDSj9P7mNNhfKxsyLGRDahTX5QD1DdP" },
       entrypoint: { name: "", params: { name: "", type: "" } },
     });
   });
