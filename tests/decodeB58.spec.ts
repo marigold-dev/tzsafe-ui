@@ -68,7 +68,7 @@ describe("no need to decodeB58 address", () => {
   });
 });
 
-describe("no need to decodeB58 key_hash", () => {
+describe("decodeB58 key_hash", () => {
   it("should be present in string representation", () => {
     const instr = p.parseMichelineExpression(
       ` { PUSH key_hash 0x0077c6399c2ea03f4f3a00a8f805f083f97d775c1f}`
@@ -78,6 +78,20 @@ describe("no need to decodeB58 key_hash", () => {
     const newData = decodeB58(type, data);
     expect(newData).toMatchObject({
       string: "tz1WZLZs5SbL8pMJfoWNKVhkgpSGQtjHwX4B",
+    });
+  });
+});
+
+describe("decodeB58 key_hash 2", () => {
+  it("should be present in string representation", () => {
+    const instr = p.parseMichelineExpression(
+      ` { PUSH key_hash 0x0012548f71994cb2ce18072d0dcb568fe35fb74930  }`
+    )!;
+    const [type, data] = testData(instr);
+
+    const newData = decodeB58(type, data);
+    expect(newData).toMatchObject({
+      string: "tz1MJx9vhaNRSimcuXPK2rW4fLccQnDAnVKJ",
     });
   });
 });
