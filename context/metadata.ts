@@ -54,22 +54,25 @@ async function fetchVersion(
   }
 ): Promise<version> {
   try {
-    const version = await metadata
-      .tzip16()
-      .getMetadata()
-      .then(metadata => {
-        return metadata?.metadata?.version ?? "unknown version";
-      })
-      .catch(_ =>
-        fetch(`${TZKT_API_URL}/v1/contracts?address=${metadata.address}`)
-          .then(r => r.json())
-          .then(
-            ([{ typeHash, codeHash }]: {
-              typeHash: number;
-              codeHash: number;
-            }[]) => VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version"
-          )
+    let version = await fetch(
+      `${TZKT_API_URL}/v1/contracts?address=${metadata.address}`
+    )
+      .then(r => r.json())
+      .then(
+        ([{ typeHash, codeHash }]: {
+          typeHash: number;
+          codeHash: number;
+        }[]) => VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version"
       );
+
+    if (version === "unknown version") {
+      version = (await metadata
+        .tzip16()
+        .getMetadata()
+        .then(metadata => {
+          return metadata?.metadata?.version ?? "unknown version";
+        })) as version;
+    }
 
     return dispatch[version] ?? "unknown version";
   } catch {
