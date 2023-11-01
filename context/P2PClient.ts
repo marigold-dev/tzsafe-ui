@@ -1,12 +1,12 @@
 import {
   BeaconErrorType,
   BeaconMessageType,
-  WalletClient,
   PermissionRequestOutput,
-  WalletClientOptions,
   BeaconRequestOutputMessage,
   ProofOfEventChallengeRequestOutput,
   ConnectionContext,
+  WalletClient,
+  WalletClientOptions,
 } from "@airgap/beacon-sdk";
 import { TinyEmitter } from "tiny-emitter";
 import { buf2Hex } from "../utils/strings";
