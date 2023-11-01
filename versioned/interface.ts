@@ -4,6 +4,7 @@ import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
 import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
+import { proofOfEventSchema as proposalSchema_0_3_2 } from "../types/Proposal0_3_2";
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
@@ -110,7 +111,19 @@ abstract class Versioned {
     offset: number
   ): Promise<Array<{ key: string; value: any }>> {
     const common = `&limit=${this.FETCH_COUNT}&offset=${offset}&sort.desc=id`;
-    if (c.version === "0.3.1") {
+    if (
+      c.version === "0.0.6" ||
+      c.version === "0.0.8" ||
+      c.version === "0.0.9" ||
+      c.version === "0.0.10" ||
+      c.version === "0.0.11" ||
+      c.version === "0.1.1" ||
+      c.version === "0.3.0"
+    ) {
+      return fetch(
+        `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}, {"expired": {}}]${common}`
+      ).then(res => res.json());
+    } else if (c.version === "0.3.1") {
       return fetch(
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
@@ -125,10 +138,23 @@ abstract class Versioned {
             ),
           }))
         );
-    } else {
+    } else if (c.version === "0.3.2") {
       return fetch(
-        `${TZKT_API_URL}/v1/bigmaps/${bigmapId}/keys?value.state.in=[{"executed":{}}, {"rejected":{}}, {"expired": {}}]${common}`
-      ).then(res => res.json());
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
+      )
+        .then(res => res.json())
+        .then((events: Array<proofOfEvent>) =>
+          events.map(event => ({
+            key: event.payload.challenge_id,
+            value: proposalSchema_0_3_2.Execute(
+              unpackDataBytes({
+                bytes: event.payload.payload,
+              })
+            ),
+          }))
+        );
+    } else {
+      throw Error("unknown version");
     }
   }
 
@@ -145,7 +171,8 @@ abstract class Versioned {
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
-      c.version === "0.3.1"
+      c.version === "0.3.1" ||
+      c.version === "0.3.2"
     ) {
       return c.owners;
     }
@@ -165,7 +192,8 @@ abstract class Versioned {
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
-      c.version === "0.3.1"
+      c.version === "0.3.1" ||
+      c.version === "0.3.2"
     ) {
       return c.owners;
     }
@@ -220,7 +248,8 @@ abstract class Versioned {
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
-      c.version === "0.3.1"
+      c.version === "0.3.1" ||
+      c.version === "0.3.2"
     ) {
       return {
         values: {
@@ -315,7 +344,8 @@ abstract class Versioned {
       c.version === "0.0.11" ||
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
-      c.version === "0.3.1"
+      c.version === "0.3.1" ||
+      c.version === "0.3.2"
     ) {
       return {
         values: {
