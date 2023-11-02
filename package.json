@@ -18,8 +18,7 @@
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "4.0.13-beta.0",
-    "@airgap/beacon-transport-matrix": "file:../../beacon-sdk/packages/beacon-transport-matrix",
+    "@airgap/beacon-sdk": "4.0.13-beta.1",
     "@ariakit/react": "^0.1.8",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-select": "^1.2.0",
@@ -60,10 +59,5 @@
     "prettier-plugin-tailwindcss": "^0.2.3",
     "tailwindcss": "^3.2.4",
     "vitest": "^0.29.8"
-  },
-  "overrides": {
-    "@airgap/beacon-sdk": {
-      "@airgap/beacon-transport-matrix": "file:../../beacon-sdk/packages/beacon-transport-matrix"
-    }
   }
 }
