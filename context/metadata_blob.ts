@@ -33,7 +33,7 @@ async function fromIpfs(): Promise<{
   const blob = new Blob([bytes], {
     type: "application/json;charset=utf-8",
   });
-  formData.append("file", blob, "");
+  formData.append("file", blob, "tzsafe-metdata.json");
   let { cid } = await fetch(`${IPFS}/add`, {
     method: "POST",
     body: formData,
