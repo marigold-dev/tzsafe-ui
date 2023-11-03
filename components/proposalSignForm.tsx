@@ -51,7 +51,7 @@ function ProposalSignForm({
     () =>
       proposal.ui.content.map(v =>
         contentToData(
-          state.contracts[state.currentContract ?? ""]?.version ??
+          state.contracts[currentContract]?.version ??
             state.currentStorage?.version,
           v,
           walletTokens
@@ -173,7 +173,7 @@ function ProposalSignForm({
   }
 
   const allSigners = signers(
-    state.contracts[currentContract] ?? state.currentContract
+    state.contracts[currentContract] ?? state.currentStorage
   );
 
   const signatures = proposal.ui.signatures.filter(({ signer }) =>
