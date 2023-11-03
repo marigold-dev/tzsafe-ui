@@ -172,17 +172,16 @@ function ProposalSignForm({
     );
   }
 
-  const allSigners = signers(state.contracts[currentContract]);
+  const allSigners = signers(
+    state.contracts[currentContract] ?? state.currentContract
+  );
+
   const signatures = proposal.ui.signatures.filter(({ signer }) =>
     allSigners.includes(signer)
   );
 
   const isExecutable = canExecute(signatures, threshold);
-  const isRejectable = canReject(
-    signatures,
-    threshold,
-    signers(state.contracts[currentContract]).length
-  );
+  const isRejectable = canReject(signatures, threshold, allSigners.length);
   const isSignOrResolve =
     (typeof modalState === "boolean" && modalState) ||
     (typeof modalState !== "boolean" && isExecutable);
