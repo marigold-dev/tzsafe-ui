@@ -120,13 +120,6 @@ class P2PClient extends WalletClient {
         console.log(message);
         break;
 
-      // case BeaconMessageType.SignPayloadRequest:
-      //   if (await this.isSupportedSignPayload(message)) {
-      //     this.signRequest = message;
-      //     this.changeFavicon(true);
-      //   }
-      //   break;
-
       default:
         await this.respond({
           type: BeaconMessageType.Error,

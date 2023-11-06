@@ -107,18 +107,22 @@ const Settings = () => {
                                 data.publicKey
                               );
 
-                              await state.p2pClient?.removePeer({
-                                ...data,
-                                type: "p2p-pairing-response",
-                                senderId,
-                              });
+                              await state.p2pClient?.removePeer(
+                                {
+                                  ...data,
+                                  type: "p2p-pairing-response",
+                                  senderId,
+                                },
+                                true
+                              );
+
                               await state.p2pClient?.removeAppMetadata(
                                 senderId
                               );
 
                               dispatch({
                                 type: "removeDapp",
-                                payload: data.id,
+                                payload: data.appUrl,
                               });
                             }}
                           >

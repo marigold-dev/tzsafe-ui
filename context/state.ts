@@ -195,7 +195,7 @@ function reducer(state: tezosState, action: action): tezosState {
           ...state.connectedDapps,
           [state.currentContract]: {
             ...Object.values(state.connectedDapps[state.currentContract])
-              .filter(v => v.id !== action.payload)
+              .filter(v => v.appUrl !== action.payload)
               .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
           },
         },
