@@ -6,7 +6,7 @@ let meta = {
   name: "TzSafe",
   description:
     "TzSafe is a multisig wallet aiming at providing better assurance of security and management of ownership than a traditional single-signed wallet",
-  version: "0.3.1",
+  version: "0.3.2",
   license: {
     name: "MIT",
   },
@@ -33,7 +33,7 @@ async function fromIpfs(): Promise<{
   const blob = new Blob([bytes], {
     type: "application/json;charset=utf-8",
   });
-  formData.append("file", blob, "");
+  formData.append("file", blob, "tzsafe-metdata.json");
   let { cid } = await fetch(`${IPFS}/add`, {
     method: "POST",
     body: formData,
