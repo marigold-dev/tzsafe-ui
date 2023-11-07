@@ -105,7 +105,7 @@ const Beacon = () => {
           {validationState === State.CODE && (
             <p className="mt-2 text-sm text-zinc-400 lg:w-1/2">
               To obtain the code, go to the beacon connection modal in the Dapp,
-              click on {`"Show QR code"`}, then {`"beacon"`} and click on Copy
+              click on {`"Show QR code"`}, then select {`"beacon"`} and click on Copy
               to clipboard. You can then paste the code below
             </p>
           )}
