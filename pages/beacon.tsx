@@ -9,6 +9,7 @@ import renderError from "../components/formUtils";
 import Meta from "../components/meta";
 import { Event } from "../context/P2PClient";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import useIsOwner from "../utils/useIsOwner";
 import { p2pData } from "../versioned/interface";
 
 export enum State {
@@ -40,6 +41,7 @@ const Beacon = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
   const router = useRouter();
+  const isOwner = useIsOwner();
 
   const searchParams = useSearchParams();
   const [data, setData] = useState<p2pData | undefined>();
@@ -54,7 +56,7 @@ const Beacon = () => {
   const [error, setError] = useState<undefined | string>(undefined);
 
   useEffect(() => {
-    if (!state.currentContract) {
+    if (!state.currentContract || !isOwner) {
       router.replace("/");
       return;
     }
@@ -68,6 +70,14 @@ const Beacon = () => {
 
     const data = decodeData((searchParams.get("data") ?? code) as string);
 
+    if (
+      data.appUrl === "http://localhost:3000" ||
+      data.appUrl.includes("tzsafe")
+    ) {
+      setError("Sorry you can't pair Tzsafe with itself");
+      return;
+    }
+
     setData(data);
 
     state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
@@ -75,7 +85,7 @@ const Beacon = () => {
     });
 
     state.p2pClient!.addPeer(data);
-  }, [searchParams, state.currentContract, state.p2pClient, code]);
+  }, [searchParams, state.currentContract, state.p2pClient, code, isOwner]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -122,7 +132,15 @@ const Beacon = () => {
                       if (!inputRef.current) return;
 
                       try {
-                        decodeData(inputRef.current.value);
+                        const data = decodeData(inputRef.current.value);
+
+                        if (
+                          data.appUrl === "http://localhost:3000" ||
+                          data.appUrl.includes("tzsafe")
+                        ) {
+                          setError("Sorry you can't pair Tzsafe with itself");
+                          return;
+                        }
                         setCode(inputRef.current.value);
                         setValidationState(State.LOADING);
                       } catch (e) {
