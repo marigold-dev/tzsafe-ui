@@ -173,10 +173,13 @@ function reducer(state: tezosState, action: action): tezosState {
       return { ...state, p2pClient: action.payload };
     }
     case "addDapp": {
+      if (!state.address) return state;
+
       state.connectedDapps[action.payload.address] ??= {};
 
-      state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
-        action.payload.data;
+      state.connectedDapps[action.payload.address][
+        `${action.payload.data.appUrl}-${state.address}`
+      ] = action.payload.data;
 
       saveState(state);
 
@@ -189,21 +192,13 @@ function reducer(state: tezosState, action: action): tezosState {
       )
         return state;
 
-      const newState = {
-        ...state,
-        connectedDapps: {
-          ...state.connectedDapps,
-          [state.currentContract]: {
-            ...Object.values(state.connectedDapps[state.currentContract])
-              .filter(v => v.appUrl !== action.payload)
-              .reduce((acc, curr) => ({ ...acc, [curr.id]: curr }), {}),
-          },
-        },
-      };
+      delete state.connectedDapps[state.currentContract][
+        `${action.payload}-${state.address}`
+      ];
 
-      saveState(newState);
+      saveState(state);
 
-      return newState;
+      return state;
     }
     case "addContract": {
       let al = action.payload.aliases;
