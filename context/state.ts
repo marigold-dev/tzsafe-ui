@@ -300,6 +300,7 @@ function reducer(state: tezosState, action: action): tezosState {
         accountInfo: null,
         address: null,
         connection: connection,
+        p2pClient: null,
       };
     }
     case "removeContract": {

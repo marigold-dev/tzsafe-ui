@@ -191,7 +191,7 @@ export default function App({ Component, pageProps }: AppProps) {
         }
       }
     })();
-  }, []);
+  }, [state.beaconWallet]);
 
   useEffect(() => {
     setHasSidebar(false);
