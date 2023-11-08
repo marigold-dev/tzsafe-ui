@@ -579,6 +579,12 @@ abstract class Versioned {
       ],
     };
   }
+
+  static hasPoeSupport(version: version): boolean {
+    const [_, middle, __] = version.split(".");
+
+    return parseInt(middle) >= 3;
+  }
 }
 
 export { Versioned };

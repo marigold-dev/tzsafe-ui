@@ -12,7 +12,7 @@ import Meta from "../components/meta";
 import { Event } from "../context/P2PClient";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import useIsOwner from "../utils/useIsOwner";
-import { p2pData } from "../versioned/interface";
+import { Versioned, p2pData } from "../versioned/interface";
 
 export enum State {
   LOADING = -10,
@@ -58,7 +58,14 @@ const Beacon = () => {
   const [error, setError] = useState<undefined | string>(undefined);
 
   useEffect(() => {
-    if (!state.currentContract || !isOwner) {
+    if (
+      !state.currentContract ||
+      !isOwner ||
+      !Versioned.hasPoeSupport(
+        state.contracts[state.currentContract ?? ""]?.version ??
+          state.currentStorage?.version
+      )
+    ) {
       router.replace("/");
       return;
     }
@@ -72,11 +79,8 @@ const Beacon = () => {
 
     const data = decodeData((searchParams.get("data") ?? code) as string);
 
-    if (
-      data.appUrl === "http://localhost:3000" ||
-      data.appUrl.includes("tzsafe")
-    ) {
-      setError("Sorry you can't pair Tzsafe with itself");
+    if (data.appUrl.includes("tzsafe")) {
+      setError("Sorry you can't pair TzSafe with itself");
       return;
     }
 
@@ -168,8 +172,8 @@ const Beacon = () => {
           {validationState === State.CODE && (
             <p className="mt-2 text-sm text-zinc-400 lg:w-1/2">
               To obtain the code, go to the beacon connection modal in the Dapp,
-              click on {`"Show QR code"`}, then select {`"beacon"`} and click on Copy
-              to clipboard. You can then paste the code below
+              click on {`"Show QR code"`}, then select {`"beacon"`} and click on
+              Copy to clipboard. You can then paste the code below
             </p>
           )}
         </div>
@@ -197,11 +201,8 @@ const Beacon = () => {
                       try {
                         const data = decodeData(inputRef.current.value);
 
-                        if (
-                          data.appUrl === "http://localhost:3000" ||
-                          data.appUrl.includes("tzsafe")
-                        ) {
-                          setError("Sorry you can't pair Tzsafe with itself");
+                        if (data.appUrl.includes("tzsafe")) {
+                          setError("Sorry you can't pair TzSafe with itself");
                           return;
                         }
                         setCode(inputRef.current.value);
