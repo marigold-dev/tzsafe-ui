@@ -4,15 +4,16 @@ import bs58check from "bs58check";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import Alias from "../components/Alias";
-import Select from "../components/Select";
-import Spinner from "../components/Spinner";
-import renderError from "../components/formUtils";
-import Meta from "../components/meta";
-import { Event } from "../context/P2PClient";
-import { AppDispatchContext, AppStateContext } from "../context/state";
-import useIsOwner from "../utils/useIsOwner";
-import { Versioned, p2pData } from "../versioned/interface";
+import Alias from "../../components/Alias";
+import Select from "../../components/Select";
+import Spinner from "../../components/Spinner";
+import renderError from "../../components/formUtils";
+import Meta from "../../components/meta";
+import { Event } from "../../context/P2PClient";
+import { MODAL_TIMEOUT } from "../../context/config";
+import { AppDispatchContext, AppStateContext } from "../../context/state";
+import useIsOwner from "../../utils/useIsOwner";
+import { Versioned, p2pData } from "../../versioned/interface";
 
 export enum State {
   LOADING = -10,
@@ -47,11 +48,7 @@ const Beacon = () => {
 
   const searchParams = useSearchParams();
   const [data, setData] = useState<p2pData | undefined>();
-  const [selectedWallet, setSelectedWallet] = useState({
-    id: state.currentContract ?? "",
-    value: state.currentContract ?? "",
-    label: state.aliases[state.currentContract ?? ""] ?? state.currentContract,
-  });
+
   const [validationState, setValidationState] = useState(State.LOADING);
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState<undefined | string>(undefined);
@@ -93,10 +90,24 @@ const Beacon = () => {
     state.p2pClient!.addPeer(data);
   }, [searchParams, state.currentContract, state.p2pClient, code, isOwner]);
 
-  const connectedDapps = useMemo(
-    () =>
-      Object.values(state.connectedDapps[state.currentContract ?? ""] ?? {}),
-    [state.currentContract, state.connectedDapps]
+  useEffect(() => {
+    if (
+      validationState !== State.AUTHORIZED &&
+      validationState !== State.REFUSED
+    )
+      return;
+
+    const id = setTimeout(() => {
+      setValidationState(State.CODE);
+    }, MODAL_TIMEOUT);
+
+    return () => {
+      clearTimeout(id);
+    };
+  }, [validationState]);
+
+  const connectedDapps = Object.values(
+    state.connectedDapps[state.currentContract ?? ""] ?? {}
   );
 
   return (
@@ -173,7 +184,7 @@ const Beacon = () => {
             <p className="mt-2 text-sm text-zinc-400 lg:w-1/2">
               To obtain the code, go to the beacon connection modal in the Dapp,
               click on {`"Show QR code"`}, then select {`"beacon"`} and click on
-              Copy to clipboard. You can then paste the code below
+              {`"Copy to clipboard"`}. You can then paste the code below
             </p>
           )}
         </div>
@@ -238,28 +249,11 @@ const Beacon = () => {
             case State.AUTHORIZE:
               return (
                 <>
-                  <div className="w-full lg:w-1/3">
-                    <Select
-                      label="Wallet to connect"
-                      value={selectedWallet}
-                      options={Object.keys(state.contracts).map(address => ({
-                        id: address,
-                        value: address,
-                        label: state.aliases[address],
-                      }))}
-                      onChange={setSelectedWallet}
-                      onSearch={() => {}}
-                      withSearch={false}
-                      renderOption={({ value, label }) => {
-                        return (
-                          <div className="flex flex-col items-start overflow-hidden">
-                            <span>{label}</span>
-                            <span className="text-zinc-400">{value}</span>
-                          </div>
-                        );
-                      }}
-                    />
-                  </div>
+                  <p>
+                    Do you want to allow the connection to{" "}
+                    {state.aliases[state.currentContract ?? ""] ??
+                      state.currentContract}
+                  </p>
                   <div className="mt-4 flex items-center space-x-4">
                     <button
                       type="button"
@@ -290,12 +284,12 @@ const Beacon = () => {
 
                         setValidationState(State.LOADING);
                         await state.p2pClient!.approvePermission(
-                          selectedWallet.value
+                          state.currentContract
                         );
                         setValidationState(State.AUTHORIZED);
                         dispatch({
                           type: "addDapp",
-                          payload: { data, address: selectedWallet.value },
+                          payload: { data, address: state.currentContract },
                         });
                       }}
                     >
@@ -309,8 +303,8 @@ const Beacon = () => {
               return (
                 <p>
                   {data?.name} has been authorized to connect to{" "}
-                  {state.aliases[selectedWallet.value ?? ""] ??
-                    selectedWallet.value}
+                  {state.aliases[state.currentContract ?? ""] ??
+                    state.currentContract}
                 </p>
               );
             case State.REFUSED:

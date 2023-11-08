@@ -188,17 +188,21 @@ function reducer(state: tezosState, action: action): tezosState {
     case "removeDapp": {
       if (
         !state.currentContract ||
-        !state.connectedDapps[state.currentContract][action.payload]
+        !state.connectedDapps[state.currentContract][
+          `${action.payload}-${state.address}`
+        ]
       )
         return state;
 
-      delete state.connectedDapps[state.currentContract][
+      const newState = { ...state };
+
+      delete newState.connectedDapps[state.currentContract][
         `${action.payload}-${state.address}`
       ];
 
-      saveState(state);
+      saveState(newState);
 
-      return state;
+      return newState;
     }
     case "addContract": {
       let al = action.payload.aliases;

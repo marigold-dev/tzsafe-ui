@@ -498,7 +498,7 @@ const Sidebar = ({
         </Link>
 
         <Link
-          href={`/beacon`}
+          href={`/${state.currentContract}/beacon`}
           className={linkClass(
             path?.includes("/beacon") ?? false,
             isLoading || !isOwner || !Versioned.hasPoeSupport(version)
