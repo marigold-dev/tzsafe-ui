@@ -1,20 +1,57 @@
+import BigNumber from "bignumber.js";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
+import { API_URL } from "../../context/config";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { makeWertWidget } from "../../context/wert";
-import { tezToMutez } from "../../utils/tez";
+import { mutezToTez } from "../../utils/tez";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
   const disptach = useContext(AppDispatchContext)!;
   const router = useRouter();
+  const [error, setError] = useState<string | undefined>();
+
+  const onSuccess = async (txId: string) => {
+    if (!state.currentContract) return;
+
+    try {
+      const transaction = await fetch(`${API_URL}/v1/operations/${txId}`).then(
+        res => res.json()
+      );
+
+      if (!transaction || transaction.length === 0) {
+        return setTimeout(() => {
+          onSuccess(txId);
+        }, 5000);
+      }
+
+      const amount = mutezToTez(transaction[0].amount as number);
+
+      await state.connection.wallet
+        .transfer({ to: state.currentContract, amount })
+        .send();
+
+      const newContract = state.contracts[state.currentContract];
+      newContract.balance = new BigNumber(newContract.balance)
+        .plus(transaction[0].amount as number)
+        .toString();
+      disptach({
+        type: "updateContract",
+        payload: { contract: newContract, address: state.currentContract },
+      });
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
 
   const wertWidgetRef = useRef(
     makeWertWidget({
       wallet: state.address ?? "",
-      contract: state.currentContract ?? "",
+      onSuccess,
     })
   );
 
@@ -23,7 +60,7 @@ const TopUpPage = () => {
 
     wertWidgetRef.current = makeWertWidget({
       wallet: state.address ?? "",
-      contract: state.currentContract ?? "",
+      onSuccess,
     });
   }, [state.currentContract]);
 
@@ -72,23 +109,37 @@ const TopUpPage = () => {
         </div>
       </div>
       <main className="min-h-fit grow">
-        <button
-          onClick={() => {
-            wertWidgetRef.current.mount();
-          }}
-        >
-          Buy crypto
-        </button>
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div>
+            <h2 className="text-xl text-white">Buy crypto</h2>
+            <p className="mt-2 text-zinc-200">
+              Our provider {"doesn't"} support transferring to Tezos contract
+              yet. So after the transaction succeed, we will automatically
+              create a transaction from your wallet to your TzSafe wallet
+            </p>
+            <button
+              className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+              onClick={() => {
+                wertWidgetRef.current.mount();
+                setError(undefined);
+              }}
+            >
+              Open the on-ramp service
+            </button>
+            <p className="mt-2">{!!error && renderError(error, true)}</p>
+          </div>
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
             </h2>
           ) : (
-            <TopUp
-              address={state.currentContract ?? ""}
-              closeModal={() => {}}
-            />
+            <>
+              <h2 className="mt-12 text-xl text-white">Send to the contract</h2>
+              <TopUp
+                address={state.currentContract ?? ""}
+                closeModal={() => {}}
+              />
+            </>
           )}
         </div>
       </main>
