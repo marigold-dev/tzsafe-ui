@@ -1,10 +1,11 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
-import { API_URL } from "../../context/config";
+import { TZKT_API_URL, PREFERED_NETWORK } from "../../context/config";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { makeWertWidget } from "../../context/wert";
 import { mutezToTez } from "../../utils/tez";
@@ -19,9 +20,9 @@ const TopUpPage = () => {
     if (!state.currentContract) return;
 
     try {
-      const transaction = await fetch(`${API_URL}/v1/operations/${txId}`).then(
-        res => res.json()
-      );
+      const transaction = await fetch(
+        `${TZKT_API_URL}/v1/operations/${txId}`
+      ).then(res => res.json());
 
       if (!transaction || transaction.length === 0) {
         return setTimeout(() => {
@@ -93,24 +94,26 @@ const TopUpPage = () => {
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div>
-            <h2 className="text-xl text-white">Buy crypto</h2>
-            <p className="mt-2 text-zinc-200">
-              Our provider {"doesn't"} support transferring to Tezos contract
-              yet. So after the transaction succeed, we will automatically
-              create a transaction from your wallet to your TzSafe wallet
-            </p>
-            <button
-              className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-              onClick={() => {
-                wertWidgetRef.current.mount();
-                setError(undefined);
-              }}
-            >
-              Open the on-ramp service
-            </button>
-            <p className="mt-2">{!!error && renderError(error, true)}</p>
-          </div>
+          {PREFERED_NETWORK !== NetworkType.MAINNET && (
+            <div>
+              <h2 className="text-xl text-white">Buy crypto</h2>
+              <p className="mt-2 text-zinc-200">
+                Our provider {"doesn't"} support transferring to Tezos contract
+                yet. So after the transaction succeed, we will automatically
+                create a transaction from your wallet to your TzSafe wallet
+              </p>
+              <button
+                className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                onClick={() => {
+                  wertWidgetRef.current.mount();
+                  setError(undefined);
+                }}
+              >
+                Open the on-ramp service
+              </button>
+              <p className="mt-2">{!!error && renderError(error, true)}</p>
+            </div>
+          )}
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
