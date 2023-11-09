@@ -688,7 +688,7 @@ function parseContract(
  *
  *  reference: https://tezos.gitlab.io/active/michelson.html#core-data-types-and-notations
  */
-function toRightAssociative(type: Expr): void {
+function toRightAssociativePairType(type: Expr): void {
   if ("prim" in type && type.prim === "pair" && !!type.args) {
     if (type.args.length <= 2) {
       return;
@@ -697,7 +697,37 @@ function toRightAssociative(type: Expr): void {
       const left = type.args.pop();
       if (!right || !left) throw new Error("Internal: it'can happen.");
       type.args.push({ prim: "pair", args: [left, right] });
-      toRightAssociative(type);
+      toRightAssociativePairType(type);
+    }
+  } else {
+    throw new Error("Internal: not pair");
+  }
+}
+
+function toRightAssociativePairData(data: Expr): Expr {
+  if ("prim" in data && data.prim === "Pair" && !!data.args) {
+    if (data.args.length <= 2) {
+      return data;
+    } else {
+      const right = data.args.pop();
+      const left = data.args.pop();
+      if (!right || !left) throw new Error("Internal: it'can happen.");
+      data.args.push({ prim: "Pair", args: [left, right] });
+      return toRightAssociativePairData(data);
+    }
+  } else if (Array.isArray(data)) {
+    if (data.length < 2) {
+      return data;
+    } else {
+      const right = data.pop();
+      const left = data.pop();
+      if (!right || !left) throw new Error("Internal: it'can happen.");
+      if (data.length == 0) {
+        return { prim: "Pair", args: [left, right] };
+      } else {
+        data.push({ prim: "Pair", args: [left, right] });
+        return toRightAssociativePairData(data);
+      }
     }
   } else {
     throw new Error("Internal: not pair");
@@ -846,27 +876,38 @@ function decodeB58(type: Expr, data: Expr): Expr {
         }
       }
       case "pair": {
-        const new_type = toRightAssociative(type);
-        if ("prim" in data && !!data.args) {
+        toRightAssociativePairType(type);
+        data = toRightAssociativePairData(data);
+        if ("prim" in data && "args" in data) {
           let new_data = type.args?.map((v, i) => {
-            if (!data.args?.[i]) throw new Error("Internal: should have args");
-            const d = decodeB58(v, data.args[i]);
-            return d;
+            if ("prim" in data && "args" in data) {
+              if (!data.args?.[i])
+                throw new Error("Internal: should have args");
+              const d = decodeB58(v, data.args[i]);
+              return d;
+            } else {
+              throw new Error("Internal: data should be a prim or array");
+            }
           });
           data.args = new_data;
+
           return data;
         } else {
-          throw new Error("Internal: data should be a prim");
+          throw new Error("Internal: data should be a prim or array");
         }
       }
       case "option": {
         if ("prim" in data) {
           if (data.prim === "Some" && !!data.args) {
             let new_data = type.args?.map((v, i) => {
-              if (!data.args?.[i])
-                throw new Error("Internal: should have args");
-              const d = decodeB58(v, data.args[i]);
-              return d;
+              if ("prim" in data) {
+                if (!data.args?.[i])
+                  throw new Error("Internal: should have args");
+                const d = decodeB58(v, data.args[i]);
+                return d;
+              } else {
+                throw new Error("Internal: data should be a prim");
+              }
             });
             data.args = new_data;
           }
@@ -903,6 +944,7 @@ export {
   showName,
   parseContract,
   decodeB58,
-  toRightAssociative,
+  toRightAssociativePairType,
+  toRightAssociativePairData,
 };
 export type { token, tokenMap, tokenValueType };

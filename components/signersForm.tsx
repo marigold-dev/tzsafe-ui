@@ -16,7 +16,7 @@ import {
   PREFERED_NETWORK,
   PROPOSAL_DURATION_WARNING,
 } from "../context/config";
-import { API_URL } from "../context/config";
+import { TZKT_API_URL } from "../context/config";
 import {
   generateDelegateMichelson,
   generateUndelegateMichelson,
@@ -121,7 +121,7 @@ const SignersForm: FC<{
   useEffect(() => {
     if (!!state.delegatorAddresses) return;
 
-    fetch(`${API_URL}/v1/delegates?select.values=address`)
+    fetch(`${TZKT_API_URL}/v1/delegates?select.values=address`)
       .then(res => res.json())
       .then(payload => dispatch({ type: "setDelegatorAddresses", payload }));
   }, [state.delegatorAddresses]);
@@ -443,7 +443,7 @@ const SignersForm: FC<{
           else {
             try {
               const account = await fetch(
-                `${API_URL}/v1/accounts/${values.bakerAddress}`
+                `${TZKT_API_URL}/v1/accounts/${values.bakerAddress}`
               ).then(res => res.json());
 
               if (account.type !== "delegate" || !account.activationLevel)

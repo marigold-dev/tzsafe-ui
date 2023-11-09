@@ -1,5 +1,5 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Parser } from "@taquito/michel-codec";
+import { Parser, emitMicheline } from "@taquito/michel-codec";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
@@ -134,7 +134,9 @@ export const contentToData = (
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
         amount: !!lambda?.mutez ? `${mutezToTez(lambda.mutez)} Tez` : undefined,
-        params: metadata.lambda,
+        params: Array.isArray(metadata.lambda)
+          ? emitMicheline(metadata.lambda)
+          : metadata.lambda,
       };
     } else if (type === LambdaType.CONTRACT_EXECUTION) {
       data = {

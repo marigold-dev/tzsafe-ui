@@ -21,7 +21,7 @@ import {
   contractStorage as c1,
   arrayProposalSchema,
   proposalsType,
-} from "../types/Proposal0_3_1";
+} from "../types/Proposal0_3_2";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
@@ -33,7 +33,7 @@ function convert(x: string): string {
   return char2Bytes(x);
 }
 
-class Version0_3_1 extends Versioned {
+class Version0_3_2 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -300,7 +300,7 @@ class Version0_3_1 extends Versioned {
       effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.3.1",
+      version: "0.3.2",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -397,4 +397,4 @@ class Version0_3_1 extends Versioned {
   }
 }
 
-export default Version0_3_1;
+export default Version0_3_2;

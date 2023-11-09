@@ -1,6 +1,7 @@
 import { Expr, Prim, IntLiteral, emitMicheline } from "@taquito/michel-codec";
 import {
   encodePubKey,
+  encodeKeyHash,
   validateAddress,
   ValidationResult,
 } from "@taquito/utils";
@@ -133,7 +134,7 @@ const parseDelegate = (
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  if (version === "0.3.1") {
+  if (version === "0.3.1" || version === "0.3.2") {
     const delegate_instr_size = 6;
 
     if (lambda.length != delegate_instr_size)
@@ -155,9 +156,9 @@ const parseDelegate = (
             const address = !!expr?.args?.[1].string
               ? //@ts-expect-error
                 (expr?.args?.[1].string as string)
-              : encodePubKey(
+              : encodeKeyHash(
                   //@ts-expect-error
-                  formatBytes(expr?.args?.[1].bytes)
+                  expr?.args?.[1].bytes
                 );
             return [true, address];
           } else {
@@ -203,9 +204,9 @@ const parseDelegate = (
             const address = !!expr?.args?.[1].string
               ? //@ts-expect-error
                 (expr?.args?.[1].string as string)
-              : encodePubKey(
+              : encodeKeyHash(
                   //@ts-expect-error
-                  formatBytes(expr?.args?.[1].bytes)
+                  expr?.args?.[1].bytes
                 );
             return [true, address];
           } else {
@@ -236,7 +237,7 @@ const parseUnDelegate = (
   version: version,
   lambda: Expr[]
 ): [true, LambdaType] | [false, undefined] => {
-  if (version === "0.3.1") {
+  if (version === "0.3.1" || version === "0.3.2") {
     const undelegate_instr_size = 5;
 
     if (lambda.length != undelegate_instr_size) return [false, undefined];
@@ -334,7 +335,7 @@ export const parseLambda = (
     }
   }
 
-  if (version === "0.3.1") {
+  if (version === "0.3.1" || version === "0.3.2") {
     const contract_execution_instr_size = 9;
 
     if (lambda.length != contract_execution_instr_size)
