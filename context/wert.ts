@@ -6,21 +6,8 @@ export const makeWertWidget = ({
 }: {
   wallet: string;
   onSuccess: (txId: string) => void;
-}) => {
-  // console.log(generateInputData(contract, tezToMutez(10)));
-  // const signedData = signSmartContractData(
-  //   {
-  //     address: wallet,
-  //     commodity: "XTZ",
-  //     network: "ghostnet",
-  //     commodity_amount: 10,
-  //     sc_address: contract,
-  //     sc_input_data: generateInputData(contract, tezToMutez(10)),
-  //   },
-  //   privateKey
-  // );
-
-  return new WertWidget({
+}) =>
+  new WertWidget({
     address: wallet,
     partner_id: "01HBARVR2HGGY24WC52R4J89R8",
     origin: "https://sandbox.wert.io",
@@ -44,4 +31,3 @@ export const makeWertWidget = ({
       },
     },
   });
-};

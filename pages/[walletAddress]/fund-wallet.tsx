@@ -64,23 +64,6 @@ const TopUpPage = () => {
     });
   }, [state.currentContract]);
 
-  // useEffect(() => {
-  //   const aze = async () => {
-  //     const contract = await state.connection.contract.at(
-  //       state.currentContract ?? ""
-  //     );
-  //
-  //     const params = await contract.methods
-  //       .default()
-  //       .toTransferParams({ amount: 10 });
-  //
-  //     console.log(params);
-  //     await state.connection.wallet.transfer(params).send();
-  //   };
-  //
-  //   aze();
-  // }, []);
-
   useEffect(() => {
     if (
       !router.query.walletAddress ||
