@@ -2,6 +2,7 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
+import Alias from "../../components/Alias";
 import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
@@ -89,28 +90,35 @@ const TopUpPage = () => {
       <Meta title={"Fund wallet - TzSafe"} />
       <div>
         <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-extrabold text-white">Fund wallet</h1>
+          <h1 className="text-2xl font-extrabold text-white">
+            Fund{" "}
+            {state.aliases[state.currentContract ?? ""] ?? (
+              <Alias address={state.currentContract ?? ""} disabled />
+            )}
+          </h1>
         </div>
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {PREFERED_NETWORK !== NetworkType.MAINNET && (
             <div>
-              <h2 className="text-xl text-white">Buy crypto</h2>
-              <p className="mt-2 text-zinc-200">
+              <h2 className="text-xl text-white">Buy XTZ</h2>
+              <p className="mt-2 font-light text-zinc-200">
                 Our provider {"doesn't"} support transferring to Tezos contract
                 yet. So after the transaction succeed, we will automatically
                 create a transaction from your wallet to your TzSafe wallet
               </p>
-              <button
-                className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                onClick={() => {
-                  wertWidgetRef.current.mount();
-                  setError(undefined);
-                }}
-              >
-                Open the on-ramp service
-              </button>
+              <div className="flex w-full justify-center">
+                <button
+                  className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                  onClick={() => {
+                    wertWidgetRef.current.mount();
+                    setError(undefined);
+                  }}
+                >
+                  Buy
+                </button>
+              </div>
               <p className="mt-2">{!!error && renderError(error, true)}</p>
             </div>
           )}
@@ -120,7 +128,9 @@ const TopUpPage = () => {
             </h2>
           ) : (
             <>
-              <h2 className="mt-12 text-xl text-white">Send to the contract</h2>
+              <h2 className="mt-12 text-xl text-white">
+                Send from your wallet
+              </h2>
               <TopUp
                 address={state.currentContract ?? ""}
                 closeModal={() => {}}
