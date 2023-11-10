@@ -99,7 +99,7 @@ const TopUpPage = () => {
               <h2 className="text-xl text-white">Buy crypto</h2>
               <p className="mt-2 text-zinc-200">
                 Our provider {"doesn't"} support transferring to Tezos contract
-                yet. So after the transaction succeed, we will automatically
+                yet. Therefore, after the transaction succeeds, we will automatically
                 create a transaction from your wallet to your TzSafe wallet
               </p>
               <button
