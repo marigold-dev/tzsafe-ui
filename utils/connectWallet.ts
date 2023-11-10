@@ -6,6 +6,8 @@ export const connectWallet = async (
   state: tezosState,
   dispatch: Dispatch<action>
 ): Promise<void> => {
+  if (!state.beaconWallet) return;
+
   await state?.beaconWallet!.requestPermissions({
     network: {
       type: PREFERED_NETWORK,

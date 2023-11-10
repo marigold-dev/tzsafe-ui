@@ -8,8 +8,8 @@ import {
   WalletClient,
   WalletClientOptions,
 } from "@airgap/beacon-sdk";
+import { buf2hex } from "@taquito/utils";
 import { TinyEmitter } from "tiny-emitter";
-import { buf2Hex } from "../utils/strings";
 
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
@@ -101,12 +101,10 @@ class P2PClient extends WalletClient {
         this.events.emit(Event.PERMISSION_REQUEST, message);
         break;
       case BeaconMessageType.ProofOfEventChallengeRequest:
-        const encoder = new TextEncoder();
-
         this.proofOfEvent.message = message;
         this.proofOfEvent.data = {
-          challenge_id: buf2Hex(encoder.encode(message.dAppChallengeId)),
-          payload: buf2Hex(encoder.encode(message.payload)),
+          challenge_id: buf2hex(Buffer.from(message.dAppChallengeId)),
+          payload: buf2hex(Buffer.from(message.payload)),
         };
 
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);

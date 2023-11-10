@@ -12,7 +12,9 @@ const LoginButton = () => {
         await connectWallet(state, dispatch);
       }}
       type="button"
-      className="rounded-full p-1 text-primary hover:text-white focus:ring-white focus:ring-offset-2  focus:ring-offset-gray-800 md:bg-primary md:px-2 md:text-black"
+      className={`rounded-full p-1 text-primary hover:text-white focus:ring-white focus:ring-offset-2  focus:ring-offset-gray-800 md:bg-primary md:px-2 md:text-black ${
+        !state.beaconWallet ? "pointer-events-none opacity-50" : ""
+      }`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
