@@ -249,7 +249,9 @@ const History = () => {
 
       const proposals: [number, any][] = bigmap.map(({ key, value }) => {
         return [
-          Number.parseInt(key),
+          version === "0.3.0" || version === "0.3.1" || version === "0.3.2"
+            ? Number.parseInt(`0x${key}`)
+            : Number.parseInt(key),
           { ui: toProposal(version, value), og: value },
         ];
       });
