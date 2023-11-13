@@ -322,7 +322,7 @@ function TopUp(props: {
         };
 
         return (
-          <Form className="col-span-2 mt-8 flex flex-col items-start justify-center">
+          <Form className="col-span-2 mt-2 flex flex-col items-start justify-center">
             {!loading && typeof result != "undefined" && (
               <div className="mb-8 flex w-full items-center justify-between md:h-12">
                 <ContractLoader loading={loading}>
@@ -510,11 +510,6 @@ function TopUp(props: {
                 </section>
               )}
             </FieldArray>
-            {!signers(
-              state.contracts[state.currentContract ?? ""] ??
-                state.currentStorage
-            ).includes(state.address ?? "") &&
-              renderWarning("You're not the owner of this wallet")}
             <div className="mt-4 flex w-full justify-center">
               <button
                 className="my-2 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"

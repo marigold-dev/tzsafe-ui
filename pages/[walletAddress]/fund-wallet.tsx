@@ -3,13 +3,14 @@ import BigNumber from "bignumber.js";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import Alias from "../../components/Alias";
-import renderError from "../../components/formUtils";
+import renderError, { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
 import { TZKT_API_URL, PREFERED_NETWORK } from "../../context/config";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import { makeWertWidget } from "../../context/wert";
 import { mutezToTez } from "../../utils/tez";
+import { signers } from "../../versioned/apis";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
@@ -89,24 +90,32 @@ const TopUpPage = () => {
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Fund wallet - TzSafe"} />
       <div>
-        <div className="mx-auto flex max-w-7xl justify-start px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">
             Fund{" "}
             {state.aliases[state.currentContract ?? ""] ?? (
               <Alias address={state.currentContract ?? ""} disabled />
             )}
           </h1>
+          <div>
+            {!signers(
+              state.contracts[state.currentContract ?? ""] ??
+                state.currentStorage
+            ).includes(state.address ?? "") &&
+              renderWarning("You're not the owner of this wallet")}
+          </div>
         </div>
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {PREFERED_NETWORK !== NetworkType.MAINNET && (
             <div>
-              <h2 className="text-xl text-white">Buy XTZ</h2>
+              <h2 className="text-xl text-white">Buy Tez</h2>
               <p className="mt-2 font-light text-zinc-200">
                 Our provider {"doesn't"} support transferring to Tezos contract
-                yet. Therefore, after the transaction succeeds, we will automatically
-                create a transaction from your wallet to your TzSafe wallet
+                yet. Therefore, after the transaction succeeds, we will
+                automatically create a transaction from your wallet to your
+                TzSafe wallet
               </p>
               <div className="flex w-full justify-center">
                 <button
@@ -129,7 +138,7 @@ const TopUpPage = () => {
           ) : (
             <>
               <h2 className="mt-12 text-xl text-white">
-                Send from your wallet
+                Send from <Alias address={state.address ?? ""} disabled />
               </h2>
               <TopUp
                 address={state.currentContract ?? ""}
