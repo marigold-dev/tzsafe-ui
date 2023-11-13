@@ -12,6 +12,7 @@ import {
   encodeKeyHash,
 } from "@taquito/utils";
 import { assertNever } from "assert-never";
+import { BigNumber } from "bignumber.js";
 import { generateExecuteContractMichelson } from "../context/generateLambda";
 import { version } from "../types/display";
 
@@ -422,12 +423,19 @@ function evalTaquitoParam(
     case "mutez":
     case "timestamp": {
       const value = tableValue[getFieldName(token.counter)];
+      if (typeof value !== "string")
+        throw new Error(
+          `The value get from UI should be in string, ${showName(
+            token.type,
+            token.name
+          )}`
+        );
       if (!value) {
         throw new Error(
           `Incorrect or empty value, ${showName(token.type, token.name)}`
         );
       }
-      return Number(value);
+      return new BigNumber(value);
     }
     case "never":
       return undefined;
