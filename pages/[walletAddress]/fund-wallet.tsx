@@ -3,6 +3,7 @@ import BigNumber from "bignumber.js";
 import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import Alias from "../../components/Alias";
+import Spinner from "../../components/Spinner";
 import renderError, { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
@@ -17,14 +18,18 @@ const TopUpPage = () => {
   const disptach = useContext(AppDispatchContext)!;
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const onSuccess = async (txId: string) => {
     if (!state.currentContract) return;
 
+    let amount = 0;
+    let transaction;
     try {
-      const transaction = await fetch(
-        `${TZKT_API_URL}/v1/operations/${txId}`
-      ).then(res => res.json());
+      transaction = await fetch(`${TZKT_API_URL}/v1/operations/${txId}`).then(
+        res => res.json()
+      );
 
       if (!transaction || transaction.length === 0) {
         return setTimeout(() => {
@@ -32,11 +37,19 @@ const TopUpPage = () => {
         }, 5000);
       }
 
-      const amount = mutezToTez(transaction[0].amount as number);
+      amount = mutezToTez(transaction[0].amount as number);
+    } catch (e) {
+      setError("Failed to create the transaction");
+    }
 
-      await state.connection.wallet
+    try {
+      const sent = await state.connection.wallet
         .transfer({ to: state.currentContract, amount })
         .send();
+
+      setIsLoading(true);
+
+      await sent.confirmation();
 
       const newContract = state.contracts[state.currentContract];
       newContract.balance = new BigNumber(newContract.balance)
@@ -46,8 +59,10 @@ const TopUpPage = () => {
         type: "updateContract",
         payload: { contract: newContract, address: state.currentContract },
       });
+      setIsLoading(false);
+      setIsSuccess(true);
     } catch (e) {
-      setError((e as Error).message);
+      setError("Failed to execute the transfer");
     }
   };
 
@@ -123,12 +138,29 @@ const TopUpPage = () => {
                   onClick={() => {
                     wertWidgetRef.current.mount();
                     setError(undefined);
+                    setIsLoading(false);
+                    setIsSuccess(false);
                   }}
                 >
                   Buy
                 </button>
               </div>
-              <p className="mt-2">{!!error && renderError(error, true)}</p>
+              <p className="mt-2">
+                {!!error ? (
+                  renderError(
+                    `${error}. All the funds are safe on your wallet, you can transfer them manually to TzSafe`,
+                    true
+                  )
+                ) : isLoading ? (
+                  <Spinner />
+                ) : isSuccess ? (
+                  <span className="font-light text-white">
+                    Transferred the funds from{" "}
+                    <Alias address={state.address ?? ""} disabled /> to{" "}
+                    <Alias disabled address={state.currentContract ?? ""} />{" "}
+                  </span>
+                ) : null}
+              </p>
             </div>
           )}
           {!state.currentContract ? (

@@ -108,12 +108,12 @@ const NavBar = (_: React.PropsWithChildren) => {
                       aria-haspopup="true"
                     >
                       <span className="sr-only">Open user menu</span>
-                      <div className="flex flex-col items-center">
-                        <span className="font-md block text-center font-bold text-white">
-                          {state?.address.slice(0, 3) +
-                            "..." +
-                            state?.address.slice(33)}
-                        </span>
+                      <div className="flex flex-col items-center text-white">
+                        <Alias
+                          address={state.address}
+                          disabled
+                          className="cursor-pointer"
+                        />
                       </div>
                     </button>
                   </div>
