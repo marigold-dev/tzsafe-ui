@@ -148,7 +148,7 @@ const TopUpPage = () => {
               <p className="mt-2">
                 {!!error ? (
                   <span className="text-red-600">
-                    {error}. All the funds are currently in
+                    {error}. All the funds are currently in{" "}
                     <Alias address={state.currentContract ?? ""} />, you can
                     transfer them manually to TzSafe
                   </span>
