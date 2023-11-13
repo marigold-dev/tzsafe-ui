@@ -22,6 +22,7 @@ import {
   AppDispatchContext,
   contractStorage,
 } from "../context/state";
+import { makeWertWidget } from "../context/wert";
 import "../styles/globals.css";
 import { fetchContract } from "../utils/fetchContract";
 

@@ -1,13 +1,22 @@
 import { useRouter } from "next/router";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
+import { makeWertWidget } from "../../context/wert";
 
 const TopUpPage = () => {
   const state = useContext(AppStateContext)!;
   const disptach = useContext(AppDispatchContext)!;
   const router = useRouter();
+
+  const wertWidgetRef = useRef(makeWertWidget(state.currentContract ?? ""));
+
+  useEffect(() => {
+    if (!state.currentContract) return;
+
+    wertWidgetRef.current = makeWertWidget(state.currentContract);
+  }, [state.currentContract]);
 
   useEffect(() => {
     if (
@@ -37,6 +46,13 @@ const TopUpPage = () => {
         </div>
       </div>
       <main className="min-h-fit grow">
+        <button
+          onClick={() => {
+            wertWidgetRef.current.mount();
+          }}
+        >
+          Buy crypto
+        </button>
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
