@@ -147,10 +147,11 @@ const TopUpPage = () => {
               </div>
               <p className="mt-2">
                 {!!error ? (
-                  renderError(
-                    `${error}. All the funds are safe on your wallet, you can transfer them manually to TzSafe`,
-                    true
-                  )
+                  <span>
+                    {error}. All the funds are currently in
+                    <Alias address={state.currentContract ?? ""} />, you can
+                    transfer them manually to TzSafe
+                  </span>
                 ) : isLoading ? (
                   <Spinner />
                 ) : isSuccess ? (
