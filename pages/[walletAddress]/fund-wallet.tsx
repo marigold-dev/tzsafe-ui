@@ -10,12 +10,20 @@ const TopUpPage = () => {
   const disptach = useContext(AppDispatchContext)!;
   const router = useRouter();
 
-  const wertWidgetRef = useRef(makeWertWidget(state.currentContract ?? ""));
+  const wertWidgetRef = useRef(
+    makeWertWidget({
+      wallet: state.address ?? "",
+      contract: state.currentContract ?? "",
+    })
+  );
 
   useEffect(() => {
-    if (!state.currentContract) return;
+    if (!state.currentContract || !state.address) return;
 
-    wertWidgetRef.current = makeWertWidget(state.currentContract);
+    wertWidgetRef.current = makeWertWidget({
+      wallet: state.address ?? "",
+      contract: state.currentContract ?? "",
+    });
   }, [state.currentContract]);
 
   useEffect(() => {
