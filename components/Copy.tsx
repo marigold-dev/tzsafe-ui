@@ -27,6 +27,7 @@ const Copy = ({ children, value, disabled = false, text }: copyProps) => {
     >
       <a
         href="#"
+        className={disabled ? "cursor-default" : ""}
         onClick={async () => {
           if (disabled) return;
 

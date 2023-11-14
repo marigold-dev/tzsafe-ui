@@ -33,7 +33,9 @@ const Alias = ({
 
   return (
     <Copy value={address} text="Copy address" disabled={disabled}>
-      <span className={className}>{toDisplay}</span>
+      <span className={className} title={address}>
+        {toDisplay}
+      </span>
     </Copy>
   );
 };

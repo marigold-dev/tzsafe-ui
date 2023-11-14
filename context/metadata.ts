@@ -25,10 +25,10 @@ type typeHash = string;
 type codeHash = string;
 
 const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
-  "0.0.6": undefined,
-  "0.0.8": undefined,
-  "0.0.9": undefined,
-  "0.0.10": undefined,
+  "0.0.6": "1047066606:471411811",
+  "0.0.8": "2045366626:-1526481454",
+  "0.0.9": "1273323151:735333822",
+  "0.0.10": "-357299388:2102290129",
   "0.0.11": "-483287042:521053333",
   "0.1.1": "-483287042:-426350137",
   "0.3.0": "-933474574:1358594366",
@@ -37,9 +37,12 @@ const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
   "unknown version": undefined,
 };
 
-// Before 0.0.11, the version is stored on the contract so tzip16 won't failed to retrieve it
 // typeHash and codeHash are provided by tzkt API
 const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
+  [HASHES["0.0.6"]!]: "0.0.6",
+  [HASHES["0.0.8"]!]: "0.0.8",
+  [HASHES["0.0.9"]!]: "0.0.9",
+  [HASHES["0.0.10"]!]: "0.0.10",
   [HASHES["0.0.11"]!]: "0.0.11",
   [HASHES["0.1.1"]!]: "0.1.1",
   [HASHES["0.3.0"]!]: "0.3.0",
@@ -67,15 +70,6 @@ async function fetchVersion(
           codeHash: number;
         }[]) => VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version"
       );
-
-    if (version === "unknown version") {
-      version = (await metadata
-        .tzip16()
-        .getMetadata()
-        .then(metadata => {
-          return metadata?.metadata?.version ?? "unknown version";
-        })) as version;
-    }
 
     return dispatch[version] ?? "unknown version";
   } catch {
