@@ -59,6 +59,13 @@ export type transfer =
         metadata: any;
       };
     }
+  | ({
+      type: "poe";
+      values: {
+        challengeId: string;
+        payload: string;
+      };
+    } & common)
   | {
       type: "contract";
       values: {
@@ -575,6 +582,46 @@ abstract class Versioned {
             validateAddress(x) !== ValidationResult.VALID
               ? `Invalid address ${x}`
               : undefined,
+        },
+      ],
+    };
+  }
+
+  static poe(version: version): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    if (version !== "0.3.2") {
+      return { fields: [], values: {} };
+    }
+
+    return {
+      values: {
+        challengeId: "",
+        payload: "",
+      },
+      fields: [
+        {
+          field: "challengeId",
+          label: "Challenge Id",
+          path: ".challengeId",
+          placeholder: "My id",
+          validate: (v: string) =>
+            v.trim() === "" ? "Challenge id is empty" : undefined,
+        },
+        {
+          field: "payload",
+          label: "Payload",
+          path: ".payload",
+          placeholder: "Payload",
+          validate: (v: string) =>
+            v.trim() === "" ? "Payload is empty" : undefined,
         },
       ],
     };

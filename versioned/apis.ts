@@ -25,6 +25,7 @@ import Version0_3_2 from "./version0_3_2";
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
 }
+
 const dispatch: {
   [key in version]: (version: version, address: string) => Versioned;
 } = {

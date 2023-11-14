@@ -20,6 +20,7 @@ import {
   generateFA1_2ApproveMichelson,
   generateFA1_2TransferMichelson,
   generateFA2Michelson,
+  generatePoe,
 } from "../context/generateLambda";
 import {
   content,
@@ -320,6 +321,7 @@ class Version0_3_0 extends Versioned {
                 },
               };
             }
+
             default:
               return {};
           }
