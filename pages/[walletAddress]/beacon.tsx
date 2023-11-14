@@ -76,7 +76,10 @@ const Beacon = () => {
 
     const data = decodeData((searchParams.get("data") ?? code) as string);
 
-    if (data.appUrl.includes("tzsafe")) {
+    if (
+      data.appUrl.includes("tzsafe") ||
+      data.name.toLowerCase() === "tzsafe"
+    ) {
       setError("Sorry you can't pair TzSafe with itself");
       return;
     }
@@ -212,7 +215,10 @@ const Beacon = () => {
                       try {
                         const data = decodeData(inputRef.current.value);
 
-                        if (data.appUrl.includes("tzsafe")) {
+                        if (
+                          data.appUrl.includes("tzsafe") ||
+                          data.name.toLowerCase() === "tzsafe"
+                        ) {
                           setError("Sorry you can't pair TzSafe with itself");
                           return;
                         }
