@@ -25,7 +25,9 @@ const Tooltip = ({
           className="radix-side-top:animate-slide-down-fade radix-side-right:animate-slide-left-fade radix-side-bottom:animate-slide-up-fade radix-side-left:animate-slide-right-fade inline-flex items-center rounded-md bg-zinc-800 px-4 py-2.5 shadow-lg"
         >
           <TooltipPrimitive.Arrow className="fill-current text-zinc-800" />
-          <span className="block max-w-xs text-xs leading-none text-zinc-100">
+          <span
+            className={`{disabled ? 'pointer-events-none' : ''} block max-w-xs text-xs leading-none text-zinc-100`}
+          >
             {text}
           </span>
         </TooltipPrimitive.Content>
