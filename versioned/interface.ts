@@ -597,7 +597,7 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    if (version !== "0.3.2") {
+    if (!this.hasPoeSupport(version)) {
       return { fields: [], values: {} };
     }
 
@@ -628,9 +628,15 @@ abstract class Versioned {
   }
 
   static hasPoeSupport(version: version): boolean {
-    const [_, middle, __] = version.split(".");
+    const [_, middle, end] = version.split(".");
 
-    return parseInt(middle) >= 3;
+    const parsedMiddle = parseInt(middle);
+    const parsedEnd = parseInt(end);
+
+    if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
+
+    // We accept 0.3.2 and above
+    return parsedMiddle === 3 ? parsedEnd >= 2 : parsedMiddle >= 4;
   }
 }
 

@@ -94,7 +94,6 @@ class P2PClient extends WalletClient {
     message: BeaconRequestOutputMessage,
     context: ConnectionContext
   ) => {
-    console.log("Message", message);
     switch (message.type) {
       case BeaconMessageType.PermissionRequest:
         this.permissionMessage = message;

@@ -478,18 +478,35 @@ const PoeModal = () => {
                         try {
                           await state.p2pClient!.approvePoeChallenge();
 
-                          const contract = await state.connection.wallet.at(
+                          const cc = await state.connection.contract.at(
                             state.currentContract
                           );
-
-                          const op = await contract.methodsObject
-                            .proof_of_event_challenge(
-                              state.p2pClient!.proofOfEvent.data
-                            )
-                            .send();
-
-                          await op.confirmation(1);
-                          setCurrentState(State.AUTHORIZED);
+                          const versioned = VersionedApi(
+                            state.contracts[state.currentContract].version,
+                            state.currentContract
+                          );
+                          const timeoutAndHash =
+                            await versioned.submitTxProposals(
+                              cc,
+                              state.connection,
+                              {
+                                transfers: [
+                                  {
+                                    type: "poe",
+                                    values: {
+                                      challengeId:
+                                        state.p2pClient?.proofOfEvent.data
+                                          ?.challenge_id ?? "",
+                                      payload:
+                                        state.p2pClient?.proofOfEvent.data
+                                          ?.payload ?? "",
+                                    },
+                                    fields: [],
+                                  },
+                                ],
+                              },
+                              false
+                            );
                         } catch (e) {
                           console.log(e);
                           setTransactionError(
