@@ -86,7 +86,8 @@ const RenderProposalContentMetadata = ({
       !metadata?.contract_address &&
       !metadata?.meta?.includes("contract_addr") &&
       !metadata?.meta?.includes("baker_address") &&
-      !metadata?.meta?.includes("fa1_2_address")
+      !metadata?.meta?.includes("fa1_2_address") &&
+      !metadata?.meta?.includes("challengeId")
     ) {
       data = {
         ...data,
@@ -177,9 +178,20 @@ const RenderProposalContentMetadata = ({
         entrypoints: undefined,
         params: undefined,
       };
+    } else if (metadata?.meta?.includes("challengeId")) {
+      const meta = JSON.parse(metadata.meta);
 
-      // This condition handles some legacy code so old wallets don't crash
-    } else if (metadata.meta) {
+      data = {
+        label: "Proof of Event",
+        metadata: undefined,
+        amount: undefined,
+        addresses: [],
+        entrypoints: undefined,
+        params: JSON.stringify(meta.payload),
+      };
+    }
+    // This condition handles some legacy code so old wallets don't crash
+    else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
         const contractData = JSON.parse(metadata.meta);
 
@@ -346,6 +358,8 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
       isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
+      : !!metadata.meta && metadata.meta.includes("challengeId")
+      ? "Proof of Event"
       : !!metadata.meta &&
         metadata.meta.includes("fa1_2_address") &&
         metadata.meta.includes("spender_address")

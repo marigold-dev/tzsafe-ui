@@ -4,6 +4,7 @@ import {
   encodeKeyHash,
   validateAddress,
   ValidationResult,
+  bytes2Char,
 } from "@taquito/utils";
 import { version } from "../types/display";
 import { decodeB58 } from "../utils/contractParam";
@@ -36,6 +37,7 @@ export enum LambdaType {
   DELEGATE = "DELEGATE",
   UNDELEGATE = "UNDELEGATE",
   CONTRACT_EXECUTION = "CONTRACT_EXECUTION",
+  POE = "POE",
 }
 
 const FA2_SIGNATURE =
@@ -295,6 +297,58 @@ const parseUnDelegate = (
   }
 };
 
+const parsePoe = (
+  lambda: Expr[]
+): [boolean, { challengeId: string; payload: string } | undefined] => {
+  const poeSize = 5;
+
+  if (lambda.length != poeSize) return [false, undefined];
+
+  const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+  const [isNil] = isDrop
+    ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
+    : failParse;
+
+  const [isPush, data] = isNil
+    ? parsePrimPattern(lambda, 2, "PUSH", value => {
+        //@ts-expect-error
+        const [challengeId, payload] = value.args?.[1]?.args ?? [
+          undefined,
+          undefined,
+        ];
+
+        if (!challengeId || !payload) return failParse;
+
+        return [
+          true,
+          {
+            challengeId: bytes2Char(challengeId.bytes),
+            payload: bytes2Char(payload.bytes),
+          },
+        ];
+      })
+    : failParse;
+
+  const [isEmit] = isPush
+    ? parsePrimPattern(lambda, 3, "EMIT", value => {
+        if (value.annots?.[0] !== "%proof_of_event") return failParse;
+
+        return succParse;
+      })
+    : failParse;
+
+  const [isCons] = isEmit
+    ? parsePrimPattern(lambda, 4, "CONS", () => succParse)
+    : failParse;
+
+  if (isCons) {
+    return [true, data];
+  } else {
+    return [false, undefined];
+  }
+};
+
 export const parseLambda = (
   version: version,
   lambda: Expr | null
@@ -333,6 +387,22 @@ export const parseLambda = (
         },
       ];
     }
+  }
+  const [isPoe, poeData] = parsePoe(lambda);
+
+  if (isPoe && !!poeData) {
+    return [
+      LambdaType.POE,
+      {
+        contractAddress: "",
+        mutez: undefined,
+        entrypoint: {
+          name: "",
+          params: { name: "", type: "" },
+        },
+        data: poeData,
+      },
+    ];
   }
 
   if (version === "0.3.1" || version === "0.3.2") {

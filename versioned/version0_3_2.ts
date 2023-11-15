@@ -190,8 +190,6 @@ class Version0_3_2 extends Versioned {
             case "poe":
               const parser = new Parser();
 
-              console.log(generatePoe([x.values]));
-
               const michelsonCode = parser.parseMichelineExpression(
                 generatePoe([x.values])
               );

@@ -644,9 +644,10 @@ function TransferForm(
                       <button
                         type="button"
                         className={`w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500 ${
-                          (state.contracts[state.currentContract ?? ""]
-                            ?.version ?? state.currentStorage?.version) ===
-                          "0.3.2"
+                          Versioned.hasPoeSupport(
+                            state.contracts[state.currentContract ?? ""]
+                              ?.version ?? state.currentStorage?.version
+                          )
                             ? ""
                             : "pointer-events-none opacity-50"
                         }`}

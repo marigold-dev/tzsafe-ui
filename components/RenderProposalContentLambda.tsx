@@ -26,7 +26,8 @@ type data = {
     | "TransferFA1_2"
     | "ApproveFA1_2"
     | "Delegate"
-    | "UnDelegate";
+    | "UnDelegate"
+    | "Poe";
   label: undefined | string;
   metadata: undefined | string;
   amount: undefined | string;
@@ -244,7 +245,17 @@ export const contentToData = (
         params: undefined,
         rawParams: undefined,
       };
-
+    } else if (type === LambdaType.POE) {
+      data = {
+        type: "Poe",
+        label: "Proof of Event",
+        metadata: undefined,
+        amount: undefined,
+        addresses: undefined,
+        entrypoints: undefined,
+        params: JSON.stringify(lambda?.data),
+        rawParams: undefined,
+      };
       // This condition handles some legacy code so old wallets don't crash
     } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -440,6 +451,8 @@ export const labelOfProposalContentLambda = (
       ? "Undelegate"
       : type === LambdaType.CONTRACT_EXECUTION
       ? "Execute contract"
+      : type === LambdaType.POE
+      ? "Proof of Event"
       : "Execute lambda";
   }
 };
