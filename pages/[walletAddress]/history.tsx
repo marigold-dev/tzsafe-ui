@@ -429,15 +429,10 @@ const History = () => {
                     case TransferType.UNKNOWN:
                       return null;
                     default:
-                      const hasLambda = x[1].og.contents.every(
-                        (v: any) => !!v?.execute_lambda?.lambda
-                      );
-
                       return (
                         <ProposalCard
                           id={x[0]}
                           key={x[0]}
-                          metadataRender={!hasLambda}
                           status={x[1].ui.status}
                           date={
                             !!x[1].og.resolver

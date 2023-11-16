@@ -125,6 +125,7 @@ export default function App({ Component, pageProps }: AppProps) {
         setIsFetching(false);
       } catch (e) {
         setIsFetching(false);
+
         router.replace(
           `/invalid-contract?address=${router.query.walletAddress}`
         );

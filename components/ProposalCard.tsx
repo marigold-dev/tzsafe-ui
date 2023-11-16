@@ -26,7 +26,6 @@ type ProposalCardProps = {
   isSignable?: boolean;
   shouldResolve?: boolean;
   setCloseModal?: (arg: boolean | undefined) => void;
-  metadataRender?: boolean;
 };
 
 const ProposalCard = ({
@@ -41,7 +40,6 @@ const ProposalCard = ({
   setCloseModal,
   isSignable = false,
   shouldResolve = false,
-  metadataRender = false,
 }: ProposalCardProps) => {
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
@@ -92,26 +90,30 @@ const ProposalCard = ({
             minWidth: "7rem",
           }}
           title={content
-            .map(v =>
-              metadataRender
-                ? labelOfProposalContentMetadata(v)
-                : labelOfProposalContentLambda(
+            .map(v => {
+              return "executeLambda" in v &&
+                (!!v.executeLambda.content ||
+                  !!v.executeLambda.metadata?.includes('"lambda"'))
+                ? labelOfProposalContentLambda(
                     state.contracts[state.currentContract ?? ""]?.version ??
                       state.currentStorage?.version,
                     v
                   )
-            )
+                : labelOfProposalContentMetadata(v);
+            })
             .join(", ")}
         >
           {content
             .map(v =>
-              metadataRender
-                ? labelOfProposalContentMetadata(v)
-                : labelOfProposalContentLambda(
+              "executeLambda" in v &&
+              (!!v.executeLambda.content ||
+                !!v.executeLambda.metadata?.includes('"lambda"'))
+                ? labelOfProposalContentLambda(
                     state.contracts[state.currentContract ?? ""]?.version ??
                       state.currentStorage?.version,
                     v
                   )
+                : labelOfProposalContentMetadata(v)
             )
             .join(", ")}
         </span>
@@ -194,13 +196,14 @@ const ProposalCard = ({
             <span className="justify-self-end">Params/Tokens</span>
           </div>
           <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {rows.map((v, i) =>
-              metadataRender ? (
+            {rows.map((v, i) => {
+              // All the other types could be parsed, by the lambda
+              return v.type === "ExecuteLambda" ? (
                 <RenderProposalContentMetadata key={i} content={content[i]} />
               ) : (
                 <RenderProposalContentLambda key={i} data={v} />
-              )
-            )}
+              );
+            })}
           </div>
         </section>
         <section className="text-xs md:text-base">

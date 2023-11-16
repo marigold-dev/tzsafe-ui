@@ -973,7 +973,6 @@ function TransferForm(
                             </section>
                           );
                         } else if (transfer.type === "poe") {
-                          console.log(values, errors);
                           return (
                             <section key={`${transfer.type}:${index}`}>
                               <p className="text-lg text-white">
