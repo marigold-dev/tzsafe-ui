@@ -249,13 +249,11 @@ const PoeModal = () => {
                 </>
               );
             case State.TRANSACTION:
-              if (!transfers) return null;
-
               if (transactionLoading)
                 return (
                   <div className="flex w-full flex-col items-center justify-center">
                     <Spinner />
-                    <span className="mt-4 text-zinc-400">
+                    <span className="mt-4 text-center text-zinc-400">
                       Sending and waiting for transaction confirmation (It may
                       take a few minutes)
                     </span>
@@ -318,6 +316,9 @@ const PoeModal = () => {
                     </button>
                   </div>
                 );
+
+              if (!transfers) return null;
+
               return (
                 <>
                   <div className="col-span-2 flex w-full flex-col items-center justify-center">
@@ -473,9 +474,11 @@ const PoeModal = () => {
                         )
                           return;
 
-                        setCurrentState(State.LOADING);
+                        setTransactionLoading(true);
 
                         try {
+                          setCurrentState(State.TRANSACTION);
+
                           await state.p2pClient!.approvePoeChallenge();
 
                           const cc = await state.connection.contract.at(
@@ -507,12 +510,21 @@ const PoeModal = () => {
                               },
                               false
                             );
+
+                          setTimeoutAndHash(timeoutAndHash);
+
+                          if (timeoutAndHash[0]) {
+                            setTransactionLoading(false);
+                            return;
+                          }
+
+                          dispatch({ type: "refreshProposals" });
                         } catch (e) {
-                          console.log(e);
                           setTransactionError(
                             "Failed to create and sign the Proof Of Event transaction"
                           );
                         }
+                        setTransactionLoading(false);
                       }}
                     >
                       Accept

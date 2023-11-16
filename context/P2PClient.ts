@@ -102,8 +102,8 @@ class P2PClient extends WalletClient {
       case BeaconMessageType.ProofOfEventChallengeRequest:
         this.proofOfEvent.message = message;
         this.proofOfEvent.data = {
-          challenge_id: buf2hex(Buffer.from(message.dAppChallengeId)),
-          payload: buf2hex(Buffer.from(message.payload)),
+          challenge_id: message.dAppChallengeId,
+          payload: message.payload,
         };
 
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
