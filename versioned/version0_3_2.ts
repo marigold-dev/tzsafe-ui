@@ -196,7 +196,7 @@ class Version0_3_2 extends Versioned {
 
               return {
                 execute_lambda: {
-                  metadata: "",
+                  metadata: null,
                   lambda: michelsonCode,
                 },
               };
