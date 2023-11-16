@@ -196,11 +196,7 @@ class Version0_3_2 extends Versioned {
 
               return {
                 execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      payload: x.values,
-                    })
-                  ),
+                  metadata: "",
                   lambda: michelsonCode,
                 },
               };

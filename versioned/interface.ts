@@ -1,5 +1,7 @@
 import { Parser, unpackDataBytes } from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
+import { bytes2Char } from "@taquito/tzip16";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
@@ -140,6 +142,27 @@ abstract class Versioned {
     ).then(res => res.json());
   }
 
+  private static decodePoe(schema: Schema) {
+    return (events: Array<proofOfEvent>) =>
+      events.flatMap(event => {
+        try {
+          const value = schema.Execute(
+            unpackDataBytes({
+              bytes: event.payload.payload,
+            })
+          );
+
+          return [
+            {
+              key: event.payload.challenge_id,
+              value,
+            },
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+  }
   static proposalsHistory(
     c: contractStorage,
     address: string,
@@ -165,31 +188,13 @@ abstract class Versioned {
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then((events: Array<proofOfEvent>) =>
-          events.map(event => ({
-            key: event.payload.challenge_id,
-            value: proposalSchema_0_3_1.Execute(
-              unpackDataBytes({
-                bytes: event.payload.payload,
-              })
-            ),
-          }))
-        );
+        .then(this.decodePoe(proposalSchema_0_3_1));
     } else if (c.version === "0.3.2") {
       return fetch(
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then((events: Array<proofOfEvent>) =>
-          events.map(event => ({
-            key: event.payload.challenge_id,
-            value: proposalSchema_0_3_2.Execute(
-              unpackDataBytes({
-                bytes: event.payload.payload,
-              })
-            ),
-          }))
-        );
+        .then(this.decodePoe(proposalSchema_0_3_2));
     } else {
       throw Error("unknown version");
     }
