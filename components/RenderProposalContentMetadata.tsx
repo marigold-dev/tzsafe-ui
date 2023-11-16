@@ -86,8 +86,7 @@ const RenderProposalContentMetadata = ({
       !metadata?.contract_address &&
       !metadata?.meta?.includes("contract_addr") &&
       !metadata?.meta?.includes("baker_address") &&
-      !metadata?.meta?.includes("fa1_2_address") &&
-      !metadata?.meta?.includes("challengeId")
+      !metadata?.meta?.includes("fa1_2_address")
     ) {
       data = {
         ...data,
@@ -177,17 +176,6 @@ const RenderProposalContentMetadata = ({
         ],
         entrypoints: undefined,
         params: undefined,
-      };
-    } else if (metadata?.meta?.includes("challengeId")) {
-      const meta = JSON.parse(metadata.meta);
-
-      data = {
-        label: "Proof of Event",
-        metadata: undefined,
-        amount: undefined,
-        addresses: [],
-        entrypoints: undefined,
-        params: JSON.stringify(meta.payload),
       };
     }
     // This condition handles some legacy code so old wallets don't crash

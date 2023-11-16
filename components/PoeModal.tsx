@@ -143,12 +143,7 @@ const PoeModal = () => {
                             type,
                             param,
                           }),
-                          metadata: JSON.stringify({
-                            mutez_amount: detail.amount,
-                            contract_address: detail.destination,
-                            entrypoint: detail.parameters.entrypoint,
-                            payload: emitMicheline(detail.parameters.value),
-                          }),
+                          metadata: null,
                         },
                       };
                     } catch (e) {
