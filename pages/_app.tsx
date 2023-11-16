@@ -164,6 +164,7 @@ export default function App({ Component, pageProps }: AppProps) {
         const wallet = new BeaconWallet({
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
+          //@ts-expect-error Beacon beta and taquito's beacon are incompatible, but it's only a type error
           storage: new LocalStorage("WALLET"),
         });
 
