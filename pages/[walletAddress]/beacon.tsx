@@ -56,7 +56,7 @@ const Beacon = () => {
     if (
       !state.currentContract ||
       !isOwner ||
-      !Versioned.hasPoeSupport(
+      !Versioned.hasTzip27Support(
         state.contracts[state.currentContract ?? ""]?.version ??
           state.currentStorage?.version
       )

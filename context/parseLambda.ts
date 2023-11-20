@@ -8,6 +8,7 @@ import {
 } from "@taquito/utils";
 import { version } from "../types/display";
 import { decodeB58, toRightAssociativePairData } from "../utils/contractParam";
+import { Versioned } from "../versioned/interface";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -140,7 +141,7 @@ const parseDelegate = (
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     const delegate_instr_size = 6;
 
     if (lambda.length != delegate_instr_size)
@@ -243,7 +244,7 @@ const parseUnDelegate = (
   version: version,
   lambda: Expr[]
 ): [true, LambdaType] | [false, undefined] => {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     const undelegate_instr_size = 5;
 
     if (lambda.length != undelegate_instr_size) return [false, undefined];
@@ -409,7 +410,7 @@ export const parseLambda = (
     ];
   }
 
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     const contract_execution_instr_size = 9;
 
     if (lambda.length != contract_execution_instr_size)

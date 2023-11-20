@@ -1,11 +1,11 @@
-import { emitMicheline, Parser, packDataBytes } from "@taquito/michel-codec";
+import { emitMicheline, Parser } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
   Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char, num2PaddedHex } from "@taquito/utils";
+import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
@@ -20,9 +20,7 @@ import {
   content,
   proposal as p1,
   contractStorage as c1,
-  arrayProposalSchema,
-  proposalsType,
-} from "../types/Proposal0_3_2";
+} from "../types/Proposal0_3_3";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
@@ -34,7 +32,7 @@ function convert(x: string): string {
   return char2Bytes(x);
 }
 
-class Version0_3_2 extends Versioned {
+class Version0_3_3 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
@@ -68,7 +66,6 @@ class Version0_3_2 extends Versioned {
             case "contract": {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-
               return {
                 execute_lambda: {
                   metadata: null,
@@ -207,27 +204,25 @@ class Version0_3_2 extends Versioned {
     resolve: boolean
   ): Promise<timeoutAndHash> {
     const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const proposalId = num2PaddedHex(proposal);
-    const prop: any = await proposals.proposals.get(proposalId);
+    const prop: any = await proposals.proposals.get(proposal);
     const batch = t.wallet.batch();
-
-    const proposalData = arrayProposalSchema.Encode(prop.contents);
-
-    const proposalBytes = packDataBytes(proposalData, proposalsType).bytes;
 
     if (typeof result != "undefined") {
       batch.withContractCall(
         cc.methodsObject.sign_proposal({
           agreement: result,
-          challenge_id: proposalId,
-          payload: proposalBytes,
+          proposal_id: BigNumber(proposal),
+          proposal_contents: prop.contents,
         })
       );
     }
     if (resolve) {
       batch.withContractCall(
         // resolve proposal
-        cc.methods.proof_of_event_challenge(proposalId, proposalBytes)
+        cc.methodsObject.resolve_proposal({
+          proposal_id: BigNumber(proposal),
+          proposal_contents: prop.contents,
+        })
       );
     }
     let op = await batch.send();
@@ -284,7 +279,7 @@ class Version0_3_2 extends Versioned {
       effective_period: c!.effective_period,
       threshold: c!.threshold.toNumber()!,
       owners: c!.owners!,
-      version: "0.3.2",
+      version: "0.3.3",
     };
   }
   private static mapContent(content: content): proposalContent {
@@ -381,4 +376,4 @@ class Version0_3_2 extends Versioned {
   }
 }
 
-export default Version0_3_2;
+export default Version0_3_3;

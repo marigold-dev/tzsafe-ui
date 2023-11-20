@@ -1,5 +1,6 @@
 import { char2Bytes } from "@taquito/utils";
 import { version } from "../types/display";
+import { Versioned } from "../versioned/interface";
 
 export type makeFa2MichelsonParam = {
   walletAddress: string;
@@ -37,7 +38,7 @@ export function generateFA2Michelson(
 ) {
   if (params.length === 0) throw new Error("Empty fa2 params");
 
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{
         DROP;
         NIL operation ;
@@ -88,7 +89,7 @@ export function generateFA1_2ApproveMichelson(
   version: version,
   { spenderAddress, amount, fa1_2Address }: approve
 ) {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{ 
         DROP ;
         NIL operation ;
@@ -119,7 +120,7 @@ export function generateFA1_2TransferMichelson(
   version: version,
   { walletAddress, targetAddress, amount, fa1_2Address }: transfer
 ) {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{ 
           DROP ;
           NIL operation ;
@@ -155,7 +156,7 @@ export function generateExecuteContractMichelson(
     michelsonEntrypoint = `%${entrypoint}`;
   }
 
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{
           DROP;
           NIL operation ;
@@ -186,7 +187,7 @@ export function generateDelegateMichelson(
   version: version,
   { bakerAddress }: { bakerAddress: string }
 ) {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{
         DROP ;
         NIL operation ;
@@ -208,7 +209,7 @@ export function generateDelegateMichelson(
 }
 
 export function generateUndelegateMichelson(version: version) {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (Versioned.isLambdaReturnedListOperation(version)) {
     return `{
         DROP ;
         NIL operation ;
