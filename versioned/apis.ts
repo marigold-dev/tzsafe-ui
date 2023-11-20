@@ -21,6 +21,7 @@ import Version0_1_1 from "./version0_1_1";
 import Version0_3_0 from "./version0_3_0";
 import Version0_3_1 from "./version0_3_1";
 import Version0_3_2 from "./version0_3_2";
+import Version0_3_3 from "./version0_3_3";
 
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
@@ -38,6 +39,7 @@ const dispatch: {
   "0.3.0": (version, address) => new Version0_3_0(version, address),
   "0.3.1": (version, address) => new Version0_3_1(version, address),
   "0.3.2": (version, address) => new Version0_3_2(version, address),
+  "0.3.3": (version, address) => new Version0_3_3(version, address),
   "unknown version": () => {
     throw new Error("not implemented!");
   },
@@ -54,6 +56,7 @@ const dispatchUi: {
   "0.3.0": Version0_3_0,
   "0.3.1": Version0_3_1,
   "0.3.2": Version0_3_2,
+  "0.3.3": Version0_3_3,
   "unknown version": () => {
     throw new Error("not implemented!");
   },

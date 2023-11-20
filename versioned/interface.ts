@@ -1,12 +1,15 @@
-import { Parser, unpackDataBytes } from "@taquito/michel-codec";
+import { Parser, unpackDataBytes, MichelsonType } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
-import { bytes2Char } from "@taquito/tzip16";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
 import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { proofOfEventSchema as proposalSchema_0_3_2 } from "../types/Proposal0_3_2";
+import {
+  archiveProposalSchema as proposalSchema_0_3_3,
+  proposalType,
+} from "../types/Proposal0_3_3";
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
@@ -15,6 +18,13 @@ type proofOfEvent = {
   payload: {
     payload: string;
     challenge_id: string;
+  };
+};
+
+type archiveProposal = {
+  payload: {
+    proposal: string;
+    proposal_id: string;
   };
 };
 
@@ -142,7 +152,7 @@ abstract class Versioned {
     ).then(res => res.json());
   }
 
-  private static decodePoe(schema: Schema) {
+  private static decodePoE(schema: Schema) {
     return (events: Array<proofOfEvent>) =>
       events.flatMap(event => {
         try {
@@ -163,6 +173,32 @@ abstract class Versioned {
         }
       });
   }
+
+  private static decodeProposal(schema: Schema, proposalType: MichelsonType) {
+    return (events: Array<archiveProposal>) =>
+      events.flatMap(event => {
+        try {
+          const value = schema.Execute(
+            unpackDataBytes(
+              {
+                bytes: event.payload.proposal,
+              },
+              proposalType
+            )
+          );
+
+          return [
+            {
+              key: event.payload.proposal_id,
+              value,
+            },
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+  }
+
   static proposalsHistory(
     c: contractStorage,
     address: string,
@@ -188,13 +224,19 @@ abstract class Versioned {
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then(this.decodePoe(proposalSchema_0_3_1));
+        .then(this.decodePoE(proposalSchema_0_3_1));
     } else if (c.version === "0.3.2") {
       return fetch(
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then(this.decodePoe(proposalSchema_0_3_2));
+        .then(this.decodePoE(proposalSchema_0_3_2));
+    } else if (c.version === "0.3.3") {
+      return fetch(
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
+      )
+        .then(res => res.json())
+        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType));
     } else {
       throw Error("unknown version");
     }
@@ -214,7 +256,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return c.owners;
     }
@@ -235,7 +278,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return c.owners;
     }
@@ -291,7 +335,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return {
         values: {
@@ -387,7 +432,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return {
         values: {
@@ -602,7 +648,7 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    if (!this.hasPoeSupport(version)) {
+    if (!this.hasTzip27Support(version)) {
       return { fields: [], values: {} };
     }
 
@@ -632,7 +678,7 @@ abstract class Versioned {
     };
   }
 
-  static hasPoeSupport(version: version): boolean {
+  static hasTzip27Support(version: version): boolean {
     const [_, middle, end] = version.split(".");
 
     const parsedMiddle = parseInt(middle);
@@ -640,8 +686,20 @@ abstract class Versioned {
 
     if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
 
-    // We accept 0.3.2 and above
-    return parsedMiddle === 3 ? parsedEnd >= 2 : parsedMiddle >= 4;
+    // We accept 0.3.3 and above
+    return parsedMiddle === 3 ? parsedEnd >= 3 : parsedMiddle >= 4;
+  }
+
+  static isLambdaReturnedListOperation(version: version): boolean {
+    const [_, middle, end] = version.split(".");
+
+    const parsedMiddle = parseInt(middle);
+    const parsedEnd = parseInt(end);
+
+    if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
+
+    // We accept 0.3.1 and above
+    return parsedMiddle === 3 ? parsedEnd >= 1 : parsedMiddle >= 4;
   }
 }
 

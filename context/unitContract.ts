@@ -1,5 +1,4 @@
-const contract = `
-{ parameter
+const contract = `{ parameter
   (or (or (list %create_proposal
              (or (or (or (pair %add_or_update_metadata (string %key) (bytes %value))
                          (set %add_owners address))
@@ -10,12 +9,33 @@ const contract = `
                          (string %remove_metadata))
                      (or (set %remove_owners address) (pair %transfer (address %target) (mutez %amount))))))
           (unit %default))
-      (or (pair %proof_of_event_challenge (bytes %challenge_id) (bytes %payload))
-          (pair %sign_proposal (pair (bool %agreement) (bytes %challenge_id)) (bytes %payload)))) ;
+      (or (pair %resolve_proposal
+             (list %proposal_contents
+                (or (or (or (pair %add_or_update_metadata (string %key) (bytes %value))
+                            (set %add_owners address))
+                        (or (int %adjust_effective_period) (nat %adjust_threshold)))
+                    (or (or (pair %execute_lambda
+                               (lambda %lambda unit (list operation))
+                               (option %metadata bytes))
+                            (string %remove_metadata))
+                        (or (set %remove_owners address) (pair %transfer (address %target) (mutez %amount))))))
+             (nat %proposal_id))
+          (pair %sign_proposal
+             (pair (bool %agreement)
+                   (list %proposal_contents
+                      (or (or (or (pair %add_or_update_metadata (string %key) (bytes %value))
+                                  (set %add_owners address))
+                              (or (int %adjust_effective_period) (nat %adjust_threshold)))
+                          (or (or (pair %execute_lambda
+                                     (lambda %lambda unit (list operation))
+                                     (option %metadata bytes))
+                                  (string %remove_metadata))
+                              (or (set %remove_owners address) (pair %transfer (address %target) (mutez %amount)))))))
+             (nat %proposal_id)))) ;
 storage
   (pair (nat %proposal_counter)
         (big_map %proposals
-           bytes
+           nat
            (pair (or %state
                     (or (unit %executed) (unit %expired))
                     (or (unit %proposing) (unit %rejected)))
@@ -32,7 +52,7 @@ storage
                                 (string %remove_metadata))
                             (or (set %remove_owners address) (pair %transfer (address %target) (mutez %amount))))))))
         (big_map %archives
-           bytes
+           nat
            (or (or (unit %executed) (unit %expired)) (or (unit %proposing) (unit %rejected))))
         (set %owners address)
         (nat %threshold)
@@ -42,10 +62,10 @@ code { PUSH string "Threshold must be greater than 1" ;
        PUSH string "No owner to be added or removed" ;
        PUSH string "Effective period should be greater than 0" ;
        LAMBDA
-         (pair bytes
+         (pair nat
                nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -53,7 +73,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
@@ -80,7 +100,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                  { DROP ; PUSH string "This proposal has been resolved" ; FAILWITH } }
              { SWAP ; DIG 2 ; DROP 2 } } ;
        LAMBDA
-         (pair (pair bytes
+         (pair (pair nat
                      (or (or unit unit) (or unit unit))
                      (map address bool)
                      (pair address timestamp)
@@ -90,7 +110,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                                    (or (set address) (pair address mutez))))))
                nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -98,14 +118,14 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
                (big_map string bytes))
          (pair nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -113,7 +133,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
@@ -129,10 +149,10 @@ code { PUSH string "Threshold must be greater than 1" ;
            UPDATE ;
            UPDATE 3 } ;
        LAMBDA
-         (pair (pair bytes (or (or unit unit) (or unit unit)))
+         (pair (pair nat (or (or unit unit) (or unit unit)))
                nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -140,14 +160,14 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
                (big_map string bytes))
          (pair nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -155,7 +175,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
@@ -189,7 +209,7 @@ code { PUSH string "Threshold must be greater than 1" ;
          (pair (pair string (option bytes))
                nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -197,14 +217,14 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
                (big_map string bytes))
          (pair nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -212,7 +232,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
@@ -226,11 +246,10 @@ code { PUSH string "Threshold must be greater than 1" ;
            DIG 3 ;
            UPDATE ;
            UPDATE 12 } ;
-       NIL operation ;
        LAMBDA
          (pair nat
                (big_map
-                  bytes
+                  nat
                   (pair (or (or unit unit) (or unit unit))
                         (map address bool)
                         (pair address timestamp)
@@ -238,7 +257,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                         (list (or (or (or (pair string bytes) (set address)) (or int nat))
                                   (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                                       (or (set address) (pair address mutez)))))))
-               (big_map bytes (or (or unit unit) (or unit unit)))
+               (big_map nat (or (or unit unit) (or unit unit)))
                (set address)
                nat
                int
@@ -260,19 +279,22 @@ code { PUSH string "Threshold must be greater than 1" ;
            IF { UNIT }
               { PUSH string "You must not send tez to the smart contract" ; FAILWITH } } ;
        LAMBDA
-         (pair bytes
+         (pair (list (or (or (or (pair string bytes) (set address)) (or int nat))
+                         (or (or (pair (lambda unit (list operation)) (option bytes)) string)
+                             (or (set address) (pair address mutez)))))
                (list (or (or (or (pair string bytes) (set address)) (or int nat))
                          (or (or (pair (lambda unit (list operation)) (option bytes)) string)
                              (or (set address) (pair address mutez))))))
          unit
          { UNPAIR ;
+           PACK ;
            SWAP ;
            PACK ;
            SWAP ;
            COMPARE ;
            EQ ;
            IF { UNIT } { PUSH string "The proposal content doesn't match" ; FAILWITH } } ;
-       DIG 11 ;
+       DIG 10 ;
        UNPAIR ;
        IF_LEFT
          { DIG 2 ;
@@ -280,8 +302,7 @@ code { PUSH string "Threshold must be greater than 1" ;
            DIG 6 ;
            DIG 7 ;
            DIG 8 ;
-           DIG 9 ;
-           DROP 6 ;
+           DROP 5 ;
            IF_LEFT
              { DUP 2 ;
                DIG 4 ;
@@ -331,7 +352,6 @@ code { PUSH string "Threshold must be greater than 1" ;
                                   IF {} { PUSH string "Amount should be greater than zero" ; FAILWITH } } } } } ;
                DIG 3 ;
                DROP ;
-               DUP ;
                NONE (pair address timestamp) ;
                NOW ;
                SENDER ;
@@ -342,18 +362,14 @@ code { PUSH string "Threshold must be greater than 1" ;
                RIGHT (or unit unit) ;
                PAIR 5 ;
                PUSH nat 1 ;
-               DUP 4 ;
+               DUP 3 ;
                CAR ;
                ADD ;
-               DUP 4 ;
-               GET 3 ;
-               DIG 2 ;
                DUP 3 ;
-               BYTES ;
-               PAIR 3 ;
                DIG 3 ;
-               SWAP ;
-               UNPAIR 3 ;
+               GET 3 ;
+               DIG 3 ;
+               DUP 4 ;
                SWAP ;
                SOME ;
                SWAP ;
@@ -361,13 +377,9 @@ code { PUSH string "Threshold must be greater than 1" ;
                UPDATE 3 ;
                SWAP ;
                UPDATE 1 ;
-               SWAP ;
-               PACK ;
-               DUP 2 ;
+               DUP ;
                CAR ;
-               BYTES ;
-               PAIR ;
-               EMIT %create_proposal (pair (bytes %challenge_id) (bytes %payload)) }
+               EMIT %create_proposal nat }
              { DIG 2 ;
                DIG 3 ;
                DIG 5 ;
@@ -378,7 +390,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                EMIT %receiving_tez (pair (mutez %amount) (address %from)) } ;
            SWAP ;
            NIL operation }
-         { DIG 11 ;
+         { DIG 10 ;
            DROP ;
            IF_LEFT
              { UNPAIR ;
@@ -393,14 +405,14 @@ code { PUSH string "Threshold must be greater than 1" ;
                EXEC ;
                DROP ;
                DUP 3 ;
-               DUP 2 ;
+               DUP 3 ;
                PAIR ;
-               DIG 9 ;
+               DIG 8 ;
                SWAP ;
                EXEC ;
                DUP ;
                GET 8 ;
-               DIG 3 ;
+               DIG 2 ;
                PAIR ;
                DIG 4 ;
                SWAP ;
@@ -530,23 +542,17 @@ code { PUSH string "Threshold must be greater than 1" ;
                DUP 4 ;
                PAIR ;
                PAIR ;
-               DIG 6 ;
+               DIG 5 ;
                SWAP ;
                EXEC ;
                DUP 2 ;
-               PACK ;
-               DUP 4 ;
-               PAIR ;
-               EMIT %proof_of_event (pair (bytes %challenge_id) (bytes %payload)) ;
-               DUP 3 ;
                CAR ;
                IF_LEFT
                  { IF_LEFT
                      { DROP ;
-                       SWAP ;
-                       DIG 4 ;
+                       NIL operation ;
                        PAIR ;
-                       DUP 3 ;
+                       DUP 2 ;
                        GET 8 ;
                        ITER { SWAP ;
                               UNPAIR ;
@@ -561,7 +567,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                                           DIG 2 ;
                                           PAIR ;
                                           PAIR ;
-                                          DUP 6 ;
+                                          DUP 5 ;
                                           SWAP ;
                                           EXEC }
                                         { DUP 3 ;
@@ -580,7 +586,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                                           DIG 2 ;
                                           PAIR ;
                                           PAIR ;
-                                          DUP 6 ;
+                                          DUP 5 ;
                                           SWAP ;
                                           EXEC ;
                                           NIL operation } }
@@ -608,69 +614,68 @@ code { PUSH string "Threshold must be greater than 1" ;
                               ITER { CONS } ;
                               ITER { CONS } ;
                               PAIR } ;
-                       DIG 4 ;
+                       DIG 3 ;
                        DROP ;
                        UNPAIR ;
                        SWAP ;
                        UNIT ;
                        LEFT unit ;
                        LEFT (or unit unit) ;
-                       DUP 6 ;
+                       DUP 5 ;
                        PAIR ;
                        PAIR ;
-                       DIG 5 ;
+                       DIG 4 ;
                        SWAP ;
                        EXEC ;
                        SWAP }
-                     { DIG 5 ;
-                       DIG 6 ;
-                       DROP 3 ;
-                       SWAP ;
+                     { DIG 4 ;
+                       DROP 2 ;
                        UNIT ;
                        RIGHT unit ;
                        LEFT (or unit unit) ;
-                       DUP 5 ;
+                       DUP 4 ;
                        PAIR ;
                        PAIR ;
-                       DIG 4 ;
+                       DIG 3 ;
                        SWAP ;
                        EXEC ;
-                       NIL operation } ;
-                   DIG 2 ;
-                   CONS }
-                 { DIG 6 ;
+                       NIL operation } }
+                 { DIG 4 ;
                    DROP ;
                    IF_LEFT
-                     { SWAP ; DIG 6 ; DROP 3 ; DIG 3 }
-                     { DIG 5 ;
-                       DROP 2 ;
-                       SWAP ;
+                     { DIG 4 ; DROP 2 }
+                     { DROP ;
                        UNIT ;
                        RIGHT unit ;
                        RIGHT (or unit unit) ;
-                       DUP 5 ;
+                       DUP 4 ;
                        PAIR ;
                        PAIR ;
-                       DIG 4 ;
+                       DIG 3 ;
                        SWAP ;
-                       EXEC ;
-                       NIL operation ;
-                       DIG 2 ;
-                       CONS } } ;
-               DIG 2 ;
+                       EXEC } ;
+                   NIL operation } ;
+               DUP 3 ;
                CAR ;
-               DIG 3 ;
+               DUP 5 ;
                PAIR ;
                EMIT %resolve_proposal
-                 (pair (bytes %challenge_id)
+                 (pair (nat %proposal_id)
                        (or %proposal_state
                           (or (unit %executed) (unit %expired))
                           (or (unit %proposing) (unit %rejected)))) ;
-               DUG 2 }
+               DIG 4 ;
+               DIG 4 ;
+               PACK ;
+               PAIR ;
+               EMIT %archive_proposal (pair (bytes %proposal) (nat %proposal_id)) ;
+               DIG 3 ;
+               DIG 3 ;
+               DIG 2 ;
+               CONS }
              { DIG 5 ;
                DIG 6 ;
-               DIG 7 ;
-               DROP 3 ;
+               DROP 2 ;
                UNPAIR ;
                UNPAIR ;
                DUP 4 ;
@@ -684,7 +689,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                EXEC ;
                DROP ;
                DUP 4 ;
-               DUP 3 ;
+               DUP 4 ;
                PAIR ;
                DIG 7 ;
                SWAP ;
@@ -709,7 +714,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                IF { DROP } { FAILWITH } ;
                DUP ;
                GET 8 ;
-               DIG 4 ;
+               DIG 3 ;
                PAIR ;
                DIG 5 ;
                SWAP ;
@@ -737,7 +742,7 @@ code { PUSH string "Threshold must be greater than 1" ;
                PAIR ;
                PAIR ;
                EMIT %sign_proposal
-                 (pair (pair (bool %agreement) (bytes %challenge_id)) (address %signer)) ;
+                 (pair (pair (bool %agreement) (nat %proposal_id)) (address %signer)) ;
                SWAP ;
                NIL operation } } ;
        DIG 2 ;
@@ -772,5 +777,6 @@ code { PUSH string "Threshold must be greater than 1" ;
        GT ;
        IF { DIG 2 ; DROP } { DIG 2 ; FAILWITH } ;
        PAIR } }
+
 `;
 export default contract;
