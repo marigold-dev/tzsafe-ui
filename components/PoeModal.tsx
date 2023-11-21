@@ -156,9 +156,11 @@ const PoeModal = () => {
                       };
                     } catch (e) {
                       setTransactionError(
-                        "Failed to convert the contract call to TzSafe format"
+                        `Failed to convert the contract call to TzSafe format: ${
+                          (e as Error).message
+                        }`
                       );
-                      console.log("Error while converting contract call: ", e);
+                      console.log("Contract conversion error:", e);
 
                       state.p2pClient?.abortRequest(message.id);
                       return undefined;
