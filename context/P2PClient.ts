@@ -7,6 +7,7 @@ import {
   ConnectionContext,
   WalletClient,
   WalletClientOptions,
+  SigningType,
 } from "@airgap/beacon-sdk";
 import { buf2hex } from "@taquito/utils";
 import { TinyEmitter } from "tiny-emitter";
@@ -15,6 +16,7 @@ export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
   PROOF_OF_EVENT_CHALLENGE_REQUEST = "PROOF_OF_EVENT_CHALLENGE_REQUEST",
   INCOMING_OPERATION = "INCOMING_OPERATION",
+  SIGN_PAYLOAD = "SIGN_PAYLOAD",
 }
 
 class P2PClient extends WalletClient {
@@ -92,7 +94,7 @@ class P2PClient extends WalletClient {
 
   handleMessages = async (
     message: BeaconRequestOutputMessage,
-    context: ConnectionContext
+    _context: ConnectionContext
   ) => {
     switch (message.type) {
       case BeaconMessageType.PermissionRequest:
@@ -110,12 +112,15 @@ class P2PClient extends WalletClient {
         break;
       case BeaconMessageType.ProofOfEventChallengeRecorded:
         break;
+      case BeaconMessageType.SignPayloadRequest:
+        this.events.emit(Event.SIGN_PAYLOAD, message);
+        break;
       case BeaconMessageType.OperationRequest:
         this.events.emit(Event.INCOMING_OPERATION, message);
         break;
+
       case BeaconMessageType.BroadcastRequest:
-        console.log(message);
-        break;
+        window.alert("Broadcast requests are not supported");
 
       default:
         await this.respond({
@@ -143,6 +148,16 @@ class P2PClient extends WalletClient {
       id,
       senderId: await this.beaconId,
       transactionHash,
+    });
+  }
+
+  async signResponse(id: string, signingType: SigningType, signature: string) {
+    return this.respond({
+      type: BeaconMessageType.SignPayloadResponse,
+      id,
+      senderId: await this.beaconId,
+      signingType,
+      signature,
     });
   }
 

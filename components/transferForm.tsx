@@ -641,30 +641,6 @@ function TransferForm(
                       >
                         Contract Execution
                       </button>
-                      <button
-                        type="button"
-                        className={`w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500 ${
-                          Versioned.hasPoeSupport(
-                            state.contracts[state.currentContract ?? ""]
-                              ?.version ?? state.currentStorage?.version
-                          )
-                            ? ""
-                            : "pointer-events-none opacity-50"
-                        }`}
-                        onClick={e => {
-                          addNewField(
-                            e,
-                            push,
-                            "poe",
-                            portalIdx.current,
-                            Versioned.poe(props.contract.version)
-                          );
-
-                          portalIdx.current += 1;
-                        }}
-                      >
-                        Proof of Event
-                      </button>
                     </div>
                     <div
                       className={`${

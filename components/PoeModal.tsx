@@ -3,6 +3,7 @@ import {
   NetworkType,
   OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
+  SignPayloadRequest,
   TezosOperationType,
 } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
@@ -187,16 +188,41 @@ const PoeModal = () => {
       setCurrentState(State.TRANSACTION);
     };
 
+    const signPayloadCb = async (message: SignPayloadRequest) => {
+      console.log("Sign:", message);
+      try {
+        //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
+        // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
+        const signed =
+          await state.connection.wallet.walletProvider.client.requestSignPayload(
+            {
+              signingType: message.signingType,
+              payload: message.payload,
+              sourceAddress: state.address,
+            }
+          );
+        await state.p2pClient?.signResponse(
+          message.id,
+          message.signingType,
+          signed.signature
+        );
+      } catch (e) {
+        state.p2pClient?.abortRequest(message.id);
+      }
+    };
+
     const tinyEmitter = state.p2pClient.on(
       Event.PROOF_OF_EVENT_CHALLENGE_REQUEST,
       challengeCb
     );
 
     state.p2pClient.on(Event.INCOMING_OPERATION, transactionCb);
+    state.p2pClient.on(Event.SIGN_PAYLOAD, signPayloadCb);
 
     return () => {
       tinyEmitter.off(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, challengeCb);
       tinyEmitter.off(Event.INCOMING_OPERATION, transactionCb);
+      tinyEmitter.off(Event.SIGN_PAYLOAD, signPayloadCb);
     };
   }, [state.p2pClient]);
 
