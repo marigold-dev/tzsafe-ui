@@ -93,6 +93,12 @@ const PoeModal = () => {
     const transactionCb = async (message: OperationRequestOutput) => {
       setCurrentMetadata([message.id, message.appMetadata]);
 
+      if (message.operationDetails.length === 0) {
+        await state.p2pClient?.abortRequest(message.id);
+        setTransactionError("Operations were empty");
+        return;
+      }
+
       setTransfers(
         (
           await Promise.all(
@@ -111,7 +117,7 @@ const PoeModal = () => {
                         ]
                       );
 
-                      const value = contract.methods[
+                      const value = contract.methodsObject[
                         detail.parameters.entrypoint
                       ](
                         methodSchema.Execute(detail.parameters.value)
@@ -148,8 +154,12 @@ const PoeModal = () => {
                         },
                       };
                     } catch (e) {
-                      console.log("Error while converting contract call", e);
+                      setTransactionError(
+                        "Failed to convert the contract call to TzSafe format"
+                      );
+                      console.log("Error while converting contract call: ", e);
 
+                      state.p2pClient?.abortRequest(message.id);
                       return undefined;
                     }
                   } else
@@ -191,9 +201,9 @@ const PoeModal = () => {
     const signPayloadCb = async (message: SignPayloadRequest) => {
       console.log("Sign:", message);
       try {
-        //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
-        // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
         const signed =
+          //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
+          // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
           await state.connection.wallet.walletProvider.client.requestSignPayload(
             {
               signingType: message.signingType,
