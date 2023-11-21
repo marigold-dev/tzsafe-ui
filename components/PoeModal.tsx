@@ -22,6 +22,7 @@ import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { VersionedApi } from "../versioned/apis";
 import { transfer } from "../versioned/interface";
+import Alias from "./Alias";
 import RenderProposalContentLambda, {
   contentToData,
 } from "./RenderProposalContentLambda";
@@ -357,6 +358,10 @@ const PoeModal = () => {
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
                       from {currentMetadata?.[1].name}
                     </div>
+                    <p className="align-self-start text-sm text-zinc-400">
+                      <Alias address={state.currentContract ?? ""} /> will
+                      create the proposal
+                    </p>
                     <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
                       <section className="w-full text-white">
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
