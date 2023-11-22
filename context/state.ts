@@ -177,9 +177,8 @@ function reducer(state: tezosState, action: action): tezosState {
 
       state.connectedDapps[action.payload.address] ??= {};
 
-      state.connectedDapps[action.payload.address][
-        `${action.payload.data.appUrl}-${state.address}`
-      ] = action.payload.data;
+      state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
+        action.payload.data;
 
       saveState(state);
 
@@ -188,17 +187,13 @@ function reducer(state: tezosState, action: action): tezosState {
     case "removeDapp": {
       if (
         !state.currentContract ||
-        !state.connectedDapps[state.currentContract][
-          `${action.payload}-${state.address}`
-        ]
+        !state.connectedDapps[state.currentContract][action.payload]
       )
         return state;
 
       const newState = { ...state };
 
-      delete newState.connectedDapps[state.currentContract][
-        `${action.payload}-${state.address}`
-      ];
+      delete newState.connectedDapps[state.currentContract][action.payload];
 
       saveState(newState);
 
