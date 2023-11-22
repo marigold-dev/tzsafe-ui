@@ -1,5 +1,4 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Parser } from "@taquito/michel-codec";
 import { useState } from "react";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
@@ -93,7 +92,10 @@ const RenderProposalContentMetadata = ({
         label: "Execute lambda",
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
-        params: metadata.lambda,
+        params:
+          Array.isArray(metadata.lambda) || typeof metadata.lambda === "object"
+            ? JSON.stringify(metadata.lambda)
+            : metadata.lambda,
       };
     } else if (metadata?.meta?.includes("fa1_2_address")) {
       const contractData = JSON.parse(metadata.meta).payload;

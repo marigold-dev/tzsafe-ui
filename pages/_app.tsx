@@ -158,7 +158,9 @@ export default function App({ Component, pageProps }: AppProps) {
         Object.values(state.connectedDapps)
           .flatMap(v => Object.values(v))
           .forEach(async data => {
-            p2pClient.addPeer(data);
+            p2pClient
+              .addPeer(data)
+              .catch(_ => console.log("Failed to connect to peer", data));
           });
 
         const wallet = new BeaconWallet({
