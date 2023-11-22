@@ -125,6 +125,7 @@ const PoeModal = () => {
                       ).toTransferParams().parameter?.value;
 
                       if (!value) return undefined;
+
                       const param = emitMicheline(value as Expr);
 
                       const parser = new Parser();
@@ -202,7 +203,6 @@ const PoeModal = () => {
     };
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
-      console.log("Sign:", message);
       try {
         const signed =
           //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation

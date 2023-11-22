@@ -215,7 +215,8 @@ export const contentToData = (
         entrypoints: undefined,
         params: JSON.stringify(
           lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
-            fa2_address: token?.token.contract.address,
+            fa2_address:
+              token?.token.contract.address ?? lambda?.contractAddress,
             name: token?.token.metadata.name,
             token_id,
             to: to_,
