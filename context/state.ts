@@ -1,4 +1,4 @@
-import { AccountInfo } from "@airgap/beacon-sdk";
+import { AccountInfo, getSenderId } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
 import {
@@ -304,7 +304,21 @@ function reducer(state: tezosState, action: action): tezosState {
     }
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;
-      const { [action.address]: __, ...aliases } = { ...state.aliases };
+      const { [action.address]: __, ...aliases } = state.aliases;
+      const { [action.address]: contractDapps, ...connectedDapps } =
+        state.connectedDapps;
+
+      Object.values(contractDapps).forEach(async dapp => {
+        const senderId = await getSenderId(dapp.publicKey);
+        state.p2pClient?.removePeer(
+          {
+            ...dapp,
+            type: "p2p-pairing-response",
+            senderId,
+          },
+          true
+        );
+      });
 
       const fav =
         (state.favouriteContract || "") === action.address
@@ -320,6 +334,7 @@ function reducer(state: tezosState, action: action): tezosState {
         favouriteContract: fav,
         currentContract,
         aliases,
+        connectedDapps,
       };
 
       saveState(newState);
