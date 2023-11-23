@@ -7,7 +7,7 @@ import {
   bytes2Char,
 } from "@taquito/utils";
 import { version } from "../types/display";
-import { decodeB58 } from "../utils/contractParam";
+import { decodeB58, toRightAssociativePairData } from "../utils/contractParam";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -42,8 +42,10 @@ export enum LambdaType {
 
 const FA2_SIGNATURE =
   '{"name":"transfer","params":{"type":"list","children":[{"type":"pair","children":[{"name":"from_","type":"address"},{"name":"txs","type":"list","children":[{"type":"pair","children":[{"name":"to_","type":"address"},{"type":"pair","children":[{"name":"token_id","type":"nat"},{"name":"amount","type":"nat"}]}]}]}]}]}}';
-const FA1_2_TRANSFER_SIGNATURE =
+const FA1_2_TRANSFER_SIGNATURE_1 =
   '{"name":"transfer","params":{"type":"pair","children":[{"name":"from","type":"address"},{"type":"pair","children":[{"name":"to","type":"address"},{"name":"amount","type":"nat"}]}]}}';
+const FA1_2_TRANSFER_SIGNATURE_2 =
+  '{"name":"transfer","params":{"type":"pair","children":[{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"value","type":"nat"}]}}';
 const FA1_2_APPROVE_SIGNATURE =
   '{"name":"approve","params":{"type":"pair","children":[{"name":"spender","type":"address"},{"name":"value","type":"nat"}]}}';
 
@@ -95,23 +97,25 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
 
   if (rawData.prim === "list")
     return rawData.args?.map(v => rawDataToData(v, currentParam)) ?? [];
-  else if (rawData.prim.toLowerCase() === "pair")
-    return (rawData.args ?? []).reduce((acc, current, i) => {
-      if (!("children" in currentParam))
-        throw new Error("Pair should have children");
+  else if (rawData.prim.toLowerCase() === "pair") {
+    rawData = toRightAssociativePairData(rawData);
+    if ("prim" in rawData)
+      return (rawData.args ?? []).reduce((acc, current, i) => {
+        if (!("children" in currentParam))
+          throw new Error("Pair should have children");
 
-      const parsed = rawDataToData(current, currentParam.children[i]);
+        const parsed = rawDataToData(current, currentParam.children[i]);
 
-      return {
-        ...acc,
-        ...(Array.isArray(parsed)
-          ? { [currentParam.children[i].name ?? "value"]: parsed }
-          : typeof parsed === "string"
-          ? {}
-          : parsed),
-      };
-    }, {});
-
+        return {
+          ...acc,
+          ...(Array.isArray(parsed)
+            ? { [currentParam.children[i].name ?? "value"]: parsed }
+            : typeof parsed === "string"
+            ? {}
+            : parsed),
+        };
+      }, {});
+  }
   return [];
 };
 
@@ -494,9 +498,15 @@ export const parseLambda = (
       ? LambdaType.FA2
       : entrypointSignature === FA1_2_APPROVE_SIGNATURE
       ? LambdaType.FA1_2_APPROVE
-      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE_1 ||
+        entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
       ? LambdaType.FA1_2_TRANSFER
       : LambdaType.CONTRACT_EXECUTION;
+
+    const raw_entrypoint =
+      entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
+        ? JSON.parse(FA1_2_TRANSFER_SIGNATURE_1)
+        : entrypoint;
 
     // parse PUSH data
     const [isPushData, data] = isParsedMutez
@@ -511,7 +521,7 @@ export const parseLambda = (
                 ? !!expr.args?.[1] && !!expr.args?.[0]
                   ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
                   : "Unit"
-                : rawDataToData(expr.args![1], entrypoint.params);
+                : rawDataToData(expr.args![1], raw_entrypoint.params);
             return [true, data];
           } else {
             return failParse;
@@ -630,9 +640,15 @@ export const parseLambda = (
       ? LambdaType.FA2
       : entrypointSignature === FA1_2_APPROVE_SIGNATURE
       ? LambdaType.FA1_2_APPROVE
-      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE_1 ||
+        entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
       ? LambdaType.FA1_2_TRANSFER
       : LambdaType.CONTRACT_EXECUTION;
+
+    const raw_entrypoint =
+      entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
+        ? JSON.parse(FA1_2_TRANSFER_SIGNATURE_1)
+        : entrypoint;
 
     // parse PUSH data
     const [isParsedPushParam, data] = isParsedMutez
@@ -647,7 +663,7 @@ export const parseLambda = (
                 ? !!expr.args?.[1] && !!expr.args?.[0]
                   ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
                   : "Unit"
-                : rawDataToData(expr.args![1], entrypoint.params);
+                : rawDataToData(expr.args![1], raw_entrypoint.params);
             return [true, data];
           } else {
             return failParse;
