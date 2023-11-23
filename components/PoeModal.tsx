@@ -1,7 +1,9 @@
 import {
   AppMetadata,
+  BeaconErrorType,
   NetworkType,
   OperationRequestOutput,
+  ProofOfEventChallengeRequest,
   ProofOfEventChallengeRequestOutput,
   SignPayloadRequest,
   TezosOperationType,
@@ -17,7 +19,7 @@ import {
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import { State } from "../pages/[walletAddress]/beacon";
+import Beacon, { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { VersionedApi } from "../versioned/apis";
@@ -65,6 +67,7 @@ const PoeModal = () => {
   const [currentMetadata, setCurrentMetadata] = useState<
     undefined | [string, AppMetadata]
   >();
+  const [address, setAddress] = useState<undefined | string>();
   const [message, setMessage] = useState<
     undefined | ProofOfEventChallengeRequestOutput
   >();
@@ -77,8 +80,7 @@ const PoeModal = () => {
   const [currentState, setCurrentState] = useState(State.IDLE);
 
   const version =
-    state.contracts[state.currentContract ?? ""]?.version ??
-    state.currentStorage?.version;
+    state.contracts[address ?? ""]?.version ?? state.currentStorage?.version;
 
   const rows = useMemo(
     () =>
@@ -90,12 +92,28 @@ const PoeModal = () => {
   useEffect(() => {
     if (!state.p2pClient) return;
 
-    const challengeCb = setMessage;
+    const challengeCb = (message: ProofOfEventChallengeRequestOutput) => {
+      setMessage(message);
+      setAddress(message.contractAddress);
+    };
+
     const transactionCb = async (message: OperationRequestOutput) => {
+      if (!!currentMetadata) {
+        state.p2pClient?.abortRequest(
+          message.id,
+          "There's already a pending request"
+        );
+        return;
+      }
+      setAddress(message.sourceAddress);
       setCurrentMetadata([message.id, message.appMetadata]);
 
       if (message.operationDetails.length === 0) {
-        await state.p2pClient?.abortRequest(message.id);
+        await state.p2pClient?.sendError(
+          message.id,
+          "Request was empty",
+          BeaconErrorType.TRANSACTION_INVALID_ERROR
+        );
         setTransactionError("Operations were empty");
         return;
       }
@@ -156,14 +174,17 @@ const PoeModal = () => {
                         },
                       };
                     } catch (e) {
-                      setTransactionError(
-                        `Failed to convert the contract call to TzSafe format: ${
-                          (e as Error).message
-                        }`
-                      );
+                      const errorMessage = `Failed to create a TzSafe proposal: ${
+                        (e as Error).message
+                      }`;
+                      setTransactionError(errorMessage);
                       console.log("Contract conversion error:", e);
 
-                      state.p2pClient?.abortRequest(message.id);
+                      state.p2pClient?.sendError(
+                        message.id,
+                        errorMessage,
+                        BeaconErrorType.TRANSACTION_INVALID_ERROR
+                      );
                       return undefined;
                     }
                   } else
@@ -220,7 +241,11 @@ const PoeModal = () => {
           signed.signature
         );
       } catch (e) {
-        state.p2pClient?.abortRequest(message.id);
+        state.p2pClient?.sendError(
+          message.id,
+          `Failed to sign the payload: ${(e as Error).message}`,
+          BeaconErrorType.SIGNATURE_TYPE_NOT_SUPPORTED
+        );
       }
     };
 
@@ -360,9 +385,8 @@ const PoeModal = () => {
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
                       from {currentMetadata?.[1].name}
                     </div>
-                    <p className="align-self-start text-sm text-zinc-400">
-                      <Alias address={state.currentContract ?? ""} /> will
-                      create the proposal
+                    <p className="self-start text-sm text-zinc-400">
+                      <Alias address={address ?? ""} /> will create the proposal
                     </p>
                     <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
                       <section className="w-full text-white">
@@ -397,7 +421,8 @@ const PoeModal = () => {
                           e.preventDefault();
 
                           await state.p2pClient?.abortRequest(
-                            currentMetadata[0]
+                            currentMetadata[0],
+                            "Cancelled by the user"
                           );
                           reset();
                         }}
@@ -408,19 +433,18 @@ const PoeModal = () => {
                         className="hover:border-offset-2 hover:border-offset-gray-800 my-2 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                         type="submit"
                         onClick={async () => {
-                          if (!state.currentContract || !currentMetadata)
-                            return;
+                          if (!address || !currentMetadata) return;
 
                           setTransactionLoading(true);
 
                           let hash;
                           try {
                             const cc = await state.connection.contract.at(
-                              state.currentContract
+                              address
                             );
                             const versioned = VersionedApi(
-                              state.contracts[state.currentContract].version,
-                              state.currentContract
+                              state.contracts[address].version,
+                              address
                             );
                             const timeoutAndHash =
                               await versioned.submitTxProposals(
@@ -478,10 +502,9 @@ const PoeModal = () => {
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
                     {message.appMetadata.name} wants to check that you have the
-                    rights to interact with{" "}
-                    {state.aliases[state.currentContract ?? ""]}. To do so, it
-                    requires to emit an event from the contract with the
-                    following informations:
+                    rights to interact with {state.aliases[address ?? ""]}. To
+                    do so, it requires to emit an event from the contract with
+                    the following informations:
                   </p>
                   <ul className="mt-2 space-y-1">
                     <li className="truncate">
@@ -508,7 +531,7 @@ const PoeModal = () => {
                       onClick={async () => {
                         if (
                           !state.p2pClient!.hasReceivedProofOfEventRequest() ||
-                          !state.currentContract
+                          !address
                         )
                           return;
 
@@ -520,11 +543,11 @@ const PoeModal = () => {
                           await state.p2pClient!.approvePoeChallenge();
 
                           const cc = await state.connection.contract.at(
-                            state.currentContract
+                            address
                           );
                           const versioned = VersionedApi(
-                            state.contracts[state.currentContract].version,
-                            state.currentContract
+                            state.contracts[address].version,
+                            address
                           );
                           const timeoutAndHash =
                             await versioned.submitTxProposals(

@@ -43,12 +43,12 @@ export default function App({ Component, pageProps }: AppProps) {
     if (!path || !state.currentContract) return;
 
     const contracts = Object.keys(state.contracts);
-    if (
-      (path === "/" || path === "") &&
-      contracts.length > 0 &&
-      !!state.currentContract
-    ) {
-      router.replace(`/${contracts[0]}/proposals`);
+    if ((path === "/" || path === "") && contracts.length > 0) {
+      router.replace(
+        `/${
+          !!state.currentContract ? state.currentContract : contracts[0]
+        }}/proposals`
+      );
       return;
     }
 
@@ -155,13 +155,13 @@ export default function App({ Component, pageProps }: AppProps) {
         await p2pClient.connect(p2pClient.handleMessages);
 
         // Connect stored peers
-        Object.values(state.connectedDapps)
-          .flatMap(v => Object.values(v))
-          .forEach(async data => {
+        Object.entries(a.connectedDapps).forEach(async ([address, dapps]) => {
+          Object.values(dapps).forEach(data => {
             p2pClient
               .addPeer(data)
               .catch(_ => console.log("Failed to connect to peer", data));
           });
+        });
 
         const wallet = new BeaconWallet({
           name: "TzSafe",

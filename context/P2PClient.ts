@@ -8,6 +8,7 @@ import {
   WalletClient,
   WalletClientOptions,
   SigningType,
+  PeerInfo,
 } from "@airgap/beacon-sdk";
 import { buf2hex } from "@taquito/utils";
 import { TinyEmitter } from "tiny-emitter";
@@ -21,6 +22,7 @@ export enum Event {
 
 class P2PClient extends WalletClient {
   private events = new TinyEmitter();
+
   permissionMessage: PermissionRequestOutput | undefined = undefined;
   proofOfEvent: {
     message: undefined | ProofOfEventChallengeRequestOutput;
@@ -110,8 +112,8 @@ class P2PClient extends WalletClient {
       //
       //   this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
       //   break;
-      case BeaconMessageType.ProofOfEventChallengeRecorded:
-        break;
+      // case BeaconMessageType.ProofOfEventChallengeRecorded:
+      //   break;
       case BeaconMessageType.SignPayloadRequest:
         this.events.emit(Event.SIGN_PAYLOAD, message);
         break;
@@ -133,12 +135,23 @@ class P2PClient extends WalletClient {
     }
   };
 
-  async abortRequest(id: string) {
+  async abortRequest(id: string, reason: string) {
     return this.respond({
       type: BeaconMessageType.Error,
       errorType: BeaconErrorType.ABORTED_ERROR,
       id,
       senderId: await this.beaconId,
+      errorData: reason,
+    });
+  }
+
+  async sendError(id: string, reason: string, errorType: BeaconErrorType) {
+    return this.respond({
+      type: BeaconMessageType.Error,
+      errorType,
+      id,
+      senderId: await this.beaconId,
+      errorData: reason,
     });
   }
 
