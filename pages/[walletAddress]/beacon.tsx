@@ -138,7 +138,7 @@ const Beacon = () => {
                         onClick={async () => {
                           const senderId = await getSenderId(data.publicKey);
 
-                          await state.p2pClient?.removePeer(
+                          state.p2pClient?.removePeer(
                             {
                               ...data,
                               type: "p2p-pairing-response",

@@ -47,7 +47,7 @@ export default function App({ Component, pageProps }: AppProps) {
       router.replace(
         `/${
           !!state.currentContract ? state.currentContract : contracts[0]
-        }}/proposals`
+        }/proposals`
       );
       return;
     }
