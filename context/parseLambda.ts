@@ -405,12 +405,7 @@ export const parseLambda = (
     ];
   }
 
-  if (version === "0.3.1" || version === "0.3.2") {
-    const contract_execution_instr_size = 9;
-
-    if (lambda.length != contract_execution_instr_size)
-      return [LambdaType.LAMBDA_EXECUTION, undefined];
-
+  if (version === "0.3.1" || (version === "0.3.2" && lambda.length === 9)) {
     // parse DROP
     const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
@@ -550,12 +545,7 @@ export const parseLambda = (
         },
       ];
     else return lambdaExec;
-  } else {
-    // FA1.2 and FA2 is a special case of contract_execution. There number of instrucions is the same as regular contract execution
-    const contract_execution_instr_size = 7;
-    if (lambda.length != contract_execution_instr_size)
-      return [LambdaType.LAMBDA_EXECUTION, undefined];
-
+  } else if (lambda.length === 7) {
     // parse DROP
     const [isParsedDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
@@ -687,5 +677,17 @@ export const parseLambda = (
         },
       ];
     else return lambdaExec;
+  } else {
+    return [
+      LambdaType.LAMBDA_EXECUTION,
+      {
+        contractAddress: "",
+        entrypoint: { name: "", params: { name: undefined, type: "" } },
+        mutez: undefined,
+        data: {
+          lambda: JSON.stringify(lambda),
+        },
+      },
+    ];
   }
 };
