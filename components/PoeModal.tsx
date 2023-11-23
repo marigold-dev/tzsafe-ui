@@ -11,6 +11,8 @@ import {
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
+import { tzip16 } from "@taquito/tzip16";
+import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
@@ -18,11 +20,12 @@ import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
+import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import Beacon, { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
-import { VersionedApi } from "../versioned/apis";
+import { signers, toStorage, VersionedApi } from "../versioned/apis";
 import { transfer } from "../versioned/interface";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
@@ -225,6 +228,26 @@ const PoeModal = () => {
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
       try {
+        const contract = await state.connection.contract.at(
+          message.sourceAddress,
+          tzip16
+        );
+
+        const storage: any = await contract.storage();
+        let version = await fetchVersion(contract!);
+
+        if (version === "unknown version") {
+          throw new Error("The contract is not a TzSafe contract");
+        }
+
+        let v = toStorage(version, storage, BigNumber(0));
+        if (!signers(v).includes(state.address ?? "")) {
+          state.p2pClient?.abortRequest(
+            message.id,
+            "Current user isn't a signer"
+          );
+          return;
+        }
         const signed =
           //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
           // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
@@ -273,6 +296,7 @@ const PoeModal = () => {
     setTransactionError(undefined);
     setMessage(undefined);
     setCurrentState(State.IDLE);
+    setAddress(undefined);
   };
 
   return (
@@ -521,7 +545,7 @@ const PoeModal = () => {
                       className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
                       onClick={async () => {
                         await state.p2pClient?.refusePoeChallenge();
-                        setMessage(undefined);
+                        reset();
                       }}
                     >
                       Refuse
