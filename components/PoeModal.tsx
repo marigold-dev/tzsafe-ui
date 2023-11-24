@@ -363,7 +363,7 @@ const PoeModal = () => {
       <div
         className={`max-h-[90%] min-h-[96] w-[90%] overflow-auto ${
           !!message ? "lg:w-1/3" : "lg:w-2/3"
-        } rounded bg-graybg px-3 pb-6 text-white lg:px-6 lg:py-12`}
+        } rounded bg-graybg px-3 py-6 text-white lg:px-6 lg:py-12`}
       >
         {(() => {
           switch (currentState) {
@@ -448,7 +448,7 @@ const PoeModal = () => {
 
               if (!timeoutAndHash[0] && !!timeoutAndHash[1])
                 return (
-                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                  <div className="col-span-2 flex w-full flex-col items-center justify-center text-center">
                     <p>Succesfully created the proposal!</p>
                     <button
                       className="mt-6 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
@@ -464,7 +464,7 @@ const PoeModal = () => {
               return (
                 <>
                   <div className="col-span-2 flex w-full flex-col items-center justify-center">
-                    <div className="mb-2 mt-4 self-start text-2xl font-medium text-white">
+                    <div className="mb-2 self-start text-2xl font-medium text-white">
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
                       from {currentMetadata?.[1].name}
                     </div>
