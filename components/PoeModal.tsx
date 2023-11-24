@@ -504,7 +504,7 @@ const PoeModal = () => {
                             v.amount?.includes("*") || v.params?.includes("*")
                         ) && (
                           <div className="mt-2 text-sm text-yellow-500">
-                            * There's no decimals
+                            * There{"'"}s no decimals
                           </div>
                         )}
                       </section>
