@@ -164,7 +164,9 @@ const PoeModal = () => {
                     methodSchema.Execute(detail.parameters.value)
                   ).toTransferParams().parameter?.value;
 
-                  if (!value) return undefined;
+                  if (!value) {
+                    throw new Error("Failed to convert the parameters");
+                  }
 
                   const param = emitMicheline(value as Expr);
 
@@ -213,7 +215,8 @@ const PoeModal = () => {
                 if (
                   validateAddress(detail.destination) !==
                     ValidationResult.VALID ||
-                  isNaN(Number(detail.amount))
+                  isNaN(Number(detail.amount)) ||
+                  Number(detail.amount) < 0
                 ) {
                   state.p2pClient?.sendError(
                     message.id,
@@ -243,21 +246,21 @@ const PoeModal = () => {
                   "Invalid delegation addess " + detail.delegate,
                   BeaconErrorType.TRANSACTION_INVALID_ERROR
                 );
+
+                return undefined;
               }
 
-              return !!detail.delegate
-                ? {
-                    type: "lambda",
-                    values: {
-                      lambda: generateDelegateMichelson(version, {
-                        bakerAddress: detail.delegate,
-                      }),
-                      metadata: JSON.stringify({
-                        baker_address: detail.delegate,
-                      }),
-                    },
-                  }
-                : undefined;
+              return {
+                type: "lambda",
+                values: {
+                  lambda: generateDelegateMichelson(version, {
+                    bakerAddress: detail.delegate!,
+                  }),
+                  metadata: JSON.stringify({
+                    baker_address: detail.delegate,
+                  }),
+                },
+              };
 
             default:
               return undefined;
@@ -266,12 +269,7 @@ const PoeModal = () => {
       )) as transfer[];
 
       if (transfers.some(v => !v)) {
-        state.p2pClient?.sendError(
-          message.id,
-          "Invalid transctions",
-          BeaconErrorType.TRANSACTION_INVALID_ERROR
-        );
-
+        // If there's some undefined, it'll be catch before and we already sent the response
         return;
       }
 
