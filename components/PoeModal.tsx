@@ -499,6 +499,11 @@ const PoeModal = () => {
                             <RenderProposalContentLambda data={v} key={i} />
                           ))}
                         </div>
+                        {rows.some(v => v.amount?.includes("*")) && (
+                          <div className="mt-2 text-sm text-yellow-500">
+                            * There's no decimals
+                          </div>
+                        )}
                       </section>
                     </div>
                     <div className="mt-6 flex w-2/3 justify-between md:w-1/3">

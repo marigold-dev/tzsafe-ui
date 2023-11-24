@@ -180,7 +180,7 @@ export const contentToData = (
           const amount =
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
-          if (!token) return amount.toString();
+          if (!token) return amount.toString() + "*";
 
           return BigNumber(amount)
             .div(BigNumber(10).pow(token.token.metadata.decimals))

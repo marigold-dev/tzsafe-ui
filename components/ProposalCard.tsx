@@ -205,6 +205,12 @@ const ProposalCard = ({
               );
             })}
           </div>
+
+          {rows.some(v => v.amount?.includes("*")) && (
+            <div className="mt-2 text-sm text-yellow-500">
+              * There's no decimals
+            </div>
+          )}
         </section>
         <section className="text-xs md:text-base">
           <span className="text-xl font-bold">Activity</span>
