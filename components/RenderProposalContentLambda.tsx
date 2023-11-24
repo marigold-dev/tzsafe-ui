@@ -220,9 +220,11 @@ export const contentToData = (
             name: token?.token.metadata.name,
             token_id,
             to: to_,
-            amount: BigNumber(amount)
-              .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-              .toString(),
+            amount: !!token?.token.metadata.decimals
+              ? BigNumber(amount)
+                  .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
+                  .toString()
+              : amount.toString() + "*",
           }))
         ),
         rawParams: undefined,
