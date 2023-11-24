@@ -12,6 +12,7 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { tzip16 } from "@taquito/tzip16";
+import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
@@ -130,117 +131,151 @@ const PoeModal = () => {
       }
 
       const version = state.contracts[message.sourceAddress].version;
-      setTransfers(
-        (
-          await Promise.all(
-            message.operationDetails.map(async detail => {
-              switch (detail.kind) {
-                case TezosOperationType.TRANSACTION:
-                  if (!!detail.parameters) {
-                    try {
-                      const contract = await state.connection.contract.at(
-                        detail.destination
-                      );
 
-                      if (
-                        !contract.entrypoints.entrypoints[
-                          detail.parameters.entrypoint
-                        ]
-                      ) {
-                        throw new Error(
-                          `'${detail.parameters.entrypoint}' is not a valid entrypoint for ${detail.destination}`
-                        );
-                      }
+      const transfers = (await Promise.all(
+        message.operationDetails.map(async detail => {
+          switch (detail.kind) {
+            case TezosOperationType.TRANSACTION:
+              if (!!detail.parameters) {
+                try {
+                  const contract = await state.connection.contract.at(
+                    detail.destination
+                  );
 
-                      const methodSchema = new Schema(
-                        contract.entrypoints.entrypoints[
-                          detail.parameters.entrypoint
-                        ]
-                      );
+                  if (
+                    !contract.entrypoints.entrypoints[
+                      detail.parameters.entrypoint
+                    ]
+                  ) {
+                    throw new Error(
+                      `'${detail.parameters.entrypoint}' is not a valid entrypoint for ${detail.destination}`
+                    );
+                  }
 
-                      const value = contract.methodsObject[
+                  const methodSchema = new Schema(
+                    contract.entrypoints.entrypoints[
+                      detail.parameters.entrypoint
+                    ]
+                  );
+
+                  const value = contract.methodsObject[
+                    detail.parameters.entrypoint
+                  ](
+                    methodSchema.Execute(detail.parameters.value)
+                  ).toTransferParams().parameter?.value;
+
+                  if (!value) return undefined;
+
+                  const param = emitMicheline(value as Expr);
+
+                  const parser = new Parser();
+
+                  const type = emitMicheline(
+                    parser.parseJSON(
+                      contract.entrypoints.entrypoints[
                         detail.parameters.entrypoint
-                      ](
-                        methodSchema.Execute(detail.parameters.value)
-                      ).toTransferParams().parameter?.value;
-
-                      if (!value) return undefined;
-
-                      const param = emitMicheline(value as Expr);
-
-                      const parser = new Parser();
-
-                      const type = emitMicheline(
-                        parser.parseJSON(
-                          contract.entrypoints.entrypoints[
-                            detail.parameters.entrypoint
-                          ]
-                        ),
-                        {
-                          indent: "",
-                          newline: "",
-                        }
-                      );
-
-                      return {
-                        type: "contract",
-                        values: {
-                          lambda: generateExecuteContractMichelson(version, {
-                            address: detail.destination,
-                            amount: Number(detail.amount),
-                            entrypoint: detail.parameters.entrypoint,
-                            type,
-                            param,
-                          }),
-                          metadata: null,
-                        },
-                      };
-                    } catch (e) {
-                      const errorMessage = `Failed to create a TzSafe proposal: ${
-                        (e as Error).message
-                      }`;
-                      setTransactionError(errorMessage);
-                      console.log("Contract conversion error:", e);
-
-                      state.p2pClient?.sendError(
-                        message.id,
-                        errorMessage,
-                        BeaconErrorType.TRANSACTION_INVALID_ERROR
-                      );
-                      return undefined;
+                      ]
+                    ),
+                    {
+                      indent: "",
+                      newline: "",
                     }
-                  } else
-                    return {
-                      type: "transfer",
-                      values: {
-                        to: detail.destination,
-                        amount: detail.amount,
-                        parameters: {},
-                      },
-                    };
+                  );
 
-                case TezosOperationType.DELEGATION:
-                  return !!detail.delegate
-                    ? {
-                        type: "lambda",
-                        values: {
-                          lambda: generateDelegateMichelson(version, {
-                            bakerAddress: detail.delegate,
-                          }),
-                          metadata: JSON.stringify({
-                            baker_address: detail.delegate,
-                          }),
-                        },
-                      }
-                    : undefined;
+                  return {
+                    type: "contract",
+                    values: {
+                      lambda: generateExecuteContractMichelson(version, {
+                        address: detail.destination,
+                        amount: Number(detail.amount),
+                        entrypoint: detail.parameters.entrypoint,
+                        type,
+                        param,
+                      }),
+                      metadata: null,
+                    },
+                  };
+                } catch (e) {
+                  const errorMessage = `Failed to create a TzSafe proposal: ${
+                    (e as Error).message
+                  }`;
+                  setTransactionError(errorMessage);
+                  console.log("Contract conversion error:", e);
 
-                default:
+                  state.p2pClient?.sendError(
+                    message.id,
+                    errorMessage,
+                    BeaconErrorType.TRANSACTION_INVALID_ERROR
+                  );
                   return undefined;
+                }
+              } else {
+                if (
+                  validateAddress(detail.destination) !==
+                    ValidationResult.VALID ||
+                  isNaN(Number(detail.amount))
+                ) {
+                  state.p2pClient?.sendError(
+                    message.id,
+                    "Invalid parameters",
+                    BeaconErrorType.TRANSACTION_INVALID_ERROR
+                  );
+                  return undefined;
+                }
+
+                return {
+                  type: "transfer",
+                  values: {
+                    to: detail.destination,
+                    amount: detail.amount,
+                    parameters: {},
+                  },
+                };
               }
-            })
-          )
-        ).filter(v => !!v) as transfer[]
-      );
+
+            case TezosOperationType.DELEGATION:
+              if (
+                validateAddress(detail.delegate ?? "") !==
+                ValidationResult.VALID
+              ) {
+                state.p2pClient?.sendError(
+                  message.id,
+                  "Invalid delegation addess " + detail.delegate,
+                  BeaconErrorType.TRANSACTION_INVALID_ERROR
+                );
+              }
+
+              return !!detail.delegate
+                ? {
+                    type: "lambda",
+                    values: {
+                      lambda: generateDelegateMichelson(version, {
+                        bakerAddress: detail.delegate,
+                      }),
+                      metadata: JSON.stringify({
+                        baker_address: detail.delegate,
+                      }),
+                    },
+                  }
+                : undefined;
+
+            default:
+              return undefined;
+          }
+        })
+      )) as transfer[];
+
+      if (transfers.some(v => !v)) {
+        state.p2pClient?.sendError(
+          message.id,
+          "Invalid transctions",
+          BeaconErrorType.TRANSACTION_INVALID_ERROR
+        );
+
+        return;
+      }
+
+      setTransfers(transfers);
 
       setCurrentState(State.TRANSACTION);
     };
