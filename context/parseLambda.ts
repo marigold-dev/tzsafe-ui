@@ -405,7 +405,7 @@ export const parseLambda = (
     ];
   }
 
-  if (version === "0.3.1" || (version === "0.3.2" && lambda.length === 9)) {
+  if ((version === "0.3.1" || version === "0.3.2") && lambda.length === 9) {
     // parse DROP
     const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
 
