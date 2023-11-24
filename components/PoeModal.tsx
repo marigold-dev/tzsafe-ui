@@ -101,6 +101,14 @@ const PoeModal = () => {
     };
 
     const transactionCb = async (message: OperationRequestOutput) => {
+      if (!state.contracts[message.sourceAddress]) {
+        state.p2pClient?.abortRequest(
+          message.id,
+          "The contract is not an imported TzSafe one"
+        );
+        return;
+      }
+
       if (!!currentMetadata) {
         state.p2pClient?.abortRequest(
           message.id,
@@ -121,6 +129,7 @@ const PoeModal = () => {
         return;
       }
 
+      const version = state.contracts[message.sourceAddress].version;
       setTransfers(
         (
           await Promise.all(
@@ -247,10 +256,16 @@ const PoeModal = () => {
         let version = await fetchVersion(contract!);
 
         if (version === "unknown version") {
+          state.p2pClient?.abortRequest(
+            message.id,
+            "Current user isn't a signer"
+          );
+
           throw new Error("The contract is not a TzSafe contract");
         }
 
         let v = toStorage(version, storage, BigNumber(0));
+
         if (!signers(v).includes(state.address ?? "")) {
           state.p2pClient?.abortRequest(
             message.id,
@@ -258,6 +273,7 @@ const PoeModal = () => {
           );
           return;
         }
+
         const signed =
           //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
           // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
@@ -295,7 +311,7 @@ const PoeModal = () => {
       tinyEmitter.off(Event.INCOMING_OPERATION, transactionCb);
       tinyEmitter.off(Event.SIGN_PAYLOAD, signPayloadCb);
     };
-  }, [state.p2pClient]);
+  }, [state.p2pClient, state.address]);
 
   if (!message && !transfers) return null;
 
@@ -498,10 +514,15 @@ const PoeModal = () => {
                               return;
                             }
                           } catch (e) {
+                            state.p2pClient?.abortRequest(
+                              currentMetadata[0],
+                              "User cancelled the transaction"
+                            );
                             setTransactionLoading(false);
                             setTransactionError(
                               "Failed to create the transaction. Please try again later"
                             );
+
                             return;
                           }
 
