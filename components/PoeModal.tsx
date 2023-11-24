@@ -471,6 +471,12 @@ const PoeModal = () => {
                     <p className="self-start text-sm text-zinc-400">
                       <Alias address={address ?? ""} /> will create the proposal
                     </p>
+                    {state.currentContract !== address && (
+                      <p className="self-start text-sm text-yellow-500">
+                        The signing wallet is different from{" "}
+                        <Alias address={state.currentContract ?? ""} />
+                      </p>
+                    )}
                     <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
                       <section className="w-full text-white">
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
