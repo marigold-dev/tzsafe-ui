@@ -363,7 +363,7 @@ const PoeModal = () => {
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
       <div
-        className={`h-[90%] min-h-[96] w-[90%] overflow-auto ${
+        className={`max-h-[90%] min-h-[96] w-[90%] overflow-auto ${
           !!message ? "lg:w-1/3" : "lg:w-2/3"
         } rounded bg-graybg px-3 pb-6 text-white lg:px-6 lg:py-12`}
       >
