@@ -133,6 +133,16 @@ const PoeModal = () => {
                         detail.destination
                       );
 
+                      if (
+                        !contract.entrypoints.entrypoints[
+                          detail.parameters.entrypoint
+                        ]
+                      ) {
+                        throw new Error(
+                          `'${detail.parameters.entrypoint}' is not a valid entrypoint for ${detail.destination}`
+                        );
+                      }
+
                       const methodSchema = new Schema(
                         contract.entrypoints.entrypoints[
                           detail.parameters.entrypoint
