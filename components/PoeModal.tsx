@@ -454,11 +454,12 @@ const PoeModal = () => {
 
                           e.preventDefault();
 
+                          const metadata = currentMetadata[0];
+                          reset();
                           await state.p2pClient?.abortRequest(
-                            currentMetadata[0],
+                            metadata,
                             "Cancelled by the user"
                           );
-                          reset();
                         }}
                       >
                         Cancel
