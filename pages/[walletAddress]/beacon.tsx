@@ -11,7 +11,8 @@ import { Event } from "../../context/P2PClient";
 import { MODAL_TIMEOUT } from "../../context/config";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
 import useIsOwner from "../../utils/useIsOwner";
-import { Versioned, p2pData } from "../../versioned/interface";
+import { p2pData } from "../../versioned/interface";
+import { hasTzip27Support } from "../../versioned/util";
 
 export enum State {
   LOADING = -10,
@@ -56,7 +57,7 @@ const Beacon = () => {
     if (
       !state.currentContract ||
       !isOwner ||
-      !Versioned.hasTzip27Support(
+      !hasTzip27Support(
         state.contracts[state.currentContract ?? ""]?.version ??
           state.currentStorage?.version
       )

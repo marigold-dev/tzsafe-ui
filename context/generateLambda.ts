@@ -1,6 +1,6 @@
 import { char2Bytes } from "@taquito/utils";
 import { version } from "../types/display";
-import { Versioned } from "../versioned/interface";
+import { isLambdaReturnedListOperation } from "../versioned/util";
 
 export type makeFa2MichelsonParam = {
   walletAddress: string;
@@ -38,7 +38,7 @@ export function generateFA2Michelson(
 ) {
   if (params.length === 0) throw new Error("Empty fa2 params");
 
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{
         DROP;
         NIL operation ;
@@ -89,7 +89,7 @@ export function generateFA1_2ApproveMichelson(
   version: version,
   { spenderAddress, amount, fa1_2Address }: approve
 ) {
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{ 
         DROP ;
         NIL operation ;
@@ -120,7 +120,7 @@ export function generateFA1_2TransferMichelson(
   version: version,
   { walletAddress, targetAddress, amount, fa1_2Address }: transfer
 ) {
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{ 
           DROP ;
           NIL operation ;
@@ -156,7 +156,7 @@ export function generateExecuteContractMichelson(
     michelsonEntrypoint = `%${entrypoint}`;
   }
 
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{
           DROP;
           NIL operation ;
@@ -187,7 +187,7 @@ export function generateDelegateMichelson(
   version: version,
   { bakerAddress }: { bakerAddress: string }
 ) {
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{
         DROP ;
         NIL operation ;
@@ -209,7 +209,7 @@ export function generateDelegateMichelson(
 }
 
 export function generateUndelegateMichelson(version: version) {
-  if (Versioned.isLambdaReturnedListOperation(version)) {
+  if (isLambdaReturnedListOperation(version)) {
     return `{
         DROP ;
         NIL operation ;
