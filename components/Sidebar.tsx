@@ -22,7 +22,7 @@ import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
-import { Versioned } from "../versioned/interface";
+import { hasTzip27Support } from "../versioned/util";
 import Copy from "./Copy";
 
 type selectItemProps = {
@@ -501,7 +501,7 @@ const Sidebar = ({
           href={`/${state.currentContract}/beacon`}
           className={linkClass(
             path?.includes("/beacon") ?? false,
-            isLoading || !isOwner || !Versioned.hasTzip27Support(version)
+            isLoading || !isOwner || !hasTzip27Support(version)
           )}
           onClick={onClose}
         >

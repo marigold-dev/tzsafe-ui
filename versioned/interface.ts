@@ -13,6 +13,7 @@ import {
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
+import { hasTzip27Support } from "./util";
 
 type proofOfEvent = {
   payload: {
@@ -648,7 +649,7 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    if (!this.hasTzip27Support(version)) {
+    if (!hasTzip27Support(version)) {
       return { fields: [], values: {} };
     }
 
@@ -676,30 +677,6 @@ abstract class Versioned {
         },
       ],
     };
-  }
-
-  static hasTzip27Support(version: version): boolean {
-    const [_, middle, end] = version.split(".");
-
-    const parsedMiddle = parseInt(middle);
-    const parsedEnd = parseInt(end);
-
-    if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
-
-    // We accept 0.3.3 and above
-    return parsedMiddle === 3 ? parsedEnd >= 3 : parsedMiddle >= 4;
-  }
-
-  static isLambdaReturnedListOperation(version: version): boolean {
-    const [_, middle, end] = version.split(".");
-
-    const parsedMiddle = parseInt(middle);
-    const parsedEnd = parseInt(end);
-
-    if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
-
-    // We accept 0.3.1 and above
-    return parsedMiddle === 3 ? parsedEnd >= 1 : parsedMiddle >= 4;
   }
 }
 
