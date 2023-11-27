@@ -12,7 +12,7 @@ export function hasTzip27Support(version: version): boolean {
   return parsedMiddle === 3 ? parsedEnd >= 3 : parsedMiddle >= 4;
 }
 
-export function isLambdaReturnedListOperation(version: version): boolean {
+export function isListOperation(version: version): boolean {
   const [_, middle, end] = version.split(".");
 
   const parsedMiddle = parseInt(middle);
