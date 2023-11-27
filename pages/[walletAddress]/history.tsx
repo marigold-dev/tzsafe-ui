@@ -450,7 +450,11 @@ const History = () => {
                           )}
                           content={x[1].ui.content}
                           proposer={x[1].og.proposer}
-                          resolver={x[1].og.resolver}
+                          resolver={
+                            x[1].og.resolver.Some
+                              ? x[1].og.resolver.Some
+                              : x[1].og.resolver
+                          }
                           walletTokens={walletTokens}
                         />
                       );
