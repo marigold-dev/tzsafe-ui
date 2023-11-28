@@ -26,6 +26,7 @@ import {
 } from "../context/state";
 import "../styles/globals.css";
 import { fetchContract } from "../utils/fetchContract";
+import { hasTzip27Support } from "../versioned/util";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -44,10 +45,54 @@ export default function App({ Component, pageProps }: AppProps) {
 
     const contracts = Object.keys(state.contracts);
     if ((path === "/" || path === "") && contracts.length > 0) {
+      const queryParams = new URLSearchParams(window.location.search);
+
+      const isPairing = queryParams.has("type") && queryParams.has("data");
+
+      let contract;
+      if (
+        isPairing &&
+        !!state.currentContract &&
+        hasTzip27Support(state.contracts[state.currentContract].version)
+      ) {
+        console.log("HERE");
+        contract = state.currentContract;
+      } else if (isPairing) {
+        console.log("HERE#2");
+        const entries = Object.entries(state.contracts);
+
+        for (const entry of entries) {
+          const [address, storage] = entry;
+
+          console.log(address, storage.version);
+          if (hasTzip27Support(storage.version)) {
+            contract = address;
+            break;
+          }
+        }
+
+        if (!contract) {
+          contract = !!state.currentContract
+            ? state.currentContract
+            : contracts[0];
+        }
+      } else {
+        contract = !!state.currentContract
+          ? state.currentContract
+          : contracts[0];
+      }
+
+      console.log("FINAL:", contract);
+
       router.replace(
-        `/${
-          !!state.currentContract ? state.currentContract : contracts[0]
-        }/proposals`
+        `/${contract}${
+          isPairing
+            ? "/beacon?type=" +
+              queryParams.get("type") +
+              "&data=" +
+              queryParams.get("data")
+            : "/proposals"
+        }`
       );
       return;
     }
