@@ -55,16 +55,13 @@ export default function App({ Component, pageProps }: AppProps) {
         !!state.currentContract &&
         hasTzip27Support(state.contracts[state.currentContract].version)
       ) {
-        console.log("HERE");
         contract = state.currentContract;
       } else if (isPairing) {
-        console.log("HERE#2");
         const entries = Object.entries(state.contracts);
 
         for (const entry of entries) {
           const [address, storage] = entry;
 
-          console.log(address, storage.version);
           if (hasTzip27Support(storage.version)) {
             contract = address;
             break;
@@ -81,8 +78,6 @@ export default function App({ Component, pageProps }: AppProps) {
           ? state.currentContract
           : contracts[0];
       }
-
-      console.log("FINAL:", contract);
 
       router.replace(
         `/${contract}${
