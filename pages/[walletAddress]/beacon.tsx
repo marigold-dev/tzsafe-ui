@@ -24,7 +24,7 @@ export enum State {
   TRANSACTION = 40,
 }
 
-function decodeData(data: string): p2pData {
+export function decodeData(data: string): p2pData {
   try {
     const decoded = JSON.parse(
       new TextDecoder().decode(bs58check.decode(data))
@@ -32,9 +32,7 @@ function decodeData(data: string): p2pData {
 
     if ("name" in decoded && "id" in decoded && "relayServer" in decoded)
       return decoded as p2pData;
-  } catch {
-    throw new Error("The code is not valid");
-  }
+  } catch {}
 
   throw new Error("The code is not valid");
 }

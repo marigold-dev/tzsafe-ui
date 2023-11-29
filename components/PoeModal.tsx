@@ -268,12 +268,8 @@ const PoeModal = () => {
         })
       )) as transfer[];
 
-      if (transfers.some(v => !v)) {
-        // If there's some undefined, it'll be catch before and we already sent the response
-        return;
-      }
-
-      setTransfers(transfers);
+      // Even if there's an error, setting transfers is a requirement to show the modal
+      setTransfers(transfers.filter(v => !!v));
 
       setCurrentState(State.TRANSACTION);
     };
@@ -434,7 +430,7 @@ const PoeModal = () => {
               if (!!transactionError)
                 return (
                   <div className="col-span-2 flex w-full flex-col items-center justify-center">
-                    <div className="mb-2 mt-4 text-center text-xl font-medium text-white">
+                    <div className="mb-2 mt-4 w-full text-center text-xl font-medium text-white">
                       {transactionError}
                     </div>
                     <button

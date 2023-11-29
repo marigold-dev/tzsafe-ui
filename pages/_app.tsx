@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
 import Banner from "../components/Banner";
+import LoginModal from "../components/LoginModal";
 import PoeModal from "../components/PoeModal";
 import Sidebar from "../components/Sidebar";
 import Spinner from "../components/Spinner";
@@ -36,7 +37,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   const [isFetching, setIsFetching] = useState(true);
   const [hasSidebar, setHasSidebar] = useState(false);
-
+  const [data, setData] = useState<undefined | string>();
   const path = usePathname();
   const router = useRouter();
 
@@ -49,46 +50,15 @@ export default function App({ Component, pageProps }: AppProps) {
 
       const isPairing = queryParams.has("type") && queryParams.has("data");
 
-      let contract;
-      if (
-        isPairing &&
-        !!state.currentContract &&
-        hasTzip27Support(state.contracts[state.currentContract].version)
-      ) {
-        contract = state.currentContract;
-      } else if (isPairing) {
-        const entries = Object.entries(state.contracts);
-
-        for (const entry of entries) {
-          const [address, storage] = entry;
-
-          if (hasTzip27Support(storage.version)) {
-            contract = address;
-            break;
-          }
-        }
-
-        if (!contract) {
-          contract = !!state.currentContract
-            ? state.currentContract
-            : contracts[0];
-        }
-      } else {
-        contract = !!state.currentContract
-          ? state.currentContract
-          : contracts[0];
+      if (isPairing) {
+        setData(queryParams.get("data")!);
       }
 
-      router.replace(
-        `/${contract}${
-          isPairing
-            ? "/beacon?type=" +
-              queryParams.get("type") +
-              "&data=" +
-              queryParams.get("data")
-            : "/proposals"
-        }`
-      );
+      const contract = !!state.currentContract
+        ? state.currentContract
+        : contracts[0];
+
+      router.replace(`/${contract}/proposals`);
       return;
     }
 
@@ -253,6 +223,14 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          {!!data && (
+            <LoginModal
+              data={data}
+              onEnd={() => {
+                setData(undefined);
+              }}
+            />
+          )}
           <PoeModal />
           <Banner>
             <span className="font-light">Make sure the URL is </span>
