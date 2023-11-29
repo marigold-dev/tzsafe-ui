@@ -152,6 +152,10 @@ const PoeModal = () => {
                     );
                   }
 
+                  if (isNaN(Number(detail.amount))) {
+                    throw new Error(`'${detail.amount}' is not a valid amount`);
+                  }
+
                   const methodSchema = new Schema(
                     contract.entrypoints.entrypoints[
                       detail.parameters.entrypoint

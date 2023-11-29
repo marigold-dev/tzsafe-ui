@@ -156,6 +156,10 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                   <h1 className="text-center text-lg font-medium">
                     You don{"'"}t have any wallet that is compatible with Tzip27
                   </h1>
+                  <p className="mt-2 text-center text-sm text-zinc-400">
+                    Please create or import a wallet before trying to connect
+                    with Beacon
+                  </p>
                   <div className="mt-4 flex justify-center">
                     <button
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
@@ -174,7 +178,8 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               return (
                 <>
                   <h1 className="text-center text-lg font-medium">
-                    You have refused the connection to {parsedData?.name}{" "}
+                    You have refused the connection to{" "}
+                    {parsedData?.name ?? "Dapp"}{" "}
                   </h1>
                   <div className="mt-4 flex justify-center">
                     <button
@@ -190,7 +195,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               return (
                 <>
                   <h1 className="text-center text-lg font-medium">
-                    Successfuly connected to {parsedData?.name}
+                    Successfuly connected to {parsedData?.name ?? "Dapp"}
                   </h1>
                   <div className="mt-4 flex justify-center">
                     <button

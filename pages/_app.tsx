@@ -27,7 +27,6 @@ import {
 } from "../context/state";
 import "../styles/globals.css";
 import { fetchContract } from "../utils/fetchContract";
-import { hasTzip27Support } from "../versioned/util";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
@@ -42,18 +41,18 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const isPairing = queryParams.has("type") && queryParams.has("data");
+
+    if (isPairing) {
+      setData(queryParams.get("data")!);
+    }
+
     if (!path || !state.currentContract) return;
 
     const contracts = Object.keys(state.contracts);
     if ((path === "/" || path === "") && contracts.length > 0) {
-      const queryParams = new URLSearchParams(window.location.search);
-
-      const isPairing = queryParams.has("type") && queryParams.has("data");
-
-      if (isPairing) {
-        setData(queryParams.get("data")!);
-      }
-
       const contract = !!state.currentContract
         ? state.currentContract
         : contracts[0];
