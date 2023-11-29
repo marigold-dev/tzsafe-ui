@@ -59,6 +59,8 @@ export default function App({ Component, pageProps }: AppProps) {
 
       router.replace(`/${contract}/proposals`);
       return;
+    } else if (path === "/" || path === "") {
+      router.replace("/");
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
