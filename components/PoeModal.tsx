@@ -152,7 +152,10 @@ const PoeModal = () => {
                     );
                   }
 
-                  if (isNaN(Number(detail.amount))) {
+                  if (
+                    isNaN(Number(detail.amount)) ||
+                    Number(detail.amount) < 0
+                  ) {
                     throw new Error(`'${detail.amount}' is not a valid amount`);
                   }
 
