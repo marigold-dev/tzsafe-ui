@@ -26,7 +26,8 @@ type data = {
     | "TransferFA1_2"
     | "ApproveFA1_2"
     | "Delegate"
-    | "UnDelegate";
+    | "UnDelegate"
+    | "Poe";
   label: undefined | string;
   metadata: undefined | string;
   amount: undefined | string;
@@ -179,7 +180,7 @@ export const contentToData = (
           const amount =
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
-          if (!token) return amount.toString();
+          if (!token) return amount.toString() + "*";
 
           return BigNumber(amount)
             .div(BigNumber(10).pow(token.token.metadata.decimals))
@@ -214,13 +215,16 @@ export const contentToData = (
         entrypoints: undefined,
         params: JSON.stringify(
           lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
-            fa2_address: token?.token.contract.address,
+            fa2_address:
+              token?.token.contract.address ?? lambda?.contractAddress,
             name: token?.token.metadata.name,
             token_id,
             to: to_,
-            amount: BigNumber(amount)
-              .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-              .toString(),
+            amount: !!token?.token.metadata.decimals
+              ? BigNumber(amount)
+                  .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
+                  .toString()
+              : amount.toString() + "*",
           }))
         ),
         rawParams: undefined,
@@ -244,7 +248,17 @@ export const contentToData = (
         params: undefined,
         rawParams: undefined,
       };
-
+    } else if (type === LambdaType.POE) {
+      data = {
+        type: "Poe",
+        label: "Proof of Event",
+        metadata: undefined,
+        amount: undefined,
+        addresses: undefined,
+        entrypoints: undefined,
+        params: JSON.stringify(lambda?.data),
+        rawParams: undefined,
+      };
       // This condition handles some legacy code so old wallets don't crash
     } else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -440,6 +454,8 @@ export const labelOfProposalContentLambda = (
       ? "Undelegate"
       : type === LambdaType.CONTRACT_EXECUTION
       ? "Execute contract"
+      : type === LambdaType.POE
+      ? "Proof of Event"
       : "Execute lambda";
   }
 };

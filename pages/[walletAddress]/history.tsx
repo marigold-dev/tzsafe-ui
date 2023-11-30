@@ -229,6 +229,7 @@ const History = () => {
 
       const bigmap = await Versioned.proposalsHistory(
         cc,
+
         globalState.currentContract,
         getProposalsId(version, cc),
         state.offset
@@ -432,7 +433,6 @@ const History = () => {
                         <ProposalCard
                           id={x[0]}
                           key={x[0]}
-                          metadataRender
                           status={x[1].ui.status}
                           date={
                             !!x[1].og.resolver
@@ -450,7 +450,11 @@ const History = () => {
                           )}
                           content={x[1].ui.content}
                           proposer={x[1].og.proposer}
-                          resolver={x[1].og.resolver}
+                          resolver={
+                            x[1].og.resolver.Some
+                              ? x[1].og.resolver.Some
+                              : x[1].og.resolver
+                          }
                           walletTokens={walletTokens}
                         />
                       );

@@ -1,5 +1,4 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { Parser } from "@taquito/michel-codec";
 import { useState } from "react";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
@@ -93,7 +92,10 @@ const RenderProposalContentMetadata = ({
         label: "Execute lambda",
         metadata:
           metadata.meta === "No meta supplied" ? undefined : metadata.meta,
-        params: metadata.lambda,
+        params:
+          Array.isArray(metadata.lambda) || typeof metadata.lambda === "object"
+            ? JSON.stringify(metadata.lambda)
+            : metadata.lambda,
       };
     } else if (metadata?.meta?.includes("fa1_2_address")) {
       const contractData = JSON.parse(metadata.meta).payload;
@@ -177,9 +179,9 @@ const RenderProposalContentMetadata = ({
         entrypoints: undefined,
         params: undefined,
       };
-
-      // This condition handles some legacy code so old wallets don't crash
-    } else if (metadata.meta) {
+    }
+    // This condition handles some legacy code so old wallets don't crash
+    else if (metadata.meta) {
       const [meta, amount, address, entrypoint, arg] = (() => {
         const contractData = JSON.parse(metadata.meta);
 
@@ -346,6 +348,8 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
       isFa2(metadata.payload)) ||
       (!!metadata.meta && metadata.meta.includes("fa2_address"))
       ? "Transfer FA2"
+      : !!metadata.meta && metadata.meta.includes("challengeId")
+      ? "Proof of Event"
       : !!metadata.meta &&
         metadata.meta.includes("fa1_2_address") &&
         metadata.meta.includes("spender_address")

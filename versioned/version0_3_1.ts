@@ -14,6 +14,7 @@ import {
   generateFA1_2ApproveMichelson,
   generateFA1_2TransferMichelson,
   generateFA2Michelson,
+  generatePoe,
 } from "../context/generateLambda";
 import {
   content,
@@ -186,6 +187,23 @@ class Version0_3_1 extends Versioned {
                 },
               };
             }
+            case "poe":
+              const parser = new Parser();
+
+              const michelsonCode = parser.parseMichelineExpression(
+                generatePoe([x.values])
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: convert(
+                    JSON.stringify({
+                      payload: x.values,
+                    })
+                  ),
+                  lambda: michelsonCode,
+                },
+              };
             default:
               return {};
           }
@@ -330,11 +348,13 @@ class Version0_3_1 extends Versioned {
             : JSON.stringify(
                 {
                   status: "Executed; lambda unavailable",
+
                   meta,
                 },
                 null,
                 2
               ),
+
           content: content.execute_lambda.lambda ? emitMicheline(lambda) : "",
         },
       };
@@ -383,6 +403,7 @@ class Version0_3_1 extends Versioned {
       author: prop.proposer.actor,
       status: status[Object.keys(prop.state)[0]!],
       content: prop.contents.map(this.mapContent),
+
       signatures: [
         ...(prop.signatures?.entries
           ? prop.signatures.entries()

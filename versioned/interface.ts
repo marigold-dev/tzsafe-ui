@@ -1,13 +1,19 @@
-import { Parser, unpackDataBytes } from "@taquito/michel-codec";
+import { Parser, unpackDataBytes, MichelsonType } from "@taquito/michel-codec";
+import { Schema } from "@taquito/michelson-encoder";
 import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
 import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3_1";
 import { proofOfEventSchema as proposalSchema_0_3_2 } from "../types/Proposal0_3_2";
+import {
+  archiveProposalSchema as proposalSchema_0_3_3,
+  proposalType,
+} from "../types/Proposal0_3_3";
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
+import { hasTzip27Support } from "./util";
 
 type proofOfEvent = {
   payload: {
@@ -16,7 +22,24 @@ type proofOfEvent = {
   };
 };
 
+type archiveProposal = {
+  payload: {
+    proposal: string;
+    proposal_id: string;
+  };
+};
+
 export type timeoutAndHash = [boolean, string];
+
+export type p2pData = {
+  appUrl: string;
+  id: string;
+  name: string;
+  publicKey: string;
+  relayServer: string;
+  type: string;
+  version: string;
+};
 
 type common = {
   fields: {
@@ -28,24 +51,49 @@ type common = {
     validate: (p: string) => string | undefined;
   }[];
 };
-export type proposals =
+
+export type transfer =
+  | ({
+      type: "fa1.2-transfer" | "fa1.2-approve";
+      values: { [key: string]: string };
+    } & common)
   | {
-      transfers: ({
-        type:
-          | "transfer"
-          | "lambda"
-          | "contract"
-          | "fa1.2-transfer"
-          | "fa1.2-approve";
-        values: { [key: string]: string };
-      } & common)[];
+      type: "transfer";
+      values: {
+        to: string;
+        amount: string;
+        parameters?: { [k: string]: any };
+      };
     }
   | {
-      transfers: ({
-        type: "fa2";
-        values: { [key: string]: string }[];
-      } & common)[];
-    };
+      type: "lambda";
+      values: {
+        lambda: string;
+        metadata: any;
+      };
+    }
+  | ({
+      type: "poe";
+      values: {
+        challengeId: string;
+        payload: string;
+      };
+    } & common)
+  | {
+      type: "contract";
+      values: {
+        lambda: string;
+        metadata: any;
+      };
+    }
+  | ({
+      type: "fa2";
+      values: { [key: string]: string }[];
+    } & common);
+
+export type proposals = {
+  transfers: transfer[];
+};
 
 abstract class Versioned {
   readonly version: version;
@@ -68,7 +116,8 @@ abstract class Versioned {
   abstract submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: proposals
+    proposals: proposals,
+    convertTezToMutez?: boolean
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(
@@ -104,9 +153,57 @@ abstract class Versioned {
     ).then(res => res.json());
   }
 
+  private static decodePoE(schema: Schema) {
+    return (events: Array<proofOfEvent>) =>
+      events.flatMap(event => {
+        try {
+          const value = schema.Execute(
+            unpackDataBytes({
+              bytes: event.payload.payload,
+            })
+          );
+
+          return [
+            {
+              key: event.payload.challenge_id,
+              value,
+            },
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+  }
+
+  private static decodeProposal(schema: Schema, proposalType: MichelsonType) {
+    return (events: Array<archiveProposal>) =>
+      events.flatMap(event => {
+        try {
+          const value = schema.Execute(
+            unpackDataBytes(
+              {
+                bytes: event.payload.proposal,
+              },
+              proposalType
+            )
+          );
+
+          return [
+            {
+              key: event.payload.proposal_id,
+              value,
+            },
+          ];
+        } catch (e) {
+          return [];
+        }
+      });
+  }
+
   static proposalsHistory(
     c: contractStorage,
     address: string,
+
     bigmapId: string,
     offset: number
   ): Promise<Array<{ key: string; value: any }>> {
@@ -128,31 +225,19 @@ abstract class Versioned {
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then((events: Array<proofOfEvent>) =>
-          events.map(event => ({
-            key: event.payload.challenge_id,
-            value: proposalSchema_0_3_1.Execute(
-              unpackDataBytes({
-                bytes: event.payload.payload,
-              })
-            ),
-          }))
-        );
+        .then(this.decodePoE(proposalSchema_0_3_1));
     } else if (c.version === "0.3.2") {
       return fetch(
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=proof_of_event${common}`
       )
         .then(res => res.json())
-        .then((events: Array<proofOfEvent>) =>
-          events.map(event => ({
-            key: event.payload.challenge_id,
-            value: proposalSchema_0_3_2.Execute(
-              unpackDataBytes({
-                bytes: event.payload.payload,
-              })
-            ),
-          }))
-        );
+        .then(this.decodePoE(proposalSchema_0_3_2));
+    } else if (c.version === "0.3.3") {
+      return fetch(
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
+      )
+        .then(res => res.json())
+        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType));
     } else {
       throw Error("unknown version");
     }
@@ -172,7 +257,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return c.owners;
     }
@@ -193,7 +279,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return c.owners;
     }
@@ -249,7 +336,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return {
         values: {
@@ -345,7 +433,8 @@ abstract class Versioned {
       c.version === "0.1.1" ||
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
-      c.version === "0.3.2"
+      c.version === "0.3.2" ||
+      c.version === "0.3.3"
     ) {
       return {
         values: {
@@ -545,6 +634,46 @@ abstract class Versioned {
             validateAddress(x) !== ValidationResult.VALID
               ? `Invalid address ${x}`
               : undefined,
+        },
+      ],
+    };
+  }
+
+  static poe(version: version): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    if (!hasTzip27Support(version)) {
+      return { fields: [], values: {} };
+    }
+
+    return {
+      values: {
+        challengeId: "",
+        payload: "",
+      },
+      fields: [
+        {
+          field: "challengeId",
+          label: "Challenge Id",
+          path: ".challengeId",
+          placeholder: "My id",
+          validate: (v: string) =>
+            v.trim() === "" ? "Challenge id is empty" : undefined,
+        },
+        {
+          field: "payload",
+          label: "Payload",
+          path: ".payload",
+          placeholder: "Payload",
+          validate: (v: string) =>
+            v.trim() === "" ? "Payload is empty" : undefined,
         },
       ],
     };

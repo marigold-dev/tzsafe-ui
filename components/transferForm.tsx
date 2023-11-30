@@ -482,6 +482,8 @@ function TransferForm(
 
         values.transfers.forEach((element, idx) => {
           Object.entries(element.values).forEach(([labl, value]) => {
+            if (!("fields" in element)) return;
+
             let field = element.fields.find(x => x.field === labl);
             let validate =
               field?.placeholder !== value ? field?.validate(value) : undefined;
@@ -946,7 +948,60 @@ function TransferForm(
                               </FA1_2>
                             </section>
                           );
+                        } else if (transfer.type === "poe") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                Proof of Event
+                              </p>
+
+                              <div
+                                className={
+                                  "md:p-none flex h-fit min-h-fit min-w-full flex-1 flex-col items-start justify-around space-y-4 md:flex-row md:space-x-4  md:space-y-0 md:rounded-none md:border-none"
+                                }
+                                key={index}
+                              >
+                                {transfer.fields.map((value, idx, arr) => {
+                                  let classn = `${
+                                    (idx + 1) % 2 === 0
+                                      ? `relative flex flex-col justify-start`
+                                      : "flex flex-col"
+                                  }`;
+
+                                  return (
+                                    <div
+                                      className={`${classn} w-full flex-1 md:w-auto`}
+                                      key={idx}
+                                    >
+                                      <label className="mb-1 text-white">
+                                        {value.label}
+                                      </label>
+                                      <Field
+                                        component={value.kind}
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className={
+                                          "md:text-md relative h-fit min-h-fit w-full flex-1 rounded p-2 text-sm md:w-auto"
+                                        }
+                                        placeholder={value.placeholder}
+                                        rows={10}
+                                        validate={value.validate}
+                                      />
+
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.${value.field}`}
+                                      />
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          );
                         }
+
+                        if (!("fields" in transfer)) return;
 
                         const withTextArea = transfer.fields.find(
                           x => x?.kind === "textarea"

@@ -4,9 +4,11 @@ import {
   encodeKeyHash,
   validateAddress,
   ValidationResult,
+  bytes2Char,
 } from "@taquito/utils";
 import { version } from "../types/display";
-import { decodeB58 } from "../utils/contractParam";
+import { decodeB58, toRightAssociativePairData } from "../utils/contractParam";
+import { isListOperation } from "../versioned/util";
 
 export type primitiveName = "string" | "number" | "list";
 
@@ -36,12 +38,15 @@ export enum LambdaType {
   DELEGATE = "DELEGATE",
   UNDELEGATE = "UNDELEGATE",
   CONTRACT_EXECUTION = "CONTRACT_EXECUTION",
+  POE = "POE",
 }
 
 const FA2_SIGNATURE =
   '{"name":"transfer","params":{"type":"list","children":[{"type":"pair","children":[{"name":"from_","type":"address"},{"name":"txs","type":"list","children":[{"type":"pair","children":[{"name":"to_","type":"address"},{"type":"pair","children":[{"name":"token_id","type":"nat"},{"name":"amount","type":"nat"}]}]}]}]}]}}';
-const FA1_2_TRANSFER_SIGNATURE =
+const FA1_2_TRANSFER_SIGNATURE_1 =
   '{"name":"transfer","params":{"type":"pair","children":[{"name":"from","type":"address"},{"type":"pair","children":[{"name":"to","type":"address"},{"name":"amount","type":"nat"}]}]}}';
+const FA1_2_TRANSFER_SIGNATURE_2 =
+  '{"name":"transfer","params":{"type":"pair","children":[{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"value","type":"nat"}]}}';
 const FA1_2_APPROVE_SIGNATURE =
   '{"name":"approve","params":{"type":"pair","children":[{"name":"spender","type":"address"},{"name":"value","type":"nat"}]}}';
 
@@ -93,23 +98,25 @@ const rawDataToData = (rawData: Expr, currentParam: param): data => {
 
   if (rawData.prim === "list")
     return rawData.args?.map(v => rawDataToData(v, currentParam)) ?? [];
-  else if (rawData.prim.toLowerCase() === "pair")
-    return (rawData.args ?? []).reduce((acc, current, i) => {
-      if (!("children" in currentParam))
-        throw new Error("Pair should have children");
+  else if (rawData.prim.toLowerCase() === "pair") {
+    rawData = toRightAssociativePairData(rawData);
+    if ("prim" in rawData)
+      return (rawData.args ?? []).reduce((acc, current, i) => {
+        if (!("children" in currentParam))
+          throw new Error("Pair should have children");
 
-      const parsed = rawDataToData(current, currentParam.children[i]);
+        const parsed = rawDataToData(current, currentParam.children[i]);
 
-      return {
-        ...acc,
-        ...(Array.isArray(parsed)
-          ? { [currentParam.children[i].name ?? "value"]: parsed }
-          : typeof parsed === "string"
-          ? {}
-          : parsed),
-      };
-    }, {});
-
+        return {
+          ...acc,
+          ...(Array.isArray(parsed)
+            ? { [currentParam.children[i].name ?? "value"]: parsed }
+            : typeof parsed === "string"
+            ? {}
+            : parsed),
+        };
+      }, {});
+  }
   return [];
 };
 
@@ -134,7 +141,7 @@ const parseDelegate = (
 ):
   | [true, LambdaType, { address: string } | undefined]
   | [false, undefined, undefined] => {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (isListOperation(version)) {
     const delegate_instr_size = 6;
 
     if (lambda.length != delegate_instr_size)
@@ -237,7 +244,7 @@ const parseUnDelegate = (
   version: version,
   lambda: Expr[]
 ): [true, LambdaType] | [false, undefined] => {
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (isListOperation(version)) {
     const undelegate_instr_size = 5;
 
     if (lambda.length != undelegate_instr_size) return [false, undefined];
@@ -295,6 +302,58 @@ const parseUnDelegate = (
   }
 };
 
+const parsePoe = (
+  lambda: Expr[]
+): [boolean, { challengeId: string; payload: string } | undefined] => {
+  const poeSize = 5;
+
+  if (lambda.length != poeSize) return [false, undefined];
+
+  const [isDrop] = parsePrimPattern(lambda, 0, "DROP", () => succParse);
+
+  const [isNil] = isDrop
+    ? parsePrimPattern(lambda, 1, "NIL", () => succParse)
+    : failParse;
+
+  const [isPush, data] = isNil
+    ? parsePrimPattern(lambda, 2, "PUSH", value => {
+        //@ts-expect-error
+        const [challengeId, payload] = value.args?.[1]?.args ?? [
+          undefined,
+          undefined,
+        ];
+
+        if (!challengeId || !payload) return failParse;
+
+        return [
+          true,
+          {
+            challengeId: bytes2Char(challengeId.bytes),
+            payload: bytes2Char(payload.bytes),
+          },
+        ];
+      })
+    : failParse;
+
+  const [isEmit] = isPush
+    ? parsePrimPattern(lambda, 3, "EMIT", value => {
+        if (value.annots?.[0] !== "%proof_of_event") return failParse;
+
+        return succParse;
+      })
+    : failParse;
+
+  const [isCons] = isEmit
+    ? parsePrimPattern(lambda, 4, "CONS", () => succParse)
+    : failParse;
+
+  if (isCons) {
+    return [true, data];
+  } else {
+    return [false, undefined];
+  }
+};
+
 export const parseLambda = (
   version: version,
   lambda: Expr | null
@@ -334,8 +393,24 @@ export const parseLambda = (
       ];
     }
   }
+  const [isPoe, poeData] = parsePoe(lambda);
 
-  if (version === "0.3.1" || version === "0.3.2") {
+  if (isPoe && !!poeData) {
+    return [
+      LambdaType.POE,
+      {
+        contractAddress: "",
+        mutez: undefined,
+        entrypoint: {
+          name: "",
+          params: { name: "", type: "" },
+        },
+        data: poeData,
+      },
+    ];
+  }
+
+  if (isListOperation(version)) {
     const contract_execution_instr_size = 9;
 
     if (lambda.length != contract_execution_instr_size)
@@ -429,9 +504,15 @@ export const parseLambda = (
       ? LambdaType.FA2
       : entrypointSignature === FA1_2_APPROVE_SIGNATURE
       ? LambdaType.FA1_2_APPROVE
-      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE_1 ||
+        entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
       ? LambdaType.FA1_2_TRANSFER
       : LambdaType.CONTRACT_EXECUTION;
+
+    const raw_entrypoint =
+      entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
+        ? JSON.parse(FA1_2_TRANSFER_SIGNATURE_1)
+        : entrypoint;
 
     // parse PUSH data
     const [isPushData, data] = isParsedMutez
@@ -446,7 +527,7 @@ export const parseLambda = (
                 ? !!expr.args?.[1] && !!expr.args?.[0]
                   ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
                   : "Unit"
-                : rawDataToData(expr.args![1], entrypoint.params);
+                : rawDataToData(expr.args![1], raw_entrypoint.params);
             return [true, data];
           } else {
             return failParse;
@@ -570,9 +651,15 @@ export const parseLambda = (
       ? LambdaType.FA2
       : entrypointSignature === FA1_2_APPROVE_SIGNATURE
       ? LambdaType.FA1_2_APPROVE
-      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE
+      : entrypointSignature === FA1_2_TRANSFER_SIGNATURE_1 ||
+        entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
       ? LambdaType.FA1_2_TRANSFER
       : LambdaType.CONTRACT_EXECUTION;
+
+    const raw_entrypoint =
+      entrypointSignature === FA1_2_TRANSFER_SIGNATURE_2
+        ? JSON.parse(FA1_2_TRANSFER_SIGNATURE_1)
+        : entrypoint;
 
     // parse PUSH data
     const [isParsedPushParam, data] = isParsedMutez
@@ -587,7 +674,7 @@ export const parseLambda = (
                 ? !!expr.args?.[1] && !!expr.args?.[0]
                   ? emitMicheline(decodeB58(expr.args?.[0], expr.args?.[1]))
                   : "Unit"
-                : rawDataToData(expr.args![1], entrypoint.params);
+                : rawDataToData(expr.args![1], raw_entrypoint.params);
             return [true, data];
           } else {
             return failParse;

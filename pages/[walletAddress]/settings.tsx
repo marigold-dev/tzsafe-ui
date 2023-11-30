@@ -1,5 +1,7 @@
+import { getSenderId } from "@airgap/beacon-sdk";
+import { Cross1Icon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
 import { AppDispatchContext, AppStateContext } from "../../context/state";

@@ -1,4 +1,4 @@
-import { NetworkType } from "@airgap/beacon-sdk";
+import { LocalStorage, NetworkType } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { validateAddress, ValidationResult } from "@taquito/utils";
@@ -7,10 +7,13 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
 import Banner from "../components/Banner";
+import LoginModal from "../components/LoginModal";
+import PoeModal from "../components/PoeModal";
 import Sidebar from "../components/Sidebar";
 import Spinner from "../components/Spinner";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
+import P2PClient from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
 import {
   tezosState,
@@ -33,21 +36,33 @@ export default function App({ Component, pageProps }: AppProps) {
 
   const [isFetching, setIsFetching] = useState(true);
   const [hasSidebar, setHasSidebar] = useState(false);
-
+  const [data, setData] = useState<undefined | string>();
   const path = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    if (!path || !state.currentContract) return;
+    if (!path) return;
+
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const isPairing = queryParams.has("type") && queryParams.has("data");
+
+    if (isPairing) {
+      setData(queryParams.get("data")!);
+    }
 
     const contracts = Object.keys(state.contracts);
-    if (
-      (path === "/" || path === "") &&
-      contracts.length > 0 &&
-      !!state.currentContract
-    ) {
-      router.replace(`/${contracts[0]}/proposals`);
+
+    if ((path === "/" || path === "") && contracts.length > 0) {
+      const contract = !!state.currentContract
+        ? state.currentContract
+        : contracts[0];
+
+      router.replace(`/${contract}/proposals`);
       return;
+    } else if (path === "/" || path === "") {
+      // Get rid of query in case it comes from beacon
+      router.replace("/");
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,6 +138,7 @@ export default function App({ Component, pageProps }: AppProps) {
         setIsFetching(false);
       } catch (e) {
         setIsFetching(false);
+
         router.replace(
           `/invalid-contract?address=${router.query.walletAddress}`
         );
@@ -142,12 +158,33 @@ export default function App({ Component, pageProps }: AppProps) {
       if (state!.beaconWallet === null) {
         let a = init();
         dispatch({ type: "init", payload: a });
+
+        const p2pClient = new P2PClient({
+          name: "TzSafe",
+          storage: new LocalStorage("P2P"),
+        });
+
+        await p2pClient.init();
+        await p2pClient.connect(p2pClient.handleMessages);
+
+        // Connect stored peers
+        Object.entries(a.connectedDapps).forEach(async ([address, dapps]) => {
+          Object.values(dapps).forEach(data => {
+            p2pClient
+              .addPeer(data)
+              .catch(_ => console.log("Failed to connect to peer", data));
+          });
+        });
+
         const wallet = new BeaconWallet({
           name: "TzSafe",
           preferredNetwork: PREFERED_NETWORK,
+          //@ts-expect-error Beacon beta and taquito's beacon are incompatible, but it's only a type error
+          storage: new LocalStorage("WALLET"),
         });
 
         dispatch!({ type: "beaconConnect", payload: wallet });
+        dispatch!({ type: "p2pConnect", payload: p2pClient });
 
         if (state.attemptedInitialLogin) return;
 
@@ -157,6 +194,8 @@ export default function App({ Component, pageProps }: AppProps) {
           const balance = await state?.connection.tz.getBalance(userAddress);
           dispatch({
             type: "login",
+            // TODO: FIX
+            //@ts-ignore
             accountInfo: activeAccount!,
             address: userAddress,
             balance: balance!.toString(),
@@ -169,7 +208,7 @@ export default function App({ Component, pageProps }: AppProps) {
         }
       }
     })();
-  }, [state, dispatch]);
+  }, [state.beaconWallet]);
 
   useEffect(() => {
     setHasSidebar(false);
@@ -187,6 +226,15 @@ export default function App({ Component, pageProps }: AppProps) {
       <AppDispatchContext.Provider value={dispatch}>
         <div className="relative min-h-screen">
           <div id="modal" />
+          {!!data && (
+            <LoginModal
+              data={data}
+              onEnd={() => {
+                setData(undefined);
+              }}
+            />
+          )}
+          <PoeModal />
           <Banner>
             <span className="font-light">Make sure the URL is </span>
             {PREFERED_NETWORK === NetworkType.MAINNET

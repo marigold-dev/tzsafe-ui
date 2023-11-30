@@ -22,6 +22,7 @@ import { AppDispatchContext, AppStateContext } from "../context/state";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
+import { hasTzip27Support } from "../versioned/util";
 import Copy from "./Copy";
 
 type selectItemProps = {
@@ -125,6 +126,10 @@ const Sidebar = ({
   let dispatch = useContext(AppDispatchContext)!;
 
   const isOwner = useIsOwner();
+
+  const version =
+    state.contracts[state.currentContract ?? ""]?.version ??
+    state.currentStorage?.version;
 
   useEffect(() => {
     setIsClient(true);
@@ -491,6 +496,32 @@ const Sidebar = ({
           </svg>
           <span>History</span>
         </Link>
+
+        <Link
+          href={`/${state.currentContract}/beacon`}
+          className={linkClass(
+            path?.includes("/beacon") ?? false,
+            isLoading || !isOwner || !hasTzip27Support(version)
+          )}
+          onClick={onClose}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>Connect to Dapp</span>
+        </Link>
+
         <a
           href="https://docs.tzsafe.marigold.dev"
           target="_blank"

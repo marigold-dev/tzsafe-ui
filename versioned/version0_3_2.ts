@@ -14,6 +14,7 @@ import {
   generateFA1_2ApproveMichelson,
   generateFA1_2TransferMichelson,
   generateFA2Michelson,
+  generatePoe,
 } from "../context/generateLambda";
 import {
   content,
@@ -67,13 +68,10 @@ class Version0_3_2 extends Versioned {
             case "contract": {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
 
               return {
                 execute_lambda: {
-                  metadata: meta,
+                  metadata: null,
                   lambda: michelsonCode,
                 },
               };
@@ -104,16 +102,7 @@ class Version0_3_2 extends Versioned {
 
               return {
                 execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      contract_addr: x.values[0].targetAddress,
-                      payload: x.values.map(value => ({
-                        token_id: Number(value.tokenId),
-                        fa2_address: value.fa2Address,
-                        amount: Number(value.amount),
-                      })),
-                    })
-                  ),
+                  metadata: null,
                   lambda: michelsonCode,
                 },
               };
@@ -137,16 +126,7 @@ class Version0_3_2 extends Versioned {
 
               return {
                 execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      payload: {
-                        spender_address: x.values.spenderAddress,
-                        amount: x.values.amount,
-                        fa1_2_address: x.values.fa1_2Address,
-                        name: token.token.metadata.name,
-                      },
-                    })
-                  ),
+                  metadata: null,
                   lambda: michelsonCode,
                 },
               };
@@ -172,20 +152,24 @@ class Version0_3_2 extends Versioned {
 
               return {
                 execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      payload: {
-                        amount: Number(x.values.amount),
-                        fa1_2_address: x.values.fa1_2Address,
-                        to: x.values.targetAddress,
-                        name: token.token.metadata.name,
-                      },
-                    })
-                  ),
+                  metadata: null,
                   lambda: michelsonCode,
                 },
               };
             }
+            case "poe":
+              const parser = new Parser();
+
+              const michelsonCode = parser.parseMichelineExpression(
+                generatePoe([x.values])
+              );
+
+              return {
+                execute_lambda: {
+                  metadata: null,
+                  lambda: michelsonCode,
+                },
+              };
             default:
               return {};
           }

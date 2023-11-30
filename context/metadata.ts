@@ -18,6 +18,7 @@ const dispatch: { [key: string]: version } = {
   "0.3.0": "0.3.0",
   "0.3.1": "0.3.1",
   "0.3.2": "0.3.2",
+  "0.3.3": "0.3.3",
 };
 
 // Those values are from tzkt api: /v1/contracts
@@ -30,10 +31,13 @@ const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
   "0.0.9": "1273323151:735333822",
   "0.0.10": "-357299388:2102290129",
   "0.0.11": "-483287042:521053333",
+  //@ts-expect-error There was 2 versions of 0.0.11, so it means 2 codeHash
+  "0.0.11b": "-483287042:793087855",
   "0.1.1": "-483287042:-426350137",
   "0.3.0": "-933474574:1358594366",
   "0.3.1": "1576695458:46756700",
   "0.3.2": "66001562:-1892417854",
+  "0.3.3": "-623288749:1866000220",
   "unknown version": undefined,
 };
 
@@ -44,10 +48,13 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   [HASHES["0.0.9"]!]: "0.0.9",
   [HASHES["0.0.10"]!]: "0.0.10",
   [HASHES["0.0.11"]!]: "0.0.11",
+  //@ts-ignore
+  [HASHES["0.0.11b"]!]: "0.0.11",
   [HASHES["0.1.1"]!]: "0.1.1",
   [HASHES["0.3.0"]!]: "0.3.0",
   [HASHES["0.3.1"]!]: "0.3.1",
   [HASHES["0.3.2"]!]: "0.3.2",
+  [HASHES["0.3.3"]!]: "0.3.3",
 };
 
 async function fetchVersion(
@@ -68,7 +75,9 @@ async function fetchVersion(
         ([{ typeHash, codeHash }]: {
           typeHash: number;
           codeHash: number;
-        }[]) => VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version"
+        }[]) => {
+          return VERSION_HASH[`${typeHash}:${codeHash}`] ?? "unknown version";
+        }
       );
 
     return dispatch[version] ?? "unknown version";
