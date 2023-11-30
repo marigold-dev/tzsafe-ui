@@ -2,17 +2,19 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { decodeData } from "../pages/[walletAddress]/beacon";
+import { connectWallet } from "../utils/connectWallet";
 import { p2pData } from "../versioned/interface";
 import { hasTzip27Support } from "../versioned/util";
 import Select from "./Select";
 import Spinner from "./Spinner";
+import LoginButton from "./loginButton";
 
 enum State {
   INITIAL,
-  NO_AVAILABLE_WALLET,
   LOADING,
   AUTHORIZED,
   REFUSED,
+  LOGIN,
   ERROR,
 }
 
@@ -24,6 +26,8 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [error, setError] = useState<undefined | string>();
 
   const options = useMemo(() => {
+    if (!state.address) return [];
+
     return Object.keys(state.contracts).flatMap(address => {
       if (!hasTzip27Support(state.contracts[address].version)) return [];
 
@@ -35,7 +39,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
         },
       ];
     });
-  }, [state.contracts]);
+  }, [state.contracts, state.address]);
 
   const [selectedWallet, setSelectedWallet] = useState<
     { id: string; value: string; label: string } | undefined
@@ -44,7 +48,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [currentState, setCurrentState] = useState(() => State.LOADING);
 
   useEffect(() => {
-    if (!state.p2pClient) return;
+    if (!state.p2pClient || !state.attemptedInitialLogin) return;
 
     try {
       const decoded = decodeData(data);
@@ -52,9 +56,12 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       setParsedData(decoded);
 
       state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
-        setCurrentState(
-          options.length === 0 ? State.NO_AVAILABLE_WALLET : State.INITIAL
-        );
+        if (state.attemptedInitialLogin && !state.address) {
+          setCurrentState(State.LOGIN);
+          return;
+        }
+
+        setCurrentState(State.INITIAL);
       });
 
       state.p2pClient!.addPeer(decoded);
@@ -62,7 +69,13 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       setError((e as Error).message);
       setCurrentState(State.ERROR);
     }
-  }, [data, state.p2pClient]);
+  }, [data, state.p2pClient, state.attemptedInitialLogin]);
+
+  useEffect(() => {
+    if (currentState === State.LOGIN && !!state.address) {
+      setCurrentState(State.INITIAL);
+    }
+  }, [state.address]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
@@ -80,6 +93,32 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               );
 
             case State.INITIAL:
+              if (options.length === 0) {
+                return (
+                  <>
+                    <h1 className="text-center text-lg font-medium">
+                      You don{"'"}t have any wallet that is compatible with
+                      Tzip27
+                    </h1>
+                    <p className="mt-2 text-center text-sm text-zinc-400">
+                      Please create or import a wallet before trying to connect
+                      with Beacon
+                    </p>
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                        onClick={() => {
+                          state.p2pClient?.refusePermission();
+                          onEnd();
+                        }}
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </>
+                );
+              }
+
               return (
                 <>
                   <div className="w-full">
@@ -150,29 +189,6 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                   </div>
                 </>
               );
-            case State.NO_AVAILABLE_WALLET:
-              return (
-                <>
-                  <h1 className="text-center text-lg font-medium">
-                    You don{"'"}t have any wallet that is compatible with Tzip27
-                  </h1>
-                  <p className="mt-2 text-center text-sm text-zinc-400">
-                    Please create or import a wallet before trying to connect
-                    with Beacon
-                  </p>
-                  <div className="mt-4 flex justify-center">
-                    <button
-                      className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={() => {
-                        state.p2pClient?.refusePermission();
-                        onEnd();
-                      }}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </>
-              );
 
             case State.REFUSED:
               return (
@@ -208,10 +224,43 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                 </>
               );
 
+            case State.LOGIN:
+              return (
+                <>
+                  <h1 className="text-center text-lg font-medium">
+                    Login to your wallet
+                  </h1>
+                  <div className="mt-4 flex w-full items-center justify-center space-x-4">
+                    <button
+                      className="rounded border bg-transparent px-4 py-2 font-medium text-white "
+                      onClick={() => {
+                        state.p2pClient?.refusePermission();
+                        onEnd();
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await connectWallet(state, dispatch);
+                      }}
+                      type="button"
+                      className={`rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 ${
+                        !state.beaconWallet
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }`}
+                    >
+                      Connect{" "}
+                    </button>
+                  </div>
+                </>
+              );
             case State.ERROR:
               return (
                 <>
                   <h1 className="text-lg font-medium">An error occured</h1>
+                  <p>{error}</p>
                   <div className="mt-4">
                     <button
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"

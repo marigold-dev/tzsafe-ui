@@ -41,6 +41,8 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   useEffect(() => {
+    if (!path) return;
+
     const queryParams = new URLSearchParams(window.location.search);
 
     const isPairing = queryParams.has("type") && queryParams.has("data");
@@ -48,8 +50,6 @@ export default function App({ Component, pageProps }: AppProps) {
     if (isPairing) {
       setData(queryParams.get("data")!);
     }
-
-    if (!path) return;
 
     const contracts = Object.keys(state.contracts);
 
