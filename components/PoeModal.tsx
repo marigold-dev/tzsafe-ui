@@ -14,6 +14,7 @@ import { Schema } from "@taquito/michelson-encoder";
 import { tzip16 } from "@taquito/tzip16";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
+import { usePathname } from "next/navigation";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
@@ -66,6 +67,7 @@ export const transferToProposalContent = (
 const PoeModal = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+  const path = usePathname();
 
   const walletTokens = useWalletTokens();
   const [currentMetadata, setCurrentMetadata] = useState<
@@ -562,6 +564,13 @@ const PoeModal = () => {
                             if (timeoutAndHash[0]) {
                               setTransactionLoading(false);
                               return;
+                            }
+
+                            if (
+                              path?.endsWith("proposals") &&
+                              address === state.currentContract
+                            ) {
+                              dispatch({ type: "refreshProposals" });
                             }
                           } catch (e) {
                             state.p2pClient?.abortRequest(
