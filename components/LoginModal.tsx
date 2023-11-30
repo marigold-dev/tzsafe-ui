@@ -3,6 +3,7 @@ import { Event } from "../context/P2PClient";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { decodeData } from "../pages/[walletAddress]/beacon";
 import { connectWallet } from "../utils/connectWallet";
+import { signers } from "../versioned/apis";
 import { p2pData } from "../versioned/interface";
 import { hasTzip27Support } from "../versioned/util";
 import Select from "./Select";
@@ -30,6 +31,9 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
 
     return Object.keys(state.contracts).flatMap(address => {
       if (!hasTzip27Support(state.contracts[address].version)) return [];
+
+      if (!signers(state.contracts[address]).includes(state.address!))
+        return [];
 
       return [
         {
