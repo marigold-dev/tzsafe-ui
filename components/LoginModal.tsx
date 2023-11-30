@@ -62,10 +62,15 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
         if (state.attemptedInitialLogin && !state.address) {
           setCurrentState(State.LOGIN);
-          return;
+        } else if (
+          decoded.name.toLowerCase().includes("tzsafe") ||
+          decoded.appUrl.toLowerCase().includes("tzsafe")
+        ) {
+          setError("TzSafe can't pair with itself for now");
+          setCurrentState(State.ERROR);
+        } else {
+          setCurrentState(State.INITIAL);
         }
-
-        setCurrentState(State.INITIAL);
       });
 
       state.p2pClient!.addPeer(decoded);
@@ -232,7 +237,8 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               return (
                 <>
                   <h1 className="text-center text-lg font-medium">
-                    Login to your wallet
+                    You need to connect first before establishing a connection
+                    with the dApp
                   </h1>
                   <div className="mt-4 flex w-full items-center justify-center space-x-4">
                     <button
@@ -268,7 +274,10 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                   <div className="mt-4">
                     <button
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={onEnd}
+                      onClick={async () => {
+                        await state.p2pClient?.refusePermission();
+                        onEnd();
+                      }}
                     >
                       Close
                     </button>
