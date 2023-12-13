@@ -123,47 +123,45 @@ const TopUpPage = () => {
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {PREFERED_NETWORK !== NetworkType.MAINNET && (
-            <div>
-              <h2 className="text-xl text-white">Buy Tez</h2>
-              <p className="mt-2 font-light text-zinc-200">
-                Our provider {"doesn't"} support transferring to Tezos contract
-                yet. Therefore, after the transaction succeeds, we will
-                automatically create a transaction from your wallet to your
-                TzSafe wallet
-              </p>
-              <div className="flex w-full justify-center">
-                <button
-                  className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                  onClick={() => {
-                    wertWidgetRef.current.mount();
-                    setError(undefined);
-                    setIsLoading(false);
-                    setIsSuccess(false);
-                  }}
-                >
-                  Buy
-                </button>
-              </div>
-              <p className="mt-2">
-                {!!error ? (
-                  <span className="text-red-600">
-                    {error}. All the funds are currently in{" "}
-                    <Alias address={state.currentContract ?? ""} />, you can
-                    transfer them manually to TzSafe
-                  </span>
-                ) : isLoading ? (
-                  <Spinner />
-                ) : isSuccess ? (
-                  <span className="font-light text-white">
-                    Transferred the funds from{" "}
-                    <Alias address={state.address ?? ""} disabled /> to{" "}
-                    <Alias disabled address={state.currentContract ?? ""} />{" "}
-                  </span>
-                ) : null}
-              </p>
+          <div>
+            <h2 className="text-xl text-white">Buy Tez</h2>
+            <p className="mt-2 font-light text-zinc-200">
+              Our provider {"doesn't"} support transferring to Tezos contract
+              yet. Therefore, after the transaction succeeds, we will
+              automatically create a transaction from your wallet to your TzSafe
+              wallet
+            </p>
+            <div className="flex w-full justify-center">
+              <button
+                className="mt-4 rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
+                onClick={() => {
+                  wertWidgetRef.current.mount();
+                  setError(undefined);
+                  setIsLoading(false);
+                  setIsSuccess(false);
+                }}
+              >
+                Buy
+              </button>
             </div>
-          )}
+            <p className="mt-2">
+              {!!error ? (
+                <span className="text-red-600">
+                  {error}. All the funds are currently in{" "}
+                  <Alias address={state.currentContract ?? ""} />, you can
+                  transfer them manually to TzSafe
+                </span>
+              ) : isLoading ? (
+                <Spinner />
+              ) : isSuccess ? (
+                <span className="font-light text-white">
+                  Transferred the funds from{" "}
+                  <Alias address={state.address ?? ""} disabled /> to{" "}
+                  <Alias disabled address={state.currentContract ?? ""} />{" "}
+                </span>
+              ) : null}
+            </p>
+          </div>
           {!state.currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
