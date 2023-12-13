@@ -13,6 +13,15 @@ export const PREFERED_NETWORK: NetworkType =
     ? NetworkType.GHOSTNET
     : NetworkType.CUSTOM;
 
+export const WERT_URL =
+  PREFERED_NETWORK === NetworkType.MAINNET
+    ? "https://widget.wert.io"
+    : "https://sandbox.wert.io";
+export const WERT_ID =
+  PREFERED_NETWORK === NetworkType.MAINNET
+    ? "01HHEV4BKRFT2BRPRMDH74HSQQ"
+    : "01HBARVR2HGGY24WC52R4J89R8";
+
 export const THUMBNAIL_URL = "https://display-thumbs.dipdup.net";
 
 export const DEFAULT_TIMEOUT = 60000;

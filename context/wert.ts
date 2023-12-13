@@ -1,4 +1,5 @@
 import WertWidget from "@wert-io/widget-initializer";
+import { WERT_ID, WERT_URL } from "./config";
 
 export const makeWertWidget = ({
   wallet,
@@ -9,8 +10,8 @@ export const makeWertWidget = ({
 }) =>
   new WertWidget({
     address: wallet,
-    partner_id: "01HBARVR2HGGY24WC52R4J89R8",
-    origin: "https://sandbox.wert.io",
+    partner_id: WERT_ID,
+    origin: WERT_URL,
     network: "ghostnet",
     theme: "dark",
     commodities: '[{"commodity":"XTZ","network":"ghostnet"}]',
