@@ -3,16 +3,17 @@ import { Parser, emitMicheline } from "@taquito/michel-codec";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { LambdaType, parseLambda } from "../context/parseLambda";
+import { Dapp } from "../dapps/identifyDapp";
+import { tezosDomainsContracts } from "../dapps/tezosDomains";
 import { proposalContent, version } from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
-import FA1_2 from "./FA1_2";
 import Tooltip from "./Tooltip";
 
-type data = {
+export type data = {
   type:
     | "UpdateThreshold" // legacy code
     | "UpdateProposalDuration"
@@ -417,7 +418,8 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
 
 export const labelOfProposalContentLambda = (
   version: version,
-  content: proposalContent
+  content: proposalContent,
+  dapp: Dapp | undefined
 ) => {
   if ("changeThreshold" in content) {
     return "Update threshold";
@@ -434,7 +436,7 @@ export const labelOfProposalContentLambda = (
   } else if ("executeLambda" in content) {
     const parser = new Parser();
 
-    const [type, _] = parseLambda(
+    const [type, data] = parseLambda(
       version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
@@ -442,21 +444,44 @@ export const labelOfProposalContentLambda = (
         : content.executeLambda.content ?? null
     );
 
-    return type === LambdaType.FA2
-      ? "Transfer FA2"
-      : type === LambdaType.FA1_2_APPROVE
-      ? "Approve FA1.2"
-      : type === LambdaType.FA1_2_TRANSFER
-      ? "Transfer FA1.2"
-      : type === LambdaType.DELEGATE
-      ? "Delegate"
-      : type === LambdaType.UNDELEGATE
-      ? "Undelegate"
-      : type === LambdaType.CONTRACT_EXECUTION
-      ? "Execute contract"
-      : type === LambdaType.POE
-      ? "Proof of Event"
-      : "Execute lambda";
+    if (!!dapp) {
+      switch (dapp) {
+        case Dapp.TEZOS_DOMAINS: {
+          switch (data?.contractAddress) {
+            case tezosDomainsContracts.COMMIT_ADDRESS.mainnet:
+            case tezosDomainsContracts.COMMIT_ADDRESS.ghostnet:
+              return "Commit to buy a domain";
+            case tezosDomainsContracts.BUY_ADDRESS.mainnet:
+            case tezosDomainsContracts.BUY_ADDRESS.ghostnet:
+              return "Buy a domain";
+            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet:
+            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.ghostnet:
+              return "Claim reverse record";
+            default:
+              return "Interaction with Tezos Domains";
+          }
+        }
+        default: {
+          throw new Error("Unreachable");
+        }
+      }
+    } else {
+      return type === LambdaType.FA2
+        ? "Transfer FA2"
+        : type === LambdaType.FA1_2_APPROVE
+        ? "Approve FA1.2"
+        : type === LambdaType.FA1_2_TRANSFER
+        ? "Transfer FA1.2"
+        : type === LambdaType.DELEGATE
+        ? "Delegate"
+        : type === LambdaType.UNDELEGATE
+        ? "Undelegate"
+        : type === LambdaType.CONTRACT_EXECUTION
+        ? "Execute contract"
+        : type === LambdaType.POE
+        ? "Proof of Event"
+        : "Execute lambda";
+    }
   }
 };
 

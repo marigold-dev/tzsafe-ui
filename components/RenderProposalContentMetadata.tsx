@@ -1,5 +1,7 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
+import { Dapp } from "../dapps/identifyDapp";
+import { tezosDomainsContracts } from "../dapps/tezosDomains";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
@@ -327,7 +329,10 @@ const RenderProposalContentMetadata = ({
   );
 };
 
-export const labelOfProposalContentMetadata = (content: proposalContent) => {
+export const labelOfProposalContentMetadata = (
+  content: proposalContent,
+  dapp: Dapp | undefined
+) => {
   if ("changeThreshold" in content) {
     return "Update threshold";
   } else if ("adjustEffectivePeriod" in content) {
@@ -343,27 +348,50 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
 
-    return (metadata.entrypoint === "%transfer" &&
-      Array.isArray(metadata.payload) &&
-      isFa2(metadata.payload)) ||
-      (!!metadata.meta && metadata.meta.includes("fa2_address"))
-      ? "Transfer FA2"
-      : !!metadata.meta && metadata.meta.includes("challengeId")
-      ? "Proof of Event"
-      : !!metadata.meta &&
-        metadata.meta.includes("fa1_2_address") &&
-        metadata.meta.includes("spender_address")
-      ? "Approve FA1.2"
-      : !!metadata.meta && metadata.meta.includes("fa1_2_address")
-      ? "Transfer FA1.2"
-      : !!metadata.meta && metadata.meta.includes("old_baker_address")
-      ? "Undelegate"
-      : !!metadata.meta && metadata.meta.includes("baker_address")
-      ? "Delegate"
-      : metadata.contract_address ||
-        (!!metadata.meta && metadata.meta?.includes("contract_addr"))
-      ? "Execute contract"
-      : "Execute lambda";
+    if (!!dapp) {
+      const address =
+        metadata.contract_address ?? JSON.parse(metadata.meta).contract_addr;
+
+      switch (dapp) {
+        case Dapp.TEZOS_DOMAINS: {
+          switch (address) {
+            case tezosDomainsContracts.COMMIT_ADDRESS.mainnet:
+            case tezosDomainsContracts.COMMIT_ADDRESS.ghostnet:
+              return "Commit to buy a domain";
+            case tezosDomainsContracts.BUY_ADDRESS.mainnet:
+            case tezosDomainsContracts.BUY_ADDRESS.ghostnet:
+              return "Buy a domain";
+            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet:
+            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.ghostnet:
+              return "Claim reverse record";
+            default:
+              return "Interaction with Tezos Domains";
+          }
+        }
+      }
+    } else {
+      return (metadata.entrypoint === "%transfer" &&
+        Array.isArray(metadata.payload) &&
+        isFa2(metadata.payload)) ||
+        (!!metadata.meta && metadata.meta.includes("fa2_address"))
+        ? "Transfer FA2"
+        : !!metadata.meta && metadata.meta.includes("challengeId")
+        ? "Proof of Event"
+        : !!metadata.meta &&
+          metadata.meta.includes("fa1_2_address") &&
+          metadata.meta.includes("spender_address")
+        ? "Approve FA1.2"
+        : !!metadata.meta && metadata.meta.includes("fa1_2_address")
+        ? "Transfer FA1.2"
+        : !!metadata.meta && metadata.meta.includes("old_baker_address")
+        ? "Undelegate"
+        : !!metadata.meta && metadata.meta.includes("baker_address")
+        ? "Delegate"
+        : metadata.contract_address ||
+          (!!metadata.meta && metadata.meta?.includes("contract_addr"))
+        ? "Execute contract"
+        : "Execute lambda";
+    }
   }
 };
 
