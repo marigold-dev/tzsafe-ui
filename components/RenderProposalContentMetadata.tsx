@@ -471,7 +471,7 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
   } else if ("transfer" in content) {
     return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
   } else if ("add_or_update_metadata" in content) {
-    return "Updata Metadata(TZIP16)";
+    return "Update Metadata(TZIP16)";
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {
