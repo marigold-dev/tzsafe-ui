@@ -114,7 +114,6 @@ export const contentToData = (
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
   } else if ("add_or_update_metadata" in content) {
-    console.log(char2Bytes(content.add_or_update_metadata.value));
     data = {
       ...data,
       type: "AddOrUpdateMetadata",
