@@ -176,12 +176,7 @@ const RenderProposalContentMetadata = ({
           const tokenMetadata = token?.token.metadata;
           let imageUri = tokenMetadata?.thumbnailUri;
 
-          if (
-            imageUri === undefined &&
-            tokenMetadata !== undefined &&
-            "displayUri" in tokenMetadata &&
-            tokenMetadata.displayUri !== undefined
-          )
+          if (!imageUri && tokenMetadata && "displayUri" in tokenMetadata)
             imageUri = tokenMetadata.displayUri;
 
           imageUri = toImageUri(imageUri);
@@ -236,12 +231,7 @@ const RenderProposalContentMetadata = ({
               const tokenMetadata = token?.token.metadata;
               let imageUri = tokenMetadata?.thumbnailUri;
 
-              if (
-                imageUri === undefined &&
-                tokenMetadata !== undefined &&
-                "displayUri" in tokenMetadata &&
-                tokenMetadata.displayUri !== undefined
-              )
+              if (!imageUri && tokenMetadata && "displayUri" in tokenMetadata)
                 imageUri = tokenMetadata.displayUri;
 
               imageUri = toImageUri(imageUri);

@@ -229,7 +229,7 @@ export const contentToData = (
         entrypoints: undefined,
         params: JSON.stringify(
           lambdaData[0].txs.map(({ to_, token_id, amount }) => {
-            const token = walletTokens.find(
+            const token: walletToken | undefined = walletTokens.find(
               token =>
                 token.token.contract.address === lambda?.contractAddress &&
                 token.token.tokenId === token_id.toString()
@@ -237,12 +237,7 @@ export const contentToData = (
             const metadata = token?.token.metadata;
             let imageUri = metadata?.thumbnailUri;
 
-            if (
-              imageUri === undefined &&
-              metadata !== undefined &&
-              "displayUri" in metadata &&
-              metadata.displayUri !== undefined
-            )
+            if (!imageUri && metadata && "displayUri" in metadata)
               imageUri = metadata.displayUri;
 
             imageUri = toImageUri(imageUri);
