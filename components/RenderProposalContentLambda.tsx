@@ -4,13 +4,13 @@ import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import FA2Display from "../components/FA2Display";
-import { THUMBNAIL_URL } from "../context/config";
 import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent, version } from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
 import { hexToAscii } from "../utils/bytes";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
+import { toImageUri } from "../utils/tokenImage";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import FA1_2Display from "./FA1_2Display";
@@ -185,9 +185,7 @@ export const contentToData = (
       );
 
       let imageUri = token?.token.metadata.thumbnailUri;
-      imageUri = imageUri?.includes("ipfs")
-        ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
-        : imageUri;
+      imageUri = toImageUri(imageUri);
       data = {
         metadata: undefined,
         type:
@@ -247,9 +245,7 @@ export const contentToData = (
             )
               imageUri = metadata.displayUri;
 
-            imageUri = imageUri?.includes("ipfs")
-              ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
-              : imageUri;
+            imageUri = toImageUri(imageUri);
 
             return {
               fa2_address:
@@ -361,10 +357,13 @@ const RenderProposalContentLambda = ({
   data: data;
   isOpenToken?: boolean;
 }) => {
-  const [hasParam, setHasParam] = useState(() =>  isOpenToken &&
-    (data.type == "TransferFA1_2" ||
-      data.type == "ApproveFA1_2" ||
-      data.type == "TransferFA2"));
+  const [hasParam, setHasParam] = useState(
+    () =>
+      isOpenToken &&
+      (data.type == "TransferFA1_2" ||
+        data.type == "ApproveFA1_2" ||
+        data.type == "TransferFA2")
+  );
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button

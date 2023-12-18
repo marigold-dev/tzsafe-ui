@@ -1,9 +1,9 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-import { THUMBNAIL_URL } from "../context/config";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
+import { toImageUri } from "../utils/tokenImage";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import FA1_2Display from "./FA1_2Display";
@@ -134,9 +134,7 @@ const RenderProposalContentMetadata = ({
       );
 
       let imageUri = token?.token.metadata.thumbnailUri;
-      imageUri = imageUri?.includes("ipfs")
-        ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
-        : imageUri;
+      imageUri = toImageUri(imageUri);
 
       data = {
         metadata: undefined,
@@ -186,9 +184,7 @@ const RenderProposalContentMetadata = ({
           )
             imageUri = tokenMetadata.displayUri;
 
-          imageUri = imageUri?.includes("ipfs")
-            ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
-            : imageUri;
+          imageUri = toImageUri(imageUri);
           v.imageUri = imageUri;
           v.name = token?.token.metadata.name;
           v.amount = v.amount.toString();
@@ -248,9 +244,7 @@ const RenderProposalContentMetadata = ({
               )
                 imageUri = tokenMetadata.displayUri;
 
-              imageUri = imageUri?.includes("ipfs")
-                ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
-                : imageUri;
+              imageUri = toImageUri(imageUri);
 
               return {
                 fa2_address: metadata.contract_address,
