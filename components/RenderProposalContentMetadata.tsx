@@ -1,13 +1,33 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
+import { THUMBNAIL_URL } from "../context/config";
 import { proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
+import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
+import FA1_2Display from "./FA1_2Display";
+import FA2Display from "./FA2Display";
 import Tooltip from "./Tooltip";
 
 type data = {
   label: undefined | string;
+  type:
+    | "UpdateThreshold" // legacy code
+    | "UpdateProposalDuration"
+    | "AddSigner"
+    | "RemoveSigner"
+    | "Transfer"
+    | "Execute"
+    | "ExecuteLambda"
+    | "ExecuteContract"
+    | "TransferFA2"
+    | "TransferFA1_2"
+    | "ApproveFA1_2"
+    | "Delegate"
+    | "UnDelegate"
+    | "Poe"
+    | "AddOrUpdateMetadata";
   metadata: undefined | string;
   amount: undefined | string;
   addresses: undefined | string[];
@@ -27,13 +47,16 @@ const isFa2 = (payload: any[]) => {
 
 const RenderProposalContentMetadata = ({
   content,
+  walletTokens,
+  isOpenToken,
 }: {
   content: proposalContent;
+  walletTokens: walletToken[];
+  isOpenToken?: boolean;
 }) => {
-  const [hasParam, setHasParam] = useState(false);
-
   let data: data = {
     label: undefined,
+    type: "Transfer",
     metadata: undefined,
     amount: undefined,
     addresses: undefined,
@@ -45,6 +68,7 @@ const RenderProposalContentMetadata = ({
     data = {
       ...data,
       label: "Update threshold",
+      type: "UpdateThreshold",
       params: content.changeThreshold.toString(),
     };
   } else if ("adjustEffectivePeriod" in content) {
@@ -52,18 +76,21 @@ const RenderProposalContentMetadata = ({
       ...data,
       label: "Update proposal duration",
       params: content.adjustEffectivePeriod.toString(),
+      type: "UpdateProposalDuration",
     };
   } else if ("addOwners" in content) {
     data = {
       ...data,
       label: `Add signer${content.addOwners.length > 1 ? "s" : ""}`,
       addresses: content.addOwners,
+      type: "AddSigner",
     };
   } else if ("removeOwners" in content) {
     data = {
       ...data,
       label: `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`,
       addresses: content.removeOwners,
+      type: "RemoveSigner",
     };
   } else if ("transfer" in content) {
     data = {
@@ -71,12 +98,14 @@ const RenderProposalContentMetadata = ({
       label: "Transfer",
       addresses: [content.transfer.destination],
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
+      type: "Transfer",
     };
   } else if ("execute" in content) {
     data = {
       ...data,
       label: "Execute",
       metadata: content.execute,
+      type: "ExecuteContract",
     };
   } else if ("executeLambda" in content) {
     const metadata = JSON.parse(content.executeLambda.metadata ?? "{}");
@@ -96,9 +125,18 @@ const RenderProposalContentMetadata = ({
           Array.isArray(metadata.lambda) || typeof metadata.lambda === "object"
             ? JSON.stringify(metadata.lambda)
             : metadata.lambda,
+        type: "ExecuteLambda",
       };
     } else if (metadata?.meta?.includes("fa1_2_address")) {
       const contractData = JSON.parse(metadata.meta).payload;
+      const token = walletTokens.find(
+        token => token.token.contract.address === contractData.fa1_2_address
+      );
+
+      let imageUri = token?.token.metadata.thumbnailUri;
+      imageUri = imageUri?.includes("ipfs")
+        ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
+        : imageUri;
 
       data = {
         metadata: undefined,
@@ -115,17 +153,58 @@ const RenderProposalContentMetadata = ({
         params: JSON.stringify({
           name: contractData.name,
           fa1_2_address: contractData.fa1_2_address,
+          imageUri,
         }),
+        type: !!contractData.spender_address ? "ApproveFA1_2" : "TransferFA1_2",
       };
     } else if (metadata?.meta?.includes("fa2_address")) {
       const contractData = JSON.parse(metadata.meta);
+      const payload = contractData.payload;
+
+      if (Array.isArray(payload)) {
+        payload.map((v: any) => {
+          if (
+            v === undefined ||
+            !("token_id" in v) ||
+            !("fa2_address" in v) ||
+            !("amount" in v)
+          )
+            return v;
+          const token = walletTokens.find(
+            token =>
+              token.token.contract.address === v.fa2_address &&
+              token.token.tokenId === v.token_id.toString()
+          );
+          const tokenMetadata = token?.token.metadata;
+          let imageUri = tokenMetadata?.thumbnailUri;
+
+          if (
+            imageUri === undefined &&
+            tokenMetadata !== undefined &&
+            "displayUri" in tokenMetadata &&
+            tokenMetadata.displayUri !== undefined
+          )
+            imageUri = tokenMetadata.displayUri;
+
+          imageUri = imageUri?.includes("ipfs")
+            ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
+            : imageUri;
+          v.imageUri = imageUri;
+          v.name = token?.token.metadata.name;
+          v.amount = v.amount.toString();
+          // the "to" is incorrrect in metadata, users have to go block explorer to check.
+          v.to = "please refer to the block explorer";
+          return v;
+        });
+      }
       data = {
         label: "Transfer FA2",
         metadata: undefined,
-        amount: contractData.amount,
-        addresses: [contractData.contract_addr],
+        amount: undefined,
+        addresses: undefined,
         entrypoints: undefined,
-        params: JSON.stringify(contractData.payload),
+        params: JSON.stringify(payload),
+        type: "TransferFA2",
       };
     } else if (
       metadata.entrypoint === "%transfer" &&
@@ -152,15 +231,39 @@ const RenderProposalContentMetadata = ({
               token_id: number;
               amount: number;
               name?: string;
-            }) => ({
-              fa2_address: metadata.contract_address,
-              name,
-              token_id,
-              to: to_,
-              amount,
-            })
+            }) => {
+              const token = walletTokens.find(
+                token =>
+                  token.token.contract.address === metadata.contractAddress &&
+                  token.token.tokenId === token_id.toString()
+              );
+              const tokenMetadata = token?.token.metadata;
+              let imageUri = tokenMetadata?.thumbnailUri;
+
+              if (
+                imageUri === undefined &&
+                tokenMetadata !== undefined &&
+                "displayUri" in tokenMetadata &&
+                tokenMetadata.displayUri !== undefined
+              )
+                imageUri = tokenMetadata.displayUri;
+
+              imageUri = imageUri?.includes("ipfs")
+                ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
+                : imageUri;
+
+              return {
+                fa2_address: metadata.contract_address,
+                name,
+                token_id,
+                to: to_,
+                amount: amount.toString(),
+                imageUri,
+              };
+            }
           )
         ),
+        type: "TransferFA2",
       };
     } else if (metadata?.meta?.includes("baker_address")) {
       const contractData = JSON.parse(metadata.meta);
@@ -178,6 +281,7 @@ const RenderProposalContentMetadata = ({
         ],
         entrypoints: undefined,
         params: undefined,
+        type: "Delegate",
       };
     }
     // This condition handles some legacy code so old wallets don't crash
@@ -204,6 +308,7 @@ const RenderProposalContentMetadata = ({
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        type: "ExecuteLambda",
       };
     } else {
       const [meta, amount, address, entrypoint, arg] = (() => {
@@ -226,9 +331,20 @@ const RenderProposalContentMetadata = ({
           typeof arg === "object" || Array.isArray(arg)
             ? JSON.stringify(arg)
             : arg,
+        type: "ExecuteContract",
       };
     }
   }
+
+  let defaultOpen = false;
+  if (
+    isOpenToken &&
+    (data.type == "TransferFA1_2" ||
+      data.type == "ApproveFA1_2" ||
+      data.type == "TransferFA2")
+  )
+    defaultOpen = true;
+  const [hasParam, setHasParam] = useState(defaultOpen);
 
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
@@ -304,14 +420,20 @@ const RenderProposalContentMetadata = ({
             !data.params ? "text-zinc-500" : ""
           } justify-self-end text-right`}
         >
-          <p className="font-medium text-zinc-500 lg:hidden">Params/Token</p>
+          <p className="font-medium text-zinc-500 lg:hidden">Params/Tokens</p>
           <div>
             {!!data.params
-              ? `${
-                  data.params.length < 7
-                    ? data.params
-                    : data.params.substring(0, 7) + "..."
-                }`
+              ? data.type == "TransferFA2" ||
+                data.type == "ApproveFA1_2" ||
+                data.type == "TransferFA1_2"
+                ? hasParam
+                  ? "click[+]"
+                  : "click[-]"
+                : `${
+                    data.params.length < 7
+                      ? data.params
+                      : data.params.substring(0, 7) + "..."
+                  }`
               : "-"}
           </div>
         </span>
@@ -321,7 +443,17 @@ const RenderProposalContentMetadata = ({
           hasParam ? "block" : "hidden"
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
-        {data.params}
+        {!!data.params ? (
+          data.type == "TransferFA2" ? (
+            <FA2Display data={data.params} />
+          ) : data.type == "TransferFA1_2" || data.type == "ApproveFA1_2" ? (
+            <FA1_2Display data={data.params} />
+          ) : (
+            data.params
+          )
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );
@@ -338,6 +470,8 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
     return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
   } else if ("transfer" in content) {
     return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
+  } else if ("add_or_update_metadata" in content) {
+    return "Updata Metadata(TZIP16)";
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {

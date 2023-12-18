@@ -1,15 +1,19 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { Parser, emitMicheline } from "@taquito/michel-codec";
+import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
+import FA2Display from "../components/FA2Display";
+import { THUMBNAIL_URL } from "../context/config";
 import { LambdaType, parseLambda } from "../context/parseLambda";
 import { proposalContent, version } from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
+import { hexToAscii } from "../utils/bytes";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
-import FA1_2 from "./FA1_2";
+import FA1_2Display from "./FA1_2Display";
 import Tooltip from "./Tooltip";
 
 type data = {
@@ -27,7 +31,8 @@ type data = {
     | "ApproveFA1_2"
     | "Delegate"
     | "UnDelegate"
-    | "Poe";
+    | "Poe"
+    | "AddOrUpdateMetadata";
   label: undefined | string;
   metadata: undefined | string;
   amount: undefined | string;
@@ -108,6 +113,17 @@ export const contentToData = (
       addresses: [content.transfer.destination],
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
+  } else if ("add_or_update_metadata" in content) {
+    console.log(char2Bytes(content.add_or_update_metadata.value));
+    data = {
+      ...data,
+      type: "AddOrUpdateMetadata",
+      label: "Contract Metadata (TZIP16)",
+      params: JSON.stringify({
+        key: content.add_or_update_metadata.key,
+        value: hexToAscii(content.add_or_update_metadata.value),
+      }),
+    };
   } else if ("execute" in content) {
     data = {
       ...data,
@@ -169,6 +185,10 @@ export const contentToData = (
         token => token.token.contract.address === lambda?.contractAddress
       );
 
+      let imageUri = token?.token.metadata.thumbnailUri;
+      imageUri = imageUri?.includes("ipfs")
+        ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
+        : imageUri;
       data = {
         metadata: undefined,
         type:
@@ -193,6 +213,7 @@ export const contentToData = (
         params: JSON.stringify({
           name: token?.token.metadata.name,
           fa1_2_address: lambda?.contractAddress,
+          imageUri,
         }),
         rawParams: undefined,
       };
@@ -202,10 +223,6 @@ export const contentToData = (
         txs: { to_: string; token_id: number; amount: number }[];
       }[];
 
-      const token = walletTokens.find(
-        token => token.token.contract.address === lambda?.contractAddress
-      );
-
       data = {
         type: "TransferFA2",
         label: "Transfer FA2",
@@ -214,18 +231,41 @@ export const contentToData = (
         addresses: undefined,
         entrypoints: undefined,
         params: JSON.stringify(
-          lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
-            fa2_address:
-              token?.token.contract.address ?? lambda?.contractAddress,
-            name: token?.token.metadata.name,
-            token_id,
-            to: to_,
-            amount: !!token?.token.metadata.decimals
-              ? BigNumber(amount)
-                  .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-                  .toString()
-              : amount.toString() + "*",
-          }))
+          lambdaData[0].txs.map(({ to_, token_id, amount }) => {
+            const token = walletTokens.find(
+              token =>
+                token.token.contract.address === lambda?.contractAddress &&
+                token.token.tokenId === token_id.toString()
+            );
+            const metadata = token?.token.metadata;
+            let imageUri = metadata?.thumbnailUri;
+
+            if (
+              imageUri === undefined &&
+              metadata !== undefined &&
+              "displayUri" in metadata &&
+              metadata.displayUri !== undefined
+            )
+              imageUri = metadata.displayUri;
+
+            imageUri = imageUri?.includes("ipfs")
+              ? `${THUMBNAIL_URL}/${imageUri.replace("ipfs://", "")}`
+              : imageUri;
+
+            return {
+              fa2_address:
+                token?.token.contract.address ?? lambda?.contractAddress,
+              name: token?.token.metadata.name,
+              token_id,
+              to: to_,
+              imageUri: imageUri,
+              amount: !!token?.token.metadata.decimals
+                ? BigNumber(amount)
+                    .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
+                    .toString()
+                : amount.toString() + "*",
+            };
+          })
         ),
         rawParams: undefined,
       };
@@ -315,9 +355,22 @@ export const contentToData = (
   return data;
 };
 
-const RenderProposalContentLambda = ({ data }: { data: data }) => {
-  const [hasParam, setHasParam] = useState(false);
-
+const RenderProposalContentLambda = ({
+  data,
+  isOpenToken: isOpenToken = false,
+}: {
+  data: data;
+  isOpenToken?: boolean;
+}) => {
+  let defaultOpen = false;
+  if (
+    isOpenToken &&
+    (data.type == "TransferFA1_2" ||
+      data.type == "ApproveFA1_2" ||
+      data.type == "TransferFA2")
+  )
+    defaultOpen = true;
+  const [hasParam, setHasParam] = useState(defaultOpen);
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
@@ -395,11 +448,17 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           <p className="font-medium text-zinc-500 lg:hidden">Params/Tokens</p>
           <div>
             {!!data.params
-              ? `${
-                  data.params.length < 7
-                    ? data.params
-                    : data.params.substring(0, 7) + "..."
-                }`
+              ? data.type == "TransferFA2" ||
+                data.type == "ApproveFA1_2" ||
+                data.type == "TransferFA1_2"
+                ? hasParam
+                  ? "click[+]"
+                  : "click[-]"
+                : `${
+                    data.params.length < 7
+                      ? data.params
+                      : data.params.substring(0, 7) + "..."
+                  }`
               : "-"}
           </div>
         </span>
@@ -409,7 +468,17 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           hasParam ? "block" : "hidden"
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
-        {data.params}
+        {!!data.params ? (
+          data.type == "TransferFA2" ? (
+            <FA2Display data={data.params} />
+          ) : data.type == "TransferFA1_2" || data.type == "ApproveFA1_2" ? (
+            <FA1_2Display data={data.params} />
+          ) : (
+            data.params
+          )
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );
