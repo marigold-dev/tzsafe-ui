@@ -347,9 +347,9 @@ abstract class Versioned {
         fields: [
           {
             field: "metadata",
-            label: "Metadata to save",
+            label: "Note to save",
             path: ".metadata",
-            placeholder: "Write your metadata here",
+            placeholder: "Write your note here",
             validate: (x?: string) => {
               return undefined;
             },

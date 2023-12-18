@@ -372,8 +372,8 @@ const RenderProposalContentMetadata = ({
           } w-auto justify-self-end text-right lg:w-auto lg:w-full lg:justify-self-start lg:text-left`}
         >
           <p className="flex justify-center font-medium text-zinc-500 lg:hidden">
-            Metadata
-            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+            Note
+            <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
               <InfoCircledIcon className="ml-2 h-4 w-4" />
             </Tooltip>
           </p>

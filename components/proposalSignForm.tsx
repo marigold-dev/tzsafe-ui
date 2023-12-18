@@ -226,8 +226,8 @@ function ProposalSignForm({
             <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
               <span>Function</span>
               <span className="flex items-center">
-                Metadata
-                <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                Note
+                <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
                   <InfoCircledIcon className="ml-2 h-4 w-4" />
                 </Tooltip>
               </span>
@@ -290,7 +290,7 @@ function ProposalSignForm({
                   <li className="mt-1">
                     {`We strongly advise that refrain from signing this proposal
                   unless you have a complete understanding of the potential
-                  consequences. Please be aware that the "Metadata" may not
+                  consequences. Please be aware that the "Note" may not
                   accurately reflect the actual behavior of the "Execute Lambda"
                   function. It is crucial to verify the behavior on the
                   "Param/Token."`}

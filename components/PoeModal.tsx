@@ -487,8 +487,8 @@ const PoeModal = () => {
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                           <span>Function</span>
                           <span className="flex items-center">
-                            Metadata
-                            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                            Note
+                            <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
                               <InfoCircledIcon className="ml-2 h-4 w-4" />
                             </Tooltip>
                           </span>
