@@ -199,9 +199,18 @@ const ProposalCard = ({
             {rows.map((v, i) => {
               // All the other types could be parsed, by the lambda
               return v.type === "ExecuteLambda" ? (
-                <RenderProposalContentMetadata key={i} content={content[i]} />
+                <RenderProposalContentMetadata
+                  key={i}
+                  content={content[i]}
+                  walletTokens={walletTokens}
+                  isOpenToken={i === 0}
+                />
               ) : (
-                <RenderProposalContentLambda key={i} data={v} />
+                <RenderProposalContentLambda
+                  key={i}
+                  data={v}
+                  isOpenToken={i === 0}
+                />
               );
             })}
           </div>

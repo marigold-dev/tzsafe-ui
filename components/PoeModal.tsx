@@ -501,7 +501,11 @@ const PoeModal = () => {
                         </div>
                         <div className="mt-2 space-y-4 font-light lg:space-y-2">
                           {rows.map((v, i) => (
-                            <RenderProposalContentLambda data={v} key={i} />
+                            <RenderProposalContentLambda
+                              key={i}
+                              data={v}
+                              isOpenToken={i === 0}
+                            />
                           ))}
                         </div>
                         {rows.some(
