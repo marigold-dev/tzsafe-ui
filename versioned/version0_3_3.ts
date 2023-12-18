@@ -340,6 +340,13 @@ class Version0_3_3 extends Versioned {
       return {
         adjustEffectivePeriod: content.adjust_effective_period,
       };
+    } else if ("add_or_update_metadata" in content) {
+      return {
+        add_or_update_metadata: {
+          key: content.add_or_update_metadata.key,
+          value: content.add_or_update_metadata.value,
+        },
+      };
     }
 
     throw new Error("unknown proposal");

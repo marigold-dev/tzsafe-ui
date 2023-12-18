@@ -5,6 +5,9 @@ type removeOwners = { removeOwners: string[] };
 type addOwners = { addOwners: string[] };
 type changeThreshold = { changeThreshold: number };
 type adjustExpirationPeriod = { adjustEffectivePeriod: number };
+type add_or_update_metadata = {
+  add_or_update_metadata: { key: string; value: string };
+};
 type proposalContent =
   | changeThreshold
   | adjustExpirationPeriod
@@ -12,7 +15,8 @@ type proposalContent =
   | removeOwners
   | transfer
   | execute
-  | lambda;
+  | lambda
+  | add_or_update_metadata;
 type mutezTransfer = {
   timestamp: string;
   amount: number; //mutez

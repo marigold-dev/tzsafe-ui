@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start --port 80",
     "lint": "next lint",
-    "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/",
+    "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/ test/",
     "prepare": "husky install",
     "dev:test": "vitest",
     "test": "vitest run",
@@ -38,6 +38,10 @@
     "eslint": "8.28.0",
     "eslint-config-next": "13.0.5",
     "formik": "2.4.1",
+    "fp-ts": "^2.16.1",
+    "io-fs": "^1.0.0",
+    "io-ts": "^2.2.21",
+    "jsdom": "^23.0.1",
     "luxon": "^3.2.1",
     "next": "13.1.6",
     "react": "18.2.0",
@@ -47,6 +51,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/luxon": "^3.2.0",
     "@vitejs/plugin-react": "^3.1.0",
@@ -59,6 +65,7 @@
     "prettier": "^2.8.4",
     "prettier-plugin-tailwindcss": "^0.2.3",
     "tailwindcss": "^3.2.4",
+    "vite": "^5.0.10",
     "vitest": "^0.29.8"
   }
 }
