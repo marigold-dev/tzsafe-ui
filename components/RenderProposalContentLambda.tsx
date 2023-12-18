@@ -361,15 +361,10 @@ const RenderProposalContentLambda = ({
   data: data;
   isOpenToken?: boolean;
 }) => {
-  let defaultOpen = false;
-  if (
-    isOpenToken &&
+  const [hasParam, setHasParam] = useState(() =>  isOpenToken &&
     (data.type == "TransferFA1_2" ||
       data.type == "ApproveFA1_2" ||
-      data.type == "TransferFA2")
-  )
-    defaultOpen = true;
-  const [hasParam, setHasParam] = useState(defaultOpen);
+      data.type == "TransferFA2"));
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
