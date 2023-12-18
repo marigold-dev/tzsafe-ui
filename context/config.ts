@@ -1,7 +1,6 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 
-export const RPC_URL =
-  process.env.NEXT_PUBLIC_RPC_URL ?? "https://ghostnet.tezos.marigold.dev/";
+export const RPC_URL = "https://ghostnet.ecadinfra.com/";
 export const TZKT_API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "https://api.ghostnet.tzkt.io";
 export const IPFS = "https://ipfs-proxy.gcp.marigold.dev";
