@@ -1,6 +1,5 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { Parser, emitMicheline } from "@taquito/michel-codec";
-import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import FA2Display from "../components/FA2Display";
