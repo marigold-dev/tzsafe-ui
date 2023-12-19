@@ -438,6 +438,8 @@ const RenderProposalContentMetadata = ({
             ) : (
               <FA2Display data={data.params} />
             )
+          ) : data.type === "AddOrUpdateMetadata" ? (
+            data.params
           ) : (
             JSON.stringify(data.params)
           )
