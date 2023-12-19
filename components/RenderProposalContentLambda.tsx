@@ -472,7 +472,9 @@ const RenderProposalContentLambda = ({
             ) : (
               <FA2Display data={data.params} />
             )
-          ) : data.type === "AddOrUpdateMetadata" ? (
+          ) : data.type !== "ApproveFA1_2" &&
+            data.type !== "TransferFA1_2" &&
+            data.type !== "TransferFA2" ? (
             data.params
           ) : (
             JSON.stringify(data.params)
