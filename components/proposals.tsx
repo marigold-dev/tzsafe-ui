@@ -381,6 +381,9 @@ function renderContent(
   if ("changeThreshold" in x) {
     return `Change threshold from ${contract.threshold} to ${x.changeThreshold}`;
   }
+  if ("add_or_update_metadata" in x) {
+    return `Updata metadata`;
+  }
   let _: never = x;
   return "Not supported";
 }
