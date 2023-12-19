@@ -4,7 +4,9 @@ import Alias from "./Alias";
 
 const FA1_2Display: React.FC<{ data: fa1_2Token }> = ({ data }) => {
   if (
-    Object.entries(data).some(([key, value]) => key !== "imageUri" && !value)
+    Object.entries(data).some(
+      ([key, value]) => key !== "imageUri" && value === undefined
+    )
   ) {
     return <div>{JSON.stringify(data)}</div>;
   }

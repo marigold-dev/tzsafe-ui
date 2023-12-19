@@ -8,9 +8,9 @@ const FA2Display: React.FC<{ data: fa2Tokens }> = ({ data }) => {
       item =>
         !item.name ||
         !item.fa2_address ||
-        !item.token_id ||
+        item.token_id === undefined ||
         !item.to ||
-        !item.amount
+        item.amount === undefined
     )
   ) {
     return <div>{JSON.stringify(data)}</div>;
