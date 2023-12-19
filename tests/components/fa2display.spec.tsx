@@ -3,9 +3,11 @@
  */
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
+import BigNumber from "bignumber.js";
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import FA2Display from "../../components/FA2Display";
+import { fa2Tokens } from "../../types/display";
 
 type AliasProps = {
   address: string;
@@ -18,64 +20,55 @@ vi.mock("../../components/Alias", () => {
     ),
   };
 });
+describe("FA2Display Component", () => {
+  const completeData: fa2Tokens = [
+    {
+      name: "Token1",
+      fa2_address: "tz1",
+      token_id: 1,
+      to: "tz2",
+      amount: BigNumber(10),
+      hasDecimal: false,
+      imageUri: "http://example.com/image.jpg",
+    },
+  ];
 
-describe("FA2Display", () => {
-  it("renders with valid data", () => {
-    const validData = JSON.stringify([
-      {
-        fa2_address: "Test FA2 Address",
-        name: "Test Name",
-        token_id: 123,
-        to: "Test To Address",
-        imageUri: "https://example.com/test.jpg",
-        amount: "100",
-      },
-    ]);
-
-    render(<FA2Display data={validData} />);
-    expect(screen.getByText("Test Name")).toBeInTheDocument();
-    expect(
-      screen.getByText("Alias Component with address: Test FA2 Address")
-    ).toBeInTheDocument();
-    expect(screen.getByAltText("Test Name")).toHaveAttribute(
-      "src",
-      "https://example.com/test.jpg"
+  it("renders correctly with complete data", () => {
+    const { getByText, getByAltText } = render(
+      <FA2Display data={completeData} />
     );
+    expect(getByText("Token1")).toBeInTheDocument();
+    expect(getByText("Alias Component with address: tz1")).toBeInTheDocument();
+    expect(getByAltText("Token1")).toHaveAttribute(
+      "src",
+      "http://example.com/image.jpg"
+    );
+    expect(getByText("Alias Component with address: tz2")).toBeInTheDocument();
+    expect(getByText("10*")).toBeInTheDocument();
   });
 
-  it("does not render an image when imageUri is missing", () => {
-    const dataWithoutImageUri = JSON.stringify([
-      {
-        fa2_address: "Test FA2 Address",
-        name: "Test Name",
-        token_id: 123,
-        to: "Test To Address",
-        amount: "100",
-      },
-    ]);
-
-    render(<FA2Display data={dataWithoutImageUri} />);
-    expect(screen.queryByRole("img")).toBeNull();
+  it("renders JSON stringified data when a field is missing", () => {
+    const incompleteData = [{ ...completeData[0], name: undefined }];
+    const { container } = render(<FA2Display data={incompleteData} />);
+    expect(container.firstChild).toContainHTML(JSON.stringify(incompleteData));
   });
 
-  it("renders empty component with empty array data", () => {
-    const emptyData = JSON.stringify([]);
-
-    render(<FA2Display data={emptyData} />);
-    expect(screen.queryByText("Name:")).toBeNull();
+  it("renders without an image when imageUri is missing", () => {
+    const dataWithoutImageUri = [{ ...completeData[0], imageUri: undefined }];
+    const { queryByAltText } = render(
+      <FA2Display data={dataWithoutImageUri} />
+    );
+    expect(queryByAltText("Token1")).toBeNull();
   });
 
-  it("renders error message with valid JSON data but unexpected data", () => {
-    const invalidData = JSON.stringify("Invalid data");
+  it("renders amount correctly with hasDecimal true and false", () => {
+    const { getByText } = render(<FA2Display data={completeData} />);
+    expect(getByText("10*")).toBeInTheDocument();
 
-    render(<FA2Display data={invalidData} />);
-    expect(screen.getByText(invalidData)).toBeInTheDocument();
-  });
-
-  it("renders error message with invalid JSON data", () => {
-    const invalidData = "Invalid JSON";
-
-    render(<FA2Display data={invalidData} />);
-    expect(screen.getByText(invalidData)).toBeInTheDocument();
+    const dataWithDecimal = [{ ...completeData[0], hasDecimal: true }];
+    const { getByText: getByTextWithDecimal } = render(
+      <FA2Display data={dataWithDecimal} />
+    );
+    expect(getByTextWithDecimal("10")).toBeInTheDocument();
   });
 });
