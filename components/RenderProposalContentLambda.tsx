@@ -4,7 +4,12 @@ import BigNumber from "bignumber.js";
 import { useState } from "react";
 import FA2Display from "../components/FA2Display";
 import { LambdaType, parseLambda } from "../context/parseLambda";
-import { proposalContent, version } from "../types/display";
+import {
+  fa1_2Token,
+  fa2Tokens,
+  proposalContent,
+  version,
+} from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
 import { hexToAscii } from "../utils/bytes";
 import { crop } from "../utils/strings";
@@ -37,7 +42,7 @@ type data = {
   amount: undefined | string;
   addresses: undefined | string[];
   entrypoints: undefined | string;
-  params: undefined | string;
+  params: undefined | string | fa2Tokens | fa1_2Token;
   rawParams: undefined | string;
 };
 
@@ -196,21 +201,20 @@ export const contentToData = (
           const amount =
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
-          if (!token) return amount.toString() + "*";
-
           return BigNumber(amount)
-            .div(BigNumber(10).pow(token.token.metadata.decimals))
+            .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
             .toString();
         })(),
         addresses: [
           "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         ],
         entrypoints: undefined,
-        params: JSON.stringify({
+        params: {
           name: token?.token.metadata.name,
           fa1_2_address: lambda?.contractAddress,
           imageUri,
-        }),
+          hasDecimal: !!token,
+        } as fa1_2Token,
         rawParams: undefined,
       };
     } else if (type === LambdaType.FA2) {
@@ -226,36 +230,33 @@ export const contentToData = (
         amount: undefined,
         addresses: undefined,
         entrypoints: undefined,
-        params: JSON.stringify(
-          lambdaData[0].txs.map(({ to_, token_id, amount }) => {
-            const token: walletToken | undefined = walletTokens.find(
-              token =>
-                token.token.contract.address === lambda?.contractAddress &&
-                token.token.tokenId === token_id.toString()
-            );
-            const metadata = token?.token.metadata;
-            let imageUri = metadata?.thumbnailUri;
+        params: lambdaData[0].txs.map(({ to_, token_id, amount }) => {
+          const token: walletToken | undefined = walletTokens.find(
+            token =>
+              token.token.contract.address === lambda?.contractAddress &&
+              token.token.tokenId === token_id.toString()
+          );
+          const metadata = token?.token.metadata;
+          let imageUri = metadata?.thumbnailUri;
 
-            if (!imageUri && metadata && "displayUri" in metadata)
-              imageUri = metadata.displayUri;
+          if (!imageUri && metadata && "displayUri" in metadata)
+            imageUri = metadata.displayUri;
 
-            imageUri = toImageUri(imageUri);
+          imageUri = toImageUri(imageUri);
 
-            return {
-              fa2_address:
-                token?.token.contract.address ?? lambda?.contractAddress,
-              name: token?.token.metadata.name,
-              token_id,
-              to: to_,
-              imageUri: imageUri,
-              amount: !!token?.token.metadata.decimals
-                ? BigNumber(amount)
-                    .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-                    .toString()
-                : amount.toString() + "*",
-            };
-          })
-        ),
+          return {
+            fa2_address:
+              token?.token.contract.address ?? lambda?.contractAddress,
+            name: token?.token.metadata.name,
+            token_id,
+            to: to_,
+            imageUri: imageUri,
+            amount: BigNumber(amount).div(
+              BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+            ),
+            hasDecimal: !!token?.token.metadata.decimals,
+          };
+        }),
         rawParams: undefined,
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
@@ -397,7 +398,14 @@ const RenderProposalContentLambda = ({
           } justify-self-start text-left lg:justify-self-center lg:text-right`}
         >
           <p className="font-medium text-zinc-500 lg:hidden">Amount</p>
-          {!data.amount ? "-" : `${data.amount}`}
+          {!data.amount
+            ? "-"
+            : data.params &&
+              typeof data.params !== "string" &&
+              "fa1_2_address" in data.params &&
+              !data.params.hasDecimal
+            ? `${data.amount}*`
+            : `${data.amount}`}
         </span>
         {!data.addresses ? (
           <span className="lg:text-auto justify-self-end text-right text-zinc-500 lg:justify-self-center">
@@ -442,9 +450,11 @@ const RenderProposalContentLambda = ({
                   ? "click[+]"
                   : "click[-]"
                 : `${
-                    data.params.length < 7
-                      ? data.params
-                      : data.params.substring(0, 7) + "..."
+                    typeof data.params === "string"
+                      ? data.params.length < 7
+                        ? data.params
+                        : data.params.substring(0, 7) + "..."
+                      : "-"
                   }`
               : "-"}
           </div>
@@ -456,12 +466,14 @@ const RenderProposalContentLambda = ({
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
         {!!data.params ? (
-          data.type == "TransferFA2" ? (
-            <FA2Display data={data.params} />
-          ) : data.type == "TransferFA1_2" || data.type == "ApproveFA1_2" ? (
-            <FA1_2Display data={data.params} />
+          typeof data.params !== "string" ? (
+            "fa1_2_address" in data.params ? (
+              <FA1_2Display data={data.params} />
+            ) : (
+              <FA2Display data={data.params} />
+            )
           ) : (
-            data.params
+            JSON.stringify(data.params)
           )
         ) : (
           ""

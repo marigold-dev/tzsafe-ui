@@ -510,7 +510,11 @@ const PoeModal = () => {
                         </div>
                         {rows.some(
                           v =>
-                            v.amount?.includes("*") || v.params?.includes("*")
+                            !!v.params &&
+                            typeof v.params !== "string" &&
+                            ("fa1_2_address" in v.params
+                              ? !v.params.hasDecimal
+                              : v.params.some(v => !v.hasDecimal))
                         ) && (
                           <div className="mt-2 text-sm text-yellow-500">
                             * There{"'"}s no decimals

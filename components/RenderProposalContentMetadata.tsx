@@ -1,6 +1,7 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-import { proposalContent } from "../types/display";
+import { tokenToString } from "typescript";
+import { fa1_2Token, fa2Tokens, proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
 import { toImageUri } from "../utils/tokenImage";
@@ -32,7 +33,7 @@ type data = {
   amount: undefined | string;
   addresses: undefined | string[];
   entrypoints: undefined | string;
-  params: undefined | string;
+  params: undefined | string | fa2Tokens | fa1_2Token;
 };
 
 const isFa2 = (payload: any[]) => {
@@ -148,11 +149,12 @@ const RenderProposalContentMetadata = ({
             : contractData.to,
         ],
         entrypoints: undefined,
-        params: JSON.stringify({
+        params: {
           name: contractData.name,
           fa1_2_address: contractData.fa1_2_address,
           imageUri,
-        }),
+          hasDecimal: true,
+        },
         type: !!contractData.spender_address ? "ApproveFA1_2" : "TransferFA1_2",
       };
     } else if (metadata?.meta?.includes("fa2_address")) {
@@ -185,6 +187,7 @@ const RenderProposalContentMetadata = ({
           v.amount = v.amount.toString();
           // the "to" is incorrrect in metadata, users have to go block explorer to check.
           v.to = "please refer to the block explorer";
+          v.hasDecimal = true;
           return v;
         });
       }
@@ -194,7 +197,7 @@ const RenderProposalContentMetadata = ({
         amount: undefined,
         addresses: undefined,
         entrypoints: undefined,
-        params: JSON.stringify(payload),
+        params: payload,
         type: "TransferFA2",
       };
     } else if (
@@ -210,42 +213,41 @@ const RenderProposalContentMetadata = ({
         amount: undefined,
         addresses: [],
         entrypoints: undefined,
-        params: JSON.stringify(
-          txs.map(
-            ({
-              to_,
-              token_id,
-              amount,
+        params: txs.map(
+          ({
+            to_,
+            token_id,
+            amount,
+            name,
+          }: {
+            to_: string;
+            token_id: number;
+            amount: number;
+            name?: string;
+          }) => {
+            const token = walletTokens.find(
+              token =>
+                token.token.contract.address === metadata.contractAddress &&
+                token.token.tokenId === token_id.toString()
+            );
+            const tokenMetadata = token?.token.metadata;
+            let imageUri = tokenMetadata?.thumbnailUri;
+
+            if (!imageUri && tokenMetadata && "displayUri" in tokenMetadata)
+              imageUri = tokenMetadata.displayUri;
+
+            imageUri = toImageUri(imageUri);
+
+            return {
+              fa2_address: metadata.contract_address,
               name,
-            }: {
-              to_: string;
-              token_id: number;
-              amount: number;
-              name?: string;
-            }) => {
-              const token = walletTokens.find(
-                token =>
-                  token.token.contract.address === metadata.contractAddress &&
-                  token.token.tokenId === token_id.toString()
-              );
-              const tokenMetadata = token?.token.metadata;
-              let imageUri = tokenMetadata?.thumbnailUri;
-
-              if (!imageUri && tokenMetadata && "displayUri" in tokenMetadata)
-                imageUri = tokenMetadata.displayUri;
-
-              imageUri = toImageUri(imageUri);
-
-              return {
-                fa2_address: metadata.contract_address,
-                name,
-                token_id,
-                to: to_,
-                amount: amount.toString(),
-                imageUri,
-              };
-            }
-          )
+              token_id,
+              to: to_,
+              amount: amount.toString(),
+              imageUri,
+              hasDecimal: !!token,
+            };
+          }
         ),
         type: "TransferFA2",
       };
@@ -414,9 +416,11 @@ const RenderProposalContentMetadata = ({
                   ? "click[+]"
                   : "click[-]"
                 : `${
-                    data.params.length < 7
-                      ? data.params
-                      : data.params.substring(0, 7) + "..."
+                    typeof data.params === "string"
+                      ? data.params.length < 7
+                        ? data.params
+                        : data.params.substring(0, 7) + "..."
+                      : "-"
                   }`
               : "-"}
           </div>
@@ -428,12 +432,14 @@ const RenderProposalContentMetadata = ({
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
         {!!data.params ? (
-          data.type == "TransferFA2" ? (
-            <FA2Display data={data.params} />
-          ) : data.type == "TransferFA1_2" || data.type == "ApproveFA1_2" ? (
-            <FA1_2Display data={data.params} />
+          typeof data.params !== "string" ? (
+            "fa1_2_address" in data.params ? (
+              <FA1_2Display data={data.params} />
+            ) : (
+              <FA2Display data={data.params} />
+            )
           ) : (
-            data.params
+            JSON.stringify(data.params)
           )
         ) : (
           ""

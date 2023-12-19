@@ -1,3 +1,5 @@
+import BigNumber from "bignumber.js";
+
 type lambda = { executeLambda: { metadata?: string; content?: string } };
 type execute = { execute: string };
 type transfer = { transfer: { amount: number; destination: string } };
@@ -87,6 +89,23 @@ export enum TransferType {
   FA1_2 = -3,
   UNKNOWN = -9999,
 }
+
+export type fa2Tokens = {
+  fa2_address: string | undefined;
+  name: string | undefined;
+  token_id: number;
+  to: string | undefined;
+  imageUri: string | undefined;
+  amount: BigNumber;
+  hasDecimal: boolean;
+}[];
+
+export type fa1_2Token = {
+  fa1_2_address: string;
+  name: string | undefined;
+  imageUri: string | undefined;
+  hasDecimal: boolean;
+};
 
 export {
   type proposal,
