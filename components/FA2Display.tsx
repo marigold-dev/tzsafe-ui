@@ -6,11 +6,11 @@ const FA2Display: React.FC<{ data: fa2Tokens }> = ({ data }) => {
   if (
     data.some(
       item =>
-        item.name === undefined ||
-        item.fa2_address === undefined ||
-        item.token_id === undefined ||
-        item.to === undefined ||
-        item.amount === undefined
+        !item.name ||
+        !item.fa2_address ||
+        !item.token_id ||
+        !item.to ||
+        !item.amount
     )
   ) {
     return <div>{JSON.stringify(data)}</div>;
