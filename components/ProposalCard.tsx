@@ -185,8 +185,8 @@ const ProposalCard = ({
           <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
             <span>Function</span>
             <span className="flex items-center">
-              Metadata
-              <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+              Note
+              <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
                 <InfoCircledIcon className="ml-2 h-4 w-4" />
               </Tooltip>
             </span>
@@ -199,15 +199,29 @@ const ProposalCard = ({
             {rows.map((v, i) => {
               // All the other types could be parsed, by the lambda
               return v.type === "ExecuteLambda" ? (
-                <RenderProposalContentMetadata key={i} content={content[i]} />
+                <RenderProposalContentMetadata
+                  key={i}
+                  content={content[i]}
+                  walletTokens={walletTokens}
+                  isOpenToken={i === 0}
+                />
               ) : (
-                <RenderProposalContentLambda key={i} data={v} />
+                <RenderProposalContentLambda
+                  key={i}
+                  data={v}
+                  isOpenToken={i === 0}
+                />
               );
             })}
           </div>
 
           {rows.some(
-            v => v.amount?.includes("*") || v.params?.includes("*")
+            v =>
+              !!v.params &&
+              typeof v.params !== "string" &&
+              ("fa1_2_address" in v.params
+                ? !v.params.hasDecimal
+                : v.params.some(v => !v.hasDecimal))
           ) && (
             <div className="mt-2 text-sm text-yellow-500">
               * There{"'"}s no decimals
