@@ -1,8 +1,13 @@
+import BigNumber from "bignumber.js";
 import React from "react";
 import { fa1_2Token } from "../types/display";
 import Alias from "./Alias";
 
-const FA1_2Display: React.FC<{ data: fa1_2Token }> = ({ data }) => {
+const FA1_2Display: React.FC<{
+  data: fa1_2Token;
+  to: string | undefined;
+  amount: BigNumber;
+}> = ({ data, to, amount }) => {
   if (
     Object.entries(data).some(
       ([key, value]) => key !== "imageUri" && value === undefined
@@ -28,6 +33,13 @@ const FA1_2Display: React.FC<{ data: fa1_2Token }> = ({ data }) => {
         </div>
         <div>
           <strong>FA1.2 Address:</strong> <Alias address={data.fa1_2_address} />
+        </div>
+        <div>
+          <strong>To:</strong> <Alias address={to as string} />
+        </div>
+        <div>
+          <strong>Amount:</strong>{" "}
+          {data.hasDecimal ? amount.toString() : amount.toString() + "*"}
         </div>
       </div>
     </div>

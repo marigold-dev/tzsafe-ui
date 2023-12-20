@@ -39,7 +39,7 @@ type data = {
     | "AddOrUpdateMetadata";
   label: undefined | string;
   metadata: undefined | string;
-  amount: undefined | string;
+  amount: undefined | string | BigNumber;
   addresses: undefined | string[];
   entrypoints: undefined | string;
   params: undefined | string | fa2Tokens | fa1_2Token;
@@ -201,9 +201,9 @@ export const contentToData = (
           const amount =
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
-          return BigNumber(amount)
-            .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-            .toString();
+          return BigNumber(amount).div(
+            BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+          );
         })(),
         addresses: [
           "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
@@ -468,7 +468,15 @@ const RenderProposalContentLambda = ({
         {!!data.params ? (
           typeof data.params !== "string" ? (
             "fa1_2_address" in data.params ? (
-              <FA1_2Display data={data.params} />
+              data.addresses?.at(0) && data.amount instanceof BigNumber ? (
+                <FA1_2Display
+                  data={data.params}
+                  to={data.addresses.at(0)}
+                  amount={data.amount}
+                />
+              ) : (
+                JSON.stringify(data.params)
+              )
             ) : (
               <FA2Display data={data.params} />
             )
