@@ -1,4 +1,5 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import BigNumber from "bignumber.js";
 import { useState } from "react";
 import { tokenToString } from "typescript";
 import { fa1_2Token, fa2Tokens, proposalContent } from "../types/display";
@@ -30,7 +31,7 @@ type data = {
     | "Poe"
     | "AddOrUpdateMetadata";
   metadata: undefined | string;
-  amount: undefined | string;
+  amount: undefined | string | BigNumber;
   addresses: undefined | string[];
   entrypoints: undefined | string;
   params: undefined | string | fa2Tokens | fa1_2Token;
@@ -142,7 +143,7 @@ const RenderProposalContentMetadata = ({
         label: `${
           !!contractData.spender_address ? "Approve" : "Transfer"
         } FA1.2`,
-        amount: contractData.amount,
+        amount: new BigNumber(contractData.amount),
         addresses: [
           !!contractData.spender_address
             ? contractData.spender_address
@@ -434,7 +435,15 @@ const RenderProposalContentMetadata = ({
         {!!data.params ? (
           typeof data.params !== "string" ? (
             "fa1_2_address" in data.params ? (
-              <FA1_2Display data={data.params} />
+              data.addresses?.at(0) && data.amount instanceof BigNumber ? (
+                <FA1_2Display
+                  data={data.params}
+                  to={data.addresses.at(0)}
+                  amount={data.amount}
+                />
+              ) : (
+                JSON.stringify(data.params)
+              )
             ) : (
               <FA2Display data={data.params} />
             )
