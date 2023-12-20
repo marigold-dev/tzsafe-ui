@@ -1,6 +1,7 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import { useContext, useState, useMemo } from "react";
 import { AppStateContext } from "../context/state";
+import { CustomView, customViewMatchers } from "../dapps";
 import { Dapp, identifyDapp } from "../dapps/identifyDapp";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
@@ -9,12 +10,12 @@ import Alias from "./Alias";
 import RenderProposalContentLambda, {
   labelOfProposalContentLambda,
   contentToData,
+  transaction,
 } from "./RenderProposalContentLambda";
 import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
 } from "./RenderProposalContentMetadata";
 import Tooltip from "./Tooltip";
-import { TezosDomainsLogo } from "./dapps/tezosDomains/Logo";
 import { RenderTezosDomainsRows } from "./dapps/tezosDomains/RenderRows";
 
 type ProposalCardProps = {
@@ -66,23 +67,17 @@ const ProposalCard = ({
       )
     );
 
-    const foundDapp = new Set(
-      rows.flatMap(row => {
-        if (!row.addresses || row.addresses.length === 0) return [undefined];
-        else if (row.addresses.length === 1)
-          return [identifyDapp(row.addresses[0])];
-        else {
-          return row.addresses.map(identifyDapp);
-        }
-      })
-    );
+    if (rows.some(({ type }) => type !== "ExecuteContract"))
+      return { rows, dapp: undefined };
 
-    const dapp = foundDapp.size === 1 ? [...foundDapp][0] : undefined;
+    let dapp: CustomView;
 
+    for (let i = 0; i < customViewMatchers.length; ++i) {
+      dapp = customViewMatchers[i](rows as transaction[]);
+      if (!!dapp) break;
+    }
     return { rows, dapp };
   }, [content, state.currentContract, state.currentStorage, state.contracts]);
-
-  console.log(rows);
 
   return (
     <div
@@ -103,18 +98,14 @@ const ProposalCard = ({
           {status ?? "Rejected"}
         </span>
         <div className="ml-8 flex items-center space-x-4 md:ml-0">
-          {!!dapp && (
+          {!!dapp?.logo && (
             <div className="relative h-6 w-6 shrink-0">
-              {(() => {
-                switch (dapp) {
-                  case Dapp.TEZOS_DOMAINS:
-                    return (
-                      <div className="h-full w-full" title="Tezos Domains">
-                        <TezosDomainsLogo />
-                      </div>
-                    );
-                }
-              })()}
+              <img
+                src={dapp.logo}
+                className="h-full w-full"
+                alt={dapp.logoAlt}
+                title={dapp.logoAlt}
+              />
             </div>
           )}
           <span
@@ -122,35 +113,39 @@ const ProposalCard = ({
             style={{
               minWidth: "7rem",
             }}
-            title={content
-              .map(v => {
-                return "executeLambda" in v &&
-                  (!!v.executeLambda.content ||
-                    !!v.executeLambda.metadata?.includes('"lambda"'))
-                  ? labelOfProposalContentLambda(
-                      state.contracts[state.currentContract ?? ""]?.version ??
-                        state.currentStorage?.version,
-                      v,
-                      dapp
-                    )
-                  : labelOfProposalContentMetadata(v, dapp);
-              })
-              .join(", ")}
+            title={
+              dapp?.label
+                ? dapp.label
+                : content
+                    .map(v => {
+                      return "executeLambda" in v &&
+                        (!!v.executeLambda.content ||
+                          !!v.executeLambda.metadata?.includes('"lambda"'))
+                        ? labelOfProposalContentLambda(
+                            state.contracts[state.currentContract ?? ""]
+                              ?.version ?? state.currentStorage?.version,
+                            v
+                          )
+                        : labelOfProposalContentMetadata(v);
+                    })
+                    .join(", ")
+            }
           >
-            {content
-              .map(v =>
-                "executeLambda" in v &&
-                (!!v.executeLambda.content ||
-                  !!v.executeLambda.metadata?.includes('"lambda"'))
-                  ? labelOfProposalContentLambda(
-                      state.contracts[state.currentContract ?? ""]?.version ??
-                        state.currentStorage?.version,
-                      v,
-                      dapp
-                    )
-                  : labelOfProposalContentMetadata(v, dapp)
-              )
-              .join(", ")}
+            {dapp?.label
+              ? dapp.label
+              : content
+                  .map(v =>
+                    "executeLambda" in v &&
+                    (!!v.executeLambda.content ||
+                      !!v.executeLambda.metadata?.includes('"lambda"'))
+                      ? labelOfProposalContentLambda(
+                          state.contracts[state.currentContract ?? ""]
+                            ?.version ?? state.currentStorage?.version,
+                          v
+                        )
+                      : labelOfProposalContentMetadata(v)
+                  )
+                  .join(", ")}
           </span>
         </div>
         <span className="hidden min-w-max justify-self-end lg:block lg:translate-x-1/2">
@@ -218,7 +213,7 @@ const ProposalCard = ({
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
-          {!dapp ? (
+          {!dapp?.data ? (
             <>
               <div className="mt-4 grid w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                 <span>Function</span>
@@ -256,12 +251,42 @@ const ProposalCard = ({
               )}
             </>
           ) : (
-            (() => {
-              switch (dapp) {
-                case Dapp.TEZOS_DOMAINS:
-                  return <RenderTezosDomainsRows rows={rows} />;
-              }
-            })()
+            <div className="mt-4 space-y-2 font-light">
+              {dapp.data.map((viewData, i) => {
+                console.log(viewData);
+                return (
+                  <section key={i}>
+                    <h3 className="font-normal">
+                      {viewData.link ? (
+                        <a
+                          href={viewData.link}
+                          title={viewData.action}
+                          className="underline"
+                          target="_blank"
+                        >
+                          {viewData.action}
+                        </a>
+                      ) : (
+                        viewData.action
+                      )}
+                    </h3>
+                    <div className="flex items-center space-x-4">
+                      {viewData.image && (
+                        <img
+                          src={viewData.image}
+                          className="h-auto w-16 rounded"
+                          alt={`${viewData.action}'s image`}
+                        />
+                      )}
+                      {viewData.description}
+                    </div>
+                    {!isNaN(viewData.price) && (
+                      <div className="mt-1">Price: {viewData.price}</div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
           )}
         </section>
         <section className="text-xs md:text-base">

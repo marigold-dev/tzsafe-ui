@@ -13,30 +13,41 @@ import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import Tooltip from "./Tooltip";
 
-export type data = {
-  type:
-    | "UpdateThreshold" // legacy code
-    | "UpdateProposalDuration"
-    | "AddSigner"
-    | "RemoveSigner"
-    | "Transfer"
-    | "Execute"
-    | "ExecuteLambda"
-    | "ExecuteContract"
-    | "TransferFA2"
-    | "TransferFA1_2"
-    | "ApproveFA1_2"
-    | "Delegate"
-    | "UnDelegate"
-    | "Poe";
-  label: undefined | string;
-  metadata: undefined | string;
-  amount: undefined | string;
-  addresses: undefined | string[];
-  entrypoints: undefined | string;
-  params: undefined | string;
-  rawParams: undefined | string;
-};
+export type data =
+  | {
+      type: "AddSigner" | "RemoveSigner";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | string;
+      addresses: undefined | string[];
+      entrypoints: undefined | string;
+      params: undefined | string;
+      rawParams: undefined | string;
+    }
+  | {
+      type:
+        | "UpdateThreshold" // legacy code
+        | "UpdateProposalDuration"
+        | "Transfer"
+        | "Execute"
+        | "ExecuteLambda"
+        | "ExecuteContract"
+        | "TransferFA2"
+        | "TransferFA1_2"
+        | "ApproveFA1_2"
+        | "Delegate"
+        | "UnDelegate"
+        | "Poe";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | string;
+      addresses: undefined | string;
+      entrypoints: undefined | string;
+      params: undefined | string;
+      rawParams: undefined | string;
+    };
+
+export type transaction = Extract<data, { addresses: undefined | string }>;
 
 export const contentToData = (
   version: version,
@@ -106,7 +117,7 @@ export const contentToData = (
       ...data,
       type: "Transfer",
       label: "Transfer",
-      addresses: [content.transfer.destination],
+      addresses: content.transfer.destination,
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
   } else if ("execute" in content) {
@@ -146,7 +157,7 @@ export const contentToData = (
         type: "ExecuteContract",
         label: "Execute contract",
         addresses: !!lambda?.contractAddress
-          ? [lambda.contractAddress]
+          ? lambda.contractAddress
           : undefined,
         entrypoints: !lambda?.entrypoint.name
           ? "default"
@@ -187,9 +198,7 @@ export const contentToData = (
             .div(BigNumber(10).pow(token.token.metadata.decimals))
             .toString();
         })(),
-        addresses: [
-          "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
-        ],
+        addresses: "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         entrypoints: undefined,
         params: JSON.stringify({
           name: token?.token.metadata.name,
@@ -241,9 +250,9 @@ export const contentToData = (
         metadata: undefined,
         amount: undefined,
         addresses: !!address
-          ? [address]
+          ? address
           : meta.old_baker_address
-          ? [meta.old_baker_address]
+          ? meta.old_baker_address
           : undefined,
         entrypoints: undefined,
         params: undefined,
@@ -279,7 +288,7 @@ export const contentToData = (
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
-        addresses: [address],
+        addresses: address,
         entrypoints: entrypoint,
         params:
           typeof arg === "object" || Array.isArray(arg)
@@ -303,7 +312,7 @@ export const contentToData = (
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
-        addresses: [address],
+        addresses: address,
         entrypoints: entrypoint,
         params:
           typeof arg === "object" || Array.isArray(arg)
@@ -372,11 +381,17 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
         ) : (
           <ul className="lg:text-auto justify-self-end text-right lg:justify-self-center">
             <li className="font-medium text-zinc-500 lg:hidden">Addresses</li>
-            {data.addresses.map((address, i) => (
-              <li key={i}>
-                <Alias address={address} />
+            {Array.isArray(data.addresses) ? (
+              data.addresses.map((address, i) => (
+                <li key={i}>
+                  <Alias address={address} />
+                </li>
+              ))
+            ) : (
+              <li>
+                <Alias address={data.addresses} />
               </li>
-            ))}
+            )}
           </ul>
         )}
         <span
@@ -418,8 +433,7 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
 
 export const labelOfProposalContentLambda = (
   version: version,
-  content: proposalContent,
-  dapp: Dapp | undefined
+  content: proposalContent
 ) => {
   if ("changeThreshold" in content) {
     return "Update threshold";
@@ -436,7 +450,7 @@ export const labelOfProposalContentLambda = (
   } else if ("executeLambda" in content) {
     const parser = new Parser();
 
-    const [type, data] = parseLambda(
+    const [type, _] = parseLambda(
       version,
       // Required for version 0.0.10
       typeof content.executeLambda.content === "string"
@@ -444,44 +458,21 @@ export const labelOfProposalContentLambda = (
         : content.executeLambda.content ?? null
     );
 
-    if (!!dapp) {
-      switch (dapp) {
-        case Dapp.TEZOS_DOMAINS: {
-          switch (data?.contractAddress) {
-            case tezosDomainsContracts.COMMIT_ADDRESS.mainnet:
-            case tezosDomainsContracts.COMMIT_ADDRESS.ghostnet:
-              return "Commit to buy a domain";
-            case tezosDomainsContracts.BUY_ADDRESS.mainnet:
-            case tezosDomainsContracts.BUY_ADDRESS.ghostnet:
-              return "Buy a domain";
-            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet:
-            case tezosDomainsContracts.CLAIM_REVERSE_RECORD.ghostnet:
-              return "Claim reverse record";
-            default:
-              return "Interaction with Tezos Domains";
-          }
-        }
-        default: {
-          throw new Error("Unreachable");
-        }
-      }
-    } else {
-      return type === LambdaType.FA2
-        ? "Transfer FA2"
-        : type === LambdaType.FA1_2_APPROVE
-        ? "Approve FA1.2"
-        : type === LambdaType.FA1_2_TRANSFER
-        ? "Transfer FA1.2"
-        : type === LambdaType.DELEGATE
-        ? "Delegate"
-        : type === LambdaType.UNDELEGATE
-        ? "Undelegate"
-        : type === LambdaType.CONTRACT_EXECUTION
-        ? "Execute contract"
-        : type === LambdaType.POE
-        ? "Proof of Event"
-        : "Execute lambda";
-    }
+    return type === LambdaType.FA2
+      ? "Transfer FA2"
+      : type === LambdaType.FA1_2_APPROVE
+      ? "Approve FA1.2"
+      : type === LambdaType.FA1_2_TRANSFER
+      ? "Transfer FA1.2"
+      : type === LambdaType.DELEGATE
+      ? "Delegate"
+      : type === LambdaType.UNDELEGATE
+      ? "Undelegate"
+      : type === LambdaType.CONTRACT_EXECUTION
+      ? "Execute contract"
+      : type === LambdaType.POE
+      ? "Proof of Event"
+      : "Execute lambda";
   }
 };
 
