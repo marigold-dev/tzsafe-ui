@@ -10,7 +10,7 @@ export const makeWertWidget = ({
   onSuccess: (txId: string) => void;
 }) => {
   const network =
-    PREFERED_NETWORK !== NetworkType.MAINNET ? "tezos" : "ghostnet";
+    PREFERED_NETWORK === NetworkType.MAINNET ? "tezos" : "ghostnet";
   return new WertWidget({
     address: wallet,
     partner_id: WERT_ID,
