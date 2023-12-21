@@ -1,5 +1,6 @@
+import { NetworkType } from "@airgap/beacon-sdk";
 import WertWidget from "@wert-io/widget-initializer";
-import { WERT_ID, WERT_URL } from "./config";
+import { PREFERED_NETWORK, WERT_ID, WERT_URL } from "./config";
 
 export const makeWertWidget = ({
   wallet,
@@ -7,14 +8,16 @@ export const makeWertWidget = ({
 }: {
   wallet: string;
   onSuccess: (txId: string) => void;
-}) =>
-  new WertWidget({
+}) => {
+  const network =
+    PREFERED_NETWORK !== NetworkType.MAINNET ? "tezos" : "ghostnet";
+  return new WertWidget({
     address: wallet,
     partner_id: WERT_ID,
     origin: WERT_URL,
-    network: "ghostnet",
+    network,
     theme: "dark",
-    commodities: '[{"commodity":"XTZ","network":"ghostnet"}]',
+    commodities: `[{"commodity":"XTZ","network":"${network}"}]`,
     commodity: "XTZ",
     lang: "en",
     widgetLayoutMode: "Modal",
@@ -32,3 +35,4 @@ export const makeWertWidget = ({
       },
     },
   });
+};
