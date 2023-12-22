@@ -299,8 +299,8 @@ const ProposalCard = ({
                       )}
                       {viewData.description}
                     </div>
-                    {!!viewData.price && !isNaN(viewData.price) && (
-                      <div className="mt-1">Price: {viewData.price}</div>
+                    {!!viewData.price && (
+                      <div className="mt-2">Price: {viewData.price}</div>
                     )}
                   </section>
                 );

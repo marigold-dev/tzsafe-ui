@@ -11,7 +11,7 @@ export type CustomViewData = {
   image?: string;
   action: string;
   description: ReactNode;
-  price?: number;
+  price?: string;
   link?: string;
 };
 export type CustomView =

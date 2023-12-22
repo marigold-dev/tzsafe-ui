@@ -117,7 +117,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
       .join(", "),
     data: transactions.flatMap<CustomViewData>(transaction => {
       if (!transaction.params) return [];
-      const price = transaction.amount ? Number(transaction.amount) : undefined;
+
+      const price = transaction.amount;
       const micheline = parser.parseMichelineExpression(transaction.params);
 
       if (!micheline) return [];
@@ -145,6 +146,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               ? ".tez"
               : ".gho"
           }`;
+
           return [
             {
               action: BUY_ADDRESS.name,
@@ -195,7 +197,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                   </li>
                   {!!data.name?.Some && (
                     <li>
-                      Domain:
+                      Domain:{" "}
                       <a
                         href={`https://${
                           domain.endsWith(".gho") ? "ghostnet" : "app"
