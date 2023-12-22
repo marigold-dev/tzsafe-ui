@@ -1,8 +1,8 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
+import * as Switch from "@radix-ui/react-switch";
 import { useContext, useState, useMemo } from "react";
 import { AppStateContext } from "../context/state";
 import { CustomView, customViewMatchers } from "../dapps";
-import { Dapp, identifyDapp } from "../dapps/identifyDapp";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
 import { signers } from "../versioned/apis";
@@ -16,7 +16,6 @@ import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
 } from "./RenderProposalContentMetadata";
 import Tooltip from "./Tooltip";
-import { RenderTezosDomainsRows } from "./dapps/tezosDomains/RenderRows";
 
 type ProposalCardProps = {
   id: number;
@@ -49,6 +48,7 @@ const ProposalCard = ({
   const currentContract = state.currentContract ?? "";
 
   const [isOpen, setIsOpen] = useState(false);
+  const [hasDefaultView, setHasDefaultView] = useState(false);
 
   const proposalDate = new Date(proposer.timestamp);
   const resolveDate = new Date(resolver?.timestamp ?? 0);
@@ -213,7 +213,7 @@ const ProposalCard = ({
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
-          {!dapp?.data ? (
+          {!dapp?.data || hasDefaultView ? (
             <>
               <div className="mt-4 grid w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                 <span>Function</span>
@@ -253,10 +253,15 @@ const ProposalCard = ({
           ) : (
             <div className="mt-4 space-y-2 font-light">
               {dapp.data.map((viewData, i) => {
-                console.log(viewData);
                 return (
                   <section key={i}>
-                    <h3 className="font-normal">
+                    <h3
+                      className={`font-normal ${
+                        dapp.data?.length === 1 && !viewData.link
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
                       {viewData.link ? (
                         <a
                           href={viewData.link}
@@ -280,12 +285,27 @@ const ProposalCard = ({
                       )}
                       {viewData.description}
                     </div>
-                    {!isNaN(viewData.price) && (
+                    {!!viewData.price && !isNaN(viewData.price) && (
                       <div className="mt-1">Price: {viewData.price}</div>
                     )}
                   </section>
                 );
               })}
+            </div>
+          )}
+          {!!dapp?.data && (
+            <div className="mt-6 flex w-full justify-end space-x-2">
+              <label className="font-light" htmlFor="advanced-mode">
+                Advanced mode
+              </label>
+              <Switch.Root
+                defaultChecked={false}
+                className="relative h-[25px] w-[42px] rounded-full bg-zinc-900 transition-colors data-[state='checked']:bg-primary"
+                id="advanced-mode"
+                onCheckedChange={setHasDefaultView}
+              >
+                <Switch.Thumb className="block h-[21px] w-[21px] translate-x-[2px] rounded-full bg-white transition-transform will-change-transform data-[state='checked']:translate-x-[19px]" />
+              </Switch.Root>
             </div>
           )}
         </section>

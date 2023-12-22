@@ -102,7 +102,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 return "Buy a domain";
               case CLAIM_REVERSE_RECORD.mainnet:
               case CLAIM_REVERSE_RECORD.ghostnet:
-                return "Claim reverse record";
+                return "Set domain's target";
               default:
                 return "Interaction with Tezos Domains";
             }
@@ -137,11 +137,9 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
 
           return [
             {
-              image: "https://placehold.jp/150x150.png",
-              link: "https://placehold.jp/150x150.png",
               action: "Buy a domain",
               description: (
-                <ul className="list-inside list-disc font-light">
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>
                     Domain:{" "}
                     {`${bytes2Char(data.label)}${
@@ -168,9 +166,9 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
 
           return [
             {
-              action: "Claim reverse record",
+              action: "Set domain's target",
               description: (
-                <ul className="list-inside list-disc font-light">
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>Owner: {data.owner}</li>
                   {!!data.name?.Some && (
                     <li>Domain: {bytes2Char(data.name.Some)}</li>
