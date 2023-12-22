@@ -11,6 +11,7 @@ const parser = new Parser();
 export const COMMIT_ADDRESS = {
   mainnet: "KT1P8n2qzJjwMPbHJfi4o8xu6Pe3gaU3u2A3",
   ghostnet: "KT1PEnPDgGKyHvaGzWj6VJJYwobToiW2frff",
+  name: "Publish intent",
 };
 
 export const buySchema = new Schema(
@@ -22,6 +23,7 @@ export const buySchema = new Schema(
 export const BUY_ADDRESS = {
   mainnet: "KT191reDVKrLxU9rjTSxg53wRqj6zh8pnHgr",
   ghostnet: "KT1Ks7BBTLLjD9PsdCboCL7fYEfq8z1mEvU1",
+  name: "Buy a domain",
 };
 
 export const claimReverseRecordSchema = new Schema(
@@ -33,6 +35,7 @@ export const claimReverseRecordSchema = new Schema(
 export const CLAIM_REVERSE_RECORD = {
   mainnet: "KT1TnTr6b2YxSx2xUQ8Vz3MoWy771ta66yGx",
   ghostnet: "KT1H19ouy5QwDBchKXcUw1QRFs5ZYyx1ezEJ",
+  name: "Set domain's target",
 };
 
 export const tezosDomainsContracts = {
@@ -98,13 +101,13 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
             switch (addresses) {
               case COMMIT_ADDRESS.mainnet:
               case COMMIT_ADDRESS.ghostnet:
-                return "Publish intent";
+                return COMMIT_ADDRESS.name;
               case BUY_ADDRESS.mainnet:
               case BUY_ADDRESS.ghostnet:
-                return "Buy a domain";
+                return BUY_ADDRESS.name;
               case CLAIM_REVERSE_RECORD.mainnet:
               case CLAIM_REVERSE_RECORD.ghostnet:
-                return "Set domain's target";
+                return CLAIM_REVERSE_RECORD.name;
               default:
                 return "Interaction with Tezos Domains";
             }
@@ -126,7 +129,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
 
           return [
             {
-              action: "Publish intent",
+              action: COMMIT_ADDRESS.name,
               description:
                 "Publishing the intent to buy a domain. It protects your domain from being taken by an adversary.",
               price,
@@ -137,19 +140,29 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         case tezosDomainsContracts.BUY_ADDRESS.mainnet: {
           const data = buySchema.Execute(micheline);
 
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === tezosDomainsContracts.BUY_ADDRESS.mainnet
+              ? ".tez"
+              : ".gho"
+          }`;
           return [
             {
-              action: "Buy a domain",
+              action: BUY_ADDRESS.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>
                     Domain:{" "}
-                    {`${bytes2Char(data.label)}${
-                      transaction.addresses ===
-                      tezosDomainsContracts.BUY_ADDRESS.mainnet
-                        ? ".tez"
-                        : ".gho"
-                    }`}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {domain}
+                    </a>
                   </li>
                   <li>
                     Owner: <Alias address={data.owner} />
@@ -170,16 +183,31 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet: {
           const data = claimReverseRecordSchema.Execute(micheline);
 
+          const domain = bytes2Char(data.name.Some);
+
           return [
             {
-              action: "Set domain's target",
+              action: CLAIM_REVERSE_RECORD.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>
                     Owner: <Alias address={data.owner} />
                   </li>
                   {!!data.name?.Some && (
-                    <li>Domain: {bytes2Char(data.name.Some)}</li>
+                    <li>
+                      Domain:
+                      <a
+                        href={`https://${
+                          domain.endsWith(".gho") ? "ghostnet" : "app"
+                        }.tezos.domains/domain/${domain}`}
+                        title="Open domain infos"
+                        className="underline"
+                        target="_blank"
+                        rel="noreferre"
+                      >
+                        {domain}
+                      </a>
+                    </li>
                   )}
                 </ul>
               ),
