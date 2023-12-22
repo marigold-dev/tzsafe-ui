@@ -47,8 +47,6 @@ const NavBar = (_: React.PropsWithChildren) => {
                   className="h-16 w-auto"
                 />
                 <div>
-                  <p className="ml-4 text-xs">BETA</p>
-
                   <p className="ml-4 mt-1 text-xs">
                     {PREFERED_NETWORK === NetworkType.MAINNET
                       ? "Mainnet"

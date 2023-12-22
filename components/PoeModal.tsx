@@ -364,7 +364,7 @@ const PoeModal = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
+    <div className="fixed bottom-0 left-0 right-0 top-12 z-50 flex items-center justify-center bg-black/30">
       <div
         className={`max-h-[90%] min-h-[96] w-[90%] overflow-auto ${
           !!message ? "lg:w-1/3" : "lg:w-2/3"
@@ -487,8 +487,8 @@ const PoeModal = () => {
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                           <span>Function</span>
                           <span className="flex items-center">
-                            Metadata
-                            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+                            Note
+                            <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
                               <InfoCircledIcon className="ml-2 h-4 w-4" />
                             </Tooltip>
                           </span>
@@ -501,12 +501,20 @@ const PoeModal = () => {
                         </div>
                         <div className="mt-2 space-y-4 font-light lg:space-y-2">
                           {rows.map((v, i) => (
-                            <RenderProposalContentLambda data={v} key={i} />
+                            <RenderProposalContentLambda
+                              key={i}
+                              data={v}
+                              isOpenToken={i === 0}
+                            />
                           ))}
                         </div>
                         {rows.some(
                           v =>
-                            v.amount?.includes("*") || v.params?.includes("*")
+                            !!v.params &&
+                            typeof v.params !== "string" &&
+                            ("fa1_2_address" in v.params
+                              ? !v.params.hasDecimal
+                              : v.params.some(v => !v.hasDecimal))
                         ) && (
                           <div className="mt-2 text-sm text-yellow-500">
                             * There{"'"}s no decimals

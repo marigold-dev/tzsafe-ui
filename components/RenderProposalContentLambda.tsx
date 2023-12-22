@@ -2,16 +2,24 @@ import { InfoCircledIcon } from "@radix-ui/react-icons";
 import { Parser, emitMicheline } from "@taquito/michel-codec";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
+import FA2Display from "../components/FA2Display";
 import { LambdaType, parseLambda } from "../context/parseLambda";
 import { Dapp } from "../dapps/identifyDapp";
 import { tezosDomainsContracts } from "../dapps/tezosDomains";
-import { proposalContent, version } from "../types/display";
+import {
+  fa1_2Token,
+  fa2Tokens,
+  proposalContent,
+  version,
+} from "../types/display";
 import { secondsToDuration } from "../utils/adaptiveTime";
+import { hexToAscii } from "../utils/bytes";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";
+import { toImageUri } from "../utils/tokenImage";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
-import Tooltip from "./Tooltip";
+import FA1_2Display from "./FA1_2Display";
 
 export type data =
   | {
@@ -43,7 +51,7 @@ export type data =
       amount: undefined | string;
       addresses: undefined | string;
       entrypoints: undefined | string;
-      params: undefined | string;
+      params: undefined | string | fa2Tokens | fa1_2Token;
       rawParams: undefined | string;
     };
 
@@ -120,6 +128,16 @@ export const contentToData = (
       addresses: content.transfer.destination,
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
+  } else if ("add_or_update_metadata" in content) {
+    data = {
+      ...data,
+      type: "AddOrUpdateMetadata",
+      label: "Contract Metadata (TZIP16)",
+      params: JSON.stringify({
+        key: content.add_or_update_metadata.key,
+        value: hexToAscii(content.add_or_update_metadata.value),
+      }),
+    };
   } else if ("execute" in content) {
     data = {
       ...data,
@@ -181,6 +199,8 @@ export const contentToData = (
         token => token.token.contract.address === lambda?.contractAddress
       );
 
+      let imageUri = token?.token.metadata.thumbnailUri;
+      imageUri = toImageUri(imageUri);
       data = {
         metadata: undefined,
         type:
@@ -192,18 +212,18 @@ export const contentToData = (
           const amount =
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
-          if (!token) return amount.toString() + "*";
-
-          return BigNumber(amount)
-            .div(BigNumber(10).pow(token.token.metadata.decimals))
-            .toString();
+          return BigNumber(amount).div(
+            BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+          );
         })(),
         addresses: "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         entrypoints: undefined,
-        params: JSON.stringify({
+        params: {
           name: token?.token.metadata.name,
           fa1_2_address: lambda?.contractAddress,
-        }),
+          imageUri,
+          hasDecimal: !!token,
+        } as fa1_2Token,
         rawParams: undefined,
       };
     } else if (type === LambdaType.FA2) {
@@ -212,10 +232,6 @@ export const contentToData = (
         txs: { to_: string; token_id: number; amount: number }[];
       }[];
 
-      const token = walletTokens.find(
-        token => token.token.contract.address === lambda?.contractAddress
-      );
-
       data = {
         type: "TransferFA2",
         label: "Transfer FA2",
@@ -223,20 +239,33 @@ export const contentToData = (
         amount: undefined,
         addresses: undefined,
         entrypoints: undefined,
-        params: JSON.stringify(
-          lambdaData[0].txs.map(({ to_, token_id, amount }) => ({
+        params: lambdaData[0].txs.map(({ to_, token_id, amount }) => {
+          const token: walletToken | undefined = walletTokens.find(
+            token =>
+              token.token.contract.address === lambda?.contractAddress &&
+              token.token.tokenId === token_id.toString()
+          );
+          const metadata = token?.token.metadata;
+          let imageUri = metadata?.thumbnailUri;
+
+          if (!imageUri && metadata && "displayUri" in metadata)
+            imageUri = metadata.displayUri;
+
+          imageUri = toImageUri(imageUri);
+
+          return {
             fa2_address:
               token?.token.contract.address ?? lambda?.contractAddress,
             name: token?.token.metadata.name,
             token_id,
             to: to_,
-            amount: !!token?.token.metadata.decimals
-              ? BigNumber(amount)
-                  .div(BigNumber(10).pow(token?.token.metadata.decimals ?? 0))
-                  .toString()
-              : amount.toString() + "*",
-          }))
-        ),
+            imageUri: imageUri,
+            amount: BigNumber(amount).div(
+              BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+            ),
+            hasDecimal: !!token?.token.metadata.decimals,
+          };
+        }),
         rawParams: undefined,
       };
     } else if (type === LambdaType.DELEGATE || type === LambdaType.UNDELEGATE) {
@@ -325,9 +354,20 @@ export const contentToData = (
   return data;
 };
 
-const RenderProposalContentLambda = ({ data }: { data: data }) => {
-  const [hasParam, setHasParam] = useState(false);
-
+const RenderProposalContentLambda = ({
+  data,
+  isOpenToken: isOpenToken = false,
+}: {
+  data: data;
+  isOpenToken?: boolean;
+}) => {
+  const [hasParam, setHasParam] = useState(
+    () =>
+      isOpenToken &&
+      (data.type == "TransferFA1_2" ||
+        data.type == "ApproveFA1_2" ||
+        data.type == "TransferFA2")
+  );
   return (
     <div className="after:content[''] relative w-full text-xs after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-px after:bg-zinc-500 md:text-base lg:after:hidden">
       <button
@@ -354,8 +394,8 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           } w-auto justify-self-end text-right lg:w-auto lg:w-full lg:justify-self-start lg:text-left`}
         >
           <p className="flex justify-center font-medium text-zinc-500 lg:hidden">
-            Metadata
-            <Tooltip text="Metadata is user defined. It may not reflect on behavior of lambda">
+            Note
+            <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
               <InfoCircledIcon className="ml-2 h-4 w-4" />
             </Tooltip>
           </p>
@@ -367,7 +407,14 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           } justify-self-start text-left lg:justify-self-center lg:text-right`}
         >
           <p className="font-medium text-zinc-500 lg:hidden">Amount</p>
-          {!data.amount ? "-" : `${data.amount}`}
+          {!data.amount
+            ? "-"
+            : data.params &&
+              typeof data.params !== "string" &&
+              "fa1_2_address" in data.params &&
+              !data.params.hasDecimal
+            ? `${data.amount}*`
+            : `${data.amount}`}
         </span>
         {!data.addresses ? (
           <span className="lg:text-auto justify-self-end text-right text-zinc-500 lg:justify-self-center">
@@ -411,11 +458,19 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           <p className="font-medium text-zinc-500 lg:hidden">Params/Tokens</p>
           <div>
             {!!data.params
-              ? `${
-                  data.params.length < 7
-                    ? data.params
-                    : data.params.substring(0, 7) + "..."
-                }`
+              ? data.type == "TransferFA2" ||
+                data.type == "ApproveFA1_2" ||
+                data.type == "TransferFA1_2"
+                ? hasParam
+                  ? "click[+]"
+                  : "click[-]"
+                : `${
+                    typeof data.params === "string"
+                      ? data.params.length < 7
+                        ? data.params
+                        : data.params.substring(0, 7) + "..."
+                      : "-"
+                  }`
               : "-"}
           </div>
         </span>
@@ -425,7 +480,31 @@ const RenderProposalContentLambda = ({ data }: { data: data }) => {
           hasParam ? "block" : "hidden"
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
-        {data.params}
+        {!!data.params ? (
+          typeof data.params !== "string" ? (
+            "fa1_2_address" in data.params ? (
+              data.addresses?.at(0) && data.amount instanceof BigNumber ? (
+                <FA1_2Display
+                  data={data.params}
+                  to={data.addresses.at(0)}
+                  amount={data.amount}
+                />
+              ) : (
+                JSON.stringify(data.params)
+              )
+            ) : (
+              <FA2Display data={data.params} />
+            )
+          ) : data.type !== "ApproveFA1_2" &&
+            data.type !== "TransferFA1_2" &&
+            data.type !== "TransferFA2" ? (
+            data.params
+          ) : (
+            JSON.stringify(data.params)
+          )
+        ) : (
+          ""
+        )}
       </div>
     </div>
   );
