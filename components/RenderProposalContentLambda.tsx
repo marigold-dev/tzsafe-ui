@@ -4,8 +4,6 @@ import BigNumber from "bignumber.js";
 import { useState } from "react";
 import FA2Display from "../components/FA2Display";
 import { LambdaType, parseLambda } from "../context/parseLambda";
-import { Dapp } from "../dapps/identifyDapp";
-import { tezosDomainsContracts } from "../dapps/tezosDomains";
 import {
   fa1_2Token,
   fa2Tokens,
@@ -20,6 +18,7 @@ import { toImageUri } from "../utils/tokenImage";
 import { walletToken } from "../utils/useWalletTokens";
 import Alias from "./Alias";
 import FA1_2Display from "./FA1_2Display";
+import Tooltip from "./Tooltip";
 
 export type data =
   | {
@@ -33,6 +32,16 @@ export type data =
       rawParams: undefined | string;
     }
   | {
+      type: "TransferFA2" | "TransferFA1_2" | "ApproveFA1_2";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | BigNumber;
+      addresses: undefined | string;
+      entrypoints: undefined | string;
+      params: undefined | fa2Tokens | fa1_2Token;
+      rawParams: undefined | string;
+    }
+  | {
       type:
         | "UpdateThreshold" // legacy code
         | "UpdateProposalDuration"
@@ -40,22 +49,23 @@ export type data =
         | "Execute"
         | "ExecuteLambda"
         | "ExecuteContract"
-        | "TransferFA2"
-        | "TransferFA1_2"
-        | "ApproveFA1_2"
         | "Delegate"
         | "UnDelegate"
+        | "AddOrUpdateMetadata"
         | "Poe";
       label: undefined | string;
       metadata: undefined | string;
       amount: undefined | string;
       addresses: undefined | string;
       entrypoints: undefined | string;
-      params: undefined | string | fa2Tokens | fa1_2Token;
+      params: undefined | string;
       rawParams: undefined | string;
     };
 
-export type transaction = Extract<data, { addresses: undefined | string }>;
+export type transaction = Extract<
+  data,
+  { addresses: undefined | string; params: undefined | string }
+>;
 
 export const contentToData = (
   version: version,
