@@ -3,6 +3,7 @@ import { Schema } from "@taquito/michelson-encoder";
 import { bytes2Char } from "@taquito/tzip16";
 import { contracts, CustomViewData, CustomView } from ".";
 import logo from "../assets/images/TezosDomains.svg";
+import Alias from "../components/Alias";
 import { transaction } from "../components/RenderProposalContentLambda";
 
 const parser = new Parser();
@@ -149,10 +150,14 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                         : ".gho"
                     }`}
                   </li>
-                  <li>Owner: {data.owner}</li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
                   <li>Duration: {data.duration.toString()} days</li>
                   {!!data.address?.Some && (
-                    <li>Pointing to: {data.address.Some}</li>
+                    <li>
+                      Pointing to: <Alias address={data.address.Some} />
+                    </li>
                   )}
                 </ul>
               ),
@@ -169,7 +174,9 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               action: "Set domain's target",
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                  <li>Owner: {data.owner}</li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
                   {!!data.name?.Some && (
                     <li>Domain: {bytes2Char(data.name.Some)}</li>
                   )}

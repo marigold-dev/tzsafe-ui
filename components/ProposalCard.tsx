@@ -287,7 +287,7 @@ const ProposalCard = ({
                         viewData.action
                       )}
                     </h3>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex list-inside items-center space-x-4">
                       {viewData.image && (
                         <img
                           src={viewData.image}
