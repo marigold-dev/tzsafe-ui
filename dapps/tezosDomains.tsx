@@ -87,6 +87,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
 
   return {
     logo: logo.src,
+    logoLink: "https://tezos.domains",
     logoAlt: "Tezos Domains",
     label: transactions
       .flatMap(({ addresses }) => {

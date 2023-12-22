@@ -18,6 +18,7 @@ export type CustomView =
   | {
       logo: string;
       logoAlt: string;
+      logoLink: string;
       label: string;
       data: Array<CustomViewData> | undefined;
     }

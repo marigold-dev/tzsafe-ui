@@ -100,12 +100,14 @@ const ProposalCard = ({
         <div className="ml-8 flex items-center space-x-4 md:ml-0">
           {!!dapp?.logo && (
             <div className="relative h-6 w-6 shrink-0">
-              <img
-                src={dapp.logo}
-                className="h-full w-full"
-                alt={dapp.logoAlt}
-                title={dapp.logoAlt}
-              />
+              <a href={dapp.logoLink} target="_blank" rel="noreferrer">
+                <img
+                  src={dapp.logo}
+                  className="h-full w-full"
+                  alt={dapp.logoAlt}
+                  title={dapp.logoAlt}
+                />
+              </a>
             </div>
           )}
           <span
