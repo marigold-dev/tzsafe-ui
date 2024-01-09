@@ -1,7 +1,8 @@
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
-import { tokenToString } from "typescript";
+import { Dapp } from "../dapps/identifyDapp";
+import { tezosDomainsContracts } from "../dapps/tezosDomains";
 import { fa1_2Token, fa2Tokens, proposalContent } from "../types/display";
 import { crop } from "../utils/strings";
 import { mutezToTez } from "../utils/tez";

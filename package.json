@@ -22,6 +22,7 @@
     "@ariakit/react": "^0.1.8",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-select": "^1.2.0",
+    "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.3",
     "@taquito/beacon-wallet": "^17.2.0",
     "@taquito/taquito": "^17.2.0",

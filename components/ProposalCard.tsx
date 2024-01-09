@@ -1,6 +1,8 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
+import * as Switch from "@radix-ui/react-switch";
 import { useContext, useState, useMemo } from "react";
 import { AppStateContext } from "../context/state";
+import { CustomView, customViewMatchers } from "../dapps";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
 import { signers } from "../versioned/apis";
@@ -8,6 +10,7 @@ import Alias from "./Alias";
 import RenderProposalContentLambda, {
   labelOfProposalContentLambda,
   contentToData,
+  transaction,
 } from "./RenderProposalContentLambda";
 import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
@@ -45,6 +48,7 @@ const ProposalCard = ({
   const currentContract = state.currentContract ?? "";
 
   const [isOpen, setIsOpen] = useState(false);
+  const [hasDefaultView, setHasDefaultView] = useState(false);
 
   const proposalDate = new Date(proposer.timestamp);
   const resolveDate = new Date(resolver?.timestamp ?? 0);
@@ -53,18 +57,27 @@ const ProposalCard = ({
     state.contracts[currentContract] ?? state.currentStorage
   );
 
-  const rows = useMemo(
-    () =>
-      content.map(v =>
-        contentToData(
-          state.contracts[state.currentContract ?? ""]?.version ??
-            state.currentStorage?.version,
-          v,
-          walletTokens
-        )
-      ),
-    [content, state.currentContract, state.currentStorage, state.contracts]
-  );
+  const { rows, dapp } = useMemo(() => {
+    const rows = content.map(v =>
+      contentToData(
+        state.contracts[state.currentContract ?? ""]?.version ??
+          state.currentStorage?.version,
+        v,
+        walletTokens
+      )
+    );
+
+    if (rows.some(({ type }) => type !== "ExecuteContract"))
+      return { rows, dapp: undefined };
+
+    let dapp: CustomView;
+
+    for (let i = 0; i < customViewMatchers.length; ++i) {
+      dapp = customViewMatchers[i](rows as transaction[]);
+      if (!!dapp) break;
+    }
+    return { rows, dapp };
+  }, [content, state.currentContract, state.currentStorage, state.contracts]);
 
   return (
     <div
@@ -84,39 +97,59 @@ const ProposalCard = ({
           </span>
           {status ?? "Rejected"}
         </span>
-        <span
-          className="ml-8 truncate font-light text-zinc-300 md:ml-0"
-          style={{
-            minWidth: "7rem",
-          }}
-          title={content
-            .map(v => {
-              return "executeLambda" in v &&
-                (!!v.executeLambda.content ||
-                  !!v.executeLambda.metadata?.includes('"lambda"'))
-                ? labelOfProposalContentLambda(
-                    state.contracts[state.currentContract ?? ""]?.version ??
-                      state.currentStorage?.version,
-                    v
+        <div className="ml-8 flex items-center space-x-4 md:ml-0">
+          {!!dapp?.logo && (
+            <div className="relative h-6 w-6 shrink-0">
+              <a href={dapp.logoLink} target="_blank" rel="noreferrer">
+                <img
+                  src={dapp.logo}
+                  className="h-full w-full"
+                  alt={dapp.logoAlt}
+                  title={dapp.logoAlt}
+                />
+              </a>
+            </div>
+          )}
+          <span
+            className="truncate font-light text-zinc-300"
+            style={{
+              minWidth: "7rem",
+            }}
+            title={
+              dapp?.label
+                ? dapp.label
+                : content
+                    .map(v => {
+                      return "executeLambda" in v &&
+                        (!!v.executeLambda.content ||
+                          !!v.executeLambda.metadata?.includes('"lambda"'))
+                        ? labelOfProposalContentLambda(
+                            state.contracts[state.currentContract ?? ""]
+                              ?.version ?? state.currentStorage?.version,
+                            v
+                          )
+                        : labelOfProposalContentMetadata(v);
+                    })
+                    .join(", ")
+            }
+          >
+            {dapp?.label
+              ? dapp.label
+              : content
+                  .map(v =>
+                    "executeLambda" in v &&
+                    (!!v.executeLambda.content ||
+                      !!v.executeLambda.metadata?.includes('"lambda"'))
+                      ? labelOfProposalContentLambda(
+                          state.contracts[state.currentContract ?? ""]
+                            ?.version ?? state.currentStorage?.version,
+                          v
+                        )
+                      : labelOfProposalContentMetadata(v)
                   )
-                : labelOfProposalContentMetadata(v);
-            })
-            .join(", ")}
-        >
-          {content
-            .map(v =>
-              "executeLambda" in v &&
-              (!!v.executeLambda.content ||
-                !!v.executeLambda.metadata?.includes('"lambda"'))
-                ? labelOfProposalContentLambda(
-                    state.contracts[state.currentContract ?? ""]?.version ??
-                      state.currentStorage?.version,
-                    v
-                  )
-                : labelOfProposalContentMetadata(v)
-            )
-            .join(", ")}
-        </span>
+                  .join(", ")}
+          </span>
+        </div>
         <span className="hidden min-w-max justify-self-end lg:block lg:translate-x-1/2">
           {isSignable ? "Expires at: " : ""}
           {date.toLocaleDateString()} -{" "}
@@ -182,49 +215,111 @@ const ProposalCard = ({
       <div className="space-y-4 px-6 py-4">
         <section>
           <span className="text-xl font-bold">Content</span>
-          <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
-            <span>Function</span>
-            <span className="flex items-center">
-              Note
-              <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
-                <InfoCircledIcon className="ml-2 h-4 w-4" />
-              </Tooltip>
-            </span>
-            <span className="justify-self-center">Amount</span>
-            <span className="justify-self-center">Address</span>
-            <span className="justify-self-end">Entrypoint</span>
-            <span className="justify-self-end">Params/Tokens</span>
-          </div>
-          <div className="mt-2 space-y-4 font-light lg:space-y-2">
-            {rows.map((v, i) => {
-              // All the other types could be parsed, by the lambda
-              return v.type === "ExecuteLambda" ? (
-                <RenderProposalContentMetadata
-                  key={i}
-                  content={content[i]}
-                  walletTokens={walletTokens}
-                  isOpenToken={i === 0}
-                />
-              ) : (
-                <RenderProposalContentLambda
-                  key={i}
-                  data={v}
-                  isOpenToken={i === 0}
-                />
-              );
-            })}
-          </div>
+          {!dapp?.data || hasDefaultView ? (
+            <>
+              <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
+                <span>Function</span>
+                <span className="flex items-center">
+                  Note
+                  <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
+                    <InfoCircledIcon className="ml-2 h-4 w-4" />
+                  </Tooltip>
+                </span>
+                <span className="justify-self-center">Amount</span>
+                <span className="justify-self-center">Address</span>
+                <span className="justify-self-end">Entrypoint</span>
+                <span className="justify-self-end">Params/Tokens</span>
+              </div>
+              <div className="mt-2 space-y-4 font-light lg:space-y-2">
+                {rows.map((v, i) => {
+                  // All the other types could be parsed, by the lambda
+                  return v.type === "ExecuteLambda" ? (
+                    <RenderProposalContentMetadata
+                      key={i}
+                      content={content[i]}
+                      walletTokens={walletTokens}
+                      isOpenToken={i === 0}
+                    />
+                  ) : (
+                    <RenderProposalContentLambda
+                      key={i}
+                      data={v}
+                      isOpenToken={i === 0}
+                    />
+                  );
+                })}
+              </div>
 
-          {rows.some(
-            v =>
-              !!v.params &&
-              typeof v.params !== "string" &&
-              ("fa1_2_address" in v.params
-                ? !v.params.hasDecimal
-                : v.params.some(v => !v.hasDecimal))
-          ) && (
-            <div className="mt-2 text-sm text-yellow-500">
-              * There{"'"}s no decimals
+              {rows.some(
+                v =>
+                  !!v.params &&
+                  typeof v.params !== "string" &&
+                  ("fa1_2_address" in v.params
+                    ? !v.params.hasDecimal
+                    : v.params.some(v => !v.hasDecimal))
+              ) && (
+                <div className="mt-2 text-sm text-yellow-500">
+                  * There{"'"}s no decimals
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="mt-4 space-y-2 font-light">
+              {dapp.data.map((viewData, i) => {
+                return (
+                  <section key={i}>
+                    <h3
+                      className={`font-normal ${
+                        dapp.data?.length === 1 && !viewData.link
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
+                      {viewData.link ? (
+                        <a
+                          href={viewData.link}
+                          title={viewData.action}
+                          className="underline"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {viewData.action}
+                        </a>
+                      ) : (
+                        viewData.action
+                      )}
+                    </h3>
+                    <div className="flex list-inside items-center space-x-4">
+                      {viewData.image && (
+                        <img
+                          src={viewData.image}
+                          className="h-auto w-16 rounded"
+                          alt={`${viewData.action}'s image`}
+                        />
+                      )}
+                      {viewData.description}
+                    </div>
+                    {!!viewData.price && (
+                      <div className="mt-2">Price: {viewData.price}</div>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+          {!!dapp?.data && (
+            <div className="mt-6 flex w-full justify-end space-x-2">
+              <label className="font-light" htmlFor="advanced-mode">
+                Advanced mode
+              </label>
+              <Switch.Root
+                defaultChecked={false}
+                className="relative h-[25px] w-[42px] rounded-full bg-zinc-900 transition-colors data-[state='checked']:bg-primary"
+                id="advanced-mode"
+                onCheckedChange={setHasDefaultView}
+              >
+                <Switch.Thumb className="block h-[21px] w-[21px] translate-x-[2px] rounded-full bg-white transition-transform will-change-transform data-[state='checked']:translate-x-[19px]" />
+              </Switch.Root>
             </div>
           )}
         </section>

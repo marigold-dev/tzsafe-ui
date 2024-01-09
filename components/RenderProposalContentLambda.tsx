@@ -20,31 +20,52 @@ import Alias from "./Alias";
 import FA1_2Display from "./FA1_2Display";
 import Tooltip from "./Tooltip";
 
-type data = {
-  type:
-    | "UpdateThreshold" // legacy code
-    | "UpdateProposalDuration"
-    | "AddSigner"
-    | "RemoveSigner"
-    | "Transfer"
-    | "Execute"
-    | "ExecuteLambda"
-    | "ExecuteContract"
-    | "TransferFA2"
-    | "TransferFA1_2"
-    | "ApproveFA1_2"
-    | "Delegate"
-    | "UnDelegate"
-    | "Poe"
-    | "AddOrUpdateMetadata";
-  label: undefined | string;
-  metadata: undefined | string;
-  amount: undefined | string | BigNumber;
-  addresses: undefined | string[];
-  entrypoints: undefined | string;
-  params: undefined | string | fa2Tokens | fa1_2Token;
-  rawParams: undefined | string;
-};
+export type data =
+  | {
+      type: "AddSigner" | "RemoveSigner";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | string;
+      addresses: undefined | string[];
+      entrypoints: undefined | string;
+      params: undefined | string;
+      rawParams: undefined | string;
+    }
+  | {
+      type: "TransferFA2" | "TransferFA1_2" | "ApproveFA1_2";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | BigNumber;
+      addresses: undefined | string;
+      entrypoints: undefined | string;
+      params: undefined | fa2Tokens | fa1_2Token;
+      rawParams: undefined | string;
+    }
+  | {
+      type:
+        | "UpdateThreshold" // legacy code
+        | "UpdateProposalDuration"
+        | "Transfer"
+        | "Execute"
+        | "ExecuteLambda"
+        | "ExecuteContract"
+        | "Delegate"
+        | "UnDelegate"
+        | "AddOrUpdateMetadata"
+        | "Poe";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | string;
+      addresses: undefined | string;
+      entrypoints: undefined | string;
+      params: undefined | string;
+      rawParams: undefined | string;
+    };
+
+export type transaction = Extract<
+  data,
+  { addresses: undefined | string; params: undefined | string }
+>;
 
 export const contentToData = (
   version: version,
@@ -114,7 +135,7 @@ export const contentToData = (
       ...data,
       type: "Transfer",
       label: "Transfer",
-      addresses: [content.transfer.destination],
+      addresses: content.transfer.destination,
       amount: `${mutezToTez(content.transfer.amount)} Tez`,
     };
   } else if ("add_or_update_metadata" in content) {
@@ -164,7 +185,7 @@ export const contentToData = (
         type: "ExecuteContract",
         label: "Execute contract",
         addresses: !!lambda?.contractAddress
-          ? [lambda.contractAddress]
+          ? lambda.contractAddress
           : undefined,
         entrypoints: !lambda?.entrypoint.name
           ? "default"
@@ -205,9 +226,7 @@ export const contentToData = (
             BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
           );
         })(),
-        addresses: [
-          "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
-        ],
+        addresses: "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         entrypoints: undefined,
         params: {
           name: token?.token.metadata.name,
@@ -270,9 +289,9 @@ export const contentToData = (
         metadata: undefined,
         amount: undefined,
         addresses: !!address
-          ? [address]
+          ? address
           : meta.old_baker_address
-          ? [meta.old_baker_address]
+          ? meta.old_baker_address
           : undefined,
         entrypoints: undefined,
         params: undefined,
@@ -308,7 +327,7 @@ export const contentToData = (
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
-        addresses: [address],
+        addresses: address,
         entrypoints: entrypoint,
         params:
           typeof arg === "object" || Array.isArray(arg)
@@ -332,7 +351,7 @@ export const contentToData = (
         label: "Execute contract",
         metadata: meta,
         amount: !!amount ? `${amount} Tez` : undefined,
-        addresses: [address],
+        addresses: address,
         entrypoints: entrypoint,
         params:
           typeof arg === "object" || Array.isArray(arg)
@@ -419,11 +438,17 @@ const RenderProposalContentLambda = ({
         ) : (
           <ul className="lg:text-auto justify-self-end text-right lg:justify-self-center">
             <li className="font-medium text-zinc-500 lg:hidden">Addresses</li>
-            {data.addresses.map((address, i) => (
-              <li key={i}>
-                <Alias address={address} />
+            {Array.isArray(data.addresses) ? (
+              data.addresses.map((address, i) => (
+                <li key={i}>
+                  <Alias address={address} />
+                </li>
+              ))
+            ) : (
+              <li>
+                <Alias address={data.addresses} />
               </li>
-            ))}
+            )}
           </ul>
         )}
         <span
