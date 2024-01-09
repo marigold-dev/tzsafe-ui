@@ -24,6 +24,7 @@ import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import { hasTzip27Support } from "../versioned/util";
 import Copy from "./Copy";
+import Tooltip from "./Tooltip";
 
 type selectItemProps = {
   name: string | undefined;
@@ -53,7 +54,7 @@ const SelectedItem = ({
   disableCopy = false,
 }: selectItemProps) => {
   const formattedBalance = useMemo(() => {
-    return new BigNumber(balance ?? 0).div(10 ** 6, 10).precision(5);
+    return new BigNumber(balance ?? 0).div(10 ** 6, 10);
   }, [balance]);
 
   return (
@@ -74,7 +75,9 @@ const SelectedItem = ({
         </span>
       </Copy>
       <div className="mt-2 flex items-center justify-between">
-        <p className="text-lg">{formattedBalance.toString()} Tez</p>
+        <Tooltip text={formattedBalance.toString() + " Tez"}>
+          <p className="text-lg">{formattedBalance.toFixed(2)} Tez</p>
+        </Tooltip>
         <p className="text-xs text-zinc-500">V{version ?? "0.0.0"}</p>
       </div>
     </div>
