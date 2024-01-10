@@ -2,10 +2,9 @@ import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion from "../../context/metadata";
+import fetchVersion, { CONTRACTS } from "../../context/metadata";
 import { fromIpfs } from "../../context/metadata_blob";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
-import contract from "../../context/unitContract";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
 
@@ -20,10 +19,19 @@ function Success() {
     (async () => {
       if (loading && address.status == 0) {
         try {
+          if (!formState?.version || formState.version === "unknown version")
+            throw Error("The contract version is unknown or undefined.");
+
+          const deploying_contract = CONTRACTS[formState.version];
+          if (!deploying_contract)
+            throw Error(
+              `The contract version, ${formState.version}, doesn't support for deployment.`
+            );
+
           const metablob = await fromIpfs();
           const deploy = await state?.connection.wallet
             .originate({
-              code: contract,
+              code: deploying_contract,
               storage: {
                 proposal_counter: 0,
                 proposals: [],
@@ -51,6 +59,7 @@ function Success() {
           const balance = await state?.connection.tz.getBalance(
             result1!.address!
           );
+          console.log(version, formState.version);
           setAddress({ address: result1?.address!, status: 1 });
           setLoading(false);
           dispatch!({

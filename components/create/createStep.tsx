@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import FormContext from "../../context/formContext";
-import Aliases from "./aliases";
 import Basic from "./basic";
 import Success from "./createLoader";
+import Settings from "./settings";
 
 function CreateStep() {
   const { activeStepIndex } = useContext(FormContext)!;
@@ -14,7 +14,7 @@ function CreateStep() {
           case 0:
             return <Basic />;
           case 1:
-            return <Aliases />;
+            return <Settings />;
           case 2:
             return <Success />;
           default:
