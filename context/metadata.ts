@@ -4,6 +4,8 @@ import {
   Wallet,
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
+import v0_3_3 from "../context/contract/v0.3.3";
+import v0_3_4 from "../context/contract/v0.3.4";
 import { version } from "../types/display";
 import { TZKT_API_URL } from "./config";
 
@@ -19,6 +21,25 @@ const dispatch: { [key: string]: version } = {
   "0.3.1": "0.3.1",
   "0.3.2": "0.3.2",
   "0.3.3": "0.3.3",
+  "0.3.4": "0.3.4",
+};
+
+// tzsafe does not support deploying that version
+export const CONTRACTS: { [k in version]: string | undefined } = {
+  "0.0.6": undefined,
+  "0.0.8": undefined,
+  "0.0.9": undefined,
+  "0.0.10": undefined,
+  "0.0.11": undefined,
+  //@ts-expect-error There was 2 versions of 0.0.11, so it means 2 codeHash
+  "0.0.11b": undefined,
+  "0.1.1": undefined,
+  "0.3.0": undefined,
+  "0.3.1": undefined,
+  "0.3.2": undefined,
+  "0.3.3": v0_3_3,
+  "0.3.4": v0_3_4,
+  "unknown version": undefined,
 };
 
 // Those values are from tzkt api: /v1/contracts
@@ -38,6 +59,7 @@ const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
   "0.3.1": "1576695458:46756700",
   "0.3.2": "66001562:-1892417854",
   "0.3.3": "-623288749:1866000220",
+  "0.3.4": "1138255963:-521664810",
   "unknown version": undefined,
 };
 
@@ -55,6 +77,7 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   [HASHES["0.3.1"]!]: "0.3.1",
   [HASHES["0.3.2"]!]: "0.3.2",
   [HASHES["0.3.3"]!]: "0.3.3",
+  [HASHES["0.3.4"]!]: "0.3.4",
 };
 
 async function fetchVersion(

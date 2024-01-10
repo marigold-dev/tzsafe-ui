@@ -1,12 +1,9 @@
-import { BigMapAbstraction } from "@taquito/taquito";
-import { bytes2Char, tzip16 } from "@taquito/tzip16";
-import BigNumber from "bignumber.js";
+import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fetchVersion from "../../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
-import contract from "../../context/unitContract";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {

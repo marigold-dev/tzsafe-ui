@@ -22,6 +22,7 @@ import Version0_3_0 from "./version0_3_0";
 import Version0_3_1 from "./version0_3_1";
 import Version0_3_2 from "./version0_3_2";
 import Version0_3_3 from "./version0_3_3";
+import Version0_3_4 from "./version0_3_4";
 
 function signers(c: contractStorage): string[] {
   return Versioned.signers(c);
@@ -40,25 +41,28 @@ const dispatch: {
   "0.3.1": (version, address) => new Version0_3_1(version, address),
   "0.3.2": (version, address) => new Version0_3_2(version, address),
   "0.3.3": (version, address) => new Version0_3_3(version, address),
+  "0.3.4": (version, address) => new Version0_3_4(version, address),
   "unknown version": () => {
     throw new Error("not implemented!");
   },
 };
+
 const dispatchUi: {
-  [key in version]: any;
+  [key in version]: () => typeof Versioned;
 } = {
-  "0.0.6": Version0_0_6,
-  "0.0.8": Version0_0_8,
-  "0.0.9": Version0_0_9,
-  "0.0.10": Version0_0_10,
-  "0.0.11": Version0_0_11,
-  "0.1.1": Version0_1_1,
-  "0.3.0": Version0_3_0,
-  "0.3.1": Version0_3_1,
-  "0.3.2": Version0_3_2,
-  "0.3.3": Version0_3_3,
+  "0.0.6": () => Version0_0_6,
+  "0.0.8": () => Version0_0_8,
+  "0.0.9": () => Version0_0_9,
+  "0.0.10": () => Version0_0_10,
+  "0.0.11": () => Version0_0_11,
+  "0.1.1": () => Version0_1_1,
+  "0.3.0": () => Version0_3_0,
+  "0.3.1": () => Version0_3_1,
+  "0.3.2": () => Version0_3_2,
+  "0.3.3": () => Version0_3_3,
+  "0.3.4": () => Version0_3_4,
   "unknown version": () => {
-    throw new Error("not implemented!");
+    throw Error("not implemented!");
   },
 };
 function VersionedApi(version: version, contractAddress: string): Versioned {
@@ -69,13 +73,13 @@ function toStorage(
   c: any,
   balance: BigNumber
 ): contractStorage {
-  return dispatchUi[version].toContractState(c, balance);
+  return dispatchUi[version]().toContractState(c, balance);
 }
 function getProposalsId(version: version, c: any): string {
-  return dispatchUi[version].getProposalsId(c);
+  return dispatchUi[version]().getProposalsId(c);
 }
 function toProposal(version: version, c: any): proposal {
-  return dispatchUi[version].toProposal(c);
+  return dispatchUi[version]().toProposal(c);
 }
 function map2Object(x: any): any {
   if (Array.isArray(x)) {

@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import { version } from "../types/display";
 
 const FormContext = createContext<null | {
   activeStepIndex: number;
@@ -11,6 +12,7 @@ const FormContext = createContext<null | {
       days: string | undefined;
       hours: string | undefined;
       minutes: string | undefined;
+      version?: version;
     } | null>
   >;
   formState: {
@@ -21,6 +23,7 @@ const FormContext = createContext<null | {
     days: string | undefined;
     hours: string | undefined;
     minutes: string | undefined;
+    version?: version;
   } | null;
   formStatus: string;
   setFormStatus: React.Dispatch<React.SetStateAction<string>>;
