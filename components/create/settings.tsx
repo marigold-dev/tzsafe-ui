@@ -34,7 +34,7 @@ function get(
   }
 }
 
-function Aliases() {
+function Settings() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useContext(AppStateContext);
@@ -360,4 +360,4 @@ function Aliases() {
   );
 }
 
-export default Aliases;
+export default Settings;

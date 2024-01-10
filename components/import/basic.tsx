@@ -22,7 +22,7 @@ function Basic() {
   const params = useSearchParams();
 
   let [initialState, set] = useState({
-    walletName: "example-wallet",
+    walletName: "TzSafe Wallet",
     walletAddress: formState?.walletAddress || "",
   });
   let byName = Object.fromEntries(
