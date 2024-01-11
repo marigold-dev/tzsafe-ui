@@ -29,6 +29,22 @@ import { ownersForm } from "./forms";
 import { proposals, timeoutAndHash, Versioned } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
-class Version0_3_4 extends Version0_3_3 {}
+class Version0_3_4 extends Version0_3_3 {
+  static override toContractState(
+    contract: any,
+    balance: BigNumber
+  ): contractStorage {
+    let c: c1 = contract;
+    return {
+      balance: balance!.toString() || "0",
+      proposal_map: c.proposals.toString(),
+      proposal_counter: c.proposal_counter.toString(),
+      effective_period: c!.effective_period,
+      threshold: c!.threshold.toNumber()!,
+      owners: c!.owners!,
+      version: "0.3.4",
+    };
+  }
+}
 
 export default Version0_3_4;

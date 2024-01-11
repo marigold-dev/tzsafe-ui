@@ -30,6 +30,7 @@ import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals } from "../versioned/interface";
+import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import ErrorMessage from "./ErrorMessage";
@@ -641,6 +642,29 @@ function TransferForm(
                       >
                         Contract Execution
                       </button>
+                      {hasTzip27SupportWithPoEChallenge(
+                        props.contract.version
+                      ) ? (
+                        <button
+                          type="button"
+                          className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                          onClick={e => {
+                            addNewField(
+                              e,
+                              push,
+                              "poe",
+                              portalIdx.current,
+                              Versioned.poe(props.contract.version)
+                            );
+
+                            portalIdx.current += 1;
+                          }}
+                        >
+                          Message Signing
+                        </button>
+                      ) : (
+                        <div></div>
+                      )}
                     </div>
                     <div
                       className={`${
@@ -955,7 +979,8 @@ function TransferForm(
                                 <span className="mr-2 text-zinc-500">
                                   #{(index + 1).toString().padStart(2, "0")}
                                 </span>
-                                Proof of Event
+                                Proof of Event Challenge for message signing{" "}
+                                {"(TZIP27)"}
                               </p>
 
                               <div
@@ -993,6 +1018,18 @@ function TransferForm(
                                       <ErrorMessage
                                         name={`transfers.${index}.values.${value.field}`}
                                       />
+                                      <button
+                                        type="button"
+                                        className={
+                                          "mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                        }
+                                        onClick={e => {
+                                          e.preventDefault();
+                                          remove(index);
+                                        }}
+                                      >
+                                        Remove
+                                      </button>
                                     </div>
                                   );
                                 })}
