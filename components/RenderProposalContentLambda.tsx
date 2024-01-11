@@ -524,7 +524,6 @@ export const labelOfProposalContentLambda = (
   version: version,
   content: proposalContent
 ) => {
-  console.log(content);
   if ("changeThreshold" in content) {
     return "Update threshold";
   } else if ("adjustEffectivePeriod" in content) {
