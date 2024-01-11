@@ -6,7 +6,11 @@ import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../../context/state";
 import fetchVersion from "../../context/version";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
@@ -182,12 +186,12 @@ const Proposals = () => {
     (async () => {
       if (!globalState.currentContract) return;
 
-      const c = await globalState.connection.contract.at(
+      const c = await globalState.connection.wallet.at(
         globalState.currentContract,
         tzip16
       );
 
-      const cc = await c.storage();
+      const storage = (await c.storage()) as contractStorage;
 
       const version = await (globalState.contracts[globalState.currentContract]
         ? Promise.resolve<version>(
@@ -196,7 +200,7 @@ const Proposals = () => {
         : fetchVersion(c));
 
       const bigmap: { key: string; value: any }[] = await Versioned.proposals(
-        getProposalsId(version, cc),
+        getProposalsId(version, storage),
         state.offset
       );
 
@@ -222,7 +226,7 @@ const Proposals = () => {
           type: "updateContract",
           payload: {
             address: globalState.currentContract,
-            contract: toStorage(version, cc, balance),
+            contract: toStorage(version, storage, balance),
           },
         });
       }

@@ -384,7 +384,6 @@ function renderContent(
   if ("add_or_update_metadata" in x) {
     return `Updata metadata`;
   }
-  let _: never = x;
   return "Not supported";
 }
 export default Proposals;

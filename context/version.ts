@@ -2,6 +2,7 @@ import {
   ContractAbstraction,
   ContractProvider,
   Wallet,
+  WalletContract,
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
 import { version } from "../types/display";
@@ -83,7 +84,7 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
 };
 
 async function fetchVersion(
-  metadata: ContractAbstraction<ContractProvider> & {
+  metadata: WalletContract & {
     tzip16(
       this: ContractAbstraction<ContractProvider | Wallet> & {
         [ABSTRACTION_KEY]?: Tzip16ContractAbstraction;

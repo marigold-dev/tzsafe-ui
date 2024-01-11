@@ -1,5 +1,5 @@
 import { emitMicheline } from "@taquito/michel-codec";
-import { Contract, TezosToolkit, TransferParams } from "@taquito/taquito";
+import { WalletContract, TezosToolkit, TransferParams } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
@@ -12,10 +12,12 @@ import Version0_3_3 from "./version0_3_3";
 
 class Version0_3_4 extends Version0_3_3 {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals
   ): Promise<[boolean, string]> {
+    const storage = (await cc.storage()) as contractStorage;
+    console.log("proposal id", storage.proposal_counter.toString());
     if (
       proposals.transfers.length === 1 &&
       proposals.transfers[0].type === "poe"

@@ -169,7 +169,7 @@ const proposalsType: MichelsonType = {
 
 class Version0_3_0 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals
   ): Promise<[boolean, string]> {
@@ -386,7 +386,7 @@ class Version0_3_0 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {
@@ -432,7 +432,7 @@ class Version0_3_0 extends Versioned {
       version: "0.3.0",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       return {
         executeLambda: {

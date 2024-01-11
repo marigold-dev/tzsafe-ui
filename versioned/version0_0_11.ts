@@ -2,7 +2,6 @@ import { Parser } from "@taquito/michel-codec";
 import { emitMicheline } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
-  Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
@@ -33,7 +32,7 @@ function convert(x: string): string {
 }
 class Version0_0_11 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true
@@ -253,7 +252,7 @@ class Version0_0_11 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {

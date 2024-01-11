@@ -3,7 +3,11 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import fromIpfs from "../../context/fromIpfs";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../../context/state";
 import fetchVersion, { CONTRACTS } from "../../context/version";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
@@ -51,8 +55,8 @@ function Success() {
             })
             .send();
           const result1 = await deploy?.contract();
-          const c = await result1!.storage();
-          const ct = await state?.connection.contract.at(
+          const c = (await result1!.storage()) as contractStorage;
+          const ct = await state?.connection.wallet.at(
             result1?.address!,
             tzip16
           )!;
