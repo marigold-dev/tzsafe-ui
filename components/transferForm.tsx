@@ -507,7 +507,7 @@ function TransferForm(
         setFormState(values);
         setLoading(true);
         try {
-          let cc = await state.connection.contract.at(props.address);
+          let cc = await state.connection.wallet.at(props.address);
 
           let versioned = VersionedApi(props.contract.version, props.address);
           setTimeoutAndHash(

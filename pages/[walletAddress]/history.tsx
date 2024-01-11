@@ -198,7 +198,7 @@ const History = () => {
     (async () => {
       if (!globalState.currentContract) return;
 
-      const c = await globalState.connection.contract.at(
+      const c = await globalState.connection.wallet.at(
         globalState.currentContract,
         tzip16
       );
@@ -206,14 +206,14 @@ const History = () => {
         globalState.currentContract
       );
 
-      const cc = (await c.storage()) as contractStorage;
+      const storage = (await c.storage()) as contractStorage;
 
       const version = await (globalState.contracts[globalState.currentContract]
         ? Promise.resolve<version>(
             globalState.contracts[globalState.currentContract].version
           )
         : fetchVersion(c));
-      const updatedContract = toStorage(version, cc, balance);
+      const updatedContract = toStorage(version, storage, balance);
 
       globalState.contracts[globalState.currentContract]
         ? globalDispatch({
@@ -225,13 +225,13 @@ const History = () => {
           })
         : null;
 
-      cc.version = version;
+      storage.version = version;
 
       const bigmap = await Versioned.proposalsHistory(
-        cc,
+        storage,
 
         globalState.currentContract,
-        getProposalsId(version, cc),
+        getProposalsId(version, storage),
         state.offset
       );
 

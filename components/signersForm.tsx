@@ -234,7 +234,7 @@ const SignersForm: FC<{
   const updateSettings = async (ops: ownersForm[]) => {
     if (!props.contract) return;
 
-    let cc = await state.connection.contract.at(props.address);
+    let cc = await state.connection.wallet.at(props.address);
     let api = VersionedApi(props.contract.version, props.address);
     setTimeoutAndHash(
       await api.submitSettingsProposals(cc, state.connection, ops)

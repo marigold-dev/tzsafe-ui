@@ -1,6 +1,5 @@
 import { Parser } from "@taquito/michel-codec";
 import {
-  Contract,
   TezosToolkit,
   BigMapAbstraction,
   MichelsonMap,
@@ -20,7 +19,7 @@ import { proposals } from "./interface";
 
 class Version0_0_6 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true
@@ -151,7 +150,7 @@ class Version0_0_6 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {

@@ -1,7 +1,6 @@
 import { emitMicheline, Parser } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
-  Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
@@ -18,7 +17,7 @@ import {
 import {
   content,
   proposal as p1,
-  contractStorage as c1,
+  contractStorage as cs,
 } from "../types/Proposal0_3_3";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
@@ -29,7 +28,7 @@ import { proposals, timeoutAndHash, Versioned } from "./interface";
 
 class Version0_3_3 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true
@@ -229,7 +228,7 @@ class Version0_3_3 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {
@@ -264,7 +263,7 @@ class Version0_3_3 extends Versioned {
     contract: any,
     balance: BigNumber
   ): contractStorage {
-    let c: c1 = contract;
+    let c: cs = contract;
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
@@ -345,7 +344,7 @@ class Version0_3_3 extends Versioned {
     throw new Error(`unknown proposal: ${JSON.stringify(content)}`);
   }
 
-  static override getProposalsId(_contract: c1): string {
+  static override getProposalsId(_contract: cs): string {
     return _contract.proposals.toString();
   }
 

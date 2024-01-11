@@ -285,7 +285,7 @@ const PoeModal = () => {
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
       try {
-        const contract = await state.connection.contract.at(
+        const contract = await state.connection.wallet.at(
           message.sourceAddress,
           tzip16
         );
@@ -550,7 +550,7 @@ const PoeModal = () => {
 
                           let hash;
                           try {
-                            const cc = await state.connection.contract.at(
+                            const cc = await state.connection.wallet.at(
                               address
                             );
                             const versioned = VersionedApi(
@@ -665,9 +665,7 @@ const PoeModal = () => {
 
                           await state.p2pClient!.approvePoeChallenge();
 
-                          const cc = await state.connection.contract.at(
-                            address
-                          );
+                          const cc = await state.connection.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
                             address
@@ -681,9 +679,6 @@ const PoeModal = () => {
                                   {
                                     type: "poe",
                                     values: {
-                                      challengeId:
-                                        state.p2pClient?.proofOfEvent.data
-                                          ?.challenge_id ?? "",
                                       payload:
                                         state.p2pClient?.proofOfEvent.data
                                           ?.payload ?? "",
