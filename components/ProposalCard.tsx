@@ -120,7 +120,6 @@ const ProposalCard = ({
                 ? dapp.label
                 : content
                     .map(v => {
-                      console.log(v);
                       return "executeLambda" in v &&
                         v.executeLambda.content === "" &&
                         !!v.executeLambda.metadata?.includes("lambda")

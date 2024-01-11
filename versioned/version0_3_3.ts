@@ -149,6 +149,14 @@ class Version0_3_3 extends Versioned {
                 },
               };
             }
+            case "update_metadata": {
+              return {
+                add_or_update_metadata: {
+                  key: "",
+                  value: char2Bytes(x.values.tzip16_metadata),
+                },
+              };
+            }
             default:
               return {};
           }

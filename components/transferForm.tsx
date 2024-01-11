@@ -30,7 +30,10 @@ import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce } from "../utils/timeout";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals } from "../versioned/interface";
-import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
+import {
+  hasTzip27Support,
+  hasTzip27SupportWithPoEChallenge,
+} from "../versioned/util";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import ErrorMessage from "./ErrorMessage";
@@ -642,6 +645,27 @@ function TransferForm(
                       >
                         Contract Execution
                       </button>
+                      {hasTzip27Support(props.contract.version) ? (
+                        <button
+                          type="button"
+                          className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                          onClick={e => {
+                            addNewField(
+                              e,
+                              push,
+                              "update_metadata",
+                              portalIdx.current,
+                              Versioned.update_metadata(props.contract.version)
+                            );
+
+                            portalIdx.current += 1;
+                          }}
+                        >
+                          Update Metadata
+                        </button>
+                      ) : (
+                        <div></div>
+                      )}
                       {hasTzip27SupportWithPoEChallenge(
                         props.contract.version
                       ) ? (
@@ -979,8 +1003,71 @@ function TransferForm(
                                 <span className="mr-2 text-zinc-500">
                                   #{(index + 1).toString().padStart(2, "0")}
                                 </span>
-                                Proof of Event Challenge for message signing{" "}
-                                {"(TZIP27)"}
+                                Message signing in Proof of Event Challenge{" "}
+                                {" (TZIP27)"}
+                              </p>
+
+                              <div
+                                className={
+                                  "md:p-none flex h-fit min-h-fit min-w-full flex-1 flex-col items-start justify-around space-y-4 md:flex-row md:space-x-4  md:space-y-0 md:rounded-none md:border-none"
+                                }
+                                key={index}
+                              >
+                                {transfer.fields.map((value, idx, arr) => {
+                                  let classn = `${
+                                    (idx + 1) % 2 === 0
+                                      ? `relative flex flex-col justify-start`
+                                      : "flex flex-col"
+                                  }`;
+
+                                  return (
+                                    <div
+                                      className={`${classn} w-full flex-1 md:w-auto`}
+                                      key={idx}
+                                    >
+                                      <label className="mb-1 text-white">
+                                        {value.label}
+                                      </label>
+                                      <Field
+                                        component={value.kind}
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className={
+                                          "md:text-md relative h-fit min-h-fit w-full flex-1 rounded p-2 text-sm md:w-auto"
+                                        }
+                                        placeholder={value.placeholder}
+                                        rows={10}
+                                        validate={value.validate}
+                                      />
+
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.${value.field}`}
+                                      />
+                                      <button
+                                        type="button"
+                                        className={
+                                          "mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                        }
+                                        onClick={e => {
+                                          e.preventDefault();
+                                          remove(index);
+                                        }}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          );
+                        } else if (transfer.type === "update_metadata") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                Update Metadata {" (TZIP16)"}
                               </p>
 
                               <div
@@ -1037,7 +1124,6 @@ function TransferForm(
                             </section>
                           );
                         }
-
                         if (!("fields" in transfer)) return;
 
                         const withTextArea = transfer.fields.find(
