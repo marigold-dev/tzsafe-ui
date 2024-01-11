@@ -1,17 +1,13 @@
-import { emitMicheline, Parser } from "@taquito/michel-codec";
+import { emitMicheline } from "@taquito/michel-codec";
 import { Contract, TezosToolkit, TransferParams } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
-import {
-  content,
-  proposal as p1,
-  contractStorage as c1,
-} from "../types/Proposal0_3_4";
+import { content, contractStorage as c1 } from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
-import { proposal, proposalContent, status } from "../types/display";
+import { proposalContent } from "../types/display";
 import { promiseWithTimeout } from "../utils/timeout";
-import { proposals, timeoutAndHash, Versioned } from "./interface";
+import { proposals } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
 class Version0_3_4 extends Version0_3_3 {
@@ -20,8 +16,6 @@ class Version0_3_4 extends Version0_3_3 {
     t: TezosToolkit,
     proposals: proposals
   ): Promise<[boolean, string]> {
-    //TODO: check if poe proposal in multiple proposals
-
     if (
       proposals.transfers.length === 1 &&
       proposals.transfers[0].type === "poe"
@@ -51,9 +45,12 @@ class Version0_3_4 extends Version0_3_3 {
         return [true, op.opHash];
       }
       return [false, op.opHash];
-    } else {
+    } else if (
+      proposals.transfers.length >= 1 &&
+      proposals.transfers.filter(v => v.type === "poe").length === 0
+    ) {
       return super.submitTxProposals(cc, t, proposals);
-    }
+    } else return [false, "doesn't support for TzSafe on UI"];
   }
 
   static override toContractState(

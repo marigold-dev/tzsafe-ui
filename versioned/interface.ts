@@ -82,6 +82,12 @@ export type transfer =
         payload: string;
       };
     } & common)
+  | ({
+      type: "update_metadata";
+      values: {
+        tzip16_metadata: string;
+      };
+    } & common)
   | {
       type: "contract";
       values: {
@@ -684,6 +690,37 @@ abstract class Versioned {
           placeholder: "Payload",
           validate: (v: string) =>
             v.trim() === "" ? "Payload is empty" : undefined,
+        },
+      ],
+    };
+  }
+
+  static update_metadata(version: version): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    if (!hasTzip27Support(version)) {
+      return { fields: [], values: {} };
+    }
+
+    return {
+      values: {
+        tzip16_metadata: "",
+      },
+      fields: [
+        {
+          field: "tzip16_metadata",
+          label: "Metadata in TZIP16",
+          path: ".tzip16_metadata",
+          placeholder: "Metadata",
+          validate: (v: string) =>
+            v.trim() === "" ? "Metadata is empty" : undefined,
         },
       ],
     };
