@@ -296,7 +296,7 @@ class Version0_1_1 extends Versioned {
       version: "0.1.1",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       return {
         executeLambda: {

@@ -14,7 +14,6 @@ import {
   generateFA1_2ApproveMichelson,
   generateFA1_2TransferMichelson,
   generateFA2Michelson,
-  generatePoe,
 } from "../context/generateLambda";
 import {
   content,
@@ -27,10 +26,6 @@ import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
 import { ownersForm } from "./forms";
 import { proposals, timeoutAndHash, Versioned } from "./interface";
-
-function convert(x: string): string {
-  return char2Bytes(x);
-}
 
 class Version0_3_3 extends Versioned {
   async submitTxProposals(
@@ -54,7 +49,7 @@ class Version0_3_3 extends Versioned {
               const p = new Parser();
               const michelsonCode = p.parseMichelineExpression(x.values.lambda);
               let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
+                ? char2Bytes(x.values.metadata)
                 : null;
               return {
                 execute_lambda: {
@@ -154,19 +149,6 @@ class Version0_3_3 extends Versioned {
                 },
               };
             }
-            case "poe":
-              const parser = new Parser();
-
-              const michelsonCode = parser.parseMichelineExpression(
-                generatePoe([x.values])
-              );
-
-              return {
-                execute_lambda: {
-                  metadata: null,
-                  lambda: michelsonCode,
-                },
-              };
             default:
               return {};
           }
@@ -282,7 +264,7 @@ class Version0_3_3 extends Versioned {
       version: "0.3.3",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       const contentLambda = content.execute_lambda.lambda;
       const metadata = content.execute_lambda.metadata;
@@ -349,11 +331,13 @@ class Version0_3_3 extends Versioned {
       };
     }
 
-    throw new Error("unknown proposal");
+    throw new Error(`unknown proposal: ${JSON.stringify(content)}`);
   }
+
   static override getProposalsId(_contract: c1): string {
     return _contract.proposals.toString();
   }
+
   static override toProposal(proposal: any): proposal {
     let prop: p1 = proposal;
 

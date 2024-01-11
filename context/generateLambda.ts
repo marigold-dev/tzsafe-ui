@@ -1,4 +1,3 @@
-import { char2Bytes } from "@taquito/utils";
 import { version } from "../types/display";
 import { isListOperation } from "../versioned/util";
 
@@ -226,24 +225,4 @@ export function generateUndelegateMichelson(version: version) {
   }
 
   throw new Error("Can't generate for an unknow version");
-}
-
-export function generatePoe(
-  events: { challengeId: string; payload: string }[]
-) {
-  if (events.length === 0) throw new Error("Empty events");
-
-  return `{
-        DROP;
-        NIL operation ;
-        ${events.map(
-          ({ challengeId, payload }) => `
-          PUSH (pair (bytes %challenge_id) (bytes %payload)) (Pair 0x${char2Bytes(
-            challengeId
-          )} 0x${char2Bytes(payload)}) ;
-          EMIT %proof_of_event (pair (bytes %challenge_id) (bytes %payload)) ;
-          CONS ;
-        `
-        )}
-      }`;
 }
