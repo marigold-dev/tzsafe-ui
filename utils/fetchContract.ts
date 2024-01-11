@@ -1,6 +1,6 @@
 import { TezosToolkit } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
-import fetchVersion from "../context/metadata";
+import fetchVersion from "../context/version";
 import { contractStorage } from "../types/app";
 import { toStorage } from "../versioned/apis";
 

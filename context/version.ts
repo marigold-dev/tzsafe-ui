@@ -4,10 +4,12 @@ import {
   Wallet,
 } from "@taquito/taquito";
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
-import v0_3_3 from "../context/contract/v0.3.3";
-import v0_3_4 from "../context/contract/v0.3.4";
 import { version } from "../types/display";
 import { TZKT_API_URL } from "./config";
+import ct0_3_3 from "./contract/v0.3.3";
+import ct0_3_4 from "./contract/v0.3.4";
+import meta0_3_3 from "./metadata/v0.3.3";
+import meta0_3_4 from "./metadata/v.0.3.4";
 
 declare const ABSTRACTION_KEY: unique symbol;
 const dispatch: { [key: string]: version } = {
@@ -24,21 +26,21 @@ const dispatch: { [key: string]: version } = {
   "0.3.4": "0.3.4",
 };
 
-// tzsafe does not support deploying that version
-export const CONTRACTS: { [k in version]: string | undefined } = {
+// undefined means tzsafe does not support deploying that version
+export const CONTRACTS: { [k in version]: [string, any] | undefined } = {
   "0.0.6": undefined,
   "0.0.8": undefined,
   "0.0.9": undefined,
   "0.0.10": undefined,
   "0.0.11": undefined,
-  //@ts-expect-error There was 2 versions of 0.0.11, so it means 2 codeHash
+  //@ts-expect-error There was 2 versions of 0.0.11, so it means 2 codeHash.
   "0.0.11b": undefined,
   "0.1.1": undefined,
   "0.3.0": undefined,
   "0.3.1": undefined,
   "0.3.2": undefined,
-  "0.3.3": v0_3_3,
-  "0.3.4": v0_3_4,
+  "0.3.3": [ct0_3_3, meta0_3_3],
+  "0.3.4": [ct0_3_4, meta0_3_4],
   "unknown version": undefined,
 };
 
@@ -70,7 +72,7 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   [HASHES["0.0.9"]!]: "0.0.9",
   [HASHES["0.0.10"]!]: "0.0.10",
   [HASHES["0.0.11"]!]: "0.0.11",
-  //@ts-ignore
+  //@ts-ignore  This version only exist on ghostnet
   [HASHES["0.0.11b"]!]: "0.0.11",
   [HASHES["0.1.1"]!]: "0.1.1",
   [HASHES["0.3.0"]!]: "0.3.0",
