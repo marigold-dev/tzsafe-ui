@@ -17,8 +17,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import fetchVersion from "../context/version";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";

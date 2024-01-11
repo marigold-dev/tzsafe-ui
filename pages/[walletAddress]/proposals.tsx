@@ -6,13 +6,13 @@ import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
-import fetchVersion from "../../context/metadata";
 import {
   AppDispatchContext,
   AppStateContext,
   tezosState,
   action as globalAction,
 } from "../../context/state";
+import fetchVersion from "../../context/version";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";

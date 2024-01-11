@@ -8,13 +8,13 @@ import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
-import fetchVersion from "../../context/metadata";
 import { getTokenTransfers, getTransfers } from "../../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../../context/state";
+import fetchVersion from "../../context/version";
 import {
   TransferType,
   mutezTransfer,

@@ -2,9 +2,9 @@ import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion, { CONTRACTS } from "../../context/metadata";
-import { fromIpfs } from "../../context/metadata_blob";
+import fromIpfs from "../../context/fromIpfs";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
+import fetchVersion, { CONTRACTS } from "../../context/version";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
 
@@ -22,13 +22,14 @@ function Success() {
           if (!formState?.version || formState.version === "unknown version")
             throw Error("The contract version is unknown or undefined.");
 
-          const deploying_contract = CONTRACTS[formState.version];
-          if (!deploying_contract)
+          const deploying_files = CONTRACTS[formState.version];
+          if (!deploying_files)
             throw Error(
               `The contract version, ${formState.version}, doesn't support for deployment.`
             );
 
-          const metablob = await fromIpfs();
+          const [deploying_contract, metadata] = deploying_files;
+          const metablob = await fromIpfs(metadata);
           const deploy = await state?.connection.wallet
             .originate({
               code: deploying_contract,

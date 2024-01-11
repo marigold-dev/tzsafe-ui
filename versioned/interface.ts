@@ -13,7 +13,7 @@ import {
 import { contractStorage } from "../types/app";
 import { proposal, version } from "../types/display";
 import { ownersForm } from "./forms";
-import { hasTzip27Support } from "./util";
+import { hasTzip27Support, hasTzip27SupportWithPoEChallenge } from "./util";
 
 type proofOfEvent = {
   payload: {
@@ -258,7 +258,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return c.owners;
     }
@@ -280,7 +281,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return c.owners;
     }
@@ -337,7 +339,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return {
         values: {
@@ -434,7 +437,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return {
         values: {
@@ -649,24 +653,15 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    if (!hasTzip27Support(version)) {
+    if (!hasTzip27SupportWithPoEChallenge(version)) {
       return { fields: [], values: {} };
     }
 
     return {
       values: {
-        challengeId: "",
         payload: "",
       },
       fields: [
-        {
-          field: "challengeId",
-          label: "Challenge Id",
-          path: ".challengeId",
-          placeholder: "My id",
-          validate: (v: string) =>
-            v.trim() === "" ? "Challenge id is empty" : undefined,
-        },
         {
           field: "payload",
           label: "Payload",

@@ -2,8 +2,8 @@ import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion from "../../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../../context/state";
+import fetchVersion from "../../context/version";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {

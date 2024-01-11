@@ -12,12 +12,12 @@ import React, {
   useState,
 } from "react";
 import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
-import fetchVersion from "../context/metadata";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../context/state";
+import fetchVersion from "../context/version";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { signers, toStorage } from "../versioned/apis";

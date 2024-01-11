@@ -22,8 +22,8 @@ import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
-import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import fetchVersion from "../context/version";
 import Beacon, { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
