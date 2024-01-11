@@ -198,7 +198,7 @@ class Version0_0_6 extends Versioned {
       version: "0.0.6",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       let meta = content.execute_lambda
         ? matchLambda({}, JSON.parse(content.execute_lambda))

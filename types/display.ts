@@ -10,6 +10,7 @@ type adjustExpirationPeriod = { adjustEffectivePeriod: number };
 type add_or_update_metadata = {
   add_or_update_metadata: { key: string; value: string };
 };
+type proof_of_event = { proof_of_event: string };
 type proposalContent =
   | changeThreshold
   | adjustExpirationPeriod
@@ -18,7 +19,9 @@ type proposalContent =
   | transfer
   | execute
   | lambda
-  | add_or_update_metadata;
+  | add_or_update_metadata
+  | proof_of_event;
+
 type mutezTransfer = {
   timestamp: string;
   amount: number; //mutez

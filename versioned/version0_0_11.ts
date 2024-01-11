@@ -303,7 +303,7 @@ class Version0_0_11 extends Versioned {
       version: "0.0.11",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       return {
         executeLambda: {

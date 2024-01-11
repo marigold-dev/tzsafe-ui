@@ -464,6 +464,7 @@ const RenderProposalContentMetadata = ({
 };
 
 export const labelOfProposalContentMetadata = (content: proposalContent) => {
+  console.log(content);
   if ("changeThreshold" in content) {
     return "Update threshold";
   } else if ("adjustEffectivePeriod" in content) {
@@ -474,8 +475,6 @@ export const labelOfProposalContentMetadata = (content: proposalContent) => {
     return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
   } else if ("transfer" in content) {
     return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
-  } else if ("add_or_update_metadata" in content) {
-    return "Update Metadata(TZIP16)";
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {
