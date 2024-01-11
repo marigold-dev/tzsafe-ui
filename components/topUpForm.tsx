@@ -276,19 +276,19 @@ function TopUp(props: {
         setLoading(true);
         try {
           await transfer(values);
-          const c = await state.connection.contract.at(props.address, tzip16);
+          const c = await state.connection.wallet.at(props.address, tzip16);
           const balance = await state.connection.tz.getBalance(props.address);
-          const cc = await c.storage();
+          const cs: contractStorage = await c.storage();
           const version = await fetchVersion(c);
 
-          const storage = toStorage(version, cc, balance);
+          const storage = toStorage(version, cs, balance);
 
           if (!!state.contracts[props.address]) {
             dispatch({
               type: "updateContract",
               payload: {
                 address: props.address,
-                contract: toStorage(version, cc, balance),
+                contract: toStorage(version, cs, balance),
               },
             });
           } else {

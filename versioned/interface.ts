@@ -1,6 +1,6 @@
 import { Parser, unpackDataBytes, MichelsonType } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
-import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
+import { TezosToolkit, WalletContract } from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
@@ -116,14 +116,14 @@ abstract class Versioned {
   }
 
   abstract submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez?: boolean
   ): Promise<timeoutAndHash>;
 
   abstract submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez?: boolean
@@ -138,7 +138,7 @@ abstract class Versioned {
   ): Promise<timeoutAndHash>;
 
   abstract submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash>;
