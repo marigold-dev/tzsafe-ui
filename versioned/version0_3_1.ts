@@ -14,7 +14,6 @@ import {
   generateFA1_2ApproveMichelson,
   generateFA1_2TransferMichelson,
   generateFA2Michelson,
-  generatePoe,
 } from "../context/generateLambda";
 import {
   content,
@@ -190,23 +189,6 @@ class Version0_3_1 extends Versioned {
                 },
               };
             }
-            case "poe":
-              const parser = new Parser();
-
-              const michelsonCode = parser.parseMichelineExpression(
-                generatePoe([x.values])
-              );
-
-              return {
-                execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      payload: x.values,
-                    })
-                  ),
-                  lambda: michelsonCode,
-                },
-              };
             default:
               return {};
           }

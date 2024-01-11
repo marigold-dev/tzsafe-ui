@@ -1,49 +1,144 @@
 import { emitMicheline, Parser } from "@taquito/michel-codec";
-import {
-  BigMapAbstraction,
-  Contract,
-  TezosToolkit,
-  WalletContract,
-} from "@taquito/taquito";
+import { Contract, TezosToolkit, TransferParams } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { fa1_2Token } from "../components/FA1_2";
-import { fa2Token } from "../components/FA2Transfer";
 import { DEFAULT_TIMEOUT } from "../context/config";
-import {
-  generateFA1_2ApproveMichelson,
-  generateFA1_2TransferMichelson,
-  generateFA2Michelson,
-  generatePoe,
-} from "../context/generateLambda";
 import {
   content,
   proposal as p1,
   contractStorage as c1,
-} from "../types/Proposal0_3_3";
+} from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
-import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
-import { ownersForm } from "./forms";
 import { proposals, timeoutAndHash, Versioned } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
 class Version0_3_4 extends Version0_3_3 {
+  async submitTxProposals(
+    cc: Contract,
+    t: TezosToolkit,
+    proposals: proposals
+  ): Promise<[boolean, string]> {
+    //TODO: check if poe proposal in multiple proposals
+
+    if (
+      proposals.transfers.length === 1 &&
+      proposals.transfers[0].type === "poe"
+    ) {
+      const params: TransferParams = cc.methods
+        .proof_of_event_challenge(
+          char2Bytes(proposals.transfers[0].values.payload)
+        )
+        .toTransferParams();
+      const op = await t.wallet.transfer(params).send();
+
+      const transacValue = await promiseWithTimeout(
+        op.transactionOperation(),
+        DEFAULT_TIMEOUT
+      );
+
+      if (transacValue === -1) {
+        return [true, op.opHash];
+      }
+
+      const confirmationValue = await promiseWithTimeout(
+        op.confirmation(1),
+        DEFAULT_TIMEOUT
+      );
+
+      if (confirmationValue === -1) {
+        return [true, op.opHash];
+      }
+      return [false, op.opHash];
+    } else {
+      return super.submitTxProposals(cc, t, proposals);
+    }
+  }
+
   static override toContractState(
     contract: any,
     balance: BigNumber
   ): contractStorage {
     let c: c1 = contract;
     return {
-      balance: balance!.toString() || "0",
-      proposal_map: c.proposals.toString(),
-      proposal_counter: c.proposal_counter.toString(),
-      effective_period: c!.effective_period,
-      threshold: c!.threshold.toNumber()!,
-      owners: c!.owners!,
+      ...super.toContractState(contract, balance),
       version: "0.3.4",
     };
+  }
+
+  static override mapContent(content: content): proposalContent {
+    if ("execute_lambda" in content) {
+      const contentLambda = content.execute_lambda.lambda;
+      const metadata = content.execute_lambda.metadata;
+
+      const meta = !!metadata
+        ? bytes2Char(typeof metadata === "string" ? metadata : metadata.Some)
+        : "No meta supplied";
+
+      const lambda = Array.isArray(contentLambda)
+        ? contentLambda
+        : JSON.parse(contentLambda ?? "");
+      return {
+        executeLambda: {
+          metadata: !!lambda
+            ? JSON.stringify(
+                {
+                  status: "Non-executed;",
+                  meta,
+                  lambda,
+                },
+                null,
+                2
+              )
+            : JSON.stringify(
+                {
+                  status: "Executed; lambda unavailable",
+                  meta,
+                },
+                null,
+                2
+              ),
+          content: content.execute_lambda.lambda ? emitMicheline(lambda) : "",
+        },
+      };
+    } else if ("transfer" in content) {
+      return {
+        transfer: {
+          amount: content.transfer.amount,
+          destination: content.transfer.target,
+        },
+      };
+    } else if ("add_owners" in content) {
+      return {
+        addOwners: content.add_owners,
+      };
+    } else if ("remove_owners" in content) {
+      return {
+        removeOwners: content.remove_owners,
+      };
+    } else if ("adjust_threshold" in content) {
+      return {
+        changeThreshold: content.adjust_threshold,
+      };
+    } else if ("adjust_effective_period" in content) {
+      return {
+        adjustEffectivePeriod: content.adjust_effective_period,
+      };
+    } else if ("add_or_update_metadata" in content) {
+      return {
+        add_or_update_metadata: {
+          key: content.add_or_update_metadata.key,
+          value: content.add_or_update_metadata.value,
+        },
+      };
+    } else if ("proof_of_event" in content) {
+      return {
+        proof_of_event: content.proof_of_event,
+      };
+    }
+
+    throw new Error(`unknown proposal: ${JSON.stringify(content)}`);
   }
 }
 

@@ -8,10 +8,14 @@ import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3
 import { proofOfEventSchema as proposalSchema_0_3_2 } from "../types/Proposal0_3_2";
 import {
   archiveProposalSchema as proposalSchema_0_3_3,
-  proposalType,
+  proposalType as proposalType_0_3_3,
 } from "../types/Proposal0_3_3";
+import {
+  archiveProposalSchema as proposalSchema_0_3_4,
+  proposalType as proposalType_0_3_4,
+} from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
-import { proposal, version } from "../types/display";
+import { proposal, proposalContent, version } from "../types/display";
 import { ownersForm } from "./forms";
 import { hasTzip27Support, hasTzip27SupportWithPoEChallenge } from "./util";
 
@@ -75,7 +79,6 @@ export type transfer =
   | ({
       type: "poe";
       values: {
-        challengeId: string;
         payload: string;
       };
     } & common)
@@ -137,10 +140,16 @@ abstract class Versioned {
   static toContractState(_contract: any, _balance: BigNumber): contractStorage {
     throw new Error("not implemented!");
   }
+
   static getProposalsId(_contract: any): string {
     throw new Error("not implemented!");
   }
+
   static toProposal(_proposal: any): proposal {
+    throw new Error("not implemented!");
+  }
+
+  static mapContent(content: any): proposalContent {
     throw new Error("not implemented!");
   }
 
@@ -237,7 +246,13 @@ abstract class Versioned {
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
       )
         .then(res => res.json())
-        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType));
+        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType_0_3_3));
+    } else if (c.version === "0.3.4") {
+      return fetch(
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
+      )
+        .then(res => res.json())
+        .then(this.decodeProposal(proposalSchema_0_3_4, proposalType_0_3_4));
     } else {
       throw Error("unknown version");
     }
