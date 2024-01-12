@@ -184,7 +184,6 @@ export const tezosDomainsContractsMatcher: contracts = {
 };
 
 export function tezosDomains(transactions: Array<transaction>): CustomView {
-  console.log(transactions);
   if (
     !transactions.every(
       ({ addresses }) =>
@@ -393,7 +392,6 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
           const data = updateRecordSchema.Execute(micheline);
 
           const recordName = bytes2Char(data.name);
-          const updateData = JSON.stringify(data.data);
 
           return [
             {
@@ -401,10 +399,11 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>Record name: {recordName}</li>
-                  <li>
-                    Address: <Alias address={data.address} />
-                  </li>
-                  <li>Data: {updateData}</li>
+                  {!!data.address.Some ? (
+                    <li>
+                      Owner: <Alias address={data.address.Some} />
+                    </li>
+                  ) : null}
                 </ul>
               ),
               price,
@@ -420,8 +419,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               action: BID.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                  <li>Label: {data.label}</li>
-                  <li>Bid: {mutezToTez(data.bid)} Tez</li>
+                  <li>Label: {bytes2Char(data.label)}</li>
+                  <li>Bid: {mutezToTez(data.bid.toNumber())} Tez</li>
                 </ul>
               ),
               price,
@@ -437,10 +436,15 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               action: SETTLE.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                  <li>Label: {data.label}</li>
                   <li>
-                    Owner: <Alias address={data.address} />
+                    Owner: <Alias address={data.owner} />
                   </li>
+                  <li>Label: {bytes2Char(data.label)}</li>
+                  {!!data.address.Some ? (
+                    <li>
+                      Owner: <Alias address={data.address.Some} />
+                    </li>
+                  ) : null}
                 </ul>
               ),
               price,
@@ -457,7 +461,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>
-                    Withdraw address: <Alias address={data.withdraw} />
+                    Withdraw address: <Alias address={data} />
                   </li>
                 </ul>
               ),
@@ -476,7 +480,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>Label: {bytes2Char(data.label)}</li>
                   <li>
-                    Duration: {data.duration} day{data.duration <= 1 ? "" : "s"}
+                    Duration: {data.duration.toString()} day
+                    {data.duration.toNumber() <= 1 ? "" : "s"}
                   </li>
                 </ul>
               ),
@@ -494,7 +499,9 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                   <li>Label: {bytes2Char(data.label)}</li>
-                  <li>Parent: {bytes2Char(data.owner)}</li>
+                  <li>
+                    Parent: <Alias address={data.parent} />
+                  </li>
                   <li>
                     Owner: <Alias address={data.owner} />
                   </li>

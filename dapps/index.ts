@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { transaction } from "../components/RenderProposalContentLambda";
+import { objkt } from "./objkt";
 import { tezosDomains } from "./tezosDomains";
 
 export type contracts = {
@@ -27,4 +28,4 @@ export type CustomView =
 
 export const customViewMatchers: Array<
   (transactions: Array<transaction>) => CustomView
-> = [tezosDomains];
+> = [tezosDomains, objkt];

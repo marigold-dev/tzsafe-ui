@@ -1,11 +1,8 @@
 import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
-import { bytes2Char } from "@taquito/tzip16";
 import { contracts, CustomViewData, CustomView } from ".";
 import logo from "../assets/images/objkt.png";
-import Alias from "../components/Alias";
 import { transaction } from "../components/RenderProposalContentLambda";
-import { mutezToTez } from "../utils/tez";
 
 const parser = new Parser();
 
@@ -15,7 +12,7 @@ function makeNftImageUrl(contract: string, id: string) {
 
 export const MARKETPLACE_V4 = {
   mainnet: "KT1WvzYHCNBvDSdwafTHv7nJ1dWmZ8GCYuuC",
-  ghostnet: "",
+  ghostnet: "KT1AiEcg7D2Jm9GKDgguVLBwRPjzjkkPpwds",
   name: "Marketplace",
 };
 
@@ -32,13 +29,13 @@ export const askSchema = new Schema(
   )!
 );
 
-export const fullfilAskSchema = new Schema(
+export const fulfilAskSchema = new Schema(
   parser.parseMichelineExpression(
     `(pair %fulfill_ask (nat %ask_id) (option %proxy address))`
   )!
 );
 
-export const fullfilOfferSchema = new Schema(
+export const fulfilOfferSchema = new Schema(
   parser.parseMichelineExpression(
     `(pair %fulfill_offer (nat %offer_id) (option %token_id nat))`
   )!
@@ -67,7 +64,7 @@ export const retractOfferSchema = new Schema(
 
 export const ENGLISH_AUCTION_V4 = {
   mainnet: "KT18p94vjkkHYY3nPmernmgVR7HdZFzE7NAk",
-  ghostnet: "",
+  ghostnet: "KT1AiEcg7D2Jm9GKDgguVLBwRPjzjkkPpwds",
   name: "English auction",
 };
 
@@ -98,7 +95,7 @@ export const settleAuctionSchema = new Schema(
 
 export const DUTCH_AUCTION_V4 = {
   mainnet: "KT1XXu88HkNzQRHNgAf7Mnq68LyS9MZJNoHP",
-  ghostnet: "",
+  ghostnet: "KT18gCSfQZQHEu8pkzkkxuTLiE8ZAVUc1kSe",
   name: "Dutch auction",
 };
 
@@ -132,11 +129,19 @@ export const objktContracts = {
 };
 
 export const objktContractsMatcher: contracts = {
-  mainnet: {},
-  ghostnet: {},
+  mainnet: {
+    [MARKETPLACE_V4.mainnet]: true,
+    [ENGLISH_AUCTION_V4.mainnet]: true,
+    [DUTCH_AUCTION_V4.mainnet]: true,
+  },
+  ghostnet: {
+    [MARKETPLACE_V4.ghostnet]: true,
+    [ENGLISH_AUCTION_V4.ghostnet]: true,
+    [DUTCH_AUCTION_V4.ghostnet]: true,
+  },
 };
 
-export function tezosDomains(transactions: Array<transaction>): CustomView {
+export function objkt(transactions: Array<transaction>): CustomView {
   if (
     !transactions.every(
       ({ addresses }) =>
@@ -244,12 +249,12 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 },
               ];
             }
-            case "fullfil_ask": {
-              const data = fullfilAskSchema.Execute(micheline);
+            case "fulfill_ask": {
+              const data = fulfilAskSchema.Execute(micheline);
 
               return [
                 {
-                  action: "Fullfil ask",
+                  action: "Fulfill ask",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>Ask id: {data.ask_id}</li>
@@ -259,12 +264,12 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 },
               ];
             }
-            case "fullfil_offer": {
-              const data = fullfilOfferSchema.Execute(micheline);
+            case "fulfill_offer": {
+              const data = fulfilOfferSchema.Execute(micheline);
 
               return [
                 {
-                  action: "Fullfil offer",
+                  action: "Fulfill offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>Offer id: {data.offer_id}</li>

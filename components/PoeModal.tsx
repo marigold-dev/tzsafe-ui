@@ -3,7 +3,6 @@ import {
   BeaconErrorType,
   NetworkType,
   OperationRequestOutput,
-  ProofOfEventChallengeRequest,
   ProofOfEventChallengeRequestOutput,
   SignPayloadRequest,
   TezosOperationType,
@@ -24,7 +23,7 @@ import {
 } from "../context/generateLambda";
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import Beacon, { State } from "../pages/[walletAddress]/beacon";
+import { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { signers, toStorage, VersionedApi } from "../versioned/apis";
@@ -213,11 +212,13 @@ const PoeModal = () => {
                   setTransactionError(errorMessage);
                   console.log("Contract conversion error:", e);
 
-                  state.p2pClient?.sendError(
-                    message.id,
-                    errorMessage,
-                    BeaconErrorType.TRANSACTION_INVALID_ERROR
-                  );
+                  state.p2pClient
+                    ?.sendError(
+                      message.id,
+                      errorMessage,
+                      BeaconErrorType.TRANSACTION_INVALID_ERROR
+                    )
+                    .catch(_ => {});
                   return undefined;
                 }
               } else {

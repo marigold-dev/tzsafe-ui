@@ -44,6 +44,7 @@ const ProposalCard = ({
   isSignable = false,
   shouldResolve = false,
 }: ProposalCardProps) => {
+  console.log(content);
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -72,9 +73,13 @@ const ProposalCard = ({
 
     let dapp: CustomView;
 
-    for (let i = 0; i < customViewMatchers.length; ++i) {
-      dapp = customViewMatchers[i](rows as transaction[]);
-      if (!!dapp) break;
+    try {
+      for (let i = 0; i < customViewMatchers.length; ++i) {
+        dapp = customViewMatchers[i](rows as transaction[]);
+        if (!!dapp) break;
+      }
+    } catch (e) {
+      console.log("Failed to parse dapp:", e);
     }
     return { rows, dapp };
   }, [content, state.currentContract, state.currentStorage, state.contracts]);
