@@ -353,7 +353,7 @@ const Proposals = () => {
                   return (
                     <ProposalCard
                       id={x[0]}
-                      key={x[0]}
+                      key={`${x[0]}:${x[1].ui.timestamp}`}
                       status={
                         hasDeadlinePassed ? (
                           "Expired"

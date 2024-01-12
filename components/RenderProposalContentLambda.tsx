@@ -64,7 +64,11 @@ export type data =
 
 export type transaction = Extract<
   data,
-  { addresses: undefined | string; params: undefined | string }
+  {
+    addresses: undefined | string;
+    params: undefined | string;
+    entrypoints: undefined | string;
+  }
 >;
 
 export const contentToData = (
