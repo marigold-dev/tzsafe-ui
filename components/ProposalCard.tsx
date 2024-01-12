@@ -44,7 +44,6 @@ const ProposalCard = ({
   isSignable = false,
   shouldResolve = false,
 }: ProposalCardProps) => {
-  console.log(content);
   const state = useContext(AppStateContext)!;
   const currentContract = state.currentContract ?? "";
 
@@ -108,7 +107,7 @@ const ProposalCard = ({
               <a href={dapp.logoLink} target="_blank" rel="noreferrer">
                 <img
                   src={dapp.logo}
-                  className="h-full w-full"
+                  className="h-full w-full rounded"
                   alt={dapp.logoAlt}
                   title={dapp.logoAlt}
                 />
@@ -294,7 +293,7 @@ const ProposalCard = ({
                         viewData.action
                       )}
                     </h3>
-                    <div className="flex list-inside items-center space-x-4">
+                    <div className="mt-1 flex list-inside items-center space-x-4">
                       {viewData.image && (
                         <img
                           src={viewData.image}

@@ -3,6 +3,7 @@ import { Schema } from "@taquito/michelson-encoder";
 import { contracts, CustomViewData, CustomView } from ".";
 import logo from "../assets/images/objkt.png";
 import { transaction } from "../components/RenderProposalContentLambda";
+import { mutezToTez } from "../utils/tez";
 
 const parser = new Parser();
 
@@ -64,7 +65,7 @@ export const retractOfferSchema = new Schema(
 
 export const ENGLISH_AUCTION_V4 = {
   mainnet: "KT18p94vjkkHYY3nPmernmgVR7HdZFzE7NAk",
-  ghostnet: "KT1AiEcg7D2Jm9GKDgguVLBwRPjzjkkPpwds",
+  ghostnet: "KT19doPp2S8SpFWhTvVhh8MuZ49vVZ5Cd5ZH",
   name: "English auction",
 };
 
@@ -200,13 +201,13 @@ export function objkt(transactions: Array<transaction>): CustomView {
                 {
                   image: makeNftImageUrl(
                     data.token.address,
-                    data.token.token_id
+                    data.token.token_id.toString()
                   ),
                   action: "Ask",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Price: {data.amount} {unit}
+                        Price: {mutezToTez(data.amount.toNumber())} {unit}
                       </li>
                       {!!data.expiry_time ? (
                         <li>
@@ -227,15 +228,17 @@ export function objkt(transactions: Array<transaction>): CustomView {
 
               return [
                 {
-                  image: makeNftImageUrl(
-                    data.token.address,
-                    data.token.token_id
-                  ),
+                  image: !!data.token.token_id.Some
+                    ? makeNftImageUrl(
+                        data.token.address,
+                        data.token.token_id.Some.toString()
+                      )
+                    : undefined,
                   action: "Offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Price: {data.amount} {unit}
+                        Price: {mutezToTez(data.amount)} {unit}
                       </li>
                       {!!data.expiry_time ? (
                         <li>
@@ -257,7 +260,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Fulfill ask",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Ask id: {data.ask_id}</li>
+                      <li>Ask id: {data.ask_id.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -272,7 +275,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Fulfill offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Offer id: {data.offer_id}</li>
+                      <li>Offer id: {data.offer_id.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -287,7 +290,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Retract ask",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Ask id: {data.retract_ask}</li>
+                      <li>Ask id: {data.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -302,7 +305,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Retract offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Ask id: {data.retract_offer}</li>
+                      <li>Ask id: {data.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -325,8 +328,8 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Bid",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Auction id: {data.auction_id}</li>
-                      <li>Amount: {data.amount}</li>
+                      <li>Auction id: {data.auction_id.toString()}</li>
+                      <li>Amount: {mutezToTez(data.amount.toNumber())} Tez</li>
                     </ul>
                   ),
                   price,
@@ -342,16 +345,18 @@ export function objkt(transactions: Array<transaction>): CustomView {
                 {
                   image: makeNftImageUrl(
                     data.token.address,
-                    data.token.token_id
+                    data.token.token_id.toString()
                   ),
                   action: "Create english auction",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Reserve price: {data.amount} {unit}
+                        Reserve price: {mutezToTez(data.reserve.toNumber())}{" "}
+                        {unit}
                       </li>
                       <li>
-                        Price increment: {data.price_increment} {unit}
+                        Price increment:{" "}
+                        {mutezToTez(data.price_increment.toNumber())} {unit}
                       </li>
                       <li>
                         Start time: {new Date(data.start_time).toLocaleString()}
@@ -359,7 +364,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                       <li>
                         End time: {new Date(data.end_time).toLocaleString()}
                       </li>
-                      <li>Extension time: {data.extension_time}</li>
+                      <li>Extension time: {data.extension_time.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -374,7 +379,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Cancel english auction",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Auction id: {data}</li>
+                      <li>Auction id: {data.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -389,7 +394,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Settle english auction",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Auction id: {data}</li>
+                      <li>Auction id: {data.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -411,8 +416,8 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Buy",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Auction id: {data.auction_id}</li>
-                      <li>Amount: {data.amount}</li>
+                      <li>Auction id: {data.auction_id.toString()}</li>
+                      <li>Amount: {mutezToTez(data.amount.toNumber())}</li>
                     </ul>
                   ),
                   price,
@@ -420,7 +425,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
               ];
             }
             case "create_auction": {
-              const data = englishCreateAuctionSchema.Execute(micheline);
+              const data = dutchCreateAuctionSchema.Execute(micheline);
 
               const unit = "tez" in data.currency ? "Tez" : "";
 
@@ -428,19 +433,18 @@ export function objkt(transactions: Array<transaction>): CustomView {
                 {
                   image: makeNftImageUrl(
                     data.token.address,
-                    data.token.token_id
+                    data.token.token_id.toString()
                   ),
-                  action: "Create english auction",
+                  action: "Create dutch auction",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Reserve price: {data.amount} {unit}
+                        Start price: {mutezToTez(data.start_price.toNumber())}{" "}
+                        {unit}
                       </li>
                       <li>
-                        Start price: {data.start_price} {unit}
-                      </li>
-                      <li>
-                        End price: {data.end_price} {unit}
+                        End price: {mutezToTez(data.end_price.toNumber())}{" "}
+                        {unit}
                       </li>
                       <li>
                         Start time: {new Date(data.start_time).toLocaleString()}
@@ -462,7 +466,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                   action: "Cancel dutch auction",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      <li>Auction id: {data}</li>
+                      <li>Auction id: {data.toString()}</li>
                     </ul>
                   ),
                   price,

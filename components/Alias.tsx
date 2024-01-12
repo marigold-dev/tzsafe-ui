@@ -14,8 +14,6 @@ const Alias = ({
   disabled?: boolean;
 }) => {
   const state = useContext(AppStateContext)!;
-  console.log("ADDRESS:", address);
-
   const formatted = useMemo(
     () =>
       `${(address ?? "").substring(0, length)}...${(address ?? "").substring(
