@@ -114,7 +114,7 @@ class Version0_0_6 extends Versioned {
 
     return [false, op.opHash];
   }
-  static override getProposalsId(_contract: storage): string {
+  static override getProposalsBigmapId(_contract: storage): string {
     return _contract.proposal_map.toString();
   }
   async signProposal(
