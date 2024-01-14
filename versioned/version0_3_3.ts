@@ -343,7 +343,7 @@ class Version0_3_3 extends Versioned {
     throw new Error(`unknown proposal: ${JSON.stringify(content)}`);
   }
 
-  static override getProposalsId(_contract: cs): string {
+  static override getProposalsBigmapId(_contract: cs): string {
     return _contract.proposals.toString();
   }
 
