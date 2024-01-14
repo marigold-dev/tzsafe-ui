@@ -352,12 +352,12 @@ class Version0_3_0 extends Versioned {
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
     const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const bProposal = num2PaddedHex(proposal);
+    const bProposal = num2PaddedHex(proposalId.toNumber());
     const prop: any = await proposals.proposals.get(bProposal);
     const batch = t.wallet.batch();
     if (typeof result != "undefined") {
@@ -425,9 +425,9 @@ class Version0_3_0 extends Versioned {
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
-      proposal_counter: c.proposal_counter.toString(),
+      proposal_counter: c.proposal_counter,
       effective_period: c!.effective_period,
-      threshold: c!.threshold.toNumber()!,
+      threshold: c!.threshold!,
       owners: c!.owners!,
       version: "0.3.0",
     };

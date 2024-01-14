@@ -261,8 +261,8 @@ const Proposals = () => {
           <ProposalSignForm
             address={currentContract}
             threshold={
-              globalState.contracts[currentContract]?.threshold ??
-              globalState.currentStorage?.threshold
+              globalState.contracts[currentContract]?.threshold.toNumber() ??
+              globalState.currentStorage?.threshold.toNumber()
             }
             version={
               globalState.contracts[currentContract]?.version ??
@@ -339,11 +339,14 @@ const Proposals = () => {
                     allSigners.includes(signer)
                   );
 
-                  const isExecutable = canExecute(signatures, threshold);
+                  const isExecutable = canExecute(
+                    signatures,
+                    threshold.toNumber()
+                  );
 
                   const isRejectable = canReject(
                     signatures,
-                    threshold,
+                    threshold.toNumber(),
                     allSigners.length
                   );
 

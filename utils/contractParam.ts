@@ -853,10 +853,12 @@ function decodeB58(type: Expr, data: Expr): Expr {
         if ("prim" in data && data.args?.[0]) {
           if (data.prim == "Left" && !!type.args?.[0]) {
             const new_data = decodeB58(type.args[0], data.args?.[0]);
-            return new_data;
+            data.args[0] = new_data;
+            return data;
           } else if (data.prim == "Right" && type.args?.[1]) {
             const new_data = decodeB58(type.args[1], data.args?.[0]);
-            return new_data;
+            data.args[0] = new_data;
+            return data;
           } else {
             throw new Error("Internal: or should be either left or right");
           }

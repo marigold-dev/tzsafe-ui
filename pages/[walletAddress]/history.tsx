@@ -323,12 +323,10 @@ const History = () => {
         {!!state.openModal.state && (
           <ProposalSignForm
             address={globalState.currentContract ?? ""}
-            threshold={
-              (
-                globalState.contracts[globalState.currentContract ?? ""] ??
-                globalState.currentStorage
-              ).threshold
-            }
+            threshold={(
+              globalState.contracts[globalState.currentContract ?? ""] ??
+              globalState.currentStorage
+            ).threshold.toNumber()}
             version={
               (
                 globalState.contracts[globalState.currentContract ?? ""] ??

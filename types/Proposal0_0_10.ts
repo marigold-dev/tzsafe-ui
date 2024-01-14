@@ -23,7 +23,7 @@ type proposal = {
 };
 
 type contractStorage = {
-  proposal_counter: string;
+  proposal_counter: BigNumber;
   balance: string;
   effective_period: number;
   proposals: string;
