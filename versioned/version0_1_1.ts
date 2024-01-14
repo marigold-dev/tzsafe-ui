@@ -358,7 +358,7 @@ class Version0_1_1 extends Versioned {
     let never: never = content;
     throw new Error("unknown proposal");
   }
-  static override getProposalsId(_contract: c1): string {
+  static override getProposalsBigmapId(_contract: c1): string {
     return _contract.proposals.toString();
   }
   static override toProposal(proposal: any): proposal {

@@ -75,8 +75,8 @@ function toStorage(
 ): contractStorage {
   return dispatchUi[version]().toContractState(c, balance);
 }
-function getProposalsId(version: version, c: contractStorage): string {
-  return dispatchUi[version]().getProposalsId(c);
+function getProposalsBigmapId(version: version, c: contractStorage): string {
+  return dispatchUi[version]().getProposalsBigmapId(c);
 }
 function toProposal(version: version, c: WalletContract): proposal {
   return dispatchUi[version]().toProposal(c);
@@ -185,7 +185,7 @@ export {
   signers,
   toProposal,
   VersionedApi,
-  getProposalsId,
+  getProposalsBigmapId as getProposalsId,
   map2Object,
   matchLambda,
 };

@@ -146,7 +146,7 @@ abstract class Versioned {
     throw new Error("not implemented!");
   }
 
-  static getProposalsId(_contract: any): string {
+  static getProposalsBigmapId(_contract: any): string {
     throw new Error("not implemented!");
   }
 

@@ -337,7 +337,7 @@ class Version0_3_2 extends Versioned {
 
     throw new Error("unknown proposal");
   }
-  static override getProposalsId(_contract: c1): string {
+  static override getProposalsBigmapId(_contract: c1): string {
     return _contract.proposals.toString();
   }
   static override toProposal(proposal: any): proposal {
