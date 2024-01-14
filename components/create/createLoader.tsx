@@ -1,16 +1,14 @@
-import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fromIpfs from "../../context/fromIpfs";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../../context/state";
-import fetchVersion, { CONTRACTS } from "../../context/version";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
+import deployTzSafe from "../../versioned/deployTzSafe";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
@@ -23,59 +21,43 @@ function Success() {
     (async () => {
       if (loading && address.status == 0) {
         try {
+          const effective_period = Math.ceil(
+            durationOfDaysHoursMinutes(
+              formState?.days,
+              formState?.hours,
+              formState?.minutes
+            ).toMillis() / 1000
+          );
+
           if (!formState?.version || formState.version === "unknown version")
             throw Error("The contract version is unknown or undefined.");
 
-          const deploying_files = CONTRACTS[formState.version];
-          if (!deploying_files)
-            throw Error(
-              `The contract version, ${formState.version}, doesn't support for deployment.`
-            );
+          if (!state) {
+            throw new Error("state is undefined");
+          }
 
-          const [deploying_contract, metadata] = deploying_files;
-          const metablob = await fromIpfs(metadata);
-          const deploy = await state?.connection.wallet
-            .originate({
-              code: deploying_contract,
-              storage: {
-                proposal_counter: 0,
-                proposals: [],
-                owners: formState!.validators.map(x => x.address),
-                archives: [],
-                threshold: formState!.requiredSignatures,
-                effective_period: Math.ceil(
-                  durationOfDaysHoursMinutes(
-                    formState?.days,
-                    formState?.hours,
-                    formState?.minutes
-                  ).toMillis() / 1000
-                ),
-                ...metablob,
-              },
-            })
-            .send();
-          const result1 = await deploy?.contract();
-          const c = (await result1!.storage()) as contractStorage;
-          const ct = await state?.connection.wallet.at(
-            result1?.address!,
-            tzip16
-          )!;
-          const version = await fetchVersion(ct);
-          const balance = await state?.connection.tz.getBalance(
-            result1!.address!
+          const tzsafe = await deployTzSafe(
+            state?.connection.wallet,
+            formState!.validators.map(x => x.address),
+            formState!.requiredSignatures,
+            effective_period,
+            formState.version
           );
-          console.log(version, formState.version);
-          setAddress({ address: result1?.address!, status: 1 });
+          const c = (await tzsafe!.storage()) as contractStorage;
+          const balance = await state?.connection.tz.getBalance(
+            tzsafe!.address!
+          );
+          setAddress({ address: tzsafe?.address!, status: 1 });
           setLoading(false);
           dispatch!({
             type: "addContract",
             payload: {
               aliases: Object.fromEntries([
                 ...formState!.validators!.map(x => [x.address, x.name]),
-                [result1?.address!, formState?.walletName || ""],
+                [tzsafe?.address!, formState?.walletName || ""],
               ]),
-              contract: toStorage(version, c, balance!),
-              address: result1!.address!,
+              contract: toStorage(formState.version, c, balance!),
+              address: tzsafe!.address!,
             },
           });
         } catch (err) {

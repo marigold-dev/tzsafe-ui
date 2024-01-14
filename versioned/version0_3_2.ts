@@ -190,13 +190,13 @@ class Version0_3_2 extends Versioned {
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
     const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const proposalId = num2PaddedHex(proposal);
-    const prop: any = await proposals.proposals.get(proposalId);
+    const hex_proposalId = num2PaddedHex(proposalId);
+    const prop: any = await proposals.proposals.get(hex_proposalId);
     const batch = t.wallet.batch();
 
     const proposalData = arrayProposalSchema.Encode(prop.contents);
@@ -207,7 +207,7 @@ class Version0_3_2 extends Versioned {
       batch.withContractCall(
         cc.methodsObject.sign_proposal({
           agreement: result,
-          challenge_id: proposalId,
+          challenge_id: hex_proposalId,
           payload: proposalBytes,
         })
       );
@@ -215,7 +215,7 @@ class Version0_3_2 extends Versioned {
     if (resolve) {
       batch.withContractCall(
         // resolve proposal
-        cc.methods.proof_of_event_challenge(proposalId, proposalBytes)
+        cc.methods.proof_of_event_challenge(hex_proposalId, proposalBytes)
       );
     }
     let op = await batch.send();
@@ -268,9 +268,9 @@ class Version0_3_2 extends Versioned {
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
-      proposal_counter: c.proposal_counter.toString(),
+      proposal_counter: c.proposal_counter,
       effective_period: c!.effective_period,
-      threshold: c!.threshold.toNumber()!,
+      threshold: c!.threshold!,
       owners: c!.owners!,
       version: "0.3.2",
     };

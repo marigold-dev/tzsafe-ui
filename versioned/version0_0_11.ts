@@ -220,21 +220,21 @@ class Version0_0_11 extends Versioned {
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
     let proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    let prop: any = await proposals.proposals.get(BigNumber(proposal));
+    let prop: any = await proposals.proposals.get(BigNumber(proposalId));
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
+        cc.methods.sign_proposal(BigNumber(proposalId), prop.contents, result)
       );
     }
     if (resolve) {
       await batch.withContractCall(
-        cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
+        cc.methods.resolve_proposal(BigNumber(proposalId), prop.contents)
       );
     }
     let op = await batch.send();
@@ -295,9 +295,9 @@ class Version0_0_11 extends Versioned {
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
-      proposal_counter: c.proposal_counter.toString(),
+      proposal_counter: c.proposal_counter,
       effective_period: c!.effective_period,
-      threshold: c!.threshold.toNumber()!,
+      threshold: c!.threshold!,
       owners: c!.owners!,
       version: "0.0.11",
     };

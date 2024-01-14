@@ -1,5 +1,6 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import BigNumber from "bignumber.js";
 import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState, useMemo } from "react";
@@ -78,7 +79,7 @@ function ProposalSignForm({
       await versioned.signProposal(
         cc,
         state.connection,
-        proposal,
+        new BigNumber(proposal),
         result,
         resolve
       )

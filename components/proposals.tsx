@@ -224,8 +224,10 @@ const Card: FC<{
   function resolvable(
     signatures: { signer: string; result: boolean }[]
   ): boolean {
-    let pro = signatures.filter(x => x.result).length >= contract.threshold;
-    let against = signatures.filter(x => !x.result).length > contract.threshold;
+    let pro =
+      signatures.filter(x => x.result).length >= contract.threshold.toNumber();
+    let against =
+      signatures.filter(x => !x.result).length > contract.threshold.toNumber();
     return pro || against;
   }
   return (
