@@ -18,7 +18,7 @@ type proposal = {
 };
 
 type contractStorage = {
-  proposal_counter: string;
+  proposal_counter: BigNumber;
   balance: string;
   proposals: string;
   owners: string[];

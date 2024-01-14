@@ -149,7 +149,7 @@ const SignersForm: FC<{
     minutes: duration?.minutes?.toString(),
     requiredSignatures: !props.contract
       ? 0
-      : (props.contract as contractStorage).threshold,
+      : (props.contract as contractStorage).threshold.toNumber(),
     bakerAddress: undefined,
   };
 
@@ -194,7 +194,7 @@ const SignersForm: FC<{
     if (removed.size > 0) {
       ops.push({ removeOwners: [...removed.values()] });
     }
-    if (props.contract.threshold !== requiredSignatures) {
+    if (props.contract.threshold.toNumber() !== requiredSignatures) {
       ops.push({ changeThreshold: requiredSignatures });
     }
     if (!!bakerAddress && bakerAddress !== oldBakerAddress) {

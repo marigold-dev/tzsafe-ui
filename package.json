@@ -33,6 +33,7 @@
     "@types/uuid": "^9.0.1",
     "@wert-io/widget-initializer": "^4.0.1",
     "assert-never": "^1.2.1",
+    "axios": "^1.6.5",
     "bignumber.js": "^9.1.1",
     "bs58check": "^3",
     "env-cmd": "^10.1.0",
@@ -48,6 +49,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@taquito/signer": "^17.5.2",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",

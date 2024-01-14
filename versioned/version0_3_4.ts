@@ -16,8 +16,9 @@ class Version0_3_4 extends Version0_3_3 {
     t: TezosToolkit,
     proposals: proposals
   ): Promise<[boolean, string]> {
-    const storage = (await cc.storage()) as contractStorage;
-    console.log("proposal id", storage.proposal_counter.toString());
+    const poe_proposals = proposals.transfers.filter(v => v.type === "poe");
+    const regular_proposals = proposals.transfers.filter(v => v.type !== "poe");
+
     if (
       proposals.transfers.length === 1 &&
       proposals.transfers[0].type === "poe"

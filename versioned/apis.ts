@@ -6,12 +6,7 @@ import {
   Parser,
 } from "@taquito/michel-codec";
 import { ParameterSchema } from "@taquito/michelson-encoder";
-import {
-  ContractAbstraction,
-  MichelsonMap,
-  Wallet,
-  WalletContract,
-} from "@taquito/taquito";
+import { MichelsonMap, WalletContract } from "@taquito/taquito";
 import { encodePubKey } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { contractStorage } from "../types/app";
