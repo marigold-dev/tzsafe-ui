@@ -7,6 +7,7 @@ import { contractStorage } from "../../types/app";
 import { VersionedApi } from "../../versioned/apis";
 import deployTzSafe from "../../versioned/deployTzSafe";
 import { proposals } from "../../versioned/interface";
+import { ipfs_file, owner, pb, rpc } from "./config";
 
 const sixMins = 360000;
 const version = "0.3.3";
@@ -34,17 +35,15 @@ vi.mock("@airgap/beacon-sdk", () => ({
   },
 }));
 
+// There are dependency for test cases. They must in order.
 describe("Test version 0.3.3", () => {
   let Tezos: TezosToolkit;
   let addr: string;
-  const owner = "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH";
 
   beforeAll(async () => {
-    Tezos = new TezosToolkit("https://ghostnet.tezos.marigold.dev/");
+    Tezos = new TezosToolkit(rpc);
     Tezos.setProvider({
-      signer: new InMemorySigner(
-        "edskRicjCbdgMeQ61XWCxAVgTfy6hfxwocXbVgJpynXvoWF8Z8wuzZTvEyiqwnE3cb75u9s8PKCeBG25Zd797NGfK8yfZY5noK"
-      ),
+      signer: new InMemorySigner(pb),
     });
   });
 
@@ -55,6 +54,7 @@ describe("Test version 0.3.3", () => {
         deployTzSafe(Tezos.wallet, [owner], 1, 864000, version)
       );
       addr = tzsafe.address;
+      console.log(`${version} is deployed, ${addr}`);
       const storage: contractStorage = await retry(() => tzsafe.storage());
 
       expect(tzsafe.address).toBeDefined();
@@ -62,9 +62,7 @@ describe("Test version 0.3.3", () => {
       expect(storage.proposal_counter.isEqualTo(BigNumber(0))).toBe(true);
       expect(storage.owners).toEqual([owner]);
       storage.metadata.get("").then((value: string) => {
-        expect(value).toEqual(
-          char2Bytes("ipfs://Qmb72YHLm2jztSQS1B2uEvo1GrWbYKQu7dnJ5YNcS7aU1Q")
-        );
+        expect(value).toEqual(char2Bytes(ipfs_file));
       });
     },
     { timeout: sixMins }
@@ -161,6 +159,84 @@ describe("Test version 0.3.3", () => {
         after_proposal.signatures;
       expect(after_sigs.size).toBe(1);
       expect(after_sigs.get(owner)).toBe(true);
+    },
+    { timeout: sixMins }
+  );
+
+  it(
+    "test receive xtz and signProposal to resolve proposal only",
+    async () => {
+      const op = await retry(() =>
+        Tezos.wallet.transfer({ to: addr, amount: 3 }).send()
+      );
+      await op.confirmation();
+
+      const v = VersionedApi(version, addr);
+      const tzsafe = await Tezos.wallet.at(addr);
+
+      const before_storage: contractStorage = await retry(() =>
+        tzsafe.storage()
+      );
+      const before_arcihve: any = await retry(() =>
+        before_storage.archives.get(before_storage.proposal_counter)
+      );
+      expect(before_arcihve).toBeUndefined();
+
+      await retry(() =>
+        v.signProposal(
+          tzsafe,
+          Tezos,
+          before_storage.proposal_counter,
+          undefined,
+          true
+        )
+      );
+
+      const after_storage: contractStorage = await retry(() =>
+        tzsafe.storage()
+      );
+      const after_archive: any = await retry(() =>
+        after_storage.archives.get(after_storage.proposal_counter)
+      );
+      expect(after_archive).toBeDefined();
+      expect((await Tezos.tz.getBalance(addr)).toNumber()).toBe(0);
+    },
+    { timeout: sixMins }
+  );
+
+  it(
+    "test submitSettingsProposals and resolve proposal",
+    async () => {
+      const v = VersionedApi(version, addr);
+      const tzsafe = await Tezos.wallet.at(addr);
+
+      const before_storage: contractStorage = await retry(() =>
+        tzsafe.storage()
+      );
+      const before_effectivePeriod = before_storage.effective_period;
+
+      await retry(() =>
+        v.submitSettingsProposals(tzsafe, Tezos, [
+          { adjustEffectivePeriod: before_effectivePeriod.toNumber() + 2 },
+        ])
+      );
+
+      await retry(() =>
+        v.signProposal(
+          tzsafe,
+          Tezos,
+          before_storage.proposal_counter.plus(BigNumber(1)),
+          true,
+          true
+        )
+      );
+
+      const after_storage: contractStorage = await retry(() =>
+        tzsafe.storage()
+      );
+      expect(after_storage.effective_period.toNumber()).toBe(
+        before_effectivePeriod.toNumber() + 2
+      );
     },
     { timeout: sixMins }
   );
