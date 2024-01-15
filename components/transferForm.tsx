@@ -16,6 +16,7 @@ import {
   useFormikContext,
 } from "formik";
 import { useRouter } from "next/router";
+import { version } from "os";
 import React, {
   ChangeEvent,
   useCallback,
@@ -26,8 +27,7 @@ import React, {
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
-import { mutezToTez, tezToMutez } from "../utils/tez";
-import { debounce } from "../utils/timeout";
+import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals } from "../versioned/interface";
 import {
@@ -41,7 +41,7 @@ import FA1_2 from "./FA1_2";
 import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
-import renderError from "./formUtils";
+import renderError, { renderWarning } from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
 
 type Nullable<T> = T | null | undefined;
@@ -1042,6 +1042,12 @@ function TransferForm(
                                       <ErrorMessage
                                         name={`transfers.${index}.values.${value.field}`}
                                       />
+                                      {!hasTzip27SupportWithPoEChallenge(
+                                        props.contract.version
+                                      ) &&
+                                        renderWarning(
+                                          "This version doesn't support message signing, and this functionality will be removed following submission."
+                                        )}
                                       <button
                                         type="button"
                                         className={
@@ -1105,6 +1111,12 @@ function TransferForm(
                                       <ErrorMessage
                                         name={`transfers.${index}.values.${value.field}`}
                                       />
+                                      {!hasTzip27Support(
+                                        props.contract.version
+                                      ) &&
+                                        renderWarning(
+                                          "This version doesn't support metadata updateing, and this functionality will be removed following submission."
+                                        )}
                                       <button
                                         type="button"
                                         className={
