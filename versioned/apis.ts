@@ -185,7 +185,7 @@ export {
   signers,
   toProposal,
   VersionedApi,
-  getProposalsBigmapId as getProposalsId,
+  getProposalsBigmapId,
   map2Object,
   matchLambda,
 };

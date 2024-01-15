@@ -17,7 +17,7 @@ import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
 import {
-  getProposalsId,
+  getProposalsBigmapId,
   signers,
   toProposal,
   toStorage,
@@ -200,7 +200,7 @@ const Proposals = () => {
         : fetchVersion(c));
 
       const bigmap: { key: string; value: any }[] = await Versioned.proposals(
-        getProposalsId(version, storage),
+        getProposalsBigmapId(version, storage),
         state.offset
       );
 
@@ -320,6 +320,9 @@ const Proposals = () => {
                   const threshold =
                     globalState.contracts[currentContract]?.threshold ??
                     globalState.currentStorage?.threshold;
+                  console.log(
+                    globalState.contracts[currentContract]?.threshold
+                  );
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +

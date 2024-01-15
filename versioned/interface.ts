@@ -142,7 +142,10 @@ abstract class Versioned {
     ops: ownersForm[]
   ): Promise<timeoutAndHash>;
 
-  static toContractState(_contract: any, _balance: BigNumber): contractStorage {
+  static toContractState(
+    _contract: contractStorage,
+    _balance: BigNumber
+  ): contractStorage {
     throw new Error("not implemented!");
   }
 
