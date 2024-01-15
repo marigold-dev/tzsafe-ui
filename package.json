@@ -12,7 +12,8 @@
     "prepare": "husky install",
     "dev:test": "vitest",
     "test": "vitest run",
-    "check": "tsc"
+    "check": "tsc",
+    "get_tez": "npx @oxheadalpha/get-tez tz1Rwf9UAGpsNjE6tFGJpxPKRunteiQT7XZF --amount 20 --network ghostnet"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
@@ -42,7 +43,7 @@
     "formik": "2.4.1",
     "luxon": "^3.2.1",
     "next": "13.1.6",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tiny-emitter": "^2.1.0",
@@ -50,11 +51,13 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@oxheadalpha/get-tez": "^1.0.7",
     "@taquito/signer": "^17.5.2",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/luxon": "^3.2.0",
+    "@types/node-fetch": "^2.6.10",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.13",
     "eslint-config-prettier": "^8.5.0",

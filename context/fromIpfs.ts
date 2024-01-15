@@ -1,27 +1,57 @@
 import { MichelsonMap } from "@taquito/taquito";
 import { buf2hex } from "@taquito/utils";
-import FormData from "form-data";
-import fetch from "node-fetch";
 import { IPFS } from "./config";
+
+// Check if running in a Node.js environment
+const isNode =
+  typeof process !== "undefined" &&
+  process.versions != null &&
+  process.versions.node != null;
+
+let FormDataNode: new () => any;
+let fetch:
+  | (((
+      input: RequestInfo | URL,
+      init?: RequestInit | undefined
+    ) => Promise<Response>) &
+      ((
+        input: RequestInfo | URL,
+        init?: RequestInit | undefined
+      ) => Promise<Response>))
+  | ((arg0: string, arg1: { method: string; body: any; headers: {} }) => any);
+
+if (isNode) {
+  FormDataNode = require("form-data");
+  fetch = require("node-fetch");
+} else {
+  fetch = window.fetch; // Use the browser's fetch
+}
 
 export default async function fromIpfs(meta: any): Promise<{
   metadata: MichelsonMap<any, unknown>;
 }> {
-  const formData = new FormData();
   const str = JSON.stringify(meta);
 
-  // Create a buffer from the string
-  const buffer = Buffer.from(str, "utf-8");
+  let formData;
+  let headers = {};
 
-  // Append the buffer to formData
-  formData.append("file", buffer, {
-    contentType: "application/json",
-    filename: "tzsafe-metadata.json",
-  });
+  if (isNode) {
+    // Node.js environment
+    formData = new FormDataNode();
+    const buffer = Buffer.from(str, "utf-8");
+    formData.append("file", buffer, "tzsafe-metadata.json");
+    headers = formData.getHeaders();
+  } else {
+    // Browser environment
+    formData = new FormData();
+    const blob = new Blob([str], { type: "application/json" });
+    formData.append("file", blob, "tzsafe-metadata.json");
+  }
 
   const response = await fetch(`${IPFS}/add`, {
     method: "POST",
     body: formData,
+    headers: headers,
   });
 
   const data = (await response.json()) as { cid: string };
