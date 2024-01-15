@@ -24,7 +24,11 @@ import {
 } from "../../types/display";
 import { mutezToTez } from "../../utils/tez";
 import useWalletTokens from "../../utils/useWalletTokens";
-import { getProposalsId, toProposal, toStorage } from "../../versioned/apis";
+import {
+  getProposalsBigmapId,
+  toProposal,
+  toStorage,
+} from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
 
 type proposals = [number, { og: any; ui: proposal }][];
@@ -231,7 +235,7 @@ const History = () => {
         storage,
 
         globalState.currentContract,
-        getProposalsId(version, storage),
+        getProposalsBigmapId(version, storage),
         state.offset
       );
 
