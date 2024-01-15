@@ -1,4 +1,4 @@
-export const owner = "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH";
+export const owner = "tz1Rwf9UAGpsNjE6tFGJpxPKRunteiQT7XZF";
 export const pb =
-  "edskRicjCbdgMeQ61XWCxAVgTfy6hfxwocXbVgJpynXvoWF8Z8wuzZTvEyiqwnE3cb75u9s8PKCeBG25Zd797NGfK8yfZY5noK";
+  "edskRykbgjfXDDrg9Yg2nCNgY3A2hmZgrTN2qVRDhEUDy3Wf9nGA2XBYHhRiENa4ko9JjEVeh7YKQxzU3To9jktW8QKYFfe79q";
 export const rpc = "https://ghostnet.tezos.marigold.dev/";
