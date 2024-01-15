@@ -60,6 +60,7 @@
     "form-data": "^4.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2",
+    "node-blob": "^0.0.2",
     "pino-pretty": "^10.2.3",
     "postcss": "^8.4.19",
     "prettier": "^2.8.4",

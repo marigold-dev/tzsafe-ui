@@ -1,5 +1,7 @@
 import { MichelsonMap } from "@taquito/taquito";
 import { buf2hex } from "@taquito/utils";
+import FormData from "form-data";
+import Blob from "node-blob";
 import { IPFS } from "./config";
 
 export default async function fromIpfs(meta: any): Promise<{
