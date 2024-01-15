@@ -7,8 +7,10 @@ import {
 import { Tzip16ContractAbstraction } from "@taquito/tzip16";
 import { version } from "../types/display";
 import { TZKT_API_URL } from "./config";
+import ct0_1_1 from "./contract/v0.1.1";
 import ct0_3_3 from "./contract/v0.3.3";
 import ct0_3_4 from "./contract/v0.3.4";
+import meta0_1_1 from "./metadata/v0.1.1";
 import meta0_3_3 from "./metadata/v0.3.3";
 import meta0_3_4 from "./metadata/v.0.3.4";
 
@@ -36,7 +38,7 @@ export const CONTRACTS: { [k in version]: [string, any] | undefined } = {
   "0.0.11": undefined,
   //@ts-expect-error There was 2 versions of 0.0.11, so it means 2 codeHash.
   "0.0.11b": undefined,
-  "0.1.1": undefined,
+  "0.1.1": [ct0_1_1, meta0_1_1],
   "0.3.0": undefined,
   "0.3.1": undefined,
   "0.3.2": undefined,
