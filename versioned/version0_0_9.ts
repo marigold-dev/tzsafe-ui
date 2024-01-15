@@ -37,78 +37,84 @@ class Version0_0_9 extends Versioned {
 
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map(x => {
-          switch (x.type) {
-            case "transfer":
-              return {
-                transfer: {
-                  target: x.values.to,
-                  amount: x.values.amount,
-                  parameter: {},
-                },
-              };
-            case "lambda": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
-              return {
-                execute_lambda: {
-                  metadata: meta,
-                  lambda: michelsonCode,
-                },
-              };
-            }
-            case "contract": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
-              return {
-                execute_lambda: {
-                  metadata: meta,
-                  lambda: michelsonCode,
-                },
-              };
-            }
-            case "fa2": {
-              const parser = new Parser();
+        proposals.transfers
+          .map(x => {
+            switch (x.type) {
+              case "transfer":
+                return {
+                  transfer: {
+                    target: x.values.to,
+                    amount: x.values.amount,
+                    parameter: {},
+                  },
+                };
+              case "lambda": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? convert(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "contract": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? convert(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "fa2": {
+                const parser = new Parser();
 
-              const michelsonCode = parser.parseMichelineExpression(
-                generateFA2Michelson(
-                  this.version,
-                  x.values.map(value => ({
-                    walletAddress: cc.address,
-                    targetAddress: value.targetAddress,
-                    tokenId: Number(value.tokenId),
-                    amount: Number(value.amount),
-                    fa2Address: value.fa2Address,
-                  }))
-                )
-              );
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA2Michelson(
+                    this.version,
+                    x.values.map(value => ({
+                      walletAddress: cc.address,
+                      targetAddress: value.targetAddress,
+                      tokenId: Number(value.tokenId),
+                      amount: Number(value.amount),
+                      fa2Address: value.fa2Address,
+                    }))
+                  )
+                );
 
-              return {
-                execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      contract_addr: x.values[0].targetAddress,
-                      payload: x.values.map(value => ({
-                        token_id: Number(value.tokenId),
-                        fa2_address: value.fa2Address,
-                        amount: Number(value.amount),
-                      })),
-                    })
-                  ),
-                  lambda: michelsonCode,
-                },
-              };
+                return {
+                  execute_lambda: {
+                    metadata: convert(
+                      JSON.stringify({
+                        contract_addr: x.values[0].targetAddress,
+                        payload: x.values.map(value => ({
+                          token_id: Number(value.tokenId),
+                          fa2_address: value.fa2Address,
+                          amount: Number(value.amount),
+                        })),
+                      })
+                    ),
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              default:
+                return {};
             }
-            default:
-              return {};
-          }
-        })
+          })
+          .filter(v => Object.keys(v).length !== 0)
       )
       .toTransferParams();
     let op = await t.wallet.transfer(params).send();
