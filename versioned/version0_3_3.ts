@@ -198,7 +198,7 @@ class Version0_3_3 extends Versioned {
     let batchOp = batch;
     if (batchOp === undefined) batchOp = t.wallet.batch();
 
-    if (typeof result !== undefined) {
+    if (result !== undefined) {
       batchOp.withContractCall(
         cc.methodsObject.sign_proposal({
           agreement: result,
