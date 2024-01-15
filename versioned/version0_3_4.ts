@@ -1,5 +1,10 @@
 import { emitMicheline } from "@taquito/michel-codec";
-import { WalletContract, TezosToolkit, TransferParams } from "@taquito/taquito";
+import {
+  WalletContract,
+  TezosToolkit,
+  TransferParams,
+  WalletOperationBatch,
+} from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
@@ -14,46 +19,37 @@ class Version0_3_4 extends Version0_3_3 {
   async submitTxProposals(
     cc: WalletContract,
     t: TezosToolkit,
-    proposals: proposals
+    proposals: proposals,
+    _convertTezToMutez?: boolean,
+    batch?: WalletOperationBatch
   ): Promise<[boolean, string]> {
+    let batchOp = batch;
+    if (batchOp === undefined) batchOp = t.wallet.batch();
+
     const poe_proposals = proposals.transfers.filter(v => v.type === "poe");
     const regular_proposals = proposals.transfers.filter(v => v.type !== "poe");
 
-    if (
-      proposals.transfers.length === 1 &&
-      proposals.transfers[0].type === "poe"
-    ) {
-      const params: TransferParams = cc.methods
-        .proof_of_event_challenge(
-          char2Bytes(proposals.transfers[0].values.payload)
-        )
-        .toTransferParams();
-      const op = await t.wallet.transfer(params).send();
-
-      const transacValue = await promiseWithTimeout(
-        op.transactionOperation(),
-        DEFAULT_TIMEOUT
-      );
-
-      if (transacValue === -1) {
-        return [true, op.opHash];
+    poe_proposals.forEach(v => {
+      if (v.type === "poe") {
+        const params = cc.methods.proof_of_event_challenge(
+          char2Bytes(v.values.payload)
+        );
+        if (!batchOp) {
+          throw new Error(
+            "Internal error: batchOp is undefined. It should never happen."
+          );
+        }
+        batchOp.withContractCall(params);
       }
+    });
 
-      const confirmationValue = await promiseWithTimeout(
-        op.confirmation(1),
-        DEFAULT_TIMEOUT
-      );
-
-      if (confirmationValue === -1) {
-        return [true, op.opHash];
-      }
-      return [false, op.opHash];
-    } else if (
-      proposals.transfers.length >= 1 &&
-      proposals.transfers.filter(v => v.type === "poe").length === 0
-    ) {
-      return super.submitTxProposals(cc, t, proposals);
-    } else return [false, "doesn't support for TzSafe on UI"];
+    return super.submitTxProposals(
+      cc,
+      t,
+      { transfers: regular_proposals },
+      undefined,
+      batchOp
+    );
   }
 
   static override toContractState(

@@ -39,136 +39,143 @@ class Version0_3_3 extends Versioned {
 
     if (batchOp === undefined) batchOp = t.wallet.batch();
 
-    const params = cc.methodsObject.create_proposal(
-      proposals.transfers.map(x => {
-        switch (x.type) {
-          case "transfer":
-            return {
-              transfer: {
-                target: x.values.to,
-                amount: tezToMutez(Number(x.values.amount)),
-              },
-            };
-          case "lambda": {
-            const p = new Parser();
-            const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-            let meta = !!x.values.metadata
-              ? char2Bytes(x.values.metadata)
-              : null;
-            return {
-              execute_lambda: {
-                metadata: meta,
-                lambda: michelsonCode,
-              },
-            };
-          }
-          case "contract": {
-            const p = new Parser();
-            const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-            return {
-              execute_lambda: {
-                metadata: null,
-                lambda: michelsonCode,
-              },
-            };
-          }
-          case "fa2": {
-            const parser = new Parser();
+    if (proposals.transfers.length > 0) {
+      const params = cc.methodsObject.create_proposal(
+        proposals.transfers
+          .map(x => {
+            switch (x.type) {
+              case "transfer":
+                return {
+                  transfer: {
+                    target: x.values.to,
+                    amount: tezToMutez(Number(x.values.amount)),
+                  },
+                };
+              case "lambda": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? char2Bytes(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "contract": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                return {
+                  execute_lambda: {
+                    metadata: null,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "fa2": {
+                const parser = new Parser();
 
-            const michelsonCode = parser.parseMichelineExpression(
-              generateFA2Michelson(
-                this.version,
-                x.values.map(value => {
-                  const token = value.token as unknown as fa2Token;
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA2Michelson(
+                    this.version,
+                    x.values.map(value => {
+                      const token = value.token as unknown as fa2Token;
 
-                  return {
-                    walletAddress: cc.address,
-                    targetAddress: value.targetAddress,
-                    tokenId: Number(value.tokenId),
-                    amount: BigNumber(value.amount)
+                      return {
+                        walletAddress: cc.address,
+                        targetAddress: value.targetAddress,
+                        tokenId: Number(value.tokenId),
+                        amount: BigNumber(value.amount)
+                          .multipliedBy(
+                            BigNumber(10).pow(token.token.metadata.decimals)
+                          )
+                          .toNumber(),
+                        fa2Address: value.fa2Address,
+                      };
+                    })
+                  )
+                );
+
+                return {
+                  execute_lambda: {
+                    metadata: null,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "fa1.2-approve": {
+                const parser = new Parser();
+
+                const token = x.values.token as unknown as fa1_2Token;
+
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA1_2ApproveMichelson(this.version, {
+                    spenderAddress: x.values.spenderAddress,
+                    amount: BigNumber(x.values.amount)
                       .multipliedBy(
                         BigNumber(10).pow(token.token.metadata.decimals)
                       )
                       .toNumber(),
-                    fa2Address: value.fa2Address,
-                  };
-                })
-              )
-            );
+                    fa1_2Address: x.values.fa1_2Address,
+                  })
+                );
 
-            return {
-              execute_lambda: {
-                metadata: null,
-                lambda: michelsonCode,
-              },
-            };
-          }
-          case "fa1.2-approve": {
-            const parser = new Parser();
+                return {
+                  execute_lambda: {
+                    metadata: null,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
 
-            const token = x.values.token as unknown as fa1_2Token;
+              case "fa1.2-transfer": {
+                const parser = new Parser();
 
-            const michelsonCode = parser.parseMichelineExpression(
-              generateFA1_2ApproveMichelson(this.version, {
-                spenderAddress: x.values.spenderAddress,
-                amount: BigNumber(x.values.amount)
-                  .multipliedBy(
-                    BigNumber(10).pow(token.token.metadata.decimals)
-                  )
-                  .toNumber(),
-                fa1_2Address: x.values.fa1_2Address,
-              })
-            );
+                const token = x.values.token as unknown as fa1_2Token;
 
-            return {
-              execute_lambda: {
-                metadata: null,
-                lambda: michelsonCode,
-              },
-            };
-          }
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA1_2TransferMichelson(this.version, {
+                    walletAddress: cc.address,
+                    amount: BigNumber(x.values.amount)
+                      .multipliedBy(
+                        BigNumber(10).pow(token.token.metadata.decimals)
+                      )
+                      .toNumber(),
+                    fa1_2Address: x.values.fa1_2Address,
+                    targetAddress: x.values.targetAddress,
+                  })
+                );
 
-          case "fa1.2-transfer": {
-            const parser = new Parser();
+                return {
+                  execute_lambda: {
+                    metadata: null,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "update_metadata": {
+                return {
+                  add_or_update_metadata: {
+                    key: "",
+                    value: char2Bytes(x.values.tzip16_metadata),
+                  },
+                };
+              }
+              default:
+                return {};
+            }
+          })
+          .filter(v => Object.keys(v).length !== 0)
+      );
 
-            const token = x.values.token as unknown as fa1_2Token;
-
-            const michelsonCode = parser.parseMichelineExpression(
-              generateFA1_2TransferMichelson(this.version, {
-                walletAddress: cc.address,
-                amount: BigNumber(x.values.amount)
-                  .multipliedBy(
-                    BigNumber(10).pow(token.token.metadata.decimals)
-                  )
-                  .toNumber(),
-                fa1_2Address: x.values.fa1_2Address,
-                targetAddress: x.values.targetAddress,
-              })
-            );
-
-            return {
-              execute_lambda: {
-                metadata: null,
-                lambda: michelsonCode,
-              },
-            };
-          }
-          case "update_metadata": {
-            return {
-              add_or_update_metadata: {
-                key: "",
-                value: char2Bytes(x.values.tzip16_metadata),
-              },
-            };
-          }
-          default:
-            return {};
-        }
-      })
-    );
-
-    batchOp.withContractCall(params);
-
+      batchOp.withContractCall(params);
+    }
     const op = await batchOp.send();
 
     const confirmationValue = await promiseWithTimeout(
