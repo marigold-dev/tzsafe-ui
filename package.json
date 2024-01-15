@@ -42,6 +42,7 @@
     "formik": "2.4.1",
     "luxon": "^3.2.1",
     "next": "13.1.6",
+    "node-fetch": "^3.3.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tiny-emitter": "^2.1.0",

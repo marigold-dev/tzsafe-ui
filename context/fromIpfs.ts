@@ -1,26 +1,34 @@
 import { MichelsonMap } from "@taquito/taquito";
 import { buf2hex } from "@taquito/utils";
 import FormData from "form-data";
-import Blob from "node-blob";
+import fetch from "node-fetch";
 import { IPFS } from "./config";
 
 export default async function fromIpfs(meta: any): Promise<{
   metadata: MichelsonMap<any, unknown>;
 }> {
   const formData = new FormData();
-  let str = JSON.stringify(meta);
-  const bytes = new TextEncoder().encode(str);
-  const blob = new Blob([bytes], {
-    type: "application/json;charset=utf-8",
+  const str = JSON.stringify(meta);
+
+  // Create a buffer from the string
+  const buffer = Buffer.from(str, "utf-8");
+
+  // Append the buffer to formData
+  formData.append("file", buffer, {
+    contentType: "application/json",
+    filename: "tzsafe-metadata.json",
   });
-  formData.append("file", blob, "tzsafe-metdata.json");
-  let { cid } = await fetch(`${IPFS}/add`, {
+
+  const response = await fetch(`${IPFS}/add`, {
     method: "POST",
     body: formData,
-  }).then(res => res.json());
+  });
+
+  const data = (await response.json()) as { cid: string };
+
   return {
     metadata: MichelsonMap.fromLiteral({
-      "": buf2hex(Buffer.from(`ipfs://${cid}`)),
+      "": buf2hex(Buffer.from(`ipfs://${data.cid}`)),
     }),
   };
 }
