@@ -119,7 +119,12 @@ describe("decodeB58 address on the right of or", () => {
 
     const newData = decodeB58(type, data);
     expect(newData).toMatchObject({
-      string: "KT1CD9M7KgWDQ3RozRfrT82mSuG9W2b7QDFA",
+      args: [
+        {
+          string: "KT1CD9M7KgWDQ3RozRfrT82mSuG9W2b7QDFA",
+        },
+      ],
+      prim: "Right",
     });
   });
 });
@@ -133,7 +138,12 @@ describe("decodeB58 address on the left of or", () => {
 
     const newData = decodeB58(type, data);
     expect(newData).toMatchObject({
-      string: "KT1CD9M7KgWDQ3RozRfrT82mSuG9W2b7QDFA",
+      args: [
+        {
+          string: "KT1CD9M7KgWDQ3RozRfrT82mSuG9W2b7QDFA",
+        },
+      ],
+      prim: "Left",
     });
   });
 });
