@@ -3,7 +3,7 @@ import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
 import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { describe, expect, it, beforeAll, vi } from "vitest";
-import { proposal } from "../../types/Proposal0_3_3";
+import { proposal } from "../../types/Proposal0_3_4";
 import { contractStorage } from "../../types/app";
 import { VersionedApi } from "../../versioned/apis";
 import deployTzSafe from "../../versioned/deployTzSafe";
@@ -12,8 +12,8 @@ import { owner, pb, rpc } from "./config";
 import { retry } from "./util";
 
 const sixMins = 360000;
-const version = "0.3.3";
-const ipfs_file = "ipfs://Qmb72YHLm2jztSQS1B2uEvo1GrWbYKQu7dnJ5YNcS7aU1Q";
+const version = "0.3.4";
+const ipfs_file = "ipfs://QmPkai5FJL2QELFcmnmaDHNZ7NRC4XYBdL7P6RLVMNx7eu";
 
 vi.mock("@airgap/beacon-sdk", () => ({
   NetworkType: {
@@ -102,7 +102,7 @@ describe(`Test version ${version}`, () => {
       );
       after_storage.proposals
         .get(after_proposal_counter.toNumber())
-        .then((value: proposal) => {
+        .then((value: any) => {
           expect(value).toBeDefined();
           expect(value.contents.length).toBe(2);
         });
@@ -119,7 +119,7 @@ describe(`Test version ${version}`, () => {
       const before_storage: contractStorage = await retry(() =>
         tzsafe.storage()
       );
-      const before_proposal: proposal = await retry(() =>
+      const before_proposal: any = await retry(() =>
         before_storage.proposals.get(before_storage.proposal_counter)
       );
       const before_sigs: MichelsonMap<string, boolean> =
@@ -139,7 +139,7 @@ describe(`Test version ${version}`, () => {
       const after_storage: contractStorage = await retry(() =>
         tzsafe.storage()
       );
-      const after_proposal: proposal = await retry(() =>
+      const after_proposal: any = await retry(() =>
         after_storage.proposals.get(after_storage.proposal_counter)
       );
       const after_sigs: MichelsonMap<string, boolean> =
@@ -164,7 +164,7 @@ describe(`Test version ${version}`, () => {
       const before_storage: contractStorage = await retry(() =>
         tzsafe.storage()
       );
-      const before_arcihve: { executed: Symbol } = await retry(() =>
+      const before_arcihve: any = await retry(() =>
         before_storage.archives.get(before_storage.proposal_counter)
       );
       expect(before_arcihve).toBeUndefined();
@@ -227,8 +227,9 @@ describe(`Test version ${version}`, () => {
     },
     { timeout: sixMins }
   );
+
   it(
-    "test submitTxProposals: non-supporting proposals will be dropped",
+    "test submitTxProposals through proof-of-event challenge",
     async () => {
       const v = VersionedApi(version, addr);
       const tzsafe = await retry(() => tezos.wallet.at(addr));
@@ -240,6 +241,20 @@ describe(`Test version ${version}`, () => {
               payload: "0001",
             },
             fields: [],
+          },
+          {
+            type: "poe",
+            values: {
+              payload: "0002",
+            },
+            fields: [],
+          },
+          {
+            type: "transfer",
+            values: {
+              to: owner,
+              amount: "1",
+            },
           },
           {
             type: "transfer",
@@ -270,13 +285,26 @@ describe(`Test version ${version}`, () => {
       const after_proposal_counter: BigNumber = after_storage.proposal_counter;
 
       expect(after_proposal_counter.toNumber()).toBe(
-        before_proposal_counter.toNumber() + 1
+        before_proposal_counter.toNumber() + 3
       );
 
       after_storage.proposals
         .get(after_proposal_counter.toNumber())
         .then((value: proposal) => {
-          expect(value.contents.filter(v => "transfer" in v).length).toBe(1);
+          expect(value.contents.length).toBe(1);
+          expect(value.contents.find(v => "proof_of_event" in v)).toBeDefined();
+        });
+
+      after_storage.proposals
+        .get(after_proposal_counter.toNumber() - 1)
+        .then((value: proposal) => {
+          expect(value.contents.length).toBe(1);
+          expect(value.contents.find(v => "proof_of_event" in v)).toBeDefined();
+        });
+      after_storage.proposals
+        .get(after_proposal_counter.toNumber() - 2)
+        .then((value: proposal) => {
+          expect(value.contents.filter(v => "transfer" in v).length).toBe(2);
         });
     },
     { timeout: sixMins }
