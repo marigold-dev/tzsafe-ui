@@ -1,4 +1,5 @@
 import { Parser } from "@taquito/michel-codec";
+import { PreapplyParams } from "@taquito/rpc";
 import {
   TezosToolkit,
   BigMapAbstraction,
@@ -18,6 +19,13 @@ import { timeoutAndHash, Versioned } from "./interface";
 import { proposals } from "./interface";
 
 class Version0_0_6 extends Versioned {
+  async generateSpoeOps(
+    _payload: string,
+    _cc: WalletContract,
+    _t: TezosToolkit
+  ): Promise<PreapplyParams> {
+    throw new Error("Not supported");
+  }
   async submitTxProposals(
     cc: WalletContract,
     t: TezosToolkit,

@@ -15,6 +15,7 @@ import { Trie } from "../utils/radixTrie";
 import { p2pData } from "../versioned/interface";
 import P2PClient from "./P2PClient";
 import { IPFS_NODE, RPC_URL } from "./config";
+import { BeaconSigner } from "./signer";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -164,10 +165,12 @@ const saveState = (state: tezosState) => {
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
     case "beaconConnect": {
+      console.log("SET PROVIDER CALL");
       state.connection.setProvider({
         rpc: RPC_URL,
         wallet: action.payload,
       });
+      state.connection.setSignerProvider(new BeaconSigner(action.payload));
       return { ...state, beaconWallet: action.payload };
     }
     case "p2pConnect": {
