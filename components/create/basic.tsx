@@ -88,7 +88,7 @@ function Basic() {
           </div>
           <ErrorMessage name="version" render={renderError} />
         </div>
-        <div className="mt-8 flex space-x-6">
+        <div className="mt-8 flex justify-center space-x-6">
           <Link
             type="button"
             href="/"
