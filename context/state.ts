@@ -322,7 +322,7 @@ function reducer(state: tezosState, action: action): tezosState {
       const { [action.address]: contractDapps, ...connectedDapps } =
         state.connectedDapps;
 
-      Object.values(contractDapps).forEach(async dapp => {
+      Object.values(contractDapps ?? {}).forEach(async dapp => {
         const senderId = await getSenderId(dapp.publicKey);
         state.p2pClient?.removePeer(
           {
