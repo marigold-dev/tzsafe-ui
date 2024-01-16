@@ -360,6 +360,7 @@ const Proposals = () => {
                   const effectivePeriod =
                     globalState.contracts[currentContract]?.effective_period ??
                     globalState.currentStorage?.effective_period;
+
                   const threshold =
                     globalState.contracts[currentContract]?.threshold ??
                     globalState.currentStorage?.threshold;
