@@ -1,4 +1,5 @@
 import { emitMicheline, Parser, packDataBytes } from "@taquito/michel-codec";
+import { PreapplyParams } from "@taquito/rpc";
 import {
   BigMapAbstraction,
   TezosToolkit,
@@ -35,6 +36,14 @@ function convert(x: string): string {
 }
 
 class Version0_3_2 extends Versioned {
+  async generateSpoeOps(
+    _payload: string,
+    _cc: WalletContract,
+    _t: TezosToolkit
+  ): Promise<PreapplyParams> {
+    throw new Error("Not supported");
+  }
+
   async submitTxProposals(
     cc: WalletContract,
     t: TezosToolkit,

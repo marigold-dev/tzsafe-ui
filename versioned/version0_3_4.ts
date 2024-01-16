@@ -3,6 +3,7 @@ import {
   WalletContract,
   TezosToolkit,
   WalletOperationBatch,
+  OpKind,
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
@@ -14,6 +15,38 @@ import { proposals } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
 class Version0_3_4 extends Version0_3_3 {
+  async generateSpoeOps(payload: string, cc: WalletContract, t: TezosToolkit) {
+    const storage = toStorage(this.version, await cc.storage(), BigNumber(0));
+    const proposal_id = storage.proposal_counter.plus(1);
+    const encodedPayload = char2Bytes(payload);
+
+    const ops = [
+      cc.methods.proof_of_event_challenge(encodedPayload).toTransferParams(),
+      cc.methodsObject
+        .sign_proposal({
+          agreement: true,
+          proposal_id,
+          proposal_contents: [{ proof_of_event: encodedPayload }],
+        })
+        .toTransferParams(),
+      cc.methodsObject
+        .resolve_proposal({
+          proposal_id,
+          proposal_contents: [{ proof_of_event: encodedPayload }],
+        })
+        .toTransferParams(),
+    ];
+
+    const batch = await t.prepare.batch(
+      ops.map(op => ({
+        kind: OpKind.TRANSACTION,
+        ...op,
+      }))
+    );
+
+    return t.prepare.toPreapply(batch);
+  }
+
   async submitTxProposals(
     cc: WalletContract,
     t: TezosToolkit,
