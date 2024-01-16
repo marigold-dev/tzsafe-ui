@@ -317,12 +317,10 @@ const Proposals = () => {
                   const effectivePeriod =
                     globalState.contracts[currentContract]?.effective_period ??
                     globalState.currentStorage?.effective_period;
+
                   const threshold =
                     globalState.contracts[currentContract]?.threshold ??
                     globalState.currentStorage?.threshold;
-                  console.log(
-                    globalState.contracts[currentContract]?.threshold
-                  );
 
                   const deadline = new Date(
                     new Date(x[1].ui.timestamp).getTime() +
