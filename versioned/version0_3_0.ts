@@ -5,6 +5,7 @@ import {
   MichelsonType,
 } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
+import { PreapplyParams } from "@taquito/rpc";
 import {
   BigMapAbstraction,
   TezosToolkit,
@@ -263,6 +264,14 @@ class Version0_3_0 extends Versioned {
     );
 
     return [confirmationValue === -1, op.opHash];
+  }
+
+  async generateSpoeOps(
+    _payload: string,
+    _cc: WalletContract,
+    _t: TezosToolkit
+  ): Promise<PreapplyParams> {
+    throw new Error("Not supported");
   }
 
   async submitSettingsProposals(
