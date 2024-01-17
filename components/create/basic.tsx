@@ -82,7 +82,7 @@ function Basic() {
             </label>
             <div className="ml-2 text-sm text-gray-500">
               {
-                "This version fully supports for TZIP27. The createion fee is roughly 2.1 tez."
+                "This version fully supports TZIP27. The creation fee is roughly 2.1 tez"
               }
             </div>
           </div>
