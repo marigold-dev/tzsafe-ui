@@ -1,4 +1,3 @@
-import { InMemorySigner } from "@taquito/signer";
 import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
 import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
@@ -16,16 +15,13 @@ const version = "0.3.4";
 const ipfs_file = "ipfs://QmPkai5FJL2QELFcmnmaDHNZ7NRC4XYBdL7P6RLVMNx7eu";
 
 // There are dependency for test cases. They must in order.
-const test_suit = () =>
+const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
   describe(`Test version ${version}`, () => {
     let tezos: TezosToolkit;
     let addr: string;
 
     beforeAll(async () => {
-      tezos = new TezosToolkit(rpc);
-      tezos.setProvider({
-        signer: new InMemorySigner(pb),
-      });
+      tezos = setTezosToolkit(tezos);
     });
 
     it(
