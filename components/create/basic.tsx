@@ -66,7 +66,7 @@ function Basic() {
             </label>
             <div className="ml-2 text-sm text-gray-500">
               {
-                "This version doesn't support for TZIP27 in processing proof-of-event challenges for message signing. If such functionality is unnecessary, this version is recommended. The creation fee is roughly 1.8 tez, depending on the count of owners."
+                "This version enables DApps to integrate with the TzSafe app for login purposes, although it does not support message signing in TZIP27. If message signing is not essential for your usage, opting for version 0.3.3 is recommended. The creation fee is roughly 1.8 tez, depending on the count of owners."
               }
             </div>
           </div>
@@ -82,7 +82,7 @@ function Basic() {
             </label>
             <div className="ml-2 text-sm text-gray-500">
               {
-                "This version fully supports TZIP27. The creation fee is roughly 2.1 tez"
+                "This version supports message signing in TZIP27. The creation fee is roughly 2.1 tez"
               }
             </div>
           </div>

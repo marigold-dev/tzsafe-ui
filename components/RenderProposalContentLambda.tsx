@@ -151,7 +151,7 @@ export const contentToData = (
   } else if ("proof_of_event" in content) {
     data = {
       type: "Poe",
-      label: "Sigining",
+      label: "Message Sigining (TZIP27)",
       metadata: undefined,
       amount: undefined,
       addresses: undefined,
@@ -535,9 +535,9 @@ export const labelOfProposalContentLambda = (
   } else if ("transfer" in content) {
     return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
   } else if ("add_or_update_metadata" in content) {
-    return "Update Metadata(TZIP16)";
+    return "Update metadata (TZIP16)";
   } else if ("proof_of_event" in content) {
-    return "Message Signing in Proof of event challenge(TZIP27)";
+    return "Message signing (TZIP27)";
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {

@@ -718,7 +718,7 @@ abstract class Versioned {
       fields: [
         {
           field: "tzip16_metadata",
-          label: "Metadata in TZIP16",
+          label: "Metadata (TZIP16)",
           path: ".tzip16_metadata",
           placeholder: "Metadata",
           validate: (v: string) =>
