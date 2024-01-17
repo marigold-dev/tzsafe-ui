@@ -75,7 +75,7 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   [HASHES["0.0.9"]!]: "0.0.9",
   [HASHES["0.0.10"]!]: "0.0.10",
   [HASHES["0.0.11"]!]: "0.0.11",
-  //@ts-ignore  This version only exist on ghostnet
+  //@ts-expect-error - This version only exist on ghostnet
   [HASHES["0.0.11b"]!]: "0.0.11",
   [HASHES["0.1.1"]!]: "0.1.1",
   [HASHES["0.3.0"]!]: "0.3.0",
