@@ -16,7 +16,6 @@ import {
   useFormikContext,
 } from "formik";
 import { useRouter } from "next/router";
-import { version } from "os";
 import React, {
   ChangeEvent,
   useCallback,
@@ -1046,7 +1045,7 @@ function TransferForm(
                                         props.contract.version
                                       ) &&
                                         renderWarning(
-                                          "This version doesn't support message signing, and this functionality will be removed following submission."
+                                          "This version doesn't support message signing, and it will be removed following submission."
                                         )}
                                       <button
                                         type="button"
@@ -1115,7 +1114,7 @@ function TransferForm(
                                         props.contract.version
                                       ) &&
                                         renderWarning(
-                                          "This version doesn't support metadata updateing, and this functionality will be removed following submission."
+                                          "This version doesn't support metadata updateing, and it will be removed following submission."
                                         )}
                                       <button
                                         type="button"
