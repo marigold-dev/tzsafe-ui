@@ -224,5 +224,5 @@ export function generateUndelegateMichelson(version: version) {
       }`;
   }
 
-  throw new Error("Can't generate for an unknow version");
+  throw new Error("Can't generate for an unknown version");
 }
