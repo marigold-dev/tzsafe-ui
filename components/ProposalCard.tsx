@@ -16,6 +16,7 @@ import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
 } from "./RenderProposalContentMetadata";
 import Tooltip from "./Tooltip";
+import { TryImg } from "./TryImg";
 
 type ProposalCardProps = {
   id: number;
@@ -295,7 +296,7 @@ const ProposalCard = ({
                     </h3>
                     <div className="mt-1 flex list-inside items-center space-x-4">
                       {viewData.image && (
-                        <img
+                        <TryImg
                           src={viewData.image}
                           className="h-auto w-16 rounded"
                           alt={`${viewData.action}'s image`}

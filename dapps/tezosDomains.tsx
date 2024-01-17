@@ -1,6 +1,7 @@
 import { Parser } from "@taquito/michel-codec";
-import { Schema } from "@taquito/michelson-encoder";
+import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import { bytes2Char } from "@taquito/tzip16";
+import BigNumber from "bignumber.js";
 import { contracts, CustomViewData, CustomView } from ".";
 import logo from "../assets/images/TezosDomains.svg";
 import Alias from "../components/Alias";
@@ -51,7 +52,7 @@ export const CHECK_ADDRESS = {
   name: "Check address",
 };
 
-export const setChildrenRecordSchema = new Schema(
+export const setChildRecordSchema = new Schema(
   parser.parseMichelineExpression(
     `(pair %set_child_record (bytes %label)
                         (pair (bytes %parent)
@@ -61,7 +62,7 @@ export const setChildrenRecordSchema = new Schema(
   )!
 );
 
-export const SET_CHILDREN_RECORD = {
+export const SET_CHILD_RECORD = {
   mainnet: "KT1QHLk1EMUA8BPH3FvRUeUmbTspmAhb7kpd",
   ghostnet: "KT1HpddfW7rX5aT2cTdsDaQZnH46bU7jQSTU",
   name: "Set children record",
@@ -136,6 +137,50 @@ export const SETTLE = {
   name: "Settle",
 };
 
+export const executeOfferSchema = new Schema(
+  parser.parseMichelineExpression(
+    `(pair %execute_offer (address %token_contract) (pair (nat %token_id) (address %seller)))`
+  )!
+);
+
+export const placeOfferSchema = new Schema(
+  parser.parseMichelineExpression(
+    `(pair %place_offer (address %token_contract)
+                   (pair (nat %token_id) (pair (mutez %price) (option %expiration timestamp))))`
+  )!
+);
+
+export const removeOfferSchema = new Schema(
+  parser.parseMichelineExpression(
+    `(pair %remove_offer (address %token_contract) (nat %token_id))`
+  )!
+);
+
+export const OFFER = {
+  mainnet: "KT1Evxe1udtPDGWrkiRsEN3vMDdB6gNpkMPM",
+  ghostnet: "KT1HavuWyozSXPzbmyUUpU6L92jagMQD28DT",
+  name: "Offer",
+};
+
+export const tokenTransferSchema = new Schema(
+  parser.parseMichelineExpression(`(list %transfer (pair (address %from_)
+                     (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount))))))`)!
+);
+
+export const tokenUpdateOperatorsSchema = new Schema(
+  parser.parseMichelineExpression(`(list %update_operators (or
+                         (pair %add_operator (address %owner)
+                                             (pair (address %operator) (nat %token_id)))
+                         (pair %remove_operator (address %owner)
+                                                (pair (address %operator) (nat %token_id)))))`)!
+);
+
+export const TOKEN_CONTRACT = {
+  mainnet: "KT1R4KPQxpFHAkX8MKCFmdoiqTaNSSpnJXPL",
+  ghostnet: "KT1MhAy28Bv8oNb3x71dHy6YP6eiJpDVUiDy",
+  name: "Tezos Domains Token",
+};
+
 export const tezosDomainsContracts = {
   COMMIT_ADDRESS,
   BUY_ADDRESS,
@@ -146,14 +191,16 @@ export const tezosDomainsContracts = {
   SETTLE,
   WITHDRAW,
   RENEW,
-  SET_CHILDREN_RECORD,
+  SET_CHILD_RECORD,
   CHECK_ADDRESS,
+  OFFER,
+  TOKEN_CONTRACT,
 };
 
 export const tezosDomainsContractsMatcher: contracts = {
   mainnet: {
     [CHECK_ADDRESS.mainnet]: true,
-    [SET_CHILDREN_RECORD.mainnet]: true,
+    [SET_CHILD_RECORD.mainnet]: true,
     [UPDATE_RECORD.mainnet]: true,
     [CLAIM_REVERSE_RECORD.mainnet]: true,
     [UPDATE_REVERSE_RECORD.mainnet]: true,
@@ -163,14 +210,15 @@ export const tezosDomainsContractsMatcher: contracts = {
     [BID.mainnet]: true,
     [WITHDRAW.mainnet]: true,
     [SETTLE.mainnet]: true,
+    [OFFER.mainnet]: true,
     KT1GY5qCWwmESfTv9dgjYyTYs2T5XGDSvRp1: true,
-    KT1R4KPQxpFHAkX8MKCFmdoiqTaNSSpnJXPL: true,
+    [TOKEN_CONTRACT.mainnet]: true,
     KT1Lu5om8u4ns2VWxcufgQRzjaLLhh3Qvf5B: true,
     KT1VxKQbYBVD8fSkqaewJGigL3tmcLWrsXcu: true,
   },
   ghostnet: {
     [CHECK_ADDRESS.ghostnet]: true,
-    [SET_CHILDREN_RECORD.ghostnet]: true,
+    [SET_CHILD_RECORD.ghostnet]: true,
     [UPDATE_RECORD.ghostnet]: true,
     [CLAIM_REVERSE_RECORD.ghostnet]: true,
     [UPDATE_REVERSE_RECORD.ghostnet]: true,
@@ -180,6 +228,8 @@ export const tezosDomainsContractsMatcher: contracts = {
     [BID.ghostnet]: true,
     [WITHDRAW.ghostnet]: true,
     [SETTLE.ghostnet]: true,
+    [OFFER.ghostnet]: true,
+    [TOKEN_CONTRACT.ghostnet]: true,
   },
 };
 
@@ -232,12 +282,18 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               case RENEW.mainnet:
               case RENEW.ghostnet:
                 return RENEW.name;
-              case SET_CHILDREN_RECORD.mainnet:
-              case SET_CHILDREN_RECORD.ghostnet:
-                return SET_CHILDREN_RECORD.name;
+              case SET_CHILD_RECORD.mainnet:
+              case SET_CHILD_RECORD.ghostnet:
+                return SET_CHILD_RECORD.name;
               case CHECK_ADDRESS.mainnet:
               case CHECK_ADDRESS.ghostnet:
                 return CHECK_ADDRESS.name;
+              case OFFER.mainnet:
+              case OFFER.ghostnet:
+                return OFFER.name;
+              case TOKEN_CONTRACT.mainnet:
+              case TOKEN_CONTRACT.ghostnet:
+                return OFFER.name;
 
               default:
                 return "Interaction with Tezos Domains";
@@ -257,7 +313,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
       switch (transaction.addresses) {
         case tezosDomainsContracts.COMMIT_ADDRESS.ghostnet:
         case tezosDomainsContracts.COMMIT_ADDRESS.mainnet: {
-          if (!("bytes" in micheline)) throw new Error("Wrong params");
+          if (transaction.entrypoints !== "commit") return [];
 
           return [
             {
@@ -270,6 +326,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case tezosDomainsContracts.BUY_ADDRESS.ghostnet:
         case tezosDomainsContracts.BUY_ADDRESS.mainnet: {
+          if (transaction.entrypoints !== "buy") return [];
+
           const data = buySchema.Execute(micheline);
 
           const domain = `${bytes2Char(data.label)}${
@@ -314,6 +372,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case tezosDomainsContracts.CLAIM_REVERSE_RECORD.ghostnet:
         case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet: {
+          if (transaction.entrypoints !== "claim_reverse_record") return [];
+
           const data = claimReverseRecordSchema.Execute(micheline);
 
           const domain = bytes2Char(data.name.Some);
@@ -350,6 +410,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case UPDATE_REVERSE_RECORD.mainnet:
         case UPDATE_REVERSE_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "update_reverse_record") return [];
+
           const data = updateReverseRecordSchema.Execute(micheline);
 
           const domain = bytes2Char(data.name?.Some ?? "");
@@ -389,9 +451,15 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case UPDATE_RECORD.mainnet:
         case UPDATE_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "update_record") return [];
+
           const data = updateRecordSchema.Execute(micheline);
 
           const recordName = bytes2Char(data.name);
+
+          const parsedData = Array.from(
+            (data.data as MichelsonMap<string, string>).entries()
+          ).map(([key, value]) => `${key}: ${bytes2Char(value)}`);
 
           return [
             {
@@ -404,6 +472,21 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                       Owner: <Alias address={data.address.Some} />
                     </li>
                   ) : null}
+                  <li>
+                    Data:
+                    {parsedData.length === 0 ? (
+                      "Data is empty"
+                    ) : (
+                      <ul
+                        className="list-inside list-disc"
+                        style={{ marginLeft: "3rem" }}
+                      >
+                        {parsedData.map(v => (
+                          <li>{v}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
                 </ul>
               ),
               price,
@@ -412,6 +495,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case BID.mainnet:
         case BID.ghostnet: {
+          if (transaction.entrypoints !== "bid") return [];
+
           const data = bidSchema.Execute(micheline);
 
           return [
@@ -429,6 +514,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case SETTLE.mainnet:
         case SETTLE.ghostnet: {
+          if (transaction.entrypoints !== "settle") return [];
+
           const data = settleSchema.Execute(micheline);
 
           return [
@@ -453,6 +540,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case WITHDRAW.mainnet:
         case WITHDRAW.ghostnet: {
+          if (transaction.entrypoints !== "settle") return [];
+
           const data = withdrawSchema.Execute(micheline);
 
           return [
@@ -471,6 +560,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case RENEW.mainnet:
         case RENEW.ghostnet: {
+          if (transaction.entrypoints !== "renew") return [];
+
           const data = renewSchema.Execute(micheline);
 
           return [
@@ -489,18 +580,31 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
             },
           ];
         }
-        case SET_CHILDREN_RECORD.mainnet:
-        case SET_CHILDREN_RECORD.ghostnet: {
-          const data = setChildrenRecordSchema.Execute(micheline);
+        case SET_CHILD_RECORD.mainnet:
+        case SET_CHILD_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "set_child_record") return [];
 
+          const data = setChildRecordSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}.${bytes2Char(data.parent)}`;
           return [
             {
-              action: SET_CHILDREN_RECORD.name,
+              action: SET_CHILD_RECORD.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                  <li>Label: {bytes2Char(data.label)}</li>
                   <li>
-                    Parent: <Alias address={data.parent} />
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferre"
+                    >
+                      {domain}
+                    </a>
                   </li>
                   <li>
                     Owner: <Alias address={data.owner} />
@@ -513,6 +617,8 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         }
         case CHECK_ADDRESS.mainnet:
         case CHECK_ADDRESS.ghostnet: {
+          if (transaction.entrypoints !== "check_address") return [];
+
           const data = checkAddressSchema.Execute(micheline);
 
           return [
@@ -529,6 +635,178 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
               price,
             },
           ];
+        }
+        case OFFER.mainnet:
+        case OFFER.ghostnet: {
+          switch (transaction.entrypoints) {
+            case "execute_offer": {
+              const data = executeOfferSchema.Execute(micheline);
+
+              return [
+                {
+                  action: "Execute offer",
+                  description: (
+                    <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                      <li>
+                        Seller: <Alias address={data.seller} />
+                      </li>
+                      <li>
+                        Token contract: <Alias address={data.token_contract} />
+                      </li>
+                      <li>Token id: {data.token_id.toString()}</li>
+                    </ul>
+                  ),
+                  price,
+                },
+              ];
+            }
+            case "place_offer": {
+              const data = placeOfferSchema.Execute(micheline);
+
+              return [
+                {
+                  action: "Place offer",
+                  description: (
+                    <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                      <li>
+                        Token contract: <Alias address={data.token_contract} />
+                      </li>
+                      <li>Token id: {data.token_id.toString()}</li>
+                      <li>Price: {mutezToTez(data.price.toNumber())} Tez</li>
+                      {!!data.expiration ? (
+                        <li>
+                          Expiration date:{" "}
+                          {new Date(data.expiration).toLocaleString()}
+                        </li>
+                      ) : null}
+                    </ul>
+                  ),
+                  price,
+                },
+              ];
+            }
+            case "remove_offer": {
+              const data = removeOfferSchema.Execute(micheline);
+
+              return [
+                {
+                  action: "Remove offer",
+                  description: (
+                    <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                      <li>
+                        Token contract: <Alias address={data.token_contract} />
+                      </li>
+                      <li>Token id: {data.token_id.toString()}</li>
+                    </ul>
+                  ),
+                  price,
+                },
+              ];
+            }
+            default:
+              return [];
+          }
+        }
+        case TOKEN_CONTRACT.ghostnet:
+        case TOKEN_CONTRACT.mainnet: {
+          switch (transaction.entrypoints) {
+            case "transfer": {
+              const data = tokenTransferSchema.Execute(micheline) as Array<{
+                from_: string;
+                txs: Array<{
+                  to_: string;
+                  token_id: BigNumber;
+                  amount: BigNumber;
+                }>;
+              }>;
+
+              return [
+                {
+                  action: "Token transfer",
+                  description: (
+                    <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                      {data.map(transfer => (
+                        <li>
+                          From: <Alias address={transfer.from_} />
+                          <ul
+                            className="list-inside list-disc"
+                            style={{ marginLeft: "3rem" }}
+                          >
+                            {transfer.txs.map(({ to_, token_id, amount }) => (
+                              <>
+                                <li>
+                                  To: <Alias address={to_} />
+                                </li>
+                                <li>Token id: {token_id.toString()}</li>
+                                <li>Amount: {amount.toString()}</li>
+                              </>
+                            ))}
+                          </ul>
+                        </li>
+                      ))}
+                    </ul>
+                  ),
+                  price,
+                },
+              ];
+            }
+            case "update_operators": {
+              const data = tokenUpdateOperatorsSchema.Execute(
+                micheline
+              ) as Array<
+                | {
+                    add_operator: {
+                      owner: string;
+                      operator: string;
+                      token_id: BigNumber;
+                    };
+                  }
+                | {
+                    remove_operator: {
+                      owner: string;
+                      operator: string;
+                      token_id: BigNumber;
+                    };
+                  }
+              >;
+
+              return [
+                {
+                  action: "Update operators",
+                  description: data.map((operation, i) => {
+                    const data =
+                      "add_operator" in operation
+                        ? operation.add_operator
+                        : operation.remove_operator;
+
+                    return (
+                      <section className={i > 0 ? "mt-2" : ""}>
+                        <h4>
+                          {"add_operator" in operation
+                            ? "Add operator"
+                            : "Remove operator"}
+                        </h4>
+                        <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                          <li>
+                            Owner : <Alias address={data.owner} />
+                          </li>
+                          <li>
+                            Operator : <Alias address={data.operator} />
+                          </li>
+                          <li>Token id: {data.token_id.toString()}</li>
+                        </ul>
+                      </section>
+                    );
+                  }),
+
+                  price,
+                },
+              ];
+            }
+
+            default:
+              return [];
+          }
         }
 
         default:

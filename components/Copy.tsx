@@ -28,7 +28,8 @@ const Copy = ({ children, value, disabled = false, text }: copyProps) => {
       <a
         href="#"
         className={disabled ? "cursor-default" : ""}
-        onClick={async () => {
+        onClick={async e => {
+          e.preventDefault();
           if (disabled) return;
 
           setIsCopying(true);
