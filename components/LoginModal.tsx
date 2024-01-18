@@ -5,7 +5,7 @@ import { decodeData } from "../pages/[walletAddress]/beacon";
 import { connectWallet } from "../utils/connectWallet";
 import { signers } from "../versioned/apis";
 import { p2pData } from "../versioned/interface";
-import { hasTzip27Support } from "../versioned/util";
+import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
 import Select from "./Select";
 import Spinner from "./Spinner";
 import LoginButton from "./loginButton";
@@ -30,7 +30,8 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
     if (!state.address) return [];
 
     return Object.keys(state.contracts).flatMap(address => {
-      if (!hasTzip27Support(state.contracts[address].version)) return [];
+      if (!hasTzip27SupportWithPoEChallenge(state.contracts[address].version))
+        return [];
 
       if (!signers(state.contracts[address]).includes(state.address!))
         return [];
