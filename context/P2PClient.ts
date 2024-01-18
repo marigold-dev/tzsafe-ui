@@ -107,7 +107,6 @@ class P2PClient extends WalletClient {
         this.proofOfEvent.data = {
           payload: message.payload,
         };
-
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
         break;
       case BeaconMessageType.ProofOfEventChallengeRecorded:
