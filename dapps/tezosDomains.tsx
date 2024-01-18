@@ -1,11 +1,15 @@
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
+import { TezosToolkit } from "@taquito/taquito";
+import { TokenMetadata } from "@taquito/tzip12";
 import { bytes2Char } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
+import React, { ReactNode, useEffect, useState } from "react";
 import { contracts, CustomViewData, CustomView } from ".";
 import logo from "../assets/images/TezosDomains.svg";
 import Alias from "../components/Alias";
 import { transaction } from "../components/RenderProposalContentLambda";
+import { getTokenMetadata } from "../utils/getTokenMetadata";
 import { mutezToTez } from "../utils/tez";
 
 const parser = new Parser();
@@ -233,7 +237,30 @@ export const tezosDomainsContractsMatcher: contracts = {
   },
 };
 
-export function tezosDomains(transactions: Array<transaction>): CustomView {
+const promiseCache: {
+  [key: string]: Promise<ReactNode>;
+} = {};
+
+function PromiseRendrer({ promise }: { promise: Promise<React.ReactNode> }) {
+  const [{ node }, setPromiseState] = useState<{
+    isLoading: boolean;
+    node: React.ReactNode;
+  }>({
+    isLoading: true,
+    node: null,
+  });
+
+  useEffect(() => {
+    promise.then(node => setPromiseState({ isLoading: false, node }));
+  }, [promise]);
+
+  return <>{node}</>;
+}
+
+export function tezosDomains(
+  transactions: Array<transaction>,
+  Tezos: TezosToolkit
+): CustomView {
   if (
     !transactions.every(
       ({ addresses }) =>
@@ -249,12 +276,12 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
     logoLink: "https://tezos.domains",
     logoAlt: "Tezos Domains",
     label: transactions
-      .flatMap(({ addresses }) => {
-        if (!addresses) return [];
+      .flatMap(({ addresses: address }) => {
+        if (!address) return [];
 
         return [
           (() => {
-            switch (addresses) {
+            switch (address) {
               case COMMIT_ADDRESS.mainnet:
               case COMMIT_ADDRESS.ghostnet:
                 return COMMIT_ADDRESS.name;
@@ -368,7 +395,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                       Owner: <Alias address={data.owner} />
                     </li>
                     <li>Duration: {data.duration.toString()} days</li>
-                    {!!data.address?.Some && (
+                    {!!data.address && (
                       <li>
                         Pointing to: <Alias address={data.address.Some} />
                       </li>
@@ -491,7 +518,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                     <li>
                       Owner: <Alias address={data.owner} />
                     </li>
-                    {!!data.address?.Some ? (
+                    {!!data.address ? (
                       <li>
                         Address: <Alias address={data.address.Some} />
                       </li>
@@ -506,7 +533,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                           style={{ marginLeft: "3rem" }}
                         >
                           {parsedData.map(v => (
-                            <li>{v}</li>
+                            <li key={v}>{v}</li>
                           ))}
                         </ul>
                       )}
@@ -521,6 +548,10 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         case BID.ghostnet: {
           const data = bidSchema.Execute(micheline);
 
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === BID.mainnet ? ".tez" : ".gho"
+          }`;
+
           return [
             {
               action: BID.name,
@@ -532,7 +563,20 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                   </p>
                 ) : (
                   <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>Label: {bytes2Char(data.label)}</li>
+                    <li>
+                      Domain:{" "}
+                      <a
+                        href={`https://${
+                          domain.endsWith(".gho") ? "ghostnet" : "app"
+                        }.tezos.domains/domain/${domain}`}
+                        title="Open domain infos"
+                        className="underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {domain}
+                      </a>
+                    </li>
                     <li>Bid: {mutezToTez(data.bid.toNumber())} Tez</li>
                   </ul>
                 ),
@@ -543,6 +587,10 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         case SETTLE.mainnet:
         case SETTLE.ghostnet: {
           const data = settleSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === SETTLE.mainnet ? ".tez" : ".gho"
+          }`;
 
           return [
             {
@@ -556,12 +604,25 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 ) : (
                   <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                     <li>
+                      Domain:{" "}
+                      <a
+                        href={`https://${
+                          domain.endsWith(".gho") ? "ghostnet" : "app"
+                        }.tezos.domains/domain/${domain}`}
+                        title="Open domain infos"
+                        className="underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {domain}
+                      </a>
+                    </li>
+                    <li>
                       Owner: <Alias address={data.owner} />
                     </li>
-                    <li>Label: {bytes2Char(data.label)}</li>
-                    {!!data.address?.Some ? (
+                    {!!data.address ? (
                       <li>
-                        Owner: <Alias address={data.address.Some} />
+                        Address: <Alias address={data.address.Some} />
                       </li>
                     ) : null}
                   </ul>
@@ -598,6 +659,10 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
         case RENEW.ghostnet: {
           const data = renewSchema.Execute(micheline);
 
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === RENEW.mainnet ? ".tez" : ".gho"
+          }`;
+
           return [
             {
               action: RENEW.name,
@@ -609,7 +674,20 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                   </p>
                 ) : (
                   <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>Label: {bytes2Char(data.label)}</li>
+                    <li>
+                      Domain:{" "}
+                      <a
+                        href={`https://${
+                          domain.endsWith(".gho") ? "ghostnet" : "app"
+                        }.tezos.domains/domain/${domain}`}
+                        title="Open domain infos"
+                        className="underline"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {domain}
+                      </a>
+                    </li>
                     <li>
                       Duration: {data.duration.toString()} day
                       {data.duration.toNumber() <= 1 ? "" : "s"}
@@ -724,7 +802,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                       {!!data.expiration ? (
                         <li>
                           Expiration date:{" "}
-                          {new Date(data.expiration).toLocaleString()}
+                          {new Date(data.expiration.Some).toLocaleString()}
                         </li>
                       ) : null}
                     </ul>
@@ -778,30 +856,54 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                 }>;
               }>;
 
+              if (data.length !== 1 && data[0].txs.length !== 1)
+                return [
+                  {
+                    action: "Token transfer",
+                    description:
+                      "TzSafe doesn't support multiple tokens transfer for Tezos Domains",
+                  },
+                ];
+
+              const tokenId = data[0].txs[0].token_id;
+              const cacheKey = `${transaction.addresses}:${tokenId}`;
+
+              if (!promiseCache[cacheKey]) {
+                promiseCache[cacheKey] = getTokenMetadata(
+                  transaction.addresses,
+                  tokenId.toNumber(),
+                  Tezos
+                ).then(metadata => (
+                  <a
+                    href={`https://${
+                      metadata.name?.endsWith(".gho") ? "ghostnet" : "app"
+                    }.tezos.domains/domain/${metadata.name}`}
+                    title="Open domain infos"
+                    className="underline"
+                    target="_blank"
+                    rel="noreferre"
+                  >
+                    {metadata.name}
+                  </a>
+                ));
+              }
+
               return [
                 {
                   action: "Token transfer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                      {data.map(transfer => (
-                        <li>
-                          From: <Alias address={transfer.from_} />
-                          <ul
-                            className="list-inside list-disc"
-                            style={{ marginLeft: "3rem" }}
-                          >
-                            {transfer.txs.map(({ to_, token_id, amount }) => (
-                              <>
-                                <li>
-                                  To: <Alias address={to_} />
-                                </li>
-                                <li>Token id: {token_id.toString()}</li>
-                                <li>Amount: {amount.toString()}</li>
-                              </>
-                            ))}
-                          </ul>
-                        </li>
-                      ))}
+                      <li>
+                        From: <Alias address={data[0].from_} />
+                      </li>
+                      <li>
+                        To: <Alias address={data[0].txs[0].to_} />
+                      </li>
+                      <li>
+                        Domain:{" "}
+                        <PromiseRendrer promise={promiseCache[cacheKey]} />
+                      </li>
+                      <li>Amount: {data[0].txs[0].amount.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -838,7 +940,7 @@ export function tezosDomains(transactions: Array<transaction>): CustomView {
                         : operation.remove_operator;
 
                     return (
-                      <section className={i > 0 ? "mt-2" : ""}>
+                      <section className={i > 0 ? "mt-2" : ""} key={i}>
                         <h4>
                           {"add_operator" in operation
                             ? "Add operator"

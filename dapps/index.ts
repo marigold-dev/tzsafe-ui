@@ -1,3 +1,4 @@
+import { TezosToolkit } from "@taquito/taquito";
 import { ReactNode } from "react";
 import { transaction } from "../components/RenderProposalContentLambda";
 import { objkt } from "./objkt";
@@ -27,5 +28,5 @@ export type CustomView =
   | undefined;
 
 export const customViewMatchers: Array<
-  (transactions: Array<transaction>) => CustomView
+  (transactions: Array<transaction>, Tezos: TezosToolkit) => CustomView
 > = [tezosDomains, objkt];

@@ -212,7 +212,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                       {!!data.expiry_time ? (
                         <li>
                           Expiration date:{" "}
-                          {new Date(data.expiry_time).toLocaleString()}
+                          {new Date(data.expiry_time.Some).toLocaleString()}
                         </li>
                       ) : null}
                     </ul>
@@ -243,7 +243,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
                       {!!data.expiry_time ? (
                         <li>
                           Expiration date:{" "}
-                          {new Date(data.expiry_time).toLocaleString()}
+                          {new Date(data.expiry_time.Some).toLocaleString()}
                         </li>
                       ) : null}
                     </ul>

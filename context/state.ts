@@ -1,6 +1,7 @@
 import { AccountInfo, getSenderId } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
+import { Tzip12Module } from "@taquito/tzip12";
 import {
   Handler,
   IpfsHttpHandler,
@@ -54,6 +55,8 @@ let emptyState = (): tezosState => {
 
   const customMetadataProvider = new MetadataProvider(customHandler);
   connection.addExtension(new Tzip16Module(customMetadataProvider));
+  connection.addExtension(new Tzip12Module());
+
   connection.setStreamProvider(
     connection.getFactory(PollingSubscribeProvider)({
       shouldObservableSubscriptionRetry: true,

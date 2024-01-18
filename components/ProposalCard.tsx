@@ -75,7 +75,7 @@ const ProposalCard = ({
 
     try {
       for (let i = 0; i < customViewMatchers.length; ++i) {
-        dapp = customViewMatchers[i](rows as transaction[]);
+        dapp = customViewMatchers[i](rows as transaction[], state.connection);
         if (!!dapp) break;
       }
     } catch (e) {
