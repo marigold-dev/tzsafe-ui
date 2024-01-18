@@ -620,20 +620,14 @@ const PoeModal = () => {
               return (
                 <>
                   <h1 className="text-lg font-medium">
-                    {message.appMetadata.name} wants to perform a Proof Of Event
-                    Challenge
+                    Message Signing Request from {message.appMetadata.name}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {message.appMetadata.name} wants to check that you have the
-                    rights to interact with {state.aliases[address ?? ""]}. To
-                    do so, it requires to emit an event from the contract with
-                    the following informations:
+                    {message.appMetadata.name} requests message signing from{" "}
+                    {state.aliases[address ?? ""]}. The payload of the message
+                    is as follows:
                   </p>
                   <ul className="mt-2 space-y-1">
-                    <li className="truncate">
-                      <span className="font-light">Challenge id:</span>{" "}
-                      {state.p2pClient?.proofOfEvent.data?.challenge_id}
-                    </li>
                     <li className="truncate">
                       <span className="font-light">Payload:</span>{" "}
                       {state.p2pClient?.proofOfEvent.data?.payload}

@@ -10,7 +10,6 @@ import {
   SigningType,
   PeerInfo,
 } from "@airgap/beacon-sdk";
-import { buf2hex } from "@taquito/utils";
 import { TinyEmitter } from "tiny-emitter";
 
 export enum Event {
@@ -26,7 +25,7 @@ class P2PClient extends WalletClient {
   permissionMessage: PermissionRequestOutput | undefined = undefined;
   proofOfEvent: {
     message: undefined | ProofOfEventChallengeRequestOutput;
-    data: undefined | { challenge_id: string; payload: string };
+    data: undefined | { payload: string };
   } = {
     message: undefined,
     data: undefined,
@@ -103,17 +102,16 @@ class P2PClient extends WalletClient {
         this.permissionMessage = message;
         this.events.emit(Event.PERMISSION_REQUEST, message);
         break;
-      // case BeaconMessageType.ProofOfEventChallengeRequest:
-      //   this.proofOfEvent.message = message;
-      //   this.proofOfEvent.data = {
-      //     challenge_id: message.dAppChallengeId,
-      //     payload: message.payload,
-      //   };
-      //
-      //   this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
-      //   break;
-      // case BeaconMessageType.ProofOfEventChallengeRecorded:
-      //   break;
+      case BeaconMessageType.ProofOfEventChallengeRequest:
+        this.proofOfEvent.message = message;
+        this.proofOfEvent.data = {
+          payload: message.payload,
+        };
+
+        this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
+        break;
+      case BeaconMessageType.ProofOfEventChallengeRecorded:
+        break;
       case BeaconMessageType.SignPayloadRequest:
         this.events.emit(Event.SIGN_PAYLOAD, message);
         break;
