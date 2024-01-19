@@ -48,7 +48,9 @@ class Version0_3_3 extends Versioned {
                 return {
                   transfer: {
                     target: x.values.to,
-                    amount: tezToMutez(Number(x.values.amount)),
+                    amount: convertTezToMutez
+                      ? tezToMutez(Number(x.values.amount))
+                      : Number(x.values.amount),
                   },
                 };
               case "lambda": {
