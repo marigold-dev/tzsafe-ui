@@ -370,24 +370,43 @@ export function tezosDomains(
       switch (transaction.addresses) {
         case tezosDomainsContracts.COMMIT_ADDRESS.ghostnet:
         case tezosDomainsContracts.COMMIT_ADDRESS.mainnet: {
-          return [
-            {
-              action: COMMIT_ADDRESS.name,
-              description:
-                transaction.entrypoints !== "commit" ? (
+          if (transaction.entrypoints !== "commit")
+            return [
+              {
+                action: COMMIT_ADDRESS.name,
+                description: (
                   <p>
                     TzSafe doesn't support the entrypoint:{" "}
                     {transaction.entrypoints}
                   </p>
-                ) : (
-                  "Publishing the intent to buy a domain. It protects your domain from being taken by an adversary."
                 ),
+              },
+            ];
+
+          return [
+            {
+              action: COMMIT_ADDRESS.name,
+              description:
+                "Publishing the intent to buy a domain. It protects your domain from being taken by an adversary.",
               price,
             },
           ];
         }
         case tezosDomainsContracts.BUY_ADDRESS.ghostnet:
         case tezosDomainsContracts.BUY_ADDRESS.mainnet: {
+          if (transaction.entrypoints !== "buy")
+            return [
+              {
+                action: BUY_ADDRESS.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
           const data = buySchema.Execute(micheline);
 
           const domain = `${bytes2Char(data.label)}${
@@ -399,45 +418,52 @@ export function tezosDomains(
           return [
             {
               action: BUY_ADDRESS.name,
-              description:
-                transaction.entrypoints !== "buy" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {domain}
+                    </a>
+                  </li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                  <li>Duration: {data.duration.toString()} days</li>
+                  {!!data.address && (
                     <li>
-                      Domain:{" "}
-                      <a
-                        href={`https://${
-                          domain.endsWith(".gho") ? "ghostnet" : "app"
-                        }.tezos.domains/domain/${domain}`}
-                        title="Open domain infos"
-                        className="underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {domain}
-                      </a>
+                      Pointing to: <Alias address={data.address.Some} />
                     </li>
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                    <li>Duration: {data.duration.toString()} days</li>
-                    {!!data.address && (
-                      <li>
-                        Pointing to: <Alias address={data.address.Some} />
-                      </li>
-                    )}
-                  </ul>
-                ),
+                  )}
+                </ul>
+              ),
               price,
             },
           ];
         }
         case tezosDomainsContracts.CLAIM_REVERSE_RECORD.ghostnet:
         case tezosDomainsContracts.CLAIM_REVERSE_RECORD.mainnet: {
+          if (transaction.entrypoints !== "claim_reverse_record")
+            return [
+              {
+                action: CLAIM_REVERSE_RECORD.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
           const data = claimReverseRecordSchema.Execute(micheline);
 
           const domain = bytes2Char(data.name.Some);
@@ -445,305 +471,12 @@ export function tezosDomains(
           return [
             {
               action: CLAIM_REVERSE_RECORD.name,
-              description:
-                transaction.entrypoints !== "claim_reverse_record" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                    {!!data.name?.Some && (
-                      <li>
-                        Domain:{" "}
-                        <a
-                          href={`https://${
-                            domain.endsWith(".gho") ? "ghostnet" : "app"
-                          }.tezos.domains/domain/${domain}`}
-                          title="Open domain infos"
-                          className="underline"
-                          target="_blank"
-                          rel="noreferre"
-                        >
-                          {domain}
-                        </a>
-                      </li>
-                    )}
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case UPDATE_REVERSE_RECORD.mainnet:
-        case UPDATE_REVERSE_RECORD.ghostnet: {
-          const data = updateReverseRecordSchema.Execute(micheline);
-
-          const domain = bytes2Char(data.name?.Some ?? "");
-
-          return [
-            {
-              action: UPDATE_REVERSE_RECORD.name,
-              description:
-                transaction.entrypoints !== "update_reverse_record" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                    <li>
-                      Address: <Alias address={data.address} />
-                    </li>
-                    {!!data.name?.Some && (
-                      <li>
-                        Domain:{" "}
-                        <a
-                          href={`https://${
-                            domain.endsWith(".gho") ? "ghostnet" : "app"
-                          }.tezos.domains/domain/${domain}`}
-                          title="Open domain infos"
-                          className="underline"
-                          target="_blank"
-                          rel="noreferre"
-                        >
-                          {domain}
-                        </a>
-                      </li>
-                    )}
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case UPDATE_RECORD.mainnet:
-        case UPDATE_RECORD.ghostnet: {
-          const data = updateRecordSchema.Execute(micheline);
-
-          const recordName = bytes2Char(data.name);
-
-          const parsedData = Array.from(
-            (data.data as MichelsonMap<string, string>).entries()
-          ).map(([key, value]) => `${key}: ${bytes2Char(value)}`);
-
-          return [
-            {
-              action: UPDATE_RECORD.name,
-              description:
-                transaction.entrypoints !== "update_record" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>Record name: {recordName}</li>
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                    {!!data.address ? (
-                      <li>
-                        Address: <Alias address={data.address.Some} />
-                      </li>
-                    ) : null}
-                    <li>
-                      Settings:
-                      {parsedData.length === 0 ? (
-                        " Either empty or have been cleared"
-                      ) : (
-                        <ul
-                          className="list-inside list-disc"
-                          style={{ marginLeft: "3rem" }}
-                        >
-                          {parsedData.map(v => (
-                            <li key={v}>{v}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </li>
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case BID.mainnet:
-        case BID.ghostnet: {
-          const data = bidSchema.Execute(micheline);
-
-          const domain = `${bytes2Char(data.label)}${
-            transaction.addresses === BID.mainnet ? ".tez" : ".gho"
-          }`;
-
-          return [
-            {
-              action: BID.name,
-              description:
-                transaction.entrypoints !== "bid" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Domain:{" "}
-                      <a
-                        href={`https://${
-                          domain.endsWith(".gho") ? "ghostnet" : "app"
-                        }.tezos.domains/domain/${domain}`}
-                        title="Open domain infos"
-                        className="underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {domain}
-                      </a>
-                    </li>
-                    <li>Bid: {mutezToTez(data.bid.toNumber())} Tez</li>
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case SETTLE.mainnet:
-        case SETTLE.ghostnet: {
-          const data = settleSchema.Execute(micheline);
-
-          const domain = `${bytes2Char(data.label)}${
-            transaction.addresses === SETTLE.mainnet ? ".tez" : ".gho"
-          }`;
-
-          return [
-            {
-              action: SETTLE.name,
-              description:
-                transaction.entrypoints !== "settle" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Domain:{" "}
-                      <a
-                        href={`https://${
-                          domain.endsWith(".gho") ? "ghostnet" : "app"
-                        }.tezos.domains/domain/${domain}`}
-                        title="Open domain infos"
-                        className="underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {domain}
-                      </a>
-                    </li>
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                    {!!data.address ? (
-                      <li>
-                        Address: <Alias address={data.address.Some} />
-                      </li>
-                    ) : null}
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case WITHDRAW.mainnet:
-        case WITHDRAW.ghostnet: {
-          const data = withdrawSchema.Execute(micheline);
-
-          return [
-            {
-              action: WITHDRAW.name,
-              description:
-                transaction.entrypoints !== "withdraw" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Withdraw address: <Alias address={data} />
-                    </li>
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case RENEW.mainnet:
-        case RENEW.ghostnet: {
-          const data = renewSchema.Execute(micheline);
-
-          const domain = `${bytes2Char(data.label)}${
-            transaction.addresses === RENEW.mainnet ? ".tez" : ".gho"
-          }`;
-
-          return [
-            {
-              action: RENEW.name,
-              description:
-                transaction.entrypoints !== "renew" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>
-                      Domain:{" "}
-                      <a
-                        href={`https://${
-                          domain.endsWith(".gho") ? "ghostnet" : "app"
-                        }.tezos.domains/domain/${domain}`}
-                        title="Open domain infos"
-                        className="underline"
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {domain}
-                      </a>
-                    </li>
-                    <li>
-                      Duration: {data.duration.toString()} day
-                      {data.duration.toNumber() <= 1 ? "" : "s"}
-                    </li>
-                  </ul>
-                ),
-              price,
-            },
-          ];
-        }
-        case SET_CHILD_RECORD.mainnet:
-        case SET_CHILD_RECORD.ghostnet: {
-          const data = setChildRecordSchema.Execute(micheline);
-
-          const domain = `${bytes2Char(data.label)}.${bytes2Char(data.parent)}`;
-          return [
-            {
-              action: SET_CHILD_RECORD.name,
-              description:
-                transaction.entrypoints !== "set_child_record" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                  {!!data.name?.Some && (
                     <li>
                       Domain:{" "}
                       <a
@@ -758,36 +491,379 @@ export function tezosDomains(
                         {domain}
                       </a>
                     </li>
-                    <li>
-                      Owner: <Alias address={data.owner} />
-                    </li>
-                  </ul>
+                  )}
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case UPDATE_REVERSE_RECORD.mainnet:
+        case UPDATE_REVERSE_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "update_reverse_record")
+            return [
+              {
+                action: UPDATE_REVERSE_RECORD.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
                 ),
+              },
+            ];
+
+          const data = updateReverseRecordSchema.Execute(micheline);
+
+          const domain = bytes2Char(data.name?.Some ?? "");
+
+          return [
+            {
+              action: UPDATE_REVERSE_RECORD.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                  <li>
+                    Address: <Alias address={data.address} />
+                  </li>
+                  {!!data.name?.Some && (
+                    <li>
+                      Domain:{" "}
+                      <a
+                        href={`https://${
+                          domain.endsWith(".gho") ? "ghostnet" : "app"
+                        }.tezos.domains/domain/${domain}`}
+                        title="Open domain infos"
+                        className="underline"
+                        target="_blank"
+                        rel="noreferre"
+                      >
+                        {domain}
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case UPDATE_RECORD.mainnet:
+        case UPDATE_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "update_record")
+            return [
+              {
+                action: UPDATE_RECORD.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = updateRecordSchema.Execute(micheline);
+
+          const recordName = bytes2Char(data.name);
+
+          const parsedData = Array.from(
+            (data.data as MichelsonMap<string, string>).entries()
+          ).map(([key, value]) => `${key}: ${bytes2Char(value)}`);
+
+          return [
+            {
+              action: UPDATE_RECORD.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>Record name: {recordName}</li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                  {!!data.address ? (
+                    <li>
+                      Address: <Alias address={data.address.Some} />
+                    </li>
+                  ) : null}
+                  <li>
+                    Settings:
+                    {parsedData.length === 0 ? (
+                      " Either empty or have been cleared"
+                    ) : (
+                      <ul
+                        className="list-inside list-disc"
+                        style={{ marginLeft: "3rem" }}
+                      >
+                        {parsedData.map(v => (
+                          <li key={v}>{v}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case BID.mainnet:
+        case BID.ghostnet: {
+          if (transaction.entrypoints !== "bid")
+            return [
+              {
+                action: BID.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = bidSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === BID.mainnet ? ".tez" : ".gho"
+          }`;
+
+          return [
+            {
+              action: BID.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {domain}
+                    </a>
+                  </li>
+                  <li>Bid: {mutezToTez(data.bid.toNumber())} Tez</li>
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case SETTLE.mainnet:
+        case SETTLE.ghostnet: {
+          if (transaction.entrypoints !== "settle")
+            return [
+              {
+                action: SETTLE.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = settleSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === SETTLE.mainnet ? ".tez" : ".gho"
+          }`;
+
+          return [
+            {
+              action: SETTLE.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {domain}
+                    </a>
+                  </li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                  {!!data.address ? (
+                    <li>
+                      Address: <Alias address={data.address.Some} />
+                    </li>
+                  ) : null}
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case WITHDRAW.mainnet:
+        case WITHDRAW.ghostnet: {
+          if (transaction.entrypoints !== "withdraw")
+            return [
+              {
+                action: WITHDRAW.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = withdrawSchema.Execute(micheline);
+
+          return [
+            {
+              action: WITHDRAW.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Withdraw address: <Alias address={data} />
+                  </li>
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case RENEW.mainnet:
+        case RENEW.ghostnet: {
+          if (transaction.entrypoints !== "renew")
+            return [
+              {
+                action: RENEW.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = renewSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}${
+            transaction.addresses === RENEW.mainnet ? ".tez" : ".gho"
+          }`;
+
+          return [
+            {
+              action: RENEW.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {domain}
+                    </a>
+                  </li>
+                  <li>
+                    Duration: {data.duration.toString()} day
+                    {data.duration.toNumber() <= 1 ? "" : "s"}
+                  </li>
+                </ul>
+              ),
+              price,
+            },
+          ];
+        }
+        case SET_CHILD_RECORD.mainnet:
+        case SET_CHILD_RECORD.ghostnet: {
+          if (transaction.entrypoints !== "set_child_record")
+            return [
+              {
+                action: SET_CHILD_RECORD.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
+          const data = setChildRecordSchema.Execute(micheline);
+
+          const domain = `${bytes2Char(data.label)}.${bytes2Char(data.parent)}`;
+          return [
+            {
+              action: SET_CHILD_RECORD.name,
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>
+                    Domain:{" "}
+                    <a
+                      href={`https://${
+                        domain.endsWith(".gho") ? "ghostnet" : "app"
+                      }.tezos.domains/domain/${domain}`}
+                      title="Open domain infos"
+                      className="underline"
+                      target="_blank"
+                      rel="noreferre"
+                    >
+                      {domain}
+                    </a>
+                  </li>
+                  <li>
+                    Owner: <Alias address={data.owner} />
+                  </li>
+                </ul>
+              ),
               price,
             },
           ];
         }
         case CHECK_ADDRESS.mainnet:
         case CHECK_ADDRESS.ghostnet: {
+          if (transaction.entrypoints !== "check_address")
+            return [
+              {
+                action: CHECK_ADDRESS.name,
+                description: (
+                  <p>
+                    TzSafe doesn't support the entrypoint:{" "}
+                    {transaction.entrypoints}
+                  </p>
+                ),
+              },
+            ];
+
           const data = checkAddressSchema.Execute(micheline);
 
           return [
             {
               action: CHECK_ADDRESS.name,
-              description:
-                transaction.entrypoints !== "check_address" ? (
-                  <p>
-                    TzSafe doesn't support the entrypoint:{" "}
-                    {transaction.entrypoints}
-                  </p>
-                ) : (
-                  <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                    <li>Name: {bytes2Char(data.name)}</li>
-                    <li>
-                      Address: <Alias address={data.address} />{" "}
-                    </li>
-                  </ul>
-                ),
+              description: (
+                <ul className="list-inside list-disc space-y-1 pt-1 font-light">
+                  <li>Name: {bytes2Char(data.name)}</li>
+                  <li>
+                    Address: <Alias address={data.address} />{" "}
+                  </li>
+                </ul>
+              ),
               price,
             },
           ];
