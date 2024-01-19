@@ -20,7 +20,7 @@ class Version0_3_4 extends Version0_3_3 {
     cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
-    _convertTezToMutez?: boolean,
+    convertTezToMutez?: boolean,
     batch?: WalletOperationBatch
   ): Promise<[boolean, string]> {
     let batchOp = batch;
@@ -47,7 +47,7 @@ class Version0_3_4 extends Version0_3_3 {
       cc,
       t,
       { transfers: regular_proposals },
-      _convertTezToMutez,
+      convertTezToMutez,
       batchOp
     );
   }
