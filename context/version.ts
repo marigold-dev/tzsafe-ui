@@ -30,7 +30,9 @@ const dispatch: { [key: string]: version } = {
 };
 
 // undefined means tzsafe does not support deploying that version
-export const CONTRACTS: { [k in version]: [string, any] | undefined } = {
+export const CONTRACTS: {
+  [k in version]: [constractCode: string, metadata: any] | undefined;
+} = {
   "0.0.6": undefined,
   "0.0.8": undefined,
   "0.0.9": undefined,
