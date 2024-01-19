@@ -2,16 +2,13 @@ import { emitMicheline } from "@taquito/michel-codec";
 import {
   WalletContract,
   TezosToolkit,
-  TransferParams,
   WalletOperationBatch,
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { DEFAULT_TIMEOUT } from "../context/config";
 import { content, contractStorage as c1 } from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
 import { proposalContent } from "../types/display";
-import { promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
@@ -20,7 +17,7 @@ class Version0_3_4 extends Version0_3_3 {
     cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
-    convertTezToMutez?: boolean,
+    convertTezToMutez: boolean = true,
     batch?: WalletOperationBatch
   ): Promise<[boolean, string]> {
     let batchOp = batch;
