@@ -8,6 +8,7 @@ import {
   TezosOperationType,
 } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import * as Switch from "@radix-ui/react-switch";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { tzip16 } from "@taquito/tzip16";
@@ -23,6 +24,7 @@ import {
 } from "../context/generateLambda";
 import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import { CustomView, customViewMatchers } from "../dapps";
 import { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
@@ -31,9 +33,11 @@ import { transfer } from "../versioned/interface";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
   contentToData,
+  transaction,
 } from "./RenderProposalContentLambda";
 import Spinner from "./Spinner";
 import Tooltip from "./Tooltip";
+import { TryImg } from "./TryImg";
 
 export const transferToProposalContent = (
   transfer: transfer
@@ -82,18 +86,30 @@ const PoeModal = () => {
     undefined
   );
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [hasDefaultView, setHasDefaultView] = useState(false);
   const [currentState, setCurrentState] = useState(State.IDLE);
 
   const version =
     state.contracts[address ?? ""]?.version ?? state.currentStorage?.version;
 
-  const rows = useMemo(
-    () =>
-      (transfers ?? []).map(t =>
-        contentToData(version, transferToProposalContent(t), walletTokens ?? [])
-      ),
-    [transfers]
-  );
+  const { rows, dapp } = useMemo(() => {
+    const rows = (transfers ?? []).map(t =>
+      contentToData(version, transferToProposalContent(t), walletTokens ?? [])
+    );
+
+    let dapp: CustomView;
+
+    try {
+      for (let i = 0; i < customViewMatchers.length; ++i) {
+        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        if (!!dapp) break;
+      }
+    } catch (e) {
+      console.log("Failed to parse dapp:", e);
+    }
+    return { rows, dapp };
+  }, [transfers]);
+
   useEffect(() => {
     if (!state.p2pClient) return;
 
@@ -469,7 +485,11 @@ const PoeModal = () => {
 
               return (
                 <>
-                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                  <div
+                    className={`col-span-2 flex w-full flex-col ${
+                      hasDefaultView ? "items-center" : ""
+                    } justify-center`}
+                  >
                     <div className="mb-2 self-start text-2xl font-medium text-white">
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
                       from {currentMetadata?.[1].name}
@@ -483,8 +503,8 @@ const PoeModal = () => {
                         <Alias address={state.currentContract ?? ""} />
                       </p>
                     )}
-                    <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
-                      <section className="w-full text-white">
+                    {!dapp?.data || hasDefaultView ? (
+                      <>
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                           <span>Function</span>
                           <span className="flex items-center">
@@ -501,28 +521,79 @@ const PoeModal = () => {
                           </span>
                         </div>
                         <div className="mt-2 space-y-4 font-light lg:space-y-2">
-                          {rows.map((v, i) => (
-                            <RenderProposalContentLambda
-                              key={i}
-                              data={v}
-                              isOpenToken={i === 0}
-                            />
-                          ))}
+                          {rows.length > 0
+                            ? rows.map((v, i) => (
+                                <RenderProposalContentLambda
+                                  key={i}
+                                  data={v}
+                                  isOpenToken={i === 0}
+                                />
+                              ))
+                            : []}
                         </div>
-                        {rows.some(
-                          v =>
-                            !!v.params &&
-                            typeof v.params !== "string" &&
-                            ("fa1_2_address" in v.params
-                              ? !v.params.hasDecimal
-                              : v.params.some(v => !v.hasDecimal))
-                        ) && (
-                          <div className="mt-2 text-sm text-yellow-500">
-                            * There{"'"}s no decimals
-                          </div>
-                        )}
-                      </section>
-                    </div>
+                      </>
+                    ) : (
+                      <div className="mt-4 space-y-2 font-light">
+                        {dapp.data.map((viewData, i) => {
+                          return (
+                            <section key={i}>
+                              <h3
+                                className={`font-normal ${
+                                  dapp.data?.length === 1 && !viewData.link
+                                    ? "hidden"
+                                    : ""
+                                }`}
+                              >
+                                {viewData.link ? (
+                                  <a
+                                    href={viewData.link}
+                                    title={viewData.action}
+                                    className="underline"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {viewData.action}
+                                  </a>
+                                ) : (
+                                  viewData.action
+                                )}
+                              </h3>
+                              <div className="mt-1 flex list-inside items-center space-x-4">
+                                {viewData.image && (
+                                  <TryImg
+                                    src={viewData.image}
+                                    className="h-auto w-16 rounded"
+                                    alt={`${viewData.action}'s image`}
+                                  />
+                                )}
+                                {viewData.description}
+                              </div>
+                              {!!viewData.price && (
+                                <div className="mt-2">
+                                  Price: {viewData.price}
+                                </div>
+                              )}
+                            </section>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!!dapp?.data && (
+                      <div className="mt-6 flex w-full justify-end space-x-2">
+                        <label className="font-light" htmlFor="advanced-mode">
+                          Advanced mode
+                        </label>
+                        <Switch.Root
+                          defaultChecked={false}
+                          className="relative h-[25px] w-[42px] rounded-full bg-zinc-900 transition-colors data-[state='checked']:bg-primary"
+                          id="advanced-mode"
+                          onCheckedChange={setHasDefaultView}
+                        >
+                          <Switch.Thumb className="block h-[21px] w-[21px] translate-x-[2px] rounded-full bg-white transition-transform will-change-transform data-[state='checked']:translate-x-[19px]" />
+                        </Switch.Root>
+                      </div>
+                    )}
                     <div className="mt-6 flex w-2/3 justify-between md:w-1/3">
                       <button
                         className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"

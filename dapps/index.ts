@@ -27,6 +27,7 @@ export type CustomView =
   | { logo: undefined; label: undefined; data: undefined }
   | undefined;
 
+// Import matcher function here to support new dapp
 export const customViewMatchers: Array<
   (transactions: Array<transaction>, Tezos: TezosToolkit) => CustomView
-> = [tezosDomains, objkt];
+> = [tezosDomains];

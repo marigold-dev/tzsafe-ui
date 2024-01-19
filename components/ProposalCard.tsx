@@ -81,6 +81,7 @@ const ProposalCard = ({
     } catch (e) {
       console.log("Failed to parse dapp:", e);
     }
+
     return { rows, dapp };
   }, [content, state.currentContract, state.currentStorage, state.contracts]);
 

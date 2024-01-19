@@ -181,7 +181,7 @@ export const tokenUpdateOperatorsSchema = new Schema(
 
 export const TOKEN_CONTRACT = {
   mainnet: "KT1R4KPQxpFHAkX8MKCFmdoiqTaNSSpnJXPL",
-  ghostnet: "KT1MhAy28Bv8oNb3x71dHy6YP6eiJpDVUiDy",
+  ghostnet: "KT1REqKBXwULnmU6RpZxnRBUgcBmESnXhCWs",
   name: "Tezos Domains Token",
 };
 
@@ -241,6 +241,34 @@ const promiseCache: {
   [key: string]: Promise<ReactNode>;
 } = {};
 
+function getDomainPromise(
+  tokenId: number,
+  address: string,
+  Tezos: TezosToolkit
+) {
+  const cacheKey = `${address}:${tokenId}`;
+
+  if (!!promiseCache[cacheKey]) return promiseCache[cacheKey];
+
+  promiseCache[cacheKey] = getTokenMetadata(address, tokenId, Tezos)
+    .then(metadata => (
+      <a
+        href={`https://${
+          metadata.name?.endsWith(".gho") ? "ghostnet" : "app"
+        }.tezos.domains/domain/${metadata.name}`}
+        title="Open domain infos"
+        className="underline"
+        target="_blank"
+        rel="noreferre"
+      >
+        {metadata.name}
+      </a>
+    ))
+    .catch(_ => "Failed to fetch domain");
+
+  return promiseCache[cacheKey];
+}
+
 function PromiseRendrer({ promise }: { promise: Promise<React.ReactNode> }) {
   const [{ node }, setPromiseState] = useState<{
     isLoading: boolean;
@@ -251,10 +279,13 @@ function PromiseRendrer({ promise }: { promise: Promise<React.ReactNode> }) {
   });
 
   useEffect(() => {
-    promise.then(node => setPromiseState({ isLoading: false, node }));
+    promise.then(node => {
+      setPromiseState({ isLoading: false, node });
+      console.log("SET PROMISED", node);
+    });
   }, [promise]);
 
-  return <>{node}</>;
+  return <>{node ?? "..."}</>;
 }
 
 export function tezosDomains(
@@ -768,6 +799,12 @@ export function tezosDomains(
             case "execute_offer": {
               const data = executeOfferSchema.Execute(micheline);
 
+              const promise = getDomainPromise(
+                data.token_id.toNumber(),
+                data.token_contract,
+                Tezos
+              );
+
               return [
                 {
                   action: "Execute offer",
@@ -777,9 +814,8 @@ export function tezosDomains(
                         Seller: <Alias address={data.seller} />
                       </li>
                       <li>
-                        Token contract: <Alias address={data.token_contract} />
+                        Domain: <PromiseRendrer promise={promise} />
                       </li>
-                      <li>Token id: {data.token_id.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -789,15 +825,20 @@ export function tezosDomains(
             case "place_offer": {
               const data = placeOfferSchema.Execute(micheline);
 
+              const promise = getDomainPromise(
+                data.token_id.toNumber(),
+                data.token_contract,
+                Tezos
+              );
+
               return [
                 {
                   action: "Place offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Token contract: <Alias address={data.token_contract} />
+                        Domain: <PromiseRendrer promise={promise} />
                       </li>
-                      <li>Token id: {data.token_id.toString()}</li>
                       <li>Price: {mutezToTez(data.price.toNumber())} Tez</li>
                       {!!data.expiration ? (
                         <li>
@@ -814,15 +855,20 @@ export function tezosDomains(
             case "remove_offer": {
               const data = removeOfferSchema.Execute(micheline);
 
+              const promise = getDomainPromise(
+                data.token_id.toNumber(),
+                data.token_contract,
+                Tezos
+              );
+
               return [
                 {
                   action: "Remove offer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
-                        Token contract: <Alias address={data.token_contract} />
+                        Domain: <PromiseRendrer promise={promise} />
                       </li>
-                      <li>Token id: {data.token_id.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -832,7 +878,7 @@ export function tezosDomains(
             default:
               return [
                 {
-                  action: "Offer",
+                  action: "Internal",
                   description: (
                     <p>
                       TzSafe doesn't support the entrypoint:{" "}
@@ -859,38 +905,29 @@ export function tezosDomains(
               if (data.length !== 1 && data[0].txs.length !== 1)
                 return [
                   {
-                    action: "Token transfer",
+                    action: "Domain transfer",
                     description:
                       "TzSafe doesn't support multiple tokens transfer for Tezos Domains",
                   },
                 ];
 
               const tokenId = data[0].txs[0].token_id;
-              const cacheKey = `${transaction.addresses}:${tokenId}`;
 
-              if (!promiseCache[cacheKey]) {
-                promiseCache[cacheKey] = getTokenMetadata(
-                  transaction.addresses,
-                  tokenId.toNumber(),
-                  Tezos
-                ).then(metadata => (
-                  <a
-                    href={`https://${
-                      metadata.name?.endsWith(".gho") ? "ghostnet" : "app"
-                    }.tezos.domains/domain/${metadata.name}`}
-                    title="Open domain infos"
-                    className="underline"
-                    target="_blank"
-                    rel="noreferre"
-                  >
-                    {metadata.name}
-                  </a>
-                ));
-              }
+              const promise = getDomainPromise(
+                tokenId.toNumber(),
+                transaction.addresses,
+                Tezos
+              );
+              console.log(
+                "TRANSFER:",
+                data,
+                transaction.addresses,
+                tokenId.toNumber()
+              );
 
               return [
                 {
-                  action: "Token transfer",
+                  action: "Domain transfer",
                   description: (
                     <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                       <li>
@@ -900,10 +937,8 @@ export function tezosDomains(
                         To: <Alias address={data[0].txs[0].to_} />
                       </li>
                       <li>
-                        Domain:{" "}
-                        <PromiseRendrer promise={promiseCache[cacheKey]} />
+                        Domain: <PromiseRendrer promise={promise} />
                       </li>
-                      <li>Amount: {data[0].txs[0].amount.toString()}</li>
                     </ul>
                   ),
                   price,
@@ -939,6 +974,12 @@ export function tezosDomains(
                         ? operation.add_operator
                         : operation.remove_operator;
 
+                    const promise = getDomainPromise(
+                      data.token_id.toNumber(),
+                      transaction.addresses!,
+                      Tezos
+                    );
+
                     return (
                       <section className={i > 0 ? "mt-2" : ""} key={i}>
                         <h4>
@@ -948,12 +989,14 @@ export function tezosDomains(
                         </h4>
                         <ul className="list-inside list-disc space-y-1 pt-1 font-light">
                           <li>
+                            Domain: <PromiseRendrer promise={promise} />
+                          </li>
+                          <li>
                             Owner : <Alias address={data.owner} />
                           </li>
                           <li>
                             Operator : <Alias address={data.operator} />
                           </li>
-                          <li>Token id: {data.token_id.toString()}</li>
                         </ul>
                       </section>
                     );
@@ -967,7 +1010,7 @@ export function tezosDomains(
             default:
               return [
                 {
-                  action: "Token",
+                  action: "Domain",
                   description: (
                     <p>
                       TzSafe doesn't support the entrypoint:{" "}
