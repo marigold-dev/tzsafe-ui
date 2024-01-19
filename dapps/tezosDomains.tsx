@@ -281,7 +281,6 @@ function PromiseRendrer({ promise }: { promise: Promise<React.ReactNode> }) {
   useEffect(() => {
     promise.then(node => {
       setPromiseState({ isLoading: false, node });
-      console.log("SET PROMISED", node);
     });
   }, [promise]);
 
@@ -902,12 +901,11 @@ export function tezosDomains(
                 }>;
               }>;
 
-              if (data.length !== 1 && data[0].txs.length !== 1)
+              if (data.length !== 1 || data[0].txs.length !== 1)
                 return [
                   {
                     action: "Domain transfer",
-                    description:
-                      "TzSafe doesn't support multiple tokens transfer for Tezos Domains",
+                    description: "TzSafe only supports 1 domain transfer",
                   },
                 ];
 
@@ -917,12 +915,6 @@ export function tezosDomains(
                 tokenId.toNumber(),
                 transaction.addresses,
                 Tezos
-              );
-              console.log(
-                "TRANSFER:",
-                data,
-                transaction.addresses,
-                tokenId.toNumber()
               );
 
               return [
