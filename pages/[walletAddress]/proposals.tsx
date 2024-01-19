@@ -1,13 +1,18 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress, ValidationResult } from "@taquito/utils";
-import { useContext, useEffect, useReducer, useRef } from "react";
+import { Dispatch, useContext, useEffect, useReducer, useRef } from "react";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import fetchVersion from "../../context/metadata";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  tezosState,
+  action as globalAction,
+} from "../../context/state";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
@@ -129,6 +134,62 @@ const emptyProposal = {
   } as proposal,
 };
 
+async function getProposals(
+  globalState: tezosState,
+  globalDispatch: Dispatch<globalAction>,
+  dispatch: Dispatch<action>,
+  state: state
+) {
+  if (!globalState.currentContract) return;
+
+  const c = await globalState.connection.contract.at(
+    globalState.currentContract,
+    tzip16
+  );
+
+  const cc = await c.storage();
+
+  const version = await (globalState.contracts[globalState.currentContract]
+    ? Promise.resolve<version>(
+        globalState.contracts[globalState.currentContract].version
+      )
+    : fetchVersion(c));
+
+  const bigmap: { key: string; value: any }[] = await Versioned.proposals(
+    getProposalsId(version, cc),
+    state.offset
+  );
+
+  if (bigmap.length < Versioned.FETCH_COUNT) {
+    dispatch({ type: "setCanFetchMore", payload: false });
+  }
+
+  const proposals = bigmap.map(({ key, value }) => {
+    return [
+      version === "0.3.0" || version === "0.3.1" || version === "0.3.2"
+        ? Number.parseInt(`0x${key}`)
+        : Number.parseInt(key),
+      { ui: toProposal(version, value), og: value },
+    ];
+  });
+
+  if (globalState.contracts[globalState.currentContract ?? ""]) {
+    const balance = await globalState.connection.tz.getBalance(
+      globalState.currentContract
+    );
+
+    globalDispatch({
+      type: "updateContract",
+      payload: {
+        address: globalState.currentContract,
+        contract: toStorage(version, cc, balance),
+      },
+    });
+  }
+
+  return proposals as proposals;
+}
+
 const Proposals = () => {
   const globalState = useContext(AppStateContext)!;
   const globalDispatch = useContext(AppDispatchContext)!;
@@ -182,50 +243,15 @@ const Proposals = () => {
     (async () => {
       if (!globalState.currentContract) return;
 
-      const c = await globalState.connection.contract.at(
-        globalState.currentContract,
-        tzip16
+      const proposals = await getProposals(
+        globalState,
+        globalDispatch,
+        dispatch,
+        state
       );
 
-      const cc = await c.storage();
+      if (!proposals) return;
 
-      const version = await (globalState.contracts[globalState.currentContract]
-        ? Promise.resolve<version>(
-            globalState.contracts[globalState.currentContract].version
-          )
-        : fetchVersion(c));
-
-      const bigmap: { key: string; value: any }[] = await Versioned.proposals(
-        getProposalsId(version, cc),
-        state.offset
-      );
-
-      if (bigmap.length < Versioned.FETCH_COUNT) {
-        dispatch({ type: "setCanFetchMore", payload: false });
-      }
-
-      const proposals: [number, any][] = bigmap.map(({ key, value }) => {
-        return [
-          version === "0.3.0" || version === "0.3.1" || version === "0.3.2"
-            ? Number.parseInt(`0x${key}`)
-            : Number.parseInt(key),
-          { ui: toProposal(version, value), og: value },
-        ];
-      });
-
-      if (globalState.contracts[globalState.currentContract ?? ""]) {
-        const balance = await globalState.connection.tz.getBalance(
-          globalState.currentContract
-        );
-
-        globalDispatch({
-          type: "updateContract",
-          payload: {
-            address: globalState.currentContract,
-            contract: toStorage(version, cc, balance),
-          },
-        });
-      }
       dispatch(
         state.isLoading
           ? {
@@ -246,6 +272,27 @@ const Proposals = () => {
     state.offset,
     state.currentAddress,
   ]);
+
+  useEffect(() => {
+    (async () => {
+      if (!globalState.currentContract) return;
+
+      dispatch({ type: "setLoading", payload: true });
+      const proposals = await getProposals(
+        globalState,
+        globalDispatch,
+        dispatch,
+        state
+      );
+
+      if (!proposals) return;
+
+      dispatch({
+        type: "setProposals",
+        payload: { proposals, address: globalState.currentContract },
+      });
+    })();
+  }, [globalState.proposalRefresher]);
 
   const currentContract = globalState.currentContract ?? "";
 
