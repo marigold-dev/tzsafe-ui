@@ -36,7 +36,7 @@ function Create() {
       <main className="mt-8 grow">
         <div className="mx-auto max-w-7xl py-0 sm:px-6 lg:px-8">
           <div className="px-4 sm:px-0">
-            <div className="md:min-h-96 grid min-h-fit grid-rows-2 p-2 md:grid-cols-2 md:grid-rows-1">
+            <div className="grid min-h-fit grid-rows-2 p-2 md:min-h-96 md:grid-cols-2 md:grid-rows-1">
               <div className="col-span-2 row-span-2 flex flex-col items-center justify-items-center">
                 <FormContext.Provider
                   value={{
