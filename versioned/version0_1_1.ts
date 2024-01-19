@@ -38,9 +38,6 @@ class Version0_1_1 extends Versioned {
     proposals: proposals,
     convertTezToMutez: boolean = true
   ): Promise<[boolean, string]> {
-    // Avoid unused variable
-    let _ = convertTezToMutez;
-
     let params = cc.methods
       .create_proposal(
         proposals.transfers.map(x => {

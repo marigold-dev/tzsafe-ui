@@ -36,7 +36,8 @@ class Version0_3_3 extends Versioned {
   async submitTxProposals(
     cc: Contract,
     t: TezosToolkit,
-    proposals: proposals
+    proposals: proposals,
+    convertTezToMutez: boolean = true
   ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
@@ -46,7 +47,9 @@ class Version0_3_3 extends Versioned {
               return {
                 transfer: {
                   target: x.values.to,
-                  amount: tezToMutez(Number(x.values.amount)),
+                  amount: convertTezToMutez
+                    ? tezToMutez(Number(x.values.amount))
+                    : Number(x.values.amount),
                   parameter: {},
                 },
               };

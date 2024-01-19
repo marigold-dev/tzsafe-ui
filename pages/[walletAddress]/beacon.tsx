@@ -123,7 +123,7 @@ const Beacon = () => {
 
             <ul className="mt-2 w-full space-y-2">
               {connectedDapps.length === 0 ? (
-                <p className="text-zinc-500">There is no connected Dapps</p>
+                <p className="text-zinc-500">There are no connected Dapps</p>
               ) : (
                 connectedDapps.map(data => {
                   return (
