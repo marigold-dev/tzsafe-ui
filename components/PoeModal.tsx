@@ -336,6 +336,37 @@ const PoeModal = () => {
       }
     };
 
+    const simulatedProofOfEventCb = async (message: SignPayloadRequest) => {
+      const contract = state.contracts[message.sourceAddress];
+
+      if (!contract) {
+        state.p2pClient?.sendError(
+          message.id,
+          "The address is not a TzSafe one",
+          BeaconErrorType.SIGNATURE_TYPE_NOT_SUPPORTED
+        );
+        return;
+      }
+
+      const api = VersionedApi(contract.version, message.sourceAddress);
+
+      try {
+        const ops = await api.generateSpoeOps(
+          message.payload,
+          await state.connection.wallet.at(message.sourceAddress),
+          state.connection
+        );
+
+        await state.p2pClient?.spoeResponse(message.id, ops);
+      } catch (e) {
+        await state.p2pClient?.spoeResponse(
+          message.id,
+          [],
+          (e as Error).message
+        );
+      }
+    };
+
     const tinyEmitter = state.p2pClient.on(
       Event.PROOF_OF_EVENT_CHALLENGE_REQUEST,
       challengeCb
@@ -343,11 +374,19 @@ const PoeModal = () => {
 
     state.p2pClient.on(Event.INCOMING_OPERATION, transactionCb);
     state.p2pClient.on(Event.SIGN_PAYLOAD, signPayloadCb);
+    state.p2pClient.on(
+      Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
+      simulatedProofOfEventCb
+    );
 
     return () => {
       tinyEmitter.off(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, challengeCb);
       tinyEmitter.off(Event.INCOMING_OPERATION, transactionCb);
       tinyEmitter.off(Event.SIGN_PAYLOAD, signPayloadCb);
+      tinyEmitter.off(
+        Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
+        simulatedProofOfEventCb
+      );
     };
   }, [state.p2pClient, state.address]);
 
