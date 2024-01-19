@@ -8,14 +8,15 @@ import {
   WalletClient,
   WalletClientOptions,
   SigningType,
-  PeerInfo,
   BeaconResponseInputMessage,
 } from "@airgap/beacon-sdk";
+import { PreapplyParams } from "@taquito/rpc";
 import { TinyEmitter } from "tiny-emitter";
 
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
   PROOF_OF_EVENT_CHALLENGE_REQUEST = "PROOF_OF_EVENT_CHALLENGE_REQUEST",
+  SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST = "SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST",
   INCOMING_OPERATION = "INCOMING_OPERATION",
   SIGN_PAYLOAD = "SIGN_PAYLOAD",
 }
@@ -139,6 +140,11 @@ class P2PClient extends WalletClient {
       case BeaconMessageType.BroadcastRequest:
         window.alert("Broadcast requests are not supported");
 
+      case BeaconMessageType.SimulatedProofOfEventChallengeRequest:
+        this.events.emit(
+          Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
+          message
+        );
       default:
         await this.respond({
           type: BeaconMessageType.Error,
@@ -186,6 +192,16 @@ class P2PClient extends WalletClient {
       senderId: await this.beaconId,
       signingType,
       signature,
+    });
+  }
+
+  async spoeResponse(id: string, ops: PreapplyParams, errorMessage?: string) {
+    return this.respond({
+      type: BeaconMessageType.SimulatedProofOfEventChallengeResponse,
+      id,
+      senderId: await this.beaconId,
+      operationsList: Buffer.from(JSON.stringify(ops)).toString("base64"),
+      errorMessage: errorMessage ?? "",
     });
   }
 
