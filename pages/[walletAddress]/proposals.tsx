@@ -11,6 +11,7 @@ import {
   AppStateContext,
   tezosState,
   action as globalAction,
+  contractStorage,
 } from "../../context/state";
 import fetchVersion from "../../context/version";
 import { proposal, version } from "../../types/display";
@@ -18,7 +19,7 @@ import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
 import useWalletTokens from "../../utils/useWalletTokens";
 import {
-  getProposalsId,
+  getProposalsBigmapId,
   signers,
   toProposal,
   toStorage,
@@ -142,12 +143,12 @@ async function getProposals(
 ) {
   if (!globalState.currentContract) return;
 
-  const c = await globalState.connection.contract.at(
+  const c = await globalState.connection.wallet.at(
     globalState.currentContract,
     tzip16
   );
 
-  const cc = await c.storage();
+  const storage: contractStorage = await c.storage();
 
   const version = await (globalState.contracts[globalState.currentContract]
     ? Promise.resolve<version>(
@@ -156,7 +157,7 @@ async function getProposals(
     : fetchVersion(c));
 
   const bigmap: { key: string; value: any }[] = await Versioned.proposals(
-    getProposalsId(version, cc),
+    getProposalsBigmapId(version, storage),
     state.offset
   );
 
@@ -182,7 +183,7 @@ async function getProposals(
       type: "updateContract",
       payload: {
         address: globalState.currentContract,
-        contract: toStorage(version, cc, balance),
+        contract: toStorage(version, storage, balance),
       },
     });
   }
