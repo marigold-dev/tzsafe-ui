@@ -47,7 +47,7 @@ class Version0_3_4 extends Version0_3_3 {
       cc,
       t,
       { transfers: regular_proposals },
-      undefined,
+      _convertTezToMutez,
       batchOp
     );
   }
