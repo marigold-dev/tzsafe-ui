@@ -1,6 +1,10 @@
 import { Parser, unpackDataBytes, MichelsonType } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
-import { Contract, TezosToolkit, WalletContract } from "@taquito/taquito";
+import {
+  TezosToolkit,
+  WalletContract,
+  WalletOperationBatch,
+} from "@taquito/taquito";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { TZKT_API_URL } from "../context/config";
@@ -8,12 +12,16 @@ import { proofOfEventSchema as proposalSchema_0_3_1 } from "../types/Proposal0_3
 import { proofOfEventSchema as proposalSchema_0_3_2 } from "../types/Proposal0_3_2";
 import {
   archiveProposalSchema as proposalSchema_0_3_3,
-  proposalType,
+  proposalType as proposalType_0_3_3,
 } from "../types/Proposal0_3_3";
+import {
+  archiveProposalSchema as proposalSchema_0_3_4,
+  proposalType as proposalType_0_3_4,
+} from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
-import { proposal, version } from "../types/display";
+import { proposal, proposalContent, version } from "../types/display";
 import { ownersForm } from "./forms";
-import { hasTzip27Support } from "./util";
+import { hasTzip27Support, hasTzip27SupportWithPoEChallenge } from "./util";
 
 type proofOfEvent = {
   payload: {
@@ -75,8 +83,13 @@ export type transfer =
   | ({
       type: "poe";
       values: {
-        challengeId: string;
         payload: string;
+      };
+    } & common)
+  | ({
+      type: "update_metadata";
+      values: {
+        tzip16_metadata: string;
       };
     } & common)
   | {
@@ -107,40 +120,44 @@ abstract class Versioned {
   }
 
   abstract submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
-    convertTezToMutez?: boolean
-  ): Promise<timeoutAndHash>;
-
-  abstract submitTxProposals(
-    cc: Contract,
-    t: TezosToolkit,
-    proposals: proposals,
-    convertTezToMutez?: boolean
+    convertTezToMutez?: boolean,
+    batch?: WalletOperationBatch
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
-    resolve: boolean
+    resolve: boolean,
+    batch?: WalletOperationBatch
   ): Promise<timeoutAndHash>;
 
   abstract submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash>;
 
-  static toContractState(_contract: any, _balance: BigNumber): contractStorage {
+  static toContractState(
+    _contract: contractStorage,
+    _balance: BigNumber
+  ): contractStorage {
     throw new Error("not implemented!");
   }
-  static getProposalsId(_contract: any): string {
+
+  static getProposalsBigmapId(_contract: any): string {
     throw new Error("not implemented!");
   }
+
   static toProposal(_proposal: any): proposal {
+    throw new Error("not implemented!");
+  }
+
+  static mapContent(content: any): proposalContent {
     throw new Error("not implemented!");
   }
 
@@ -237,7 +254,13 @@ abstract class Versioned {
         `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
       )
         .then(res => res.json())
-        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType));
+        .then(this.decodeProposal(proposalSchema_0_3_3, proposalType_0_3_3));
+    } else if (c.version === "0.3.4") {
+      return fetch(
+        `${TZKT_API_URL}/v1/contracts/events?contract=${address}&tag=archive_proposal${common}`
+      )
+        .then(res => res.json())
+        .then(this.decodeProposal(proposalSchema_0_3_4, proposalType_0_3_4));
     } else {
       throw Error("unknown version");
     }
@@ -258,7 +281,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return c.owners;
     }
@@ -280,7 +304,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return c.owners;
     }
@@ -337,7 +362,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return {
         values: {
@@ -434,7 +460,8 @@ abstract class Versioned {
       c.version === "0.3.0" ||
       c.version === "0.3.1" ||
       c.version === "0.3.2" ||
-      c.version === "0.3.3"
+      c.version === "0.3.3" ||
+      c.version === "0.3.4"
     ) {
       return {
         values: {
@@ -649,24 +676,15 @@ abstract class Versioned {
       validate: (p: string) => string | undefined;
     }[];
   } {
-    if (!hasTzip27Support(version)) {
+    if (!hasTzip27SupportWithPoEChallenge(version)) {
       return { fields: [], values: {} };
     }
 
     return {
       values: {
-        challengeId: "",
         payload: "",
       },
       fields: [
-        {
-          field: "challengeId",
-          label: "Challenge Id",
-          path: ".challengeId",
-          placeholder: "My id",
-          validate: (v: string) =>
-            v.trim() === "" ? "Challenge id is empty" : undefined,
-        },
         {
           field: "payload",
           label: "Payload",
@@ -674,6 +692,37 @@ abstract class Versioned {
           placeholder: "Payload",
           validate: (v: string) =>
             v.trim() === "" ? "Payload is empty" : undefined,
+        },
+      ],
+    };
+  }
+
+  static update_metadata(version: version): {
+    values: { [key: string]: string };
+    fields: {
+      field: string;
+      label: string;
+      path: string;
+      placeholder: string;
+      validate: (p: string) => string | undefined;
+    }[];
+  } {
+    if (!hasTzip27Support(version)) {
+      return { fields: [], values: {} };
+    }
+
+    return {
+      values: {
+        tzip16_metadata: "",
+      },
+      fields: [
+        {
+          field: "tzip16_metadata",
+          label: "Metadata (TZIP16)",
+          path: ".tzip16_metadata",
+          placeholder: "Metadata",
+          validate: (v: string) =>
+            v.trim() === "" ? "Metadata is empty" : undefined,
         },
       ],
     };
