@@ -17,7 +17,8 @@ function Basic() {
   return (
     <Formik
       initialValues={{
-        walletName: "example-wallet",
+        walletName: "TzSafe Wallet",
+        version: "0.3.3",
       }}
       validate={values => {
         let errors: any = {};
@@ -25,6 +26,9 @@ function Basic() {
           errors.walletName = `Contract name already taken by ${
             byName[values.walletName]
           }`;
+        }
+        if (!values.version) {
+          errors.version = "Version selection is required";
         }
         return errors;
       }}
@@ -34,9 +38,9 @@ function Basic() {
         setActiveStepIndex(activeStepIndex + 1);
       }}
     >
-      <Form className="align-self-center col-span-2 flex flex-col items-center justify-center justify-self-center">
+      <Form className="align-self-center items-left col-span-2 flex flex-col justify-center justify-self-center">
         <div className="mb-2 self-center text-2xl font-medium text-white">
-          Enter your wallet name below
+          Enter your wallet name and select version below
         </div>
         <div className="mt-4 flex w-full flex-col items-start md:w-auto">
           <label className="font-medium text-white">Wallet name</label>
@@ -47,7 +51,44 @@ function Basic() {
           />
         </div>
         <ErrorMessage name="walletName" render={renderError} />
-        <div className="mt-8 flex space-x-6">
+        <div className="mt-6">
+          <label className="font-medium text-white">Select Version</label>
+          <div className="mt-2">
+            <label className="flex items-center text-white">
+              <Field
+                type="radio"
+                name="version"
+                value="0.3.3"
+                className="mr-2 "
+                checked
+              />
+              <div>v0.3.3</div>
+            </label>
+            <div className="ml-2 text-sm text-gray-500">
+              {
+                "This version enables DApps to integrate with the TzSafe app for login purposes, although it does not support message signing in TZIP27. If message signing is not essential for your usage, opting for version 0.3.3 is recommended. The creation fee is roughly 1.8 tez, depending on the count of owners."
+              }
+            </div>
+          </div>
+          <div className="mt-2">
+            <label className="flex items-center text-white">
+              <Field
+                type="radio"
+                name="version"
+                value="0.3.4"
+                className="mr-2"
+              />
+              <div>v0.3.4</div>
+            </label>
+            <div className="ml-2 text-sm text-gray-500">
+              {
+                "This version supports message signing in TZIP27. The creation fee is roughly 2.1 tez"
+              }
+            </div>
+          </div>
+          <ErrorMessage name="version" render={renderError} />
+        </div>
+        <div className="mt-8 flex justify-center space-x-6">
           <Link
             type="button"
             href="/"

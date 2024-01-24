@@ -2,7 +2,6 @@ import { Parser } from "@taquito/michel-codec";
 import { emitMicheline } from "@taquito/michel-codec";
 import {
   BigMapAbstraction,
-  Contract,
   TezosToolkit,
   WalletContract,
 } from "@taquito/taquito";
@@ -28,7 +27,7 @@ function convert(x: string): string {
 }
 class Version0_0_10 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true
@@ -38,78 +37,84 @@ class Version0_0_10 extends Versioned {
 
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map(x => {
-          switch (x.type) {
-            case "transfer":
-              return {
-                transfer: {
-                  target: x.values.to,
-                  amount: x.values.amount,
-                  parameter: {},
-                },
-              };
-            case "lambda": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
-              return {
-                execute_lambda: {
-                  metadata: meta,
-                  lambda: michelsonCode,
-                },
-              };
-            }
-            case "contract": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
-              return {
-                execute_lambda: {
-                  metadata: meta,
-                  lambda: michelsonCode,
-                },
-              };
-            }
-            case "fa2": {
-              const parser = new Parser();
+        proposals.transfers
+          .map(x => {
+            switch (x.type) {
+              case "transfer":
+                return {
+                  transfer: {
+                    target: x.values.to,
+                    amount: x.values.amount,
+                    parameter: {},
+                  },
+                };
+              case "lambda": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? convert(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "contract": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? convert(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "fa2": {
+                const parser = new Parser();
 
-              const michelsonCode = parser.parseMichelineExpression(
-                generateFA2Michelson(
-                  this.version,
-                  x.values.map(value => ({
-                    walletAddress: cc.address,
-                    targetAddress: value.targetAddress,
-                    tokenId: Number(value.tokenId),
-                    amount: Number(value.amount),
-                    fa2Address: value.fa2Address,
-                  }))
-                )
-              );
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA2Michelson(
+                    this.version,
+                    x.values.map(value => ({
+                      walletAddress: cc.address,
+                      targetAddress: value.targetAddress,
+                      tokenId: Number(value.tokenId),
+                      amount: Number(value.amount),
+                      fa2Address: value.fa2Address,
+                    }))
+                  )
+                );
 
-              return {
-                execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      contract_addr: x.values[0].targetAddress,
-                      payload: x.values.map(value => ({
-                        token_id: Number(value.tokenId),
-                        fa2_address: value.fa2Address,
-                        amount: Number(value.amount),
-                      })),
-                    })
-                  ),
-                  lambda: michelsonCode,
-                },
-              };
+                return {
+                  execute_lambda: {
+                    metadata: convert(
+                      JSON.stringify({
+                        contract_addr: x.values[0].targetAddress,
+                        payload: x.values.map(value => ({
+                          token_id: Number(value.tokenId),
+                          fa2_address: value.fa2Address,
+                          amount: Number(value.amount),
+                        })),
+                      })
+                    ),
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              default:
+                return {};
             }
-            default:
-              return {};
-          }
-        })
+          })
+          .filter(v => Object.keys(v).length !== 0)
       )
       .toTransferParams();
     let op = await t.wallet.transfer(params).send();
@@ -137,21 +142,21 @@ class Version0_0_10 extends Versioned {
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
     let proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    let prop: any = await proposals.proposals.get(BigNumber(proposal));
+    let prop: any = await proposals.proposals.get(BigNumber(proposalId));
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal(BigNumber(proposal), prop.contents, result)
+        cc.methods.sign_proposal(BigNumber(proposalId), prop.contents, result)
       );
     }
     if (resolve) {
       await batch.withContractCall(
-        cc.methods.resolve_proposal(BigNumber(proposal), prop.contents)
+        cc.methods.resolve_proposal(BigNumber(proposalId), prop.contents)
       );
     }
     let op = await batch.send();
@@ -169,7 +174,7 @@ class Version0_0_10 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {
@@ -211,14 +216,14 @@ class Version0_0_10 extends Versioned {
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposals.toString(),
-      proposal_counter: c.proposal_counter.toString(),
+      proposal_counter: c.proposal_counter,
       effective_period: c!.effective_period,
-      threshold: c!.threshold.toNumber()!,
+      threshold: c!.threshold!,
       owners: c!.owners!,
       version: "0.0.10",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       let meta = matchLambda({}, JSON.parse(content.execute_lambda.lambda));
       return {
@@ -281,7 +286,7 @@ class Version0_0_10 extends Versioned {
     let never: never = content;
     throw new Error("unknown proposal");
   }
-  static override getProposalsId(_contract: c1): string {
+  static override getProposalsBigmapId(_contract: c1): string {
     return _contract.proposals.toString();
   }
   static override toProposal(proposal: any): proposal {

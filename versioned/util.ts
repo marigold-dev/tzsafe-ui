@@ -1,5 +1,18 @@
 import { version } from "../types/display";
 
+export function hasTzip27SupportWithPoEChallenge(version: version): boolean {
+  const [_, middle, end] = version.split(".");
+
+  const parsedMiddle = parseInt(middle);
+  const parsedEnd = parseInt(end);
+
+  if (isNaN(parsedMiddle) || isNaN(parsedEnd)) return false;
+
+  // We accept 0.3.4 and above
+  return parsedMiddle === 3 ? parsedEnd >= 4 : parsedMiddle >= 4;
+}
+
+// This version doesn't support processing PoE challenge
 export function hasTzip27Support(version: version): boolean {
   const [_, middle, end] = version.split(".");
 

@@ -1,12 +1,13 @@
-import { BigMapAbstraction } from "@taquito/taquito";
-import { bytes2Char, tzip16 } from "@taquito/tzip16";
-import BigNumber from "bignumber.js";
+import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion from "../../context/metadata";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
-import contract from "../../context/unitContract";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../../context/state";
+import fetchVersion from "../../context/version";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {
@@ -23,8 +24,8 @@ function Success() {
     (async () => {
       if (loading && address.status == 0) {
         try {
-          let cc = await state?.connection.contract.at(address.address, tzip16);
-          let storage = await cc?.storage()!;
+          let cc = await state?.connection.wallet.at(address.address, tzip16);
+          let storage: contractStorage = await cc?.storage()!;
           let balance = await state?.connection.tz.getBalance(address.address);
           let version = await fetchVersion(cc!);
           let v = toStorage(version, storage, balance!);

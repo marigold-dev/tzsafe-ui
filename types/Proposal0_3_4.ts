@@ -16,7 +16,8 @@ type content =
   | { adjust_threshold: number }
   | { adjust_effective_period: number }
   | { add_or_update_metadata: { key: string; value: string } }
-  | { remove_metadata: string };
+  | { remove_metadata: string }
+  | { proof_of_event: string };
 
 type proposal = {
   signatures: MichelsonMap<string, boolean>;
@@ -38,7 +39,7 @@ type contractStorage = {
   owners: string[];
   archives: string;
   threshold: BigNumber;
-  version: "0.3.3";
+  version: "0.3.4";
 };
 
 export const proposalType: MichelsonType = {
@@ -134,27 +135,45 @@ export const proposalType: MichelsonType = {
                   prim: "or",
                   args: [
                     {
-                      prim: "pair",
+                      prim: "or",
                       args: [
                         {
-                          prim: "string",
-                          annots: ["%key"],
+                          prim: "pair",
+                          args: [
+                            {
+                              prim: "string",
+                              annots: ["%key"],
+                            },
+                            {
+                              prim: "bytes",
+                              annots: ["%value"],
+                            },
+                          ],
+                          annots: ["%add_or_update_metadata"],
                         },
                         {
-                          prim: "bytes",
-                          annots: ["%value"],
+                          prim: "set",
+                          args: [
+                            {
+                              prim: "address",
+                            },
+                          ],
+                          annots: ["%add_owners"],
                         },
                       ],
-                      annots: ["%add_or_update_metadata"],
                     },
                     {
-                      prim: "set",
+                      prim: "or",
                       args: [
                         {
-                          prim: "address",
+                          prim: "int",
+                          annots: ["%adjust_effective_period"],
+                        },
+                        {
+                          prim: "nat",
+                          annots: ["%adjust_threshold"],
                         },
                       ],
-                      annots: ["%add_owners"],
                     },
                   ],
                 },
@@ -162,90 +181,81 @@ export const proposalType: MichelsonType = {
                   prim: "or",
                   args: [
                     {
-                      prim: "int",
-                      annots: ["%adjust_effective_period"],
+                      prim: "or",
+                      args: [
+                        {
+                          prim: "pair",
+                          args: [
+                            {
+                              prim: "lambda",
+                              args: [
+                                {
+                                  prim: "unit",
+                                },
+                                {
+                                  prim: "list",
+                                  args: [
+                                    {
+                                      prim: "operation",
+                                    },
+                                  ],
+                                },
+                              ],
+                              annots: ["%lambda"],
+                            },
+                            {
+                              prim: "option",
+                              args: [
+                                {
+                                  prim: "bytes",
+                                },
+                              ],
+                              annots: ["%metadata"],
+                            },
+                          ],
+                          annots: ["%execute_lambda"],
+                        },
+                        {
+                          prim: "bytes",
+                          annots: ["%proof_of_event"],
+                        },
+                      ],
                     },
                     {
-                      prim: "nat",
-                      annots: ["%adjust_threshold"],
+                      prim: "or",
+                      args: [
+                        {
+                          prim: "string",
+                          annots: ["%remove_metadata"],
+                        },
+                        {
+                          prim: "set",
+                          args: [
+                            {
+                              prim: "address",
+                            },
+                          ],
+                          annots: ["%remove_owners"],
+                        },
+                      ],
                     },
                   ],
                 },
               ],
             },
             {
-              prim: "or",
+              prim: "pair",
               args: [
                 {
-                  prim: "or",
-                  args: [
-                    {
-                      prim: "pair",
-                      args: [
-                        {
-                          prim: "lambda",
-                          args: [
-                            {
-                              prim: "unit",
-                            },
-                            {
-                              prim: "list",
-                              args: [
-                                {
-                                  prim: "operation",
-                                },
-                              ],
-                            },
-                          ],
-                          annots: ["%lambda"],
-                        },
-                        {
-                          prim: "option",
-                          args: [
-                            {
-                              prim: "bytes",
-                            },
-                          ],
-                          annots: ["%metadata"],
-                        },
-                      ],
-                      annots: ["%execute_lambda"],
-                    },
-                    {
-                      prim: "string",
-                      annots: ["%remove_metadata"],
-                    },
-                  ],
+                  prim: "address",
+                  annots: ["%target"],
                 },
                 {
-                  prim: "or",
-                  args: [
-                    {
-                      prim: "set",
-                      args: [
-                        {
-                          prim: "address",
-                        },
-                      ],
-                      annots: ["%remove_owners"],
-                    },
-                    {
-                      prim: "pair",
-                      args: [
-                        {
-                          prim: "address",
-                          annots: ["%target"],
-                        },
-                        {
-                          prim: "mutez",
-                          annots: ["%amount"],
-                        },
-                      ],
-                      annots: ["%transfer"],
-                    },
-                  ],
+                  prim: "mutez",
+                  annots: ["%amount"],
                 },
               ],
+              annots: ["%transfer"],
             },
           ],
         },

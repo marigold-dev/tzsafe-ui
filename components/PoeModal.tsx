@@ -22,10 +22,11 @@ import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
-import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { CustomView, customViewMatchers } from "../dapps";
 import { State } from "../pages/[walletAddress]/beacon";
+import fetchVersion from "../context/version";
+import Beacon, { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { signers, toStorage, VersionedApi } from "../versioned/apis";
@@ -302,7 +303,7 @@ const PoeModal = () => {
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
       try {
-        const contract = await state.connection.contract.at(
+        const contract = await state.connection.wallet.at(
           message.sourceAddress,
           tzip16
         );
@@ -622,7 +623,7 @@ const PoeModal = () => {
 
                           let hash;
                           try {
-                            const cc = await state.connection.contract.at(
+                            const cc = await state.connection.wallet.at(
                               address
                             );
                             const versioned = VersionedApi(
@@ -692,20 +693,14 @@ const PoeModal = () => {
               return (
                 <>
                   <h1 className="text-lg font-medium">
-                    {message.appMetadata.name} wants to perform a Proof Of Event
-                    Challenge
+                    Message Signing Request from {message.appMetadata.name}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {message.appMetadata.name} wants to check that you have the
-                    rights to interact with {state.aliases[address ?? ""]}. To
-                    do so, it requires to emit an event from the contract with
-                    the following informations:
+                    {message.appMetadata.name} requests message signing from{" "}
+                    {state.aliases[address ?? ""]}. The payload of the message
+                    is as follows:
                   </p>
                   <ul className="mt-2 space-y-1">
-                    <li className="truncate">
-                      <span className="font-light">Challenge id:</span>{" "}
-                      {state.p2pClient?.proofOfEvent.data?.challenge_id}
-                    </li>
                     <li className="truncate">
                       <span className="font-light">Payload:</span>{" "}
                       {state.p2pClient?.proofOfEvent.data?.payload}
@@ -737,9 +732,7 @@ const PoeModal = () => {
 
                           await state.p2pClient!.approvePoeChallenge();
 
-                          const cc = await state.connection.contract.at(
-                            address
-                          );
+                          const cc = await state.connection.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
                             address
@@ -753,9 +746,6 @@ const PoeModal = () => {
                                   {
                                     type: "poe",
                                     values: {
-                                      challengeId:
-                                        state.p2pClient?.proofOfEvent.data
-                                          ?.challenge_id ?? "",
                                       payload:
                                         state.p2pClient?.proofOfEvent.data
                                           ?.payload ?? "",

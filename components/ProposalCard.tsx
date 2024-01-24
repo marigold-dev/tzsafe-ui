@@ -127,14 +127,14 @@ const ProposalCard = ({
                 : content
                     .map(v => {
                       return "executeLambda" in v &&
-                        (!!v.executeLambda.content ||
-                          !!v.executeLambda.metadata?.includes('"lambda"'))
-                        ? labelOfProposalContentLambda(
+                        v.executeLambda.content === "" &&
+                        !!v.executeLambda.metadata?.includes("lambda")
+                        ? labelOfProposalContentMetadata(v)
+                        : labelOfProposalContentLambda(
                             state.contracts[state.currentContract ?? ""]
                               ?.version ?? state.currentStorage?.version,
                             v
-                          )
-                        : labelOfProposalContentMetadata(v);
+                          );
                     })
                     .join(", ")
             }
@@ -144,14 +144,14 @@ const ProposalCard = ({
               : content
                   .map(v =>
                     "executeLambda" in v &&
-                    (!!v.executeLambda.content ||
-                      !!v.executeLambda.metadata?.includes('"lambda"'))
-                      ? labelOfProposalContentLambda(
+                    v.executeLambda.content === "" &&
+                    !!v.executeLambda.metadata?.includes("lambda")
+                      ? labelOfProposalContentMetadata(v)
+                      : labelOfProposalContentLambda(
                           state.contracts[state.currentContract ?? ""]
                             ?.version ?? state.currentStorage?.version,
                           v
                         )
-                      : labelOfProposalContentMetadata(v)
                   )
                   .join(", ")}
           </span>

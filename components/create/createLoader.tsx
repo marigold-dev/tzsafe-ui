@@ -1,13 +1,14 @@
-import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion from "../../context/metadata";
-import { fromIpfs } from "../../context/metadata_blob";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
-import contract from "../../context/unitContract";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../../context/state";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
+import deployTzSafe from "../../versioned/deployTzSafe";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
@@ -20,48 +21,43 @@ function Success() {
     (async () => {
       if (loading && address.status == 0) {
         try {
-          const metablob = await fromIpfs();
-          const deploy = await state?.connection.wallet
-            .originate({
-              code: contract,
-              storage: {
-                proposal_counter: 0,
-                proposals: [],
-                owners: formState!.validators.map(x => x.address),
-                archives: [],
-                threshold: formState!.requiredSignatures,
-                effective_period: Math.ceil(
-                  durationOfDaysHoursMinutes(
-                    formState?.days,
-                    formState?.hours,
-                    formState?.minutes
-                  ).toMillis() / 1000
-                ),
-                ...metablob,
-              },
-            })
-            .send();
-          const result1 = await deploy?.contract();
-          const c = await result1!.storage();
-          const ct = await state?.connection.contract.at(
-            result1?.address!,
-            tzip16
-          )!;
-          const version = await fetchVersion(ct);
-          const balance = await state?.connection.tz.getBalance(
-            result1!.address!
+          const effective_period = Math.ceil(
+            durationOfDaysHoursMinutes(
+              formState?.days,
+              formState?.hours,
+              formState?.minutes
+            ).toMillis() / 1000
           );
-          setAddress({ address: result1?.address!, status: 1 });
+
+          if (!formState?.version || formState.version === "unknown version")
+            throw Error("The contract version is unknown or undefined.");
+
+          if (!state) {
+            throw new Error("state is undefined");
+          }
+
+          const tzsafe = await deployTzSafe(
+            state?.connection.wallet,
+            formState!.validators.map(x => x.address),
+            formState!.requiredSignatures,
+            effective_period,
+            formState.version
+          );
+          const c = (await tzsafe!.storage()) as contractStorage;
+          const balance = await state?.connection.tz.getBalance(
+            tzsafe!.address!
+          );
+          setAddress({ address: tzsafe?.address!, status: 1 });
           setLoading(false);
           dispatch!({
             type: "addContract",
             payload: {
               aliases: Object.fromEntries([
                 ...formState!.validators!.map(x => [x.address, x.name]),
-                [result1?.address!, formState?.walletName || ""],
+                [tzsafe?.address!, formState?.walletName || ""],
               ]),
-              contract: toStorage(version, c, balance!),
-              address: result1!.address!,
+              contract: toStorage(formState.version, c, balance!),
+              address: tzsafe!.address!,
             },
           });
         } catch (err) {

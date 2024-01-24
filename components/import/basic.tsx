@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import fetchVersion from "../../context/metadata";
-import { AppStateContext } from "../../context/state";
+import { AppStateContext, contractStorage } from "../../context/state";
+import fetchVersion from "../../context/version";
 import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
@@ -22,7 +22,7 @@ function Basic() {
   const params = useSearchParams();
 
   let [initialState, set] = useState({
-    walletName: "example-wallet",
+    walletName: "TzSafe Wallet",
     walletAddress: formState?.walletAddress || "",
   });
   let byName = Object.fromEntries(
@@ -75,11 +75,11 @@ function Basic() {
         setError(undefined);
 
         try {
-          const contract = await state.connection.contract.at(
+          const contract = await state.connection.wallet.at(
             values.walletAddress,
             tzip16
           );
-          const storage: any = await contract.storage();
+          const storage: contractStorage = await contract.storage();
           let version = await fetchVersion(contract!);
 
           if (version === "unknown version") {
@@ -104,7 +104,7 @@ function Basic() {
             ...values,
             ...duration.toObject(),
             validators,
-            requiredSignatures: storage.threshold.toNumber(),
+            requiredSignatures: storage.threshold,
           };
           setFormState(data as any);
           setActiveStepIndex(activeStepIndex + 1);

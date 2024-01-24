@@ -3,7 +3,6 @@ import { useContext, useEffect, useState } from "react";
 import Step from "../components/create/createStep";
 import Meta from "../components/meta";
 import Stepper from "../components/stepper";
-import { PREFERED_NETWORK } from "../context/config";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
 import { connectWallet } from "../utils/connectWallet";
