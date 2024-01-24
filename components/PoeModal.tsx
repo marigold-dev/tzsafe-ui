@@ -23,10 +23,9 @@ import {
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import fetchVersion from "../context/version";
 import { CustomView, customViewMatchers } from "../dapps";
 import { State } from "../pages/[walletAddress]/beacon";
-import fetchVersion from "../context/version";
-import Beacon, { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { signers, toStorage, VersionedApi } from "../versioned/apis";
