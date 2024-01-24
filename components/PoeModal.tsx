@@ -30,6 +30,7 @@ import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { signers, toStorage, VersionedApi } from "../versioned/apis";
 import { transfer } from "../versioned/interface";
+import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
   contentToData,
@@ -691,7 +692,7 @@ const PoeModal = () => {
             default:
               if (!message) return null;
 
-              return (
+              return hasTzip27SupportWithPoEChallenge(version) ? (
                 <>
                   <h1 className="text-lg font-medium">
                     Message Signing Request from {message.appMetadata.name}
@@ -768,13 +769,34 @@ const PoeModal = () => {
                           dispatch({ type: "refreshProposals" });
                         } catch (e) {
                           setTransactionError(
-                            "Failed to create and sign the Proof Of Event transaction"
+                            "Failed to create message signing proposal (TZIP27)."
                           );
                         }
                         setTransactionLoading(false);
                       }}
                     >
                       Accept
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-lg font-medium">
+                    Does not support message signing {"(TZIP27)"}
+                  </h1>
+                  <p className="mt-4 font-light text-zinc-200">
+                    {state.aliases[address ?? ""]} version is {version};
+                    however, version 0.3.4 or higher is required.
+                  </p>
+                  <div className="mt-8 flex justify-around">
+                    <button
+                      className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+                      onClick={async () => {
+                        await state.p2pClient?.refusePoeChallenge();
+                        reset();
+                      }}
+                    >
+                      Close
                     </button>
                   </div>
                 </>
