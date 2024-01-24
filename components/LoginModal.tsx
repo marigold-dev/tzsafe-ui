@@ -5,10 +5,9 @@ import { decodeData } from "../pages/[walletAddress]/beacon";
 import { connectWallet } from "../utils/connectWallet";
 import { signers } from "../versioned/apis";
 import { p2pData } from "../versioned/interface";
-import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
+import { hasTzip27Support } from "../versioned/util";
 import Select from "./Select";
 import Spinner from "./Spinner";
-import LoginButton from "./loginButton";
 
 enum State {
   INITIAL,
@@ -30,8 +29,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
     if (!state.address) return [];
 
     return Object.keys(state.contracts).flatMap(address => {
-      if (!hasTzip27SupportWithPoEChallenge(state.contracts[address].version))
-        return [];
+      if (!hasTzip27Support(state.contracts[address].version)) return [];
 
       if (!signers(state.contracts[address]).includes(state.address!))
         return [];
@@ -107,12 +105,13 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                 return (
                   <>
                     <h1 className="text-center text-lg font-medium">
-                      You don{"'"}t have any wallet that is compatible with
-                      Tzip27
+                      No Available Wallet for Dapp Connection
                     </h1>
                     <p className="mt-2 text-center text-sm text-zinc-400">
-                      Please create or import a wallet before trying to connect
-                      with Beacon
+                      Ensure you have a wallet version of 0.3.3 or higher. If
+                      not, please create and import a new one to access all
+                      available features. Once this is done, proceed to connect
+                      with the Dapp again.
                     </p>
                     <div className="mt-4 flex justify-center">
                       <button
@@ -238,9 +237,12 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               return (
                 <>
                   <h1 className="text-center text-lg font-medium">
-                    You need to connect first before establishing a connection
-                    with the dApp
+                    Owner Login Not Detected
                   </h1>
+                  <p className="mt-2 text-center text-sm text-zinc-400">
+                    To establish a connection with a DApp using TzSafe, select a
+                    wallet other than TzSafe itself to log in TzSafe.
+                  </p>
                   <div className="mt-4 flex w-full items-center justify-center space-x-4">
                     <button
                       className="rounded border bg-transparent px-4 py-2 font-medium text-white "
