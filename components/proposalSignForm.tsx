@@ -272,7 +272,9 @@ function ProposalSignForm({
                     <section key={i}>
                       <h3
                         className={`font-normal ${
-                          dapp.data?.length === 1 && !viewData.link
+                          dapp.data?.length === 1 &&
+                          !viewData.link &&
+                          dapp.data[0].action === dapp.label
                             ? "hidden"
                             : ""
                         }`}
