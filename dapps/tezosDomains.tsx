@@ -1,7 +1,6 @@
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import { TezosToolkit } from "@taquito/taquito";
-import { TokenMetadata } from "@taquito/tzip12";
 import { bytes2Char } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import React, { ReactNode, useEffect, useState } from "react";
@@ -182,7 +181,7 @@ export const tokenUpdateOperatorsSchema = new Schema(
 export const TOKEN_CONTRACT = {
   mainnet: "KT1R4KPQxpFHAkX8MKCFmdoiqTaNSSpnJXPL",
   ghostnet: "KT1REqKBXwULnmU6RpZxnRBUgcBmESnXhCWs",
-  name: "Tezos Domains Token",
+  name: "Tezos Domains NFT",
 };
 
 export const tezosDomainsContracts = {
@@ -264,7 +263,9 @@ function getDomainPromise(
         {metadata.name}
       </a>
     ))
-    .catch(_ => "Failed to fetch domain");
+    .catch(_ => {
+      return "Failed to fetch domain";
+    });
 
   return promiseCache[cacheKey];
 }
@@ -284,7 +285,7 @@ function PromiseRendrer({ promise }: { promise: Promise<React.ReactNode> }) {
     });
   }, [promise]);
 
-  return <>{node ?? "..."}</>;
+  return <>{node ?? "Loading..."}</>;
 }
 
 export function tezosDomains(
@@ -350,7 +351,7 @@ export function tezosDomains(
                 return OFFER.name;
               case TOKEN_CONTRACT.mainnet:
               case TOKEN_CONTRACT.ghostnet:
-                return OFFER.name;
+                return TOKEN_CONTRACT.name;
 
               default:
                 return "Interaction with Tezos Domains";
@@ -466,7 +467,7 @@ export function tezosDomains(
 
           const data = claimReverseRecordSchema.Execute(micheline);
 
-          const domain = bytes2Char(data.name.Some);
+          const domain = !!data.name ? bytes2Char(data.name.Some) : undefined;
 
           return [
             {
@@ -476,7 +477,7 @@ export function tezosDomains(
                   <li>
                     Owner: <Alias address={data.owner} />
                   </li>
-                  {!!data.name?.Some && (
+                  {!!domain && (
                     <li>
                       Domain:{" "}
                       <a
