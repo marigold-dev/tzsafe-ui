@@ -110,8 +110,8 @@ const ProposalCard = ({
                 <img
                   src={dapp.logo}
                   className="h-full w-full rounded"
-                  alt={dapp.logoAlt}
-                  title={dapp.logoAlt}
+                  alt={dapp.dappName}
+                  title={dapp.dappName}
                 />
               </a>
             </div>

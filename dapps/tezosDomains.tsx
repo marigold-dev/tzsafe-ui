@@ -305,7 +305,7 @@ export function tezosDomains(
   return {
     logo: logo.src,
     logoLink: "https://tezos.domains",
-    logoAlt: "Tezos Domains",
+    dappName: "Tezos Domains",
     label: transactions
       .flatMap(({ addresses: address }) => {
         if (!address) return [];

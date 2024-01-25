@@ -503,6 +503,21 @@ const PoeModal = () => {
                         <Alias address={state.currentContract ?? ""} />
                       </p>
                     )}
+                    {!!dapp?.logo && (
+                      <a
+                        className="mt-4 flex space-x-2 self-start"
+                        href={dapp.logoLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <h3>{dapp.dappName}</h3>
+                        <img
+                          src={dapp.logo}
+                          alt={dapp.dappName}
+                          className="h-6 w-6"
+                        />
+                      </a>
+                    )}
                     {!dapp?.data || hasDefaultView ? (
                       <>
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
@@ -520,7 +535,7 @@ const PoeModal = () => {
                             Params/Tokens
                           </span>
                         </div>
-                        <div className="mt-2 space-y-4 font-light lg:space-y-2">
+                        <div className="mt-2 w-full space-y-4 font-light lg:space-y-2">
                           {rows.length > 0
                             ? rows.map((v, i) => (
                                 <RenderProposalContentLambda
@@ -596,7 +611,7 @@ const PoeModal = () => {
                         </Switch.Root>
                       </div>
                     )}
-                    <div className="mt-6 flex w-2/3 justify-between md:w-1/3">
+                    <div className="mt-6 flex w-2/3 justify-between md:mx-auto md:w-1/3">
                       <button
                         className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
                         onClick={async e => {
