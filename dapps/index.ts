@@ -21,8 +21,8 @@ export type CustomViewData = {
 export type CustomView =
   | {
       logo: string;
-      logoAlt: string;
       logoLink: string;
+      dappName: string;
       label: string;
       data: Array<CustomViewData> | undefined;
     }

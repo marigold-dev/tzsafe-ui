@@ -156,7 +156,7 @@ export function objkt(transactions: Array<transaction>): CustomView {
   return {
     logo: logo.src,
     logoLink: "https://objkt.com/",
-    logoAlt: "Objkt",
+    dappName: "Objkt",
     label: transactions
       .flatMap(({ addresses }) => {
         if (!addresses) return [];
