@@ -1,6 +1,7 @@
 import { AccountInfo, getSenderId } from "@airgap/beacon-sdk";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
+import { Tzip12Module } from "@taquito/tzip12";
 import {
   Handler,
   IpfsHttpHandler,
@@ -8,6 +9,7 @@ import {
   TezosStorageHandler,
   Tzip16Module,
 } from "@taquito/tzip16";
+import BigNumber from "bignumber.js";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
@@ -54,6 +56,8 @@ let emptyState = (): tezosState => {
 
   const customMetadataProvider = new MetadataProvider(customHandler);
   connection.addExtension(new Tzip16Module(customMetadataProvider));
+  connection.addExtension(new Tzip12Module());
+
   connection.setStreamProvider(
     connection.getFactory(PollingSubscribeProvider)({
       shouldObservableSubscriptionRetry: true,
@@ -271,8 +275,21 @@ function reducer(state: tezosState, action: action): tezosState {
         currentStorage: action.payload,
       };
     case "init": {
+      const contracts = Object.entries(action.payload.contracts).reduce(
+        (acc, [key, value]) => {
+          acc[key] = {
+            ...value,
+            threshold: new BigNumber(value.threshold),
+            proposal_counter: new BigNumber(value.proposal_counter),
+            effective_period: new BigNumber(value.effective_period),
+          };
+          return acc;
+        },
+        {} as { [address: string]: contractStorage }
+      );
       return {
         ...action.payload,
+        contracts,
         attemptedInitialLogin: state.attemptedInitialLogin,
         currentContract:
           state.currentContract ?? action.payload.currentContract,
@@ -308,7 +325,7 @@ function reducer(state: tezosState, action: action): tezosState {
       const { [action.address]: contractDapps, ...connectedDapps } =
         state.connectedDapps;
 
-      Object.values(contractDapps).forEach(async dapp => {
+      Object.values(contractDapps ?? {}).forEach(async dapp => {
         const senderId = await getSenderId(dapp.publicKey);
         state.p2pClient?.removePeer(
           {

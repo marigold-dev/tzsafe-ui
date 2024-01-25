@@ -17,8 +17,12 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import fetchVersion from "../context/metadata";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  contractStorage,
+} from "../context/state";
+import fetchVersion from "../context/version";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
@@ -144,17 +148,17 @@ const Sidebar = ({
     (async () => {
       if (!state.currentContract) return;
 
-      let c = await state.connection.contract.at(state.currentContract, tzip16);
+      let c = await state.connection.wallet.at(state.currentContract, tzip16);
       let balance = await state.connection.tz.getBalance(state.currentContract);
 
-      let cc = await c.storage();
+      const storage = (await c.storage()) as contractStorage;
       let version = await (state.contracts[state.currentContract]
         ? Promise.resolve<version>(
             state.contracts[state.currentContract].version
           )
         : fetchVersion(c));
 
-      const updatedContract = toStorage(version, cc, balance);
+      const updatedContract = toStorage(version, storage, balance);
 
       state.contracts[state.currentContract]
         ? dispatch({

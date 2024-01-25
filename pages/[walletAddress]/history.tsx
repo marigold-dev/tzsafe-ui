@@ -8,13 +8,13 @@ import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
-import fetchVersion from "../../context/metadata";
 import { getTokenTransfers, getTransfers } from "../../context/proposals";
 import {
   AppDispatchContext,
   AppStateContext,
   contractStorage,
 } from "../../context/state";
+import fetchVersion from "../../context/version";
 import {
   TransferType,
   mutezTransfer,
@@ -24,7 +24,11 @@ import {
 } from "../../types/display";
 import { mutezToTez } from "../../utils/tez";
 import useWalletTokens from "../../utils/useWalletTokens";
-import { getProposalsId, toProposal, toStorage } from "../../versioned/apis";
+import {
+  getProposalsBigmapId,
+  toProposal,
+  toStorage,
+} from "../../versioned/apis";
 import { Versioned } from "../../versioned/interface";
 
 type proposals = [number, { og: any; ui: proposal }][];
@@ -198,7 +202,7 @@ const History = () => {
     (async () => {
       if (!globalState.currentContract) return;
 
-      const c = await globalState.connection.contract.at(
+      const c = await globalState.connection.wallet.at(
         globalState.currentContract,
         tzip16
       );
@@ -206,14 +210,14 @@ const History = () => {
         globalState.currentContract
       );
 
-      const cc = (await c.storage()) as contractStorage;
+      const storage = (await c.storage()) as contractStorage;
 
       const version = await (globalState.contracts[globalState.currentContract]
         ? Promise.resolve<version>(
             globalState.contracts[globalState.currentContract].version
           )
         : fetchVersion(c));
-      const updatedContract = toStorage(version, cc, balance);
+      const updatedContract = toStorage(version, storage, balance);
 
       globalState.contracts[globalState.currentContract]
         ? globalDispatch({
@@ -225,13 +229,13 @@ const History = () => {
           })
         : null;
 
-      cc.version = version;
+      storage.version = version;
 
       const bigmap = await Versioned.proposalsHistory(
-        cc,
+        storage,
 
         globalState.currentContract,
-        getProposalsId(version, cc),
+        getProposalsBigmapId(version, storage),
         state.offset
       );
 
@@ -323,12 +327,10 @@ const History = () => {
         {!!state.openModal.state && (
           <ProposalSignForm
             address={globalState.currentContract ?? ""}
-            threshold={
-              (
-                globalState.contracts[globalState.currentContract ?? ""] ??
-                globalState.currentStorage
-              ).threshold
-            }
+            threshold={(
+              globalState.contracts[globalState.currentContract ?? ""] ??
+              globalState.currentStorage
+            ).threshold.toNumber()}
             version={
               (
                 globalState.contracts[globalState.currentContract ?? ""] ??

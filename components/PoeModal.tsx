@@ -3,12 +3,12 @@ import {
   BeaconErrorType,
   NetworkType,
   OperationRequestOutput,
-  ProofOfEventChallengeRequest,
   ProofOfEventChallengeRequestOutput,
   SignPayloadRequest,
   TezosOperationType,
 } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import * as Switch from "@radix-ui/react-switch";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { tzip16 } from "@taquito/tzip16";
@@ -22,19 +22,23 @@ import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
-import fetchVersion from "../context/metadata";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import Beacon, { State } from "../pages/[walletAddress]/beacon";
+import fetchVersion from "../context/version";
+import { CustomView, customViewMatchers } from "../dapps";
+import { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
 import { signers, toStorage, VersionedApi } from "../versioned/apis";
 import { transfer } from "../versioned/interface";
+import { hasTzip27SupportWithPoEChallenge } from "../versioned/util";
 import Alias from "./Alias";
 import RenderProposalContentLambda, {
   contentToData,
+  transaction,
 } from "./RenderProposalContentLambda";
 import Spinner from "./Spinner";
 import Tooltip from "./Tooltip";
+import { TryImg } from "./TryImg";
 
 export const transferToProposalContent = (
   transfer: transfer
@@ -83,18 +87,30 @@ const PoeModal = () => {
     undefined
   );
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
+  const [hasDefaultView, setHasDefaultView] = useState(false);
   const [currentState, setCurrentState] = useState(State.IDLE);
 
   const version =
     state.contracts[address ?? ""]?.version ?? state.currentStorage?.version;
 
-  const rows = useMemo(
-    () =>
-      (transfers ?? []).map(t =>
-        contentToData(version, transferToProposalContent(t), walletTokens ?? [])
-      ),
-    [transfers]
-  );
+  const { rows, dapp } = useMemo(() => {
+    const rows = (transfers ?? []).map(t =>
+      contentToData(version, transferToProposalContent(t), walletTokens ?? [])
+    );
+
+    let dapp: CustomView;
+
+    try {
+      for (let i = 0; i < customViewMatchers.length; ++i) {
+        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        if (!!dapp) break;
+      }
+    } catch (e) {
+      console.log("Failed to parse dapp:", e);
+    }
+    return { rows, dapp };
+  }, [transfers]);
+
   useEffect(() => {
     if (!state.p2pClient) return;
 
@@ -213,11 +229,13 @@ const PoeModal = () => {
                   setTransactionError(errorMessage);
                   console.log("Contract conversion error:", e);
 
-                  state.p2pClient?.sendError(
-                    message.id,
-                    errorMessage,
-                    BeaconErrorType.TRANSACTION_INVALID_ERROR
-                  );
+                  state.p2pClient
+                    ?.sendError(
+                      message.id,
+                      errorMessage,
+                      BeaconErrorType.TRANSACTION_INVALID_ERROR
+                    )
+                    .catch(_ => {});
                   return undefined;
                 }
               } else {
@@ -285,7 +303,7 @@ const PoeModal = () => {
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
       try {
-        const contract = await state.connection.contract.at(
+        const contract = await state.connection.wallet.at(
           message.sourceAddress,
           tzip16
         );
@@ -468,7 +486,11 @@ const PoeModal = () => {
 
               return (
                 <>
-                  <div className="col-span-2 flex w-full flex-col items-center justify-center">
+                  <div
+                    className={`col-span-2 flex w-full flex-col ${
+                      hasDefaultView ? "items-center" : ""
+                    } justify-center`}
+                  >
                     <div className="mb-2 self-start text-2xl font-medium text-white">
                       Incoming action{(transfers?.length ?? 0) > 1 ? "s" : ""}{" "}
                       from {currentMetadata?.[1].name}
@@ -482,8 +504,23 @@ const PoeModal = () => {
                         <Alias address={state.currentContract ?? ""} />
                       </p>
                     )}
-                    <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
-                      <section className="w-full text-white">
+                    {!!dapp?.logo && (
+                      <a
+                        className="mt-4 flex space-x-2 self-start"
+                        href={dapp.logoLink}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <h3>{dapp.dappName}</h3>
+                        <img
+                          src={dapp.logo}
+                          alt={dapp.dappName}
+                          className="h-6 w-6"
+                        />
+                      </a>
+                    )}
+                    {!dapp?.data || hasDefaultView ? (
+                      <>
                         <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
                           <span>Function</span>
                           <span className="flex items-center">
@@ -499,30 +536,83 @@ const PoeModal = () => {
                             Params/Tokens
                           </span>
                         </div>
-                        <div className="mt-2 space-y-4 font-light lg:space-y-2">
-                          {rows.map((v, i) => (
-                            <RenderProposalContentLambda
-                              key={i}
-                              data={v}
-                              isOpenToken={i === 0}
-                            />
-                          ))}
+                        <div className="mt-2 w-full space-y-4 font-light lg:space-y-2">
+                          {rows.length > 0
+                            ? rows.map((v, i) => (
+                                <RenderProposalContentLambda
+                                  key={i}
+                                  data={v}
+                                  isOpenToken={i === 0}
+                                />
+                              ))
+                            : []}
                         </div>
-                        {rows.some(
-                          v =>
-                            !!v.params &&
-                            typeof v.params !== "string" &&
-                            ("fa1_2_address" in v.params
-                              ? !v.params.hasDecimal
-                              : v.params.some(v => !v.hasDecimal))
-                        ) && (
-                          <div className="mt-2 text-sm text-yellow-500">
-                            * There{"'"}s no decimals
-                          </div>
-                        )}
-                      </section>
-                    </div>
-                    <div className="mt-6 flex w-2/3 justify-between md:w-1/3">
+                      </>
+                    ) : (
+                      <div className="mt-4 space-y-2 font-light">
+                        {dapp.data.map((viewData, i) => {
+                          return (
+                            <section key={i}>
+                              <h3
+                                className={`font-normal ${
+                                  dapp.data?.length === 1 &&
+                                  !viewData.link &&
+                                  dapp.data[0].action === dapp.label
+                                    ? "hidden"
+                                    : ""
+                                }`}
+                              >
+                                {viewData.link ? (
+                                  <a
+                                    href={viewData.link}
+                                    title={viewData.action}
+                                    className="underline"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    {viewData.action}
+                                  </a>
+                                ) : (
+                                  viewData.action
+                                )}
+                              </h3>
+                              <div className="mt-1 flex list-inside items-center space-x-4">
+                                {viewData.image && (
+                                  <TryImg
+                                    src={viewData.image}
+                                    className="h-auto w-16 rounded"
+                                    alt={`${viewData.action}'s image`}
+                                  />
+                                )}
+                                {viewData.description}
+                              </div>
+                              {!!viewData.price && (
+                                <div className="mt-2">
+                                  Price: {viewData.price}
+                                </div>
+                              )}
+                            </section>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!!dapp?.data && (
+                      <div className="mt-6 flex w-full justify-end space-x-2">
+                        <label className="font-light" htmlFor="advanced-mode">
+                          Advanced mode
+                        </label>
+                        <Switch.Root
+                          defaultChecked={false}
+                          className="relative h-[25px] w-[42px] rounded-full bg-zinc-900 transition-colors data-[state='checked']:bg-primary"
+                          id="advanced-mode"
+                          onCheckedChange={setHasDefaultView}
+                        >
+                          <Switch.Thumb className="block h-[21px] w-[21px] translate-x-[2px] rounded-full bg-white transition-transform will-change-transform data-[state='checked']:translate-x-[19px]" />
+                        </Switch.Root>
+                      </div>
+                    )}
+                    <div className="mt-6 flex w-2/3 justify-between md:mx-auto md:w-1/3">
                       <button
                         className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
                         onClick={async e => {
@@ -550,7 +640,7 @@ const PoeModal = () => {
 
                           let hash;
                           try {
-                            const cc = await state.connection.contract.at(
+                            const cc = await state.connection.wallet.at(
                               address
                             );
                             const versioned = VersionedApi(
@@ -617,23 +707,17 @@ const PoeModal = () => {
             default:
               if (!message) return null;
 
-              return (
+              return hasTzip27SupportWithPoEChallenge(version) ? (
                 <>
                   <h1 className="text-lg font-medium">
-                    {message.appMetadata.name} wants to perform a Proof Of Event
-                    Challenge
+                    Message Signing Request from {message.appMetadata.name}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {message.appMetadata.name} wants to check that you have the
-                    rights to interact with {state.aliases[address ?? ""]}. To
-                    do so, it requires to emit an event from the contract with
-                    the following informations:
+                    {message.appMetadata.name} requests message signing from{" "}
+                    {state.aliases[address ?? ""]}. The payload of the message
+                    is as follows:
                   </p>
                   <ul className="mt-2 space-y-1">
-                    <li className="truncate">
-                      <span className="font-light">Challenge id:</span>{" "}
-                      {state.p2pClient?.proofOfEvent.data?.challenge_id}
-                    </li>
                     <li className="truncate">
                       <span className="font-light">Payload:</span>{" "}
                       {state.p2pClient?.proofOfEvent.data?.payload}
@@ -665,9 +749,7 @@ const PoeModal = () => {
 
                           await state.p2pClient!.approvePoeChallenge();
 
-                          const cc = await state.connection.contract.at(
-                            address
-                          );
+                          const cc = await state.connection.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
                             address
@@ -681,9 +763,6 @@ const PoeModal = () => {
                                   {
                                     type: "poe",
                                     values: {
-                                      challengeId:
-                                        state.p2pClient?.proofOfEvent.data
-                                          ?.challenge_id ?? "",
                                       payload:
                                         state.p2pClient?.proofOfEvent.data
                                           ?.payload ?? "",
@@ -705,13 +784,34 @@ const PoeModal = () => {
                           dispatch({ type: "refreshProposals" });
                         } catch (e) {
                           setTransactionError(
-                            "Failed to create and sign the Proof Of Event transaction"
+                            "Failed to create message signing proposal (TZIP27)."
                           );
                         }
                         setTransactionLoading(false);
                       }}
                     >
                       Accept
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-lg font-medium">
+                    Does not support message signing {"(TZIP27)"}
+                  </h1>
+                  <p className="mt-4 font-light text-zinc-200">
+                    {state.aliases[address ?? ""]} version is {version};
+                    however, version 0.3.4 or higher is required.
+                  </p>
+                  <div className="mt-8 flex justify-around">
+                    <button
+                      className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
+                      onClick={async () => {
+                        await state.p2pClient?.refusePoeChallenge();
+                        reset();
+                      }}
+                    >
+                      Close
                     </button>
                   </div>
                 </>

@@ -1,11 +1,14 @@
 import { NetworkType } from "@airgap/beacon-sdk";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import * as Switch from "@radix-ui/react-switch";
+import BigNumber from "bignumber.js";
 import { Field, Form, Formik } from "formik";
 import { useRouter } from "next/router";
 import React, { useContext, useState, useMemo } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { PROPOSAL_DURATION_WARNING } from "../context/config";
 import { AppStateContext } from "../context/state";
+import { CustomView, customViewMatchers } from "../dapps";
 import { version, proposal } from "../types/display";
 import { canExecute, canReject } from "../utils/proposals";
 import { walletToken } from "../utils/useWalletTokens";
@@ -13,8 +16,10 @@ import { VersionedApi, signers } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import RenderProposalContentLambda, {
   contentToData,
+  transaction,
 } from "./RenderProposalContentLambda";
 import Tooltip from "./Tooltip";
+import { TryImg } from "./TryImg";
 import ContractLoader from "./contractLoader";
 
 function ProposalSignForm({
@@ -46,24 +51,35 @@ function ProposalSignForm({
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [result, setResult] = useState<undefined | boolean>(undefined);
+  const [hasDefaultView, setHasDefaultView] = useState(false);
 
-  const rows = useMemo(
-    () =>
-      proposal.ui.content.map(v =>
-        contentToData(
-          state.contracts[currentContract]?.version ??
-            state.currentStorage?.version,
-          v,
-          walletTokens
-        )
-      ),
-    [
-      proposal.ui.content,
-      state.currentContract,
-      state.contracts,
-      state.currentStorage,
-    ]
-  );
+  const { rows, dapp } = useMemo(() => {
+    const rows = proposal.ui.content.map(v =>
+      contentToData(
+        state.contracts[currentContract]?.version ??
+          state.currentStorage?.version,
+        v,
+        walletTokens
+      )
+    );
+
+    let dapp: CustomView;
+
+    try {
+      for (let i = 0; i < customViewMatchers.length; ++i) {
+        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        if (!!dapp) break;
+      }
+    } catch (e) {
+      console.log("Failed to parse dapp:", e);
+    }
+    return { rows, dapp };
+  }, [
+    proposal.ui.content,
+    state.currentContract,
+    state.contracts,
+    state.currentStorage,
+  ]);
 
   async function sign(
     proposal: number,
@@ -78,7 +94,7 @@ function ProposalSignForm({
       await versioned.signProposal(
         cc,
         state.connection,
-        proposal,
+        new BigNumber(proposal),
         result,
         resolve
       )
@@ -223,30 +239,95 @@ function ProposalSignForm({
         </div>
         <div className="mb-2 flex w-full max-w-full flex-col items-start md:flex-col ">
           <section className="w-full text-white">
-            <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
-              <span>Function</span>
-              <span className="flex items-center">
-                Note
-                <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
-                  <InfoCircledIcon className="ml-2 h-4 w-4" />
-                </Tooltip>
-              </span>
-              <span className="justify-self-center">Amount</span>
-              <span className="justify-self-center">Address</span>
-              <span className="justify-self-end">Entrypoint</span>
-              <span className="justify-self-end">Params/Tokens</span>
-            </div>
-            <div className="mt-2 space-y-4 font-light lg:space-y-2">
-              {rows.length > 0
-                ? rows.map((v, i) => (
-                    <RenderProposalContentLambda
-                      key={i}
-                      data={v}
-                      isOpenToken={i === 0}
-                    />
-                  ))
-                : []}
-            </div>
+            {!dapp?.data || hasDefaultView ? (
+              <>
+                <div className="mt-4 grid hidden w-full grid-cols-6 gap-4 text-zinc-500 lg:grid">
+                  <span>Function</span>
+                  <span className="flex items-center">
+                    Note
+                    <Tooltip text="The note is user defined. It may not reflect on behavior of lambda">
+                      <InfoCircledIcon className="ml-2 h-4 w-4" />
+                    </Tooltip>
+                  </span>
+                  <span className="justify-self-center">Amount</span>
+                  <span className="justify-self-center">Address</span>
+                  <span className="justify-self-end">Entrypoint</span>
+                  <span className="justify-self-end">Params/Tokens</span>
+                </div>
+                <div className="mt-2 space-y-4 font-light lg:space-y-2">
+                  {rows.length > 0
+                    ? rows.map((v, i) => (
+                        <RenderProposalContentLambda
+                          key={i}
+                          data={v}
+                          isOpenToken={i === 0}
+                        />
+                      ))
+                    : []}
+                </div>
+              </>
+            ) : (
+              <div className="mt-4 space-y-2 font-light">
+                {dapp.data.map((viewData, i) => {
+                  return (
+                    <section key={i}>
+                      <h3
+                        className={`font-normal ${
+                          dapp.data?.length === 1 &&
+                          !viewData.link &&
+                          dapp.data[0].action === dapp.label
+                            ? "hidden"
+                            : ""
+                        }`}
+                      >
+                        {viewData.link ? (
+                          <a
+                            href={viewData.link}
+                            title={viewData.action}
+                            className="underline"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {viewData.action}
+                          </a>
+                        ) : (
+                          viewData.action
+                        )}
+                      </h3>
+                      <div className="mt-1 flex list-inside items-center space-x-4">
+                        {viewData.image && (
+                          <TryImg
+                            src={viewData.image}
+                            className="h-auto w-16 rounded"
+                            alt={`${viewData.action}'s image`}
+                          />
+                        )}
+                        {viewData.description}
+                      </div>
+                      {!!viewData.price && (
+                        <div className="mt-2">Price: {viewData.price}</div>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+
+            {!!dapp?.data && (
+              <div className="mt-6 flex w-full justify-end space-x-2">
+                <label className="font-light" htmlFor="advanced-mode">
+                  Advanced mode
+                </label>
+                <Switch.Root
+                  defaultChecked={false}
+                  className="relative h-[25px] w-[42px] rounded-full bg-zinc-900 transition-colors data-[state='checked']:bg-primary"
+                  id="advanced-mode"
+                  onCheckedChange={setHasDefaultView}
+                >
+                  <Switch.Thumb className="block h-[21px] w-[21px] translate-x-[2px] rounded-full bg-white transition-transform will-change-transform data-[state='checked']:translate-x-[19px]" />
+                </Switch.Root>
+              </div>
+            )}
             <ul className="mt-4 list-disc space-y-2 text-xs font-light leading-3 text-yellow-500">
               {isSignOrResolve &&
                 !!rows.find(

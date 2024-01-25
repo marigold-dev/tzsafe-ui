@@ -12,7 +12,8 @@
     "prepare": "husky install",
     "dev:test": "vitest",
     "test": "vitest run",
-    "check": "tsc"
+    "check": "tsc",
+    "get_tez": "npx @oxheadalpha/get-tez tz1Rwf9UAGpsNjE6tFGJpxPKRunteiQT7XZF --amount 20 --network ghostnet"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
@@ -26,6 +27,7 @@
     "@radix-ui/react-tooltip": "^1.0.3",
     "@taquito/beacon-wallet": "^17.2.0",
     "@taquito/taquito": "^17.2.0",
+    "@taquito/tzip12": "^17.5.2",
     "@taquito/tzip16": "^17.2.0",
     "@types/node": "18.11.9",
     "@types/react": "18.0.25",
@@ -33,6 +35,7 @@
     "@types/uuid": "^9.0.1",
     "@wert-io/widget-initializer": "^4.0.1",
     "assert-never": "^1.2.1",
+    "axios": "^1.6.5",
     "bignumber.js": "^9.1.1",
     "bs58check": "^3",
     "env-cmd": "^10.1.0",
@@ -41,6 +44,7 @@
     "formik": "2.4.1",
     "luxon": "^3.2.1",
     "next": "13.1.6",
+    "node-fetch": "^2.7.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tiny-emitter": "^2.1.0",
@@ -48,15 +52,20 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@oxheadalpha/get-tez": "^1.0.7",
+    "@taquito/signer": "^17.5.2",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/luxon": "^3.2.0",
+    "@types/node-fetch": "^2.6.10",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.13",
     "eslint-config-prettier": "^8.5.0",
+    "form-data": "^4.0.0",
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2",
+    "node-blob": "^0.0.2",
     "pino-pretty": "^10.2.3",
     "postcss": "^8.4.19",
     "prettier": "^2.8.4",

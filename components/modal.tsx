@@ -17,7 +17,7 @@ function Modal(props: React.PropsWithChildren<{ opened: boolean }>) {
         >
           <div
             className={
-              "min-h-96 absolute bottom-8 left-4 right-4 top-8 h-fit overflow-y-auto rounded bg-graybg px-4 py-12 md:bottom-8 md:left-1 md:right-auto md:top-8 md:max-h-[90%] md:w-[97%] md:translate-x-[1%] md:px-12"
+              "min-h-96 absolute bottom-8 left-4 right-4 top-8 h-fit max-h-[96vh] overflow-y-auto rounded bg-graybg px-4 py-12 md:bottom-8 md:left-1 md:right-auto md:top-8 md:max-h-[90%] md:w-[97%] md:translate-x-[1%] md:px-12"
             }
           >
             {props.children}

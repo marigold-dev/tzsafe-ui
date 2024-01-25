@@ -1,5 +1,9 @@
+import { NetworkType } from "@airgap/beacon-sdk";
+import { TezosToolkit } from "@taquito/taquito";
 import { ReactNode } from "react";
 import { transaction } from "../components/RenderProposalContentLambda";
+import { PREFERED_NETWORK } from "../context/config";
+import { objkt } from "./objkt";
 import { tezosDomains } from "./tezosDomains";
 
 export type contracts = {
@@ -17,14 +21,15 @@ export type CustomViewData = {
 export type CustomView =
   | {
       logo: string;
-      logoAlt: string;
       logoLink: string;
+      dappName: string;
       label: string;
       data: Array<CustomViewData> | undefined;
     }
   | { logo: undefined; label: undefined; data: undefined }
   | undefined;
 
+// Import matcher function here to support new dapp
 export const customViewMatchers: Array<
-  (transactions: Array<transaction>) => CustomView
-> = [tezosDomains];
+  (transactions: Array<transaction>, Tezos: TezosToolkit) => CustomView
+> = PREFERED_NETWORK === NetworkType.GHOSTNET ? [tezosDomains] : [];

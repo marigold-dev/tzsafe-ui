@@ -1,4 +1,4 @@
-const contract = `{ parameter
+const v0_3_3 = `{ parameter
   (or (or (list %create_proposal
              (or (or (or (pair %add_or_update_metadata (string %key) (bytes %value))
                          (set %add_owners address))
@@ -779,4 +779,4 @@ code { PUSH string "Threshold must be greater than 1" ;
        PAIR } }
 
 `;
-export default contract;
+export default v0_3_3;

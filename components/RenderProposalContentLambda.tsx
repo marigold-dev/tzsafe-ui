@@ -64,7 +64,11 @@ export type data =
 
 export type transaction = Extract<
   data,
-  { addresses: undefined | string; params: undefined | string }
+  {
+    addresses: undefined | string;
+    params: undefined | string;
+    entrypoints: undefined | string;
+  }
 >;
 
 export const contentToData = (
@@ -147,6 +151,17 @@ export const contentToData = (
         key: content.add_or_update_metadata.key,
         value: hexToAscii(content.add_or_update_metadata.value),
       }),
+    };
+  } else if ("proof_of_event" in content) {
+    data = {
+      type: "Poe",
+      label: "Message Sigining (TZIP27)",
+      metadata: undefined,
+      amount: undefined,
+      addresses: undefined,
+      entrypoints: undefined,
+      params: hexToAscii(content.proof_of_event),
+      rawParams: undefined,
     };
   } else if ("execute" in content) {
     data = {
@@ -295,17 +310,6 @@ export const contentToData = (
           : undefined,
         entrypoints: undefined,
         params: undefined,
-        rawParams: undefined,
-      };
-    } else if (type === LambdaType.POE) {
-      data = {
-        type: "Poe",
-        label: "Proof of Event",
-        metadata: undefined,
-        amount: undefined,
-        addresses: undefined,
-        entrypoints: undefined,
-        params: JSON.stringify(lambda?.data),
         rawParams: undefined,
       };
       // This condition handles some legacy code so old wallets don't crash
@@ -534,6 +538,10 @@ export const labelOfProposalContentLambda = (
     return `Remove signer${content.removeOwners.length > 1 ? "s" : ""}`;
   } else if ("transfer" in content) {
     return `Transfer ${mutezToTez(content.transfer.amount)} Tez`;
+  } else if ("add_or_update_metadata" in content) {
+    return "Update metadata (TZIP16)";
+  } else if ("proof_of_event" in content) {
+    return "Message signing (TZIP27)";
   } else if ("execute" in content) {
     return "Execute";
   } else if ("executeLambda" in content) {
@@ -559,8 +567,6 @@ export const labelOfProposalContentLambda = (
       ? "Undelegate"
       : type === LambdaType.CONTRACT_EXECUTION
       ? "Execute contract"
-      : type === LambdaType.POE
-      ? "Proof of Event"
       : "Execute lambda";
   }
 };

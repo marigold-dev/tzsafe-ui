@@ -1,6 +1,5 @@
 import { Parser } from "@taquito/michel-codec";
 import {
-  Contract,
   TezosToolkit,
   BigMapAbstraction,
   MichelsonMap,
@@ -20,7 +19,7 @@ import { proposals } from "./interface";
 
 class Version0_0_6 extends Versioned {
   async submitTxProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true
@@ -30,66 +29,72 @@ class Version0_0_6 extends Versioned {
 
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map(x => {
-          switch (x.type) {
-            case "transfer":
-              return {
-                transfer: {
-                  target: x.values.to,
-                  amount: x.values.amount,
-                  parameter: {},
-                },
-              };
-            case "lambda": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              return {
-                execute_lambda: michelsonCode,
-              };
-            }
-            case "contract": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              return {
-                execute_lambda: michelsonCode,
-              };
-            }
-            case "fa2": {
-              const parser = new Parser();
+        proposals.transfers
+          .map(x => {
+            switch (x.type) {
+              case "transfer":
+                return {
+                  transfer: {
+                    target: x.values.to,
+                    amount: x.values.amount,
+                    parameter: {},
+                  },
+                };
+              case "lambda": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                return {
+                  execute_lambda: michelsonCode,
+                };
+              }
+              case "contract": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                return {
+                  execute_lambda: michelsonCode,
+                };
+              }
+              case "fa2": {
+                const parser = new Parser();
 
-              const michelsonCode = parser.parseMichelineExpression(
-                generateFA2Michelson(
-                  this.version,
-                  x.values.map(value => ({
-                    walletAddress: cc.address,
-                    targetAddress: value.targetAddress,
-                    tokenId: Number(value.tokenId),
-                    amount: Number(value.amount),
-                    fa2Address: value.fa2Address,
-                  }))
-                )
-              );
+                const michelsonCode = parser.parseMichelineExpression(
+                  generateFA2Michelson(
+                    this.version,
+                    x.values.map(value => ({
+                      walletAddress: cc.address,
+                      targetAddress: value.targetAddress,
+                      tokenId: Number(value.tokenId),
+                      amount: Number(value.amount),
+                      fa2Address: value.fa2Address,
+                    }))
+                  )
+                );
 
-              return {
-                execute_lambda: {
-                  metadata: convert(
-                    JSON.stringify({
-                      contract_addr: x.values[0].targetAddress,
-                      payload: x.values.map(value => ({
-                        token_id: Number(value.tokenId),
-                        fa2_address: value.fa2Address,
-                        amount: Number(value.amount),
-                      })),
-                    })
-                  ),
-                  lambda: michelsonCode,
-                },
-              };
+                return {
+                  execute_lambda: {
+                    metadata: convert(
+                      JSON.stringify({
+                        contract_addr: x.values[0].targetAddress,
+                        payload: x.values.map(value => ({
+                          token_id: Number(value.tokenId),
+                          fa2_address: value.fa2Address,
+                          amount: Number(value.amount),
+                        })),
+                      })
+                    ),
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              default:
+                return {};
             }
-            default:
-              return {};
-          }
-        })
+          })
+          .filter(v => Object.keys(v).length !== 0)
       )
       .toTransferParams();
 
@@ -115,26 +120,24 @@ class Version0_0_6 extends Versioned {
 
     return [false, op.opHash];
   }
-  static override getProposalsId(_contract: storage): string {
+  static override getProposalsBigmapId(_contract: storage): string {
     return _contract.proposal_map.toString();
   }
   async signProposal(
     cc: WalletContract,
     t: TezosToolkit,
-    proposal: number,
+    proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean
   ): Promise<timeoutAndHash> {
     let batch = t.wallet.batch();
     if (typeof result != "undefined") {
       await batch.withContractCall(
-        cc.methods.sign_proposal_only(BigNumber(proposal), result)
+        cc.methods.sign_proposal_only(proposalId, result)
       );
     }
     if (resolve) {
-      await batch.withContractCall(
-        cc.methods.resolve_proposal(BigNumber(proposal))
-      );
+      await batch.withContractCall(cc.methods.resolve_proposal(proposalId));
     }
     let op = await batch.send();
 
@@ -151,7 +154,7 @@ class Version0_0_6 extends Versioned {
   }
 
   async submitSettingsProposals(
-    cc: Contract,
+    cc: WalletContract,
     t: TezosToolkit,
     ops: ownersForm[]
   ): Promise<timeoutAndHash> {
@@ -192,13 +195,13 @@ class Version0_0_6 extends Versioned {
     return {
       balance: balance!.toString() || "0",
       proposal_map: c.proposal_map.toString(),
-      proposal_counter: c.proposal_counter.toString(),
-      threshold: c!.threshold.toNumber()!,
+      proposal_counter: c.proposal_counter,
+      threshold: c!.threshold!,
       signers: c!.signers!,
       version: "0.0.6",
     };
   }
-  private static mapContent(content: content): proposalContent {
+  static mapContent(content: content): proposalContent {
     if ("execute_lambda" in content) {
       let meta = content.execute_lambda
         ? matchLambda({}, JSON.parse(content.execute_lambda))

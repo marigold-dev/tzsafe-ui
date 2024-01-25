@@ -26,10 +26,13 @@ import React, {
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
-import { mutezToTez, tezToMutez } from "../utils/tez";
-import { debounce } from "../utils/timeout";
+import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals } from "../versioned/interface";
+import {
+  hasTzip27Support,
+  hasTzip27SupportWithPoEChallenge,
+} from "../versioned/util";
 import Alias from "./Alias";
 import ExecuteForm from "./ContractExecution";
 import ErrorMessage from "./ErrorMessage";
@@ -37,7 +40,7 @@ import FA1_2 from "./FA1_2";
 import FA2Transfer from "./FA2Transfer";
 import Spinner from "./Spinner";
 import ContractLoader from "./contractLoader";
-import renderError from "./formUtils";
+import renderError, { renderWarning } from "./formUtils";
 import TextInputWithCompletion from "./textInputWithComplete";
 
 type Nullable<T> = T | null | undefined;
@@ -503,7 +506,7 @@ function TransferForm(
         setFormState(values);
         setLoading(true);
         try {
-          let cc = await state.connection.contract.at(props.address);
+          let cc = await state.connection.wallet.at(props.address);
 
           let versioned = VersionedApi(props.contract.version, props.address);
           setTimeoutAndHash(
@@ -641,6 +644,50 @@ function TransferForm(
                       >
                         Contract Execution
                       </button>
+                      {hasTzip27Support(props.contract.version) ? (
+                        <button
+                          type="button"
+                          className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                          onClick={e => {
+                            addNewField(
+                              e,
+                              push,
+                              "update_metadata",
+                              portalIdx.current,
+                              Versioned.update_metadata(props.contract.version)
+                            );
+
+                            portalIdx.current += 1;
+                          }}
+                        >
+                          Update Metadata
+                        </button>
+                      ) : (
+                        <div></div>
+                      )}
+                      {hasTzip27SupportWithPoEChallenge(
+                        props.contract.version
+                      ) ? (
+                        <button
+                          type="button"
+                          className="w-full rounded bg-primary p-2 font-medium text-white hover:bg-red-500 focus:bg-red-500"
+                          onClick={e => {
+                            addNewField(
+                              e,
+                              push,
+                              "poe",
+                              portalIdx.current,
+                              Versioned.poe(props.contract.version)
+                            );
+
+                            portalIdx.current += 1;
+                          }}
+                        >
+                          Message Signing
+                        </button>
+                      ) : (
+                        <div></div>
+                      )}
                     </div>
                     <div
                       className={`${
@@ -955,7 +1002,8 @@ function TransferForm(
                                 <span className="mr-2 text-zinc-500">
                                   #{(index + 1).toString().padStart(2, "0")}
                                 </span>
-                                Proof of Event
+                                Message signing in Proof of Event Challenge{" "}
+                                {" (TZIP27)"}
                               </p>
 
                               <div
@@ -993,6 +1041,93 @@ function TransferForm(
                                       <ErrorMessage
                                         name={`transfers.${index}.values.${value.field}`}
                                       />
+                                      {!hasTzip27SupportWithPoEChallenge(
+                                        props.contract.version
+                                      ) &&
+                                        renderWarning(
+                                          "This version doesn't support message signing, and it will be removed following submission."
+                                        )}
+                                      <button
+                                        type="button"
+                                        className={
+                                          "mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                        }
+                                        onClick={e => {
+                                          e.preventDefault();
+                                          remove(index);
+                                        }}
+                                      >
+                                        Remove
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
+                          );
+                        } else if (transfer.type === "update_metadata") {
+                          return (
+                            <section key={`${transfer.type}:${index}`}>
+                              <p className="text-lg text-white">
+                                <span className="mr-2 text-zinc-500">
+                                  #{(index + 1).toString().padStart(2, "0")}
+                                </span>
+                                Update Metadata {" (TZIP16)"}
+                              </p>
+
+                              <div
+                                className={
+                                  "md:p-none flex h-fit min-h-fit min-w-full flex-1 flex-col items-start justify-around space-y-4 md:flex-row md:space-x-4  md:space-y-0 md:rounded-none md:border-none"
+                                }
+                                key={index}
+                              >
+                                {transfer.fields.map((value, idx, arr) => {
+                                  let classn = `${
+                                    (idx + 1) % 2 === 0
+                                      ? `relative flex flex-col justify-start`
+                                      : "flex flex-col"
+                                  }`;
+
+                                  return (
+                                    <div
+                                      className={`${classn} w-full flex-1 md:w-auto`}
+                                      key={idx}
+                                    >
+                                      <label className="mb-1 text-white">
+                                        {value.label}
+                                      </label>
+                                      <Field
+                                        component={value.kind}
+                                        name={`transfers.${index}.values.${value.field}`}
+                                        className={
+                                          "md:text-md relative h-fit min-h-fit w-full flex-1 rounded p-2 text-sm md:w-auto"
+                                        }
+                                        placeholder={value.placeholder}
+                                        rows={10}
+                                        validate={value.validate}
+                                      />
+
+                                      <ErrorMessage
+                                        name={`transfers.${index}.values.${value.field}`}
+                                      />
+                                      {!hasTzip27Support(
+                                        props.contract.version
+                                      ) &&
+                                        renderWarning(
+                                          "This version doesn't support metadata updateing, and it will be removed following submission."
+                                        )}
+                                      <button
+                                        type="button"
+                                        className={
+                                          "mx-none mt-4 block self-center justify-self-end rounded bg-primary p-1.5 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto md:mt-0 md:self-end"
+                                        }
+                                        onClick={e => {
+                                          e.preventDefault();
+                                          remove(index);
+                                        }}
+                                      >
+                                        Remove
+                                      </button>
                                     </div>
                                   );
                                 })}
@@ -1000,7 +1135,6 @@ function TransferForm(
                             </section>
                           );
                         }
-
                         if (!("fields" in transfer)) return;
 
                         const withTextArea = transfer.fields.find(

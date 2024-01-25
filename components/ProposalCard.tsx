@@ -16,6 +16,7 @@ import RenderProposalContentMetadata, {
   labelOfProposalContentMetadata,
 } from "./RenderProposalContentMetadata";
 import Tooltip from "./Tooltip";
+import { TryImg } from "./TryImg";
 
 type ProposalCardProps = {
   id: number;
@@ -72,10 +73,15 @@ const ProposalCard = ({
 
     let dapp: CustomView;
 
-    for (let i = 0; i < customViewMatchers.length; ++i) {
-      dapp = customViewMatchers[i](rows as transaction[]);
-      if (!!dapp) break;
+    try {
+      for (let i = 0; i < customViewMatchers.length; ++i) {
+        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        if (!!dapp) break;
+      }
+    } catch (e) {
+      console.log("Failed to parse dapp:", e);
     }
+
     return { rows, dapp };
   }, [content, state.currentContract, state.currentStorage, state.contracts]);
 
@@ -103,9 +109,9 @@ const ProposalCard = ({
               <a href={dapp.logoLink} target="_blank" rel="noreferrer">
                 <img
                   src={dapp.logo}
-                  className="h-full w-full"
-                  alt={dapp.logoAlt}
-                  title={dapp.logoAlt}
+                  className="h-full w-full rounded"
+                  alt={dapp.dappName}
+                  title={dapp.dappName}
                 />
               </a>
             </div>
@@ -121,14 +127,14 @@ const ProposalCard = ({
                 : content
                     .map(v => {
                       return "executeLambda" in v &&
-                        (!!v.executeLambda.content ||
-                          !!v.executeLambda.metadata?.includes('"lambda"'))
-                        ? labelOfProposalContentLambda(
+                        v.executeLambda.content === "" &&
+                        !!v.executeLambda.metadata?.includes("lambda")
+                        ? labelOfProposalContentMetadata(v)
+                        : labelOfProposalContentLambda(
                             state.contracts[state.currentContract ?? ""]
                               ?.version ?? state.currentStorage?.version,
                             v
-                          )
-                        : labelOfProposalContentMetadata(v);
+                          );
                     })
                     .join(", ")
             }
@@ -138,14 +144,14 @@ const ProposalCard = ({
               : content
                   .map(v =>
                     "executeLambda" in v &&
-                    (!!v.executeLambda.content ||
-                      !!v.executeLambda.metadata?.includes('"lambda"'))
-                      ? labelOfProposalContentLambda(
+                    v.executeLambda.content === "" &&
+                    !!v.executeLambda.metadata?.includes("lambda")
+                      ? labelOfProposalContentMetadata(v)
+                      : labelOfProposalContentLambda(
                           state.contracts[state.currentContract ?? ""]
                             ?.version ?? state.currentStorage?.version,
                           v
                         )
-                      : labelOfProposalContentMetadata(v)
                   )
                   .join(", ")}
           </span>
@@ -270,7 +276,9 @@ const ProposalCard = ({
                   <section key={i}>
                     <h3
                       className={`font-normal ${
-                        dapp.data?.length === 1 && !viewData.link
+                        dapp.data?.length === 1 &&
+                        !viewData.link &&
+                        dapp.data[0].action === dapp.label
                           ? "hidden"
                           : ""
                       }`}
@@ -289,9 +297,9 @@ const ProposalCard = ({
                         viewData.action
                       )}
                     </h3>
-                    <div className="flex list-inside items-center space-x-4">
+                    <div className="mt-1 flex list-inside items-center space-x-4">
                       {viewData.image && (
-                        <img
+                        <TryImg
                           src={viewData.image}
                           className="h-auto w-16 rounded"
                           alt={`${viewData.action}'s image`}
