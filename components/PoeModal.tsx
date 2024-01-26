@@ -397,22 +397,6 @@ const PoeModal = () => {
                 </div>
               );
 
-            case State.AUTHORIZED:
-              return (
-                <>
-                  <h1 className="text-lg font-medium">
-                    Successfuly emited the event
-                  </h1>
-                  <div className="mt-4">
-                    <button
-                      className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={reset}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </>
-              );
             case State.TRANSACTION:
               if (transactionLoading)
                 return (
@@ -747,8 +731,6 @@ const PoeModal = () => {
                         try {
                           setCurrentState(State.TRANSACTION);
 
-                          await state.p2pClient!.approvePoeChallenge();
-
                           const cc = await state.connection.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
@@ -781,11 +763,25 @@ const PoeModal = () => {
                             return;
                           }
 
+                          await state.p2pClient!.approvePoeChallenge();
+
                           dispatch({ type: "refreshProposals" });
                         } catch (e) {
                           setTransactionError(
                             "Failed to create message signing proposal (TZIP27)."
                           );
+
+                          if (
+                            (e as Error).message.includes("[ABORTED_ERROR]")
+                          ) {
+                            await state.p2pClient!.dismissPoeChallenge();
+                          } else {
+                            await state.p2pClient!.sendError(
+                              state.p2pClient!.proofOfEvent.message!.id,
+                              (e as Error).message,
+                              BeaconErrorType.UNKNOWN_ERROR
+                            );
+                          }
                         }
                         setTransactionLoading(false);
                       }}
