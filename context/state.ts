@@ -28,7 +28,6 @@ type tezosState = {
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
-  favouriteContract: string | null;
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
@@ -76,7 +75,6 @@ let emptyState = (): tezosState => {
     currentStorage: null,
     accountInfo: null,
     connection,
-    favouriteContract: null,
     aliasTrie: new Trie<string>(),
     hasBanner: true,
     delegatorAddresses: undefined,
@@ -117,7 +115,6 @@ type action =
       payload: string;
     }
   | { type: "removeContract"; address: string }
-  | { type: "setFavourite"; address: string }
   | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
@@ -206,9 +203,7 @@ function reducer(state: tezosState, action: action): tezosState {
     case "addContract": {
       let al = action.payload.aliases;
       let aliases = { ...state.aliases, ...al };
-      let fav = !!state.favouriteContract
-        ? state.favouriteContract
-        : action.payload.address;
+
       let contracts = {
         ...state.contracts,
         [action.payload.address]: action.payload.contract,
@@ -337,31 +332,15 @@ function reducer(state: tezosState, action: action): tezosState {
         );
       });
 
-      const fav =
-        (state.favouriteContract || "") === action.address
-          ? Object.keys(state.contracts).at(0) || null
-          : state.favouriteContract;
-
       const addresses = Object.keys(contracts);
       const currentContract = addresses.length > 0 ? addresses[0] : null;
 
       const newState = {
         ...state,
         contracts,
-        favouriteContract: fav,
         currentContract,
         aliases,
         connectedDapps,
-      };
-
-      saveState(newState);
-
-      return newState;
-    }
-    case "setFavourite": {
-      const newState = {
-        ...state,
-        favouriteContract: action.address,
       };
 
       saveState(newState);
