@@ -126,10 +126,10 @@ const TopUpPage = () => {
           <div>
             <h2 className="text-xl text-white">Buy Tez</h2>
             <p className="mt-2 font-light text-zinc-200">
-              Our provider {"doesn't"} support transferring to Tezos contract
-              yet. Therefore, after the transaction succeeds, we will
-              automatically create a transaction from your wallet to your TzSafe
-              wallet
+              Our provider currently does not support direct transfers to a
+              Tezos contract. Consequently, once your transaction is
+              successfully processed, we will automatically initiate a transfer
+              from your wallet to your TzSafe wallet.
             </p>
             <div className="flex w-full justify-center">
               <button
@@ -147,9 +147,9 @@ const TopUpPage = () => {
             <p className="mt-2">
               {!!error ? (
                 <span className="text-red-600">
-                  {error}. All the funds are currently in{" "}
-                  <Alias address={state.currentContract ?? ""} />, you can
-                  transfer them manually to TzSafe
+                  {error}. All funds are currently held in{" "}
+                  <Alias address={state.currentContract ?? ""} />, you may
+                  manually move the funds to your TzSafe wallet.
                 </span>
               ) : isLoading ? (
                 <Spinner />
