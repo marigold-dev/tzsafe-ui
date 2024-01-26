@@ -397,22 +397,6 @@ const PoeModal = () => {
                 </div>
               );
 
-            case State.AUTHORIZED:
-              return (
-                <>
-                  <h1 className="text-lg font-medium">
-                    Successfully emited the event
-                  </h1>
-                  <div className="mt-4">
-                    <button
-                      className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                      onClick={reset}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </>
-              );
             case State.TRANSACTION:
               if (transactionLoading)
                 return (

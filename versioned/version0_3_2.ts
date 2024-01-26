@@ -41,34 +41,39 @@ class Version0_3_2 extends Versioned {
   ): Promise<[boolean, string]> {
     let params = cc.methods
       .create_proposal(
-        proposals.transfers.map(x => {
-          switch (x.type) {
-            case "transfer":
-              return {
-                transfer: {
-                  target: x.values.to,
-                  amount: convertTezToMutez
-                    ? tezToMutez(Number(x.values.amount))
-                    : Number(x.values.amount),
-                  parameter: {},
-                },
-              };
-            case "lambda": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
-              let meta = !!x.values.metadata
-                ? convert(x.values.metadata)
-                : null;
-              return {
-                execute_lambda: {
-                  metadata: meta,
-                  lambda: michelsonCode,
-                },
-              };
-            }
-            case "contract": {
-              const p = new Parser();
-              const michelsonCode = p.parseMichelineExpression(x.values.lambda);
+        proposals.transfers
+          .map(x => {
+            switch (x.type) {
+              case "transfer":
+                return {
+                  transfer: {
+                    target: x.values.to,
+                    amount: convertTezToMutez
+                      ? tezToMutez(Number(x.values.amount))
+                      : Number(x.values.amount),
+                    parameter: {},
+                  },
+                };
+              case "lambda": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
+                let meta = !!x.values.metadata
+                  ? convert(x.values.metadata)
+                  : null;
+                return {
+                  execute_lambda: {
+                    metadata: meta,
+                    lambda: michelsonCode,
+                  },
+                };
+              }
+              case "contract": {
+                const p = new Parser();
+                const michelsonCode = p.parseMichelineExpression(
+                  x.values.lambda
+                );
                 return {
                   execute_lambda: {
                     metadata: null,
