@@ -220,7 +220,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
               return (
                 <>
                   <h1 className="text-center text-lg font-medium">
-                    Successfuly connected to {parsedData?.name ?? "Dapp"}
+                    Successfully connected to {parsedData?.name ?? "Dapp"}
                   </h1>
                   <div className="mt-4 flex justify-center">
                     <button

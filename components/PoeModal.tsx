@@ -401,7 +401,7 @@ const PoeModal = () => {
               return (
                 <>
                   <h1 className="text-lg font-medium">
-                    Successfuly emited the event
+                    Successfully emited the event
                   </h1>
                   <div className="mt-4">
                     <button
