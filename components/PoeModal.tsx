@@ -747,8 +747,6 @@ const PoeModal = () => {
                         try {
                           setCurrentState(State.TRANSACTION);
 
-                          await state.p2pClient!.approvePoeChallenge();
-
                           const cc = await state.connection.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
@@ -781,11 +779,25 @@ const PoeModal = () => {
                             return;
                           }
 
+                          await state.p2pClient!.approvePoeChallenge();
+
                           dispatch({ type: "refreshProposals" });
                         } catch (e) {
                           setTransactionError(
                             "Failed to create message signing proposal (TZIP27)."
                           );
+
+                          if (
+                            (e as Error).message.includes("[ABORTED_ERROR]")
+                          ) {
+                            await state.p2pClient!.dismissPoeChallenge();
+                          } else {
+                            await state.p2pClient!.sendError(
+                              state.p2pClient!.proofOfEvent.message!.id,
+                              (e as Error).message,
+                              BeaconErrorType.UNKNOWN_ERROR
+                            );
+                          }
                         }
                         setTransactionLoading(false);
                       }}

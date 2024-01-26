@@ -9,6 +9,7 @@ import {
   WalletClientOptions,
   SigningType,
   PeerInfo,
+  BeaconResponseInputMessage,
 } from "@airgap/beacon-sdk";
 import { TinyEmitter } from "tiny-emitter";
 
@@ -73,14 +74,31 @@ class P2PClient extends WalletClient {
     });
   }
 
+  async dismissPoeChallenge() {
+    if (!this.proofOfEvent.message) throw new Error("Poe not received");
+
+    const payload = {
+      ...this.proofOfEvent.message,
+      type: BeaconMessageType.ProofOfEventChallengeResponse,
+      isAccepted: false,
+    };
+    this.proofOfEvent = { message: undefined, data: undefined };
+
+    return this.respond(payload as BeaconResponseInputMessage);
+  }
+
   async approvePoeChallenge() {
     if (!this.proofOfEvent.message) throw new Error("Poe not received");
 
-    return this.respond({
+    const payload = {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: true,
-    });
+    };
+
+    this.proofOfEvent = { message: undefined, data: undefined };
+
+    return this.respond(payload as BeaconResponseInputMessage);
   }
 
   async refusePoeChallenge() {
