@@ -467,6 +467,28 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
       },
       { timeout: tenMins }
     );
+
+    it("should generate the SPOE transaction and it should be executed when applied", async () => {
+      const v = VersionedApi(version, addr);
+
+      const contract = await retry(() =>
+        tezos.wallet.at("KT1VcfDXTkmXtY5qyDdjJpkcU3ZiKkKbSqyS")
+      );
+      const ops = await retry(() =>
+        v.generateSpoeOps("myPayload", contract, tezos)
+      );
+
+      const [response] = await retry(() => tezos.rpc.preapplyOperations(ops));
+
+      expect(
+        // @ts-ignore
+        response.contents.map(v => v.metadata.operation_result)
+      ).toMatchObject([
+        { status: "applied" },
+        { status: "applied" },
+        { status: "applied" },
+      ]);
+    });
   });
 
 export default test_suit;
