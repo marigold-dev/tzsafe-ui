@@ -28,7 +28,7 @@ export type fa1_2Token = {
     tokenId: "0";
     standard: "fa1.2";
     totalSupply: string;
-    metadata: {
+    metadata?: {
       name: string;
       symbol: string;
       decimals: string;
@@ -57,13 +57,13 @@ const FETCH_COUNT = 20;
 
 const tokenToOption = (fa1_2Token: fa1_2Token) => {
   const { token } = fa1_2Token;
-  const imageUri = token.metadata.thumbnailUri ?? "";
+  const imageUri = token.metadata?.thumbnailUri ?? "";
 
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
-    label: token.metadata.name,
+    label: token.metadata?.name ?? "No name",
     image: imageUri.includes("http")
       ? imageUri
       : imageUri === ""

@@ -61,9 +61,9 @@ const HistoryFaToken = ({ transferType, token }: props) => {
         <span className="truncate font-light text-zinc-300 md:min-w-[7rem]">
           <span className="hidden md:inline">Amount:</span>{" "}
           {BigNumber(token.amount)
-            .div(BigNumber(10).pow(token.token.metadata.decimals))
+            .div(BigNumber(10).pow(token.token.metadata?.decimals ?? 0))
             .toNumber()}{" "}
-          {token.token.metadata.symbol}
+          {token.token.metadata?.symbol ?? ""}
         </span>
         <span className="hidden justify-self-end lg:block">
           {tzDate} - {`${tzHours}:${tzMinutes}`}
@@ -78,7 +78,7 @@ const HistoryFaToken = ({ transferType, token }: props) => {
         <ul className="font-light">
           <li>
             <span className="text-zinc-400">Full name:</span>{" "}
-            {token.token.metadata.name}
+            {token.token.metadata?.name ?? "No name"}
           </li>
           <li>
             <span className="text-zinc-400">Token ID:</span>{" "}

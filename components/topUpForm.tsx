@@ -43,13 +43,13 @@ type option = {
 
 const tokenToOption = (fa1_2orfa2: fa1_2Token | fa2Token) => {
   const { token } = fa1_2orfa2;
-  const imageUri = token.metadata.thumbnailUri ?? "";
+  const imageUri = token.metadata?.thumbnailUri ?? "";
 
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
-    label: token.metadata.name,
+    label: token.metadata?.name ?? "No name",
     image: imageUri.includes("http")
       ? imageUri
       : imageUri === ""
@@ -186,7 +186,7 @@ function TopUp(props: {
                   amount ?? 0
                 )
                   .multipliedBy(
-                    BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+                    BigNumber(10).pow(token?.token.metadata?.decimals ?? 0)
                   )
                   .toNumber()}) ;`
             )
@@ -215,7 +215,7 @@ function TopUp(props: {
                 BigNumber(formToken.amount ?? 0)
                   .multipliedBy(
                     BigNumber(10).pow(
-                      formToken.token?.token.metadata.decimals ?? 0
+                      formToken.token?.token.metadata?.decimals ?? 0
                     )
                   )
                   .toNumber()
@@ -377,7 +377,11 @@ function TopUp(props: {
                   {values.tokens.map(({ token }: formToken, i) => {
                     const balance = !!token
                       ? BigNumber(token.balance)
-                          .div(BigNumber(10).pow(token.token.metadata.decimals))
+                          .div(
+                            BigNumber(10).pow(
+                              token.token.metadata?.decimals ?? 0
+                            )
+                          )
                           .toNumber()
                       : undefined;
 

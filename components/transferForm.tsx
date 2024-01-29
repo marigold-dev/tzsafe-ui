@@ -813,7 +813,7 @@ function TransferForm(
                                     ? BigNumber(token.balance)
                                         .div(
                                           BigNumber(10).pow(
-                                            token.token.metadata.decimals
+                                            token.token.metadata?.decimals ?? 0
                                           )
                                         )
                                         .toNumber()
@@ -910,7 +910,7 @@ function TransferForm(
                                     ? BigNumber(token.balance)
                                         .div(
                                           BigNumber(10).pow(
-                                            token.token.metadata.decimals
+                                            token.token.metadata?.decimals ?? 0
                                           )
                                         )
                                         .toNumber()
