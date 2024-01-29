@@ -5,6 +5,7 @@ import {
   OperationRequestOutput,
   ProofOfEventChallengeRequestOutput,
   SignPayloadRequest,
+  SimulatedProofOfEventChallengeRequest,
   TezosOperationType,
 } from "@airgap/beacon-sdk";
 import { Checkbox } from "@ariakit/react";
@@ -358,24 +359,26 @@ const PoeModal = () => {
       }
     };
 
-    const simulatedProofOfEventCb = async (message: SignPayloadRequest) => {
-      const contract = state.contracts[message.sourceAddress];
+    const simulatedProofOfEventCb = async (
+      message: SimulatedProofOfEventChallengeRequest
+    ) => {
+      const contract = state.contracts[message.contractAddress];
 
       if (!contract) {
         state.p2pClient?.sendError(
           message.id,
           "The address is not a TzSafe one",
-          BeaconErrorType.SIGNATURE_TYPE_NOT_SUPPORTED
+          BeaconErrorType.UNKNOWN_ERROR
         );
         return;
       }
 
-      const api = VersionedApi(contract.version, message.sourceAddress);
+      const api = VersionedApi(contract.version, message.contractAddress);
 
       try {
         const ops = await api.generateSpoeOps(
           message.payload,
-          await state.connection.wallet.at(message.sourceAddress),
+          await state.connection.wallet.at(message.contractAddress),
           state.connection
         );
 
