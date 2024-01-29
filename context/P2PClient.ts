@@ -139,16 +139,21 @@ class P2PClient extends WalletClient {
 
       case BeaconMessageType.BroadcastRequest:
         window.alert("Broadcast requests are not supported");
+        break;
 
       case BeaconMessageType.SimulatedProofOfEventChallengeRequest:
         this.events.emit(
           Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
           message
         );
+        break;
+
       default:
         await this.respond({
           type: BeaconMessageType.Error,
           errorType: BeaconErrorType.UNKNOWN_ERROR,
+          // @ts-expect-error - As we handle all the cases the message is of type never
+          // But it's better to handle it in case new message type is added
           id: message.id,
           senderId: await this.beaconId,
         });
