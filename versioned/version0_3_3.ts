@@ -95,7 +95,9 @@ class Version0_3_3 extends Versioned {
                         tokenId: Number(value.tokenId),
                         amount: BigNumber(value.amount)
                           .multipliedBy(
-                            BigNumber(10).pow(token.token.metadata.decimals)
+                            BigNumber(10).pow(
+                              token.token.metadata?.decimals ?? 0
+                            )
                           )
                           .toNumber(),
                         fa2Address: value.fa2Address,
@@ -121,7 +123,7 @@ class Version0_3_3 extends Versioned {
                     spenderAddress: x.values.spenderAddress,
                     amount: BigNumber(x.values.amount)
                       .multipliedBy(
-                        BigNumber(10).pow(token.token.metadata.decimals)
+                        BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
                       )
                       .toNumber(),
                     fa1_2Address: x.values.fa1_2Address,
@@ -146,7 +148,7 @@ class Version0_3_3 extends Versioned {
                     walletAddress: cc.address,
                     amount: BigNumber(x.values.amount)
                       .multipliedBy(
-                        BigNumber(10).pow(token.token.metadata.decimals)
+                        BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
                       )
                       .toNumber(),
                     fa1_2Address: x.values.fa1_2Address,
