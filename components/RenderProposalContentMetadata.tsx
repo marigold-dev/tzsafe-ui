@@ -136,7 +136,7 @@ const RenderProposalContentMetadata = ({
         token => token.token.contract.address === contractData.fa1_2_address
       );
 
-      let imageUri = token?.token.metadata.thumbnailUri;
+      let imageUri = token?.token.metadata?.thumbnailUri;
       imageUri = toImageUri(imageUri);
 
       data = {
@@ -185,7 +185,7 @@ const RenderProposalContentMetadata = ({
 
           imageUri = toImageUri(imageUri);
           v.imageUri = imageUri;
-          v.name = token?.token.metadata.name;
+          v.name = token?.token.metadata?.name ?? "No name";
           v.amount = v.amount.toString();
           // the "to" is incorrrect in metadata, users have to go block explorer to check.
           v.to = "please refer to the block explorer";

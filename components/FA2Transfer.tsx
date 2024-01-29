@@ -28,7 +28,7 @@ export type fa2Token = {
   token: {
     id: number;
     contract: { address: string };
-    metadata: {
+    metadata?: {
       name: string;
       symbol: string;
       decimals: string;
@@ -56,13 +56,13 @@ const FETCH_COUNT = 20;
 const tokenToOption = (fa2Token: fa2Token) => {
   const { token } = fa2Token;
   const imageUri =
-    token.metadata.thumbnailUri ?? token.metadata.displayUri ?? "";
+    token.metadata?.thumbnailUri ?? token.metadata?.displayUri ?? "";
 
   return {
     id: token.id.toString(),
     tokenId: token.tokenId,
     value: token.id.toString(),
-    label: token.metadata.name,
+    label: token.metadata?.name ?? "No name",
     image: imageUri.includes("http")
       ? imageUri
       : imageUri === ""
@@ -183,10 +183,8 @@ const FA2Transfer = ({
     if (!currentToken) return;
 
     return BigNumber(currentToken.balance)
-      .div(BigNumber(10).pow(currentToken.token.metadata.decimals))
+      .div(BigNumber(10).pow(currentToken.token.metadata?.decimals ?? 0))
       .toNumber();
-
-    return;
   }, [currentToken]);
 
   return (
@@ -242,7 +240,7 @@ const FA2Transfer = ({
               if (!currentToken) return;
 
               if (
-                currentToken.token.metadata.decimals === "0" &&
+                currentToken.token.metadata?.decimals === "0" &&
                 !Number.isInteger(amount)
               ) {
                 return "Amount must be an integer";

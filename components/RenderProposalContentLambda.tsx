@@ -224,7 +224,7 @@ export const contentToData = (
         token => token.token.contract.address === lambda?.contractAddress
       );
 
-      let imageUri = token?.token.metadata.thumbnailUri;
+      let imageUri = token?.token.metadata?.thumbnailUri;
       imageUri = toImageUri(imageUri);
       data = {
         metadata: undefined,
@@ -238,13 +238,13 @@ export const contentToData = (
             "value" in lambdaData ? lambdaData.value : lambdaData.amount;
 
           return BigNumber(amount).div(
-            BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+            BigNumber(10).pow(token?.token.metadata?.decimals ?? 0)
           );
         })(),
         addresses: "spender" in lambdaData ? lambdaData.spender : lambdaData.to,
         entrypoints: undefined,
         params: {
-          name: token?.token.metadata.name,
+          name: token?.token.metadata?.name ?? "No name",
           fa1_2_address: lambda?.contractAddress,
           imageUri,
           hasDecimal: !!token,
@@ -281,14 +281,16 @@ export const contentToData = (
           return {
             fa2_address:
               token?.token.contract.address ?? lambda?.contractAddress,
-            name: token?.token.metadata.name,
+            name: token?.token.metadata?.name ?? "No name",
             token_id,
             to: to_,
             imageUri: imageUri,
             amount: BigNumber(amount).div(
-              BigNumber(10).pow(token?.token.metadata.decimals ?? 0)
+              BigNumber(10).pow(token?.token.metadata?.decimals ?? 0)
             ),
-            hasDecimal: !!token?.token.metadata.decimals,
+            hasDecimal:
+              token?.token.metadata?.decimals !== undefined &&
+              token?.token.metadata?.decimals !== null,
           };
         }),
         rawParams: undefined,
