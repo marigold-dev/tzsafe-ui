@@ -10,7 +10,6 @@ export const connectWallet = async (
 
   await state?.beaconWallet!.requestPermissions({
     network: {
-      //@ts-expect-error Beacon beta and taquito's beacon are incompatible, but it's only a type error
       type: PREFERED_NETWORK,
       rpcUrl: RPC_URL,
     },
