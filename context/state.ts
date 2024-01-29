@@ -165,7 +165,6 @@ const saveState = (state: tezosState) => {
 function reducer(state: tezosState, action: action): tezosState {
   switch (action.type) {
     case "beaconConnect": {
-      console.log("SET PROVIDER CALL");
       state.connection.setProvider({
         rpc: RPC_URL,
         wallet: action.payload,
