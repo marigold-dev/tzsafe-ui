@@ -471,9 +471,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
     it("should generate the SPOE transaction and it should be executed when applied", async () => {
       const v = VersionedApi(version, addr);
 
-      const contract = await retry(() =>
-        tezos.wallet.at("KT1VcfDXTkmXtY5qyDdjJpkcU3ZiKkKbSqyS")
-      );
+      const contract = await retry(() => tezos.wallet.at(addr));
       const ops = await retry(() =>
         v.generateSpoeOps("myPayload", contract, tezos)
       );
