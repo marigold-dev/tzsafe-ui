@@ -32,13 +32,23 @@ export type data =
       rawParams: undefined | string;
     }
   | {
-      type: "TransferFA2" | "TransferFA1_2" | "ApproveFA1_2";
+      type: "TransferFA2";
       label: undefined | string;
       metadata: undefined | string;
       amount: undefined | BigNumber;
       addresses: undefined | string;
       entrypoints: undefined | string;
-      params: undefined | fa2Tokens | fa1_2Token;
+      params: undefined | fa2Tokens;
+      rawParams: undefined | string;
+    }
+  | {
+      type: "TransferFA1_2" | "ApproveFA1_2";
+      label: undefined | string;
+      metadata: undefined | string;
+      amount: undefined | BigNumber;
+      addresses: undefined | string;
+      entrypoints: undefined | string;
+      params: undefined | fa1_2Token;
       rawParams: undefined | string;
     }
   | {
@@ -497,23 +507,19 @@ const RenderProposalContentLambda = ({
         } mt-2 overflow-auto whitespace-pre-wrap rounded bg-zinc-900 px-4 py-4 font-light`}
       >
         {!!data.params ? (
-          typeof data.params !== "string" ? (
-            "fa1_2_address" in data.params ? (
-              data.addresses?.at(0) && data.amount instanceof BigNumber ? (
-                <FA1_2Display
-                  data={data.params}
-                  to={data.addresses.at(0)}
-                  amount={data.amount}
-                />
-              ) : (
-                JSON.stringify(data.params)
-              )
+          data.type === "ApproveFA1_2" || data.type === "TransferFA1_2" ? (
+            data.amount !== undefined ? (
+              <FA1_2Display
+                data={data.params}
+                to={data.addresses}
+                amount={data.amount}
+              />
             ) : (
-              <FA2Display data={data.params} />
+              JSON.stringify(data.params)
             )
-          ) : data.type !== "ApproveFA1_2" &&
-            data.type !== "TransferFA1_2" &&
-            data.type !== "TransferFA2" ? (
+          ) : data.type === "TransferFA2" ? (
+            <FA2Display data={data.params} />
+          ) : typeof data.params === "string" ? (
             data.params
           ) : (
             JSON.stringify(data.params)
