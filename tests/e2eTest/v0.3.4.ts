@@ -281,7 +281,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         );
 
         after_storage.proposals
-          .get(after_proposal_counter.toNumber())
+          .get(after_proposal_counter.toNumber() - 2)
           .then((value: proposal) => {
             expect(value.contents.filter(v => "transfer" in v).length).toBe(2);
           });
@@ -295,7 +295,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           });
 
         after_storage.proposals
-          .get(after_proposal_counter.toNumber() - 2)
+          .get(after_proposal_counter.toNumber())
           .then((value: proposal) => {
             expect(value.contents.length).toBe(1);
             expect(
