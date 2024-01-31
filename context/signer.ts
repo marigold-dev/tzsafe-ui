@@ -26,7 +26,7 @@ export class BeaconSigner implements Signer {
     tmpBuffer.set(bytes, magicByte?.byteLength ?? 0);
 
     const payload = buf2hex(tmpBuffer);
-    console.log("SALUT:", op, magicByte, payload);
+
     const { signature } = await this.wallet.client.requestSignPayload({
       signingType: SigningType.OPERATION,
       payload,
