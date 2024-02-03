@@ -124,7 +124,10 @@ abstract class Versioned {
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez?: boolean,
-    batch?: WalletOperationBatch
+    batch?: WalletOperationBatch,
+    isSigning?: boolean,
+    isResolving?: boolean,
+    proposalIdOffset?: BigNumber
   ): Promise<timeoutAndHash>;
 
   abstract signProposal(
@@ -133,7 +136,8 @@ abstract class Versioned {
     proposalId: BigNumber,
     result: boolean | undefined,
     resolve: boolean,
-    batch?: WalletOperationBatch
+    batch?: WalletOperationBatch,
+    proposalContent?: any
   ): Promise<timeoutAndHash>;
 
   abstract submitSettingsProposals(

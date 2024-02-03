@@ -9,6 +9,7 @@ import { BigNumber } from "bignumber.js";
 import { content, contractStorage as c1 } from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
 import { proposalContent } from "../types/display";
+import { toStorage } from "./apis";
 import { proposals } from "./interface";
 import Version0_3_3 from "./version0_3_3";
 
@@ -18,7 +19,10 @@ class Version0_3_4 extends Version0_3_3 {
     t: TezosToolkit,
     proposals: proposals,
     convertTezToMutez: boolean = true,
-    batch?: WalletOperationBatch
+    batch?: WalletOperationBatch,
+    isSigning: boolean = false,
+    isResolving: boolean = false,
+    proposalIdOffset: BigNumber = BigNumber(1)
   ): Promise<[boolean, string]> {
     let batchOp = batch;
     if (batchOp === undefined) batchOp = t.wallet.batch();
@@ -26,17 +30,40 @@ class Version0_3_4 extends Version0_3_3 {
     const poe_proposals = proposals.transfers.filter(v => v.type === "poe");
     const regular_proposals = proposals.transfers.filter(v => v.type !== "poe");
 
-    poe_proposals.forEach(v => {
+    let storage: contractStorage | undefined = undefined;
+    if (poe_proposals.length > 0 && isSigning) {
+      storage = toStorage(this.version, await cc.storage(), BigNumber(0));
+    }
+
+    poe_proposals.forEach(async v => {
       if (v.type === "poe") {
-        const params = cc.methods.proof_of_event_challenge(
-          char2Bytes(v.values.payload)
-        );
+        const content = char2Bytes(v.values.payload);
+        const params = cc.methods.proof_of_event_challenge(content);
+
         if (!batchOp) {
           throw new Error(
             "Internal error: batchOp is undefined. It should never happen."
           );
         }
         batchOp.withContractCall(params);
+
+        if (isSigning && storage !== undefined) {
+          const proposalId = storage.proposal_counter.plus(proposalIdOffset);
+          super.genSignAndResolveOps(
+            true,
+            batchOp,
+            cc,
+            proposalId,
+            [
+              {
+                proof_of_event: content,
+              },
+            ],
+            isResolving
+          );
+        }
+
+        proposalIdOffset = proposalIdOffset.plus(1);
       }
     });
 
@@ -45,7 +72,10 @@ class Version0_3_4 extends Version0_3_3 {
       t,
       { transfers: regular_proposals },
       convertTezToMutez,
-      batchOp
+      batchOp,
+      isSigning,
+      isResolving,
+      proposalIdOffset
     );
   }
 

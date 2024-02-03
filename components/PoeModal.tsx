@@ -7,6 +7,7 @@ import {
   SignPayloadRequest,
   TezosOperationType,
 } from "@airgap/beacon-sdk";
+import { Checkbox } from "@ariakit/react";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import * as Switch from "@radix-ui/react-switch";
 import { emitMicheline, Parser, Expr } from "@taquito/michel-codec";
@@ -15,7 +16,7 @@ import { tzip16 } from "@taquito/tzip16";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
 import {
@@ -89,6 +90,9 @@ const PoeModal = () => {
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
   const [hasDefaultView, setHasDefaultView] = useState(false);
   const [currentState, setCurrentState] = useState(State.IDLE);
+
+  const [signImmediatelyFlag, setSignImmediatelyFlag] = useState(true);
+  const [resolveImmediatelyFlag, setResolveImmediatelyFlag] = useState(false);
 
   const version =
     state.contracts[address ?? ""]?.version ?? state.currentStorage?.version;
@@ -381,6 +385,45 @@ const PoeModal = () => {
     setAddress(undefined);
   };
 
+  const Checkboxes = () => (
+    <>
+      <div className="md-2 flex w-full items-center space-x-4 pt-8">
+        <label className="font-medium text-white">Sign immediately:</label>
+        <Checkbox
+          name="signImmediatelyFlag"
+          type="checkbox"
+          checked={signImmediatelyFlag}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            if (!e.target.checked) {
+              setResolveImmediatelyFlag(e.target.checked);
+            }
+            setSignImmediatelyFlag(e.target.checked);
+          }}
+          className="h-4 w-4 rounded-md p-2"
+        />
+      </div>
+
+      {state.currentContract &&
+        state.contracts[state.currentContract]?.threshold.toNumber() <= 1 && (
+          <div className="md-2 flex w-full items-center space-x-4">
+            <label className="font-medium text-white">
+              Resolve immediately:
+            </label>
+            <Checkbox
+              disabled={!signImmediatelyFlag}
+              checked={resolveImmediatelyFlag}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setResolveImmediatelyFlag(e.target.checked);
+              }}
+              name="resolveImmediatelyFlag"
+              type="checkbox"
+              className="h-4 w-4 rounded-md p-2"
+            />
+          </div>
+        )}
+    </>
+  );
+
   return (
     <div className="fixed bottom-0 left-0 right-0 top-12 z-50 flex items-center justify-center bg-black/30">
       <div
@@ -596,6 +639,9 @@ const PoeModal = () => {
                         </Switch.Root>
                       </div>
                     )}
+
+                    <Checkboxes />
+
                     <div className="mt-6 flex w-2/3 justify-between md:mx-auto md:w-1/3">
                       <button
                         className="my-2 rounded border-2 bg-transparent p-2 font-medium text-white hover:outline-none"
@@ -631,17 +677,20 @@ const PoeModal = () => {
                               state.contracts[address].version,
                               address
                             );
-                            const timeoutAndHash =
+                            const submitTimeoutAndHash =
                               await versioned.submitTxProposals(
                                 cc,
                                 state.connection,
                                 { transfers },
-                                false
+                                false,
+                                undefined,
+                                signImmediatelyFlag,
+                                resolveImmediatelyFlag
                               );
 
-                            hash = timeoutAndHash[1];
+                            hash = submitTimeoutAndHash[1];
 
-                            setTimeoutAndHash(timeoutAndHash);
+                            setTimeoutAndHash(submitTimeoutAndHash);
 
                             if (timeoutAndHash[0]) {
                               setTransactionLoading(false);
@@ -707,6 +756,9 @@ const PoeModal = () => {
                       {state.p2pClient?.proofOfEvent.data?.payload}
                     </li>
                   </ul>
+
+                  <Checkboxes />
+
                   <div className="mt-8 flex justify-around">
                     <button
                       className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
@@ -736,7 +788,8 @@ const PoeModal = () => {
                             state.contracts[address].version,
                             address
                           );
-                          const timeoutAndHash =
+
+                          setTimeoutAndHash(
                             await versioned.submitTxProposals(
                               cc,
                               state.connection,
@@ -753,10 +806,12 @@ const PoeModal = () => {
                                   },
                                 ],
                               },
-                              false
-                            );
-
-                          setTimeoutAndHash(timeoutAndHash);
+                              false,
+                              undefined,
+                              signImmediatelyFlag,
+                              resolveImmediatelyFlag
+                            )
+                          );
 
                           if (timeoutAndHash[0]) {
                             setTransactionLoading(false);

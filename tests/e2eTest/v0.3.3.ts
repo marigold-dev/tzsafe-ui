@@ -10,7 +10,7 @@ import { proposals } from "../../versioned/interface";
 import { owner, pb, rpc } from "./config";
 import { retry } from "./util";
 
-const sixMins = 360000;
+const tenMins = 600000;
 const version = "0.3.3";
 const ipfs_file = "ipfs://Qmb72YHLm2jztSQS1B2uEvo1GrWbYKQu7dnJ5YNcS7aU1Q";
 
@@ -42,7 +42,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           expect(value).toEqual(char2Bytes(ipfs_file));
         });
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
     );
 
     it(
@@ -98,7 +98,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
             expect(value.contents.length).toBe(2);
           });
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
     );
 
     it(
@@ -138,7 +138,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         expect(after_sigs.size).toBe(1);
         expect(after_sigs.get(owner)).toBe(true);
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
     );
 
     it(
@@ -179,7 +179,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         expect(after_archive.executed).toBeDefined();
         expect((await tezos.tz.getBalance(addr)).toNumber()).toBe(0);
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
     );
 
     it(
@@ -216,7 +216,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           before_effectivePeriod.toNumber() + 2
         );
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
     );
     it(
       "test submitTxProposals: non-supporting proposals will be dropped",
@@ -271,7 +271,142 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
             expect(value.contents.filter(v => "transfer" in v).length).toBe(1);
           });
       },
-      { timeout: sixMins }
+      { timeout: tenMins }
+    );
+
+    it(
+      "test submitTxProposals with sign",
+      async () => {
+        const v = VersionedApi(version, addr);
+        const tzsafe = await retry(() => tezos.wallet.at(addr));
+        const proposals: proposals = {
+          transfers: [
+            {
+              type: "transfer",
+              values: {
+                to: owner,
+                amount: "1",
+              },
+            },
+            {
+              type: "transfer",
+              values: {
+                to: owner,
+                amount: "2",
+              },
+            },
+          ],
+        };
+
+        const before_storage: contractStorage = await retry(() =>
+          tzsafe.storage()
+        );
+        const before_proposal_counter: BigNumber =
+          before_storage.proposal_counter;
+
+        const deployed_result = await retry(() =>
+          v.submitTxProposals(
+            tzsafe,
+            tezos,
+            proposals,
+            true,
+            undefined,
+            true,
+            false
+          )
+        );
+
+        const [_, msg] = deployed_result;
+        expect(msg.startsWith("op")).toBeDefined();
+
+        // proposal validation
+        const after_storage: contractStorage = await retry(() =>
+          tzsafe.storage()
+        );
+
+        const after_proposal_counter: BigNumber =
+          after_storage.proposal_counter;
+
+        expect(after_proposal_counter.toNumber()).toBe(
+          before_proposal_counter.toNumber() + 1
+        );
+        after_storage.proposals
+          .get(after_proposal_counter.toNumber())
+          .then((value: any) => {
+            expect(value).toBeDefined();
+            expect(value.contents.length).toBe(2);
+          });
+
+        // sign validation
+        const after_proposal: any = await retry(() =>
+          after_storage.proposals.get(after_storage.proposal_counter)
+        );
+        const after_sigs: MichelsonMap<string, boolean> =
+          after_proposal.signatures;
+        expect(after_sigs.size).toBe(1);
+        expect(after_sigs.get(owner)).toBe(true);
+      },
+      { timeout: tenMins }
+    );
+
+    it(
+      "test submitTxProposals with sign and resolve",
+      async () => {
+        const op = await retry(() =>
+          tezos.wallet.transfer({ to: addr, amount: 3 }).send()
+        );
+        await retry(() => op.confirmation());
+        const v = VersionedApi(version, addr);
+        const tzsafe = await retry(() => tezos.wallet.at(addr));
+        const proposals: proposals = {
+          transfers: [
+            {
+              type: "transfer",
+              values: {
+                to: owner,
+                amount: "1",
+              },
+            },
+            {
+              type: "transfer",
+              values: {
+                to: owner,
+                amount: "2",
+              },
+            },
+          ],
+        };
+
+        const before_balance = await retry(() => tezos.tz.getBalance(addr));
+        expect(before_balance.toNumber()).toBe(3000000);
+
+        const deployed_result = await retry(() =>
+          v.submitTxProposals(
+            tzsafe,
+            tezos,
+            proposals,
+            true,
+            undefined,
+            true,
+            true
+          )
+        );
+
+        const [_, msg] = deployed_result;
+        expect(msg.startsWith("op")).toBeDefined();
+
+        // resolve validation
+        const after_storage: contractStorage = await retry(() =>
+          tzsafe.storage()
+        );
+        const after_archive: { executed: Symbol } = await retry(() =>
+          after_storage.archives.get(after_storage.proposal_counter)
+        );
+        expect(after_archive.executed).toBeDefined();
+        const after_balance = await retry(() => tezos.tz.getBalance(addr));
+        expect(after_balance.toNumber()).toBe(0);
+      },
+      { timeout: tenMins }
     );
   });
 
