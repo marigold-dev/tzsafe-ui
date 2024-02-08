@@ -7,9 +7,9 @@ import {
 import { Schema } from "@taquito/michelson-encoder";
 import {
   BigMapAbstraction,
-  Contract,
   TezosToolkit,
   WalletContract,
+  WalletOperationBatch,
 } from "@taquito/taquito";
 import { char2Bytes, bytes2Char, num2PaddedHex } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
@@ -30,8 +30,9 @@ import { contractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
+import { toStorage } from "./apis";
 import { ownersForm } from "./forms";
-import { proposals, timeoutAndHash, Versioned } from "./interface";
+import { proposals, timeoutAndHash, Versioned, transfer } from "./interface";
 
 function convert(x: string): string {
   return char2Bytes(x);
@@ -172,182 +173,44 @@ class Version0_3_0 extends Versioned {
     cc: WalletContract,
     t: TezosToolkit,
     proposals: proposals,
-    convertTezToMutez: boolean = true
+    convertTezToMutez: boolean = true,
+    batch?: WalletOperationBatch,
+    isSigning: boolean = false,
+    isResolving: boolean = false,
+    proposalIdOffset: BigNumber = BigNumber(1)
   ): Promise<[boolean, string]> {
-    let params = cc.methods
-      .create_proposal(
-        proposals.transfers
-          .map(x => {
-            switch (x.type) {
-              case "transfer":
-                return {
-                  transfer: {
-                    target: x.values.to,
-                    amount: convertTezToMutez
-                      ? tezToMutez(Number(x.values.amount))
-                      : Number(x.values.amount),
-                    parameter: {},
-                  },
-                };
-              case "lambda": {
-                const p = new Parser();
-                const michelsonCode = p.parseMichelineExpression(
-                  x.values.lambda
-                );
-                let meta = !!x.values.metadata
-                  ? convert(x.values.metadata)
-                  : null;
-                return {
-                  execute_lambda: {
-                    metadata: meta,
-                    lambda: michelsonCode,
-                  },
-                };
-              }
-              case "contract": {
-                const p = new Parser();
-                const michelsonCode = p.parseMichelineExpression(
-                  x.values.lambda
-                );
-                let meta = !!x.values.metadata
-                  ? convert(x.values.metadata)
-                  : null;
-                return {
-                  execute_lambda: {
-                    metadata: meta,
-                    lambda: michelsonCode,
-                  },
-                };
-              }
-              case "fa2": {
-                const parser = new Parser();
+    let batchOp = batch;
 
-                const michelsonCode = parser.parseMichelineExpression(
-                  generateFA2Michelson(
-                    this.version,
-                    x.values.map(value => {
-                      const token = value.token as unknown as fa2Token;
+    if (batchOp === undefined) batchOp = t.wallet.batch();
 
-                      return {
-                        walletAddress: cc.address,
-                        targetAddress: value.targetAddress,
-                        tokenId: Number(value.tokenId),
-                        amount: BigNumber(value.amount)
-                          .multipliedBy(
-                            BigNumber(10).pow(
-                              token.token.metadata?.decimals ?? 0
-                            )
-                          )
-                          .toNumber(),
-                        fa2Address: value.fa2Address,
-                      };
-                    })
-                  )
-                );
+    const content = proposals.transfers
+      .map(x => this.mapTransfer(x, cc, convertTezToMutez))
+      .filter(v => Object.keys(v).length !== 0);
 
-                return {
-                  execute_lambda: {
-                    metadata: convert(
-                      JSON.stringify({
-                        contract_addr: x.values[0].targetAddress,
-                        payload: x.values.map(value => ({
-                          token_id: Number(value.tokenId),
-                          fa2_address: value.fa2Address,
-                          amount: Number(value.amount),
-                        })),
-                      })
-                    ),
-                    lambda: michelsonCode,
-                  },
-                };
-              }
-              case "fa1.2-approve": {
-                const parser = new Parser();
+    if (content.length > 0) {
+      const params = cc.methodsObject.create_proposal(content);
+      batchOp.withContractCall(params);
 
-                const token = x.values.token as unknown as fa1_2Token;
-
-                const michelsonCode = parser.parseMichelineExpression(
-                  generateFA1_2ApproveMichelson(this.version, {
-                    spenderAddress: x.values.spenderAddress,
-                    amount: BigNumber(x.values.amount)
-                      .multipliedBy(
-                        BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
-                      )
-                      .toNumber(),
-                    fa1_2Address: x.values.fa1_2Address,
-                  })
-                );
-
-                return {
-                  execute_lambda: {
-                    metadata: convert(
-                      JSON.stringify({
-                        payload: {
-                          spender_address: x.values.spenderAddress,
-                          amount: x.values.amount,
-                          fa1_2_address: x.values.fa1_2Address,
-                          name: token.token.metadata?.name ?? "No name",
-                        },
-                      })
-                    ),
-                    lambda: michelsonCode,
-                  },
-                };
-              }
-
-              case "fa1.2-transfer": {
-                const parser = new Parser();
-
-                const token = x.values.token as unknown as fa1_2Token;
-
-                const michelsonCode = parser.parseMichelineExpression(
-                  generateFA1_2TransferMichelson(this.version, {
-                    walletAddress: cc.address,
-                    amount: BigNumber(x.values.amount)
-                      .multipliedBy(
-                        BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
-                      )
-                      .toNumber(),
-                    fa1_2Address: x.values.fa1_2Address,
-                    targetAddress: x.values.targetAddress,
-                  })
-                );
-
-                return {
-                  execute_lambda: {
-                    metadata: convert(
-                      JSON.stringify({
-                        payload: {
-                          amount: Number(x.values.amount),
-                          fa1_2_address: x.values.fa1_2Address,
-                          to: x.values.targetAddress,
-                          name: token.token.metadata?.name ?? "No name",
-                        },
-                      })
-                    ),
-                    lambda: michelsonCode,
-                  },
-                };
-              }
-              default:
-                return {};
-            }
-          })
-          .filter(v => Object.keys(v).length !== 0)
-      )
-      .toTransferParams();
-
-    let op = await t.wallet.transfer(params).send();
-
-    const transacValue = await promiseWithTimeout(
-      op.transactionOperation(),
-      DEFAULT_TIMEOUT
-    );
-
-    if (transacValue === -1) {
-      return [true, op.opHash];
+      if (isSigning) {
+        const storage = toStorage(
+          this.version,
+          await cc.storage(),
+          BigNumber(0)
+        );
+        const proposalId = storage.proposal_counter.plus(proposalIdOffset);
+        return await this.signProposal(
+          cc,
+          t,
+          proposalId,
+          true,
+          isResolving,
+          batchOp,
+          content
+        );
+      }
     }
 
+    const op = await batchOp.send();
     const confirmationValue = await promiseWithTimeout(
       op.confirmation(1),
       DEFAULT_TIMEOUT
@@ -364,28 +227,35 @@ class Version0_3_0 extends Versioned {
     t: TezosToolkit,
     proposalId: BigNumber,
     result: boolean | undefined,
-    resolve: boolean
+    resolve: boolean,
+    batch?: WalletOperationBatch,
+    proposalContent?: any
   ): Promise<timeoutAndHash> {
-    const proposals: { proposals: BigMapAbstraction } = await cc.storage();
-    const bProposal = num2PaddedHex(proposalId.toNumber());
-    const prop: any = await proposals.proposals.get(bProposal);
-    const batch = t.wallet.batch();
+    const storage: { proposals: BigMapAbstraction } = await cc.storage();
+    const hexProposalId = num2PaddedHex(proposalId.toNumber());
+    if (!proposalContent) {
+      const prop: any = await storage.proposals.get(hexProposalId);
+      proposalContent = prop.contents;
+    }
+    let batchOp = batch;
+    if (batchOp === undefined) batchOp = t.wallet.batch();
+
     if (typeof result != "undefined") {
-      await batch.withContractCall(
-        cc.methods.sign_proposal(bProposal, prop.contents, result)
+      batchOp.withContractCall(
+        cc.methods.sign_proposal(hexProposalId, proposalContent, result)
       );
     }
     if (resolve) {
       const schema = new Schema(proposalsType);
-      const proposalsData = schema.Encode(prop.contents);
+      const proposalsData = schema.Encode(proposalContent);
       const packed = packDataBytes(proposalsData, proposalsType).bytes;
 
-      await batch.withContractCall(
+      batchOp.withContractCall(
         // resolve proposal
-        cc.methods.proof_of_event_challenge(bProposal, packed)
+        cc.methods.proof_of_event_challenge(hexProposalId, packed)
       );
     }
-    let op = await batch.send();
+    let op = await batchOp.send();
 
     const confirmationValue = await promiseWithTimeout(
       op.confirmation(1),
@@ -426,6 +296,164 @@ class Version0_3_0 extends Versioned {
     );
 
     return [transacValue === -1, op.opHash];
+  }
+  mapTransfer(
+    transfer: transfer,
+    cc: WalletContract,
+    convertTezToMutez: boolean
+  ): any {
+    switch (transfer.type) {
+      case "transfer":
+        return {
+          transfer: {
+            target: transfer.values.to,
+            amount: convertTezToMutez
+              ? tezToMutez(Number(transfer.values.amount))
+              : Number(transfer.values.amount),
+            parameter: {},
+          },
+        };
+      case "lambda": {
+        const p = new Parser();
+        const michelsonCode = p.parseMichelineExpression(
+          transfer.values.lambda
+        );
+        let meta = !!transfer.values.metadata
+          ? convert(transfer.values.metadata)
+          : null;
+        return {
+          execute_lambda: {
+            metadata: meta,
+            lambda: michelsonCode,
+          },
+        };
+      }
+      case "contract": {
+        const p = new Parser();
+        const michelsonCode = p.parseMichelineExpression(
+          transfer.values.lambda
+        );
+        let meta = !!transfer.values.metadata
+          ? convert(transfer.values.metadata)
+          : null;
+        return {
+          execute_lambda: {
+            metadata: meta,
+            lambda: michelsonCode,
+          },
+        };
+      }
+      case "fa2": {
+        const parser = new Parser();
+
+        const michelsonCode = parser.parseMichelineExpression(
+          generateFA2Michelson(
+            this.version,
+            transfer.values.map(value => {
+              const token = value.token as unknown as fa2Token;
+
+              return {
+                walletAddress: cc.address,
+                targetAddress: value.targetAddress,
+                tokenId: Number(value.tokenId),
+                amount: BigNumber(value.amount)
+                  .multipliedBy(
+                    BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
+                  )
+                  .toNumber(),
+                fa2Address: value.fa2Address,
+              };
+            })
+          )
+        );
+
+        return {
+          execute_lambda: {
+            metadata: convert(
+              JSON.stringify({
+                contract_addr: transfer.values[0].targetAddress,
+                payload: transfer.values.map(value => ({
+                  token_id: Number(value.tokenId),
+                  fa2_address: value.fa2Address,
+                  amount: Number(value.amount),
+                })),
+              })
+            ),
+            lambda: michelsonCode,
+          },
+        };
+      }
+      case "fa1.2-approve": {
+        const parser = new Parser();
+
+        const token = transfer.values.token as unknown as fa1_2Token;
+
+        const michelsonCode = parser.parseMichelineExpression(
+          generateFA1_2ApproveMichelson(this.version, {
+            spenderAddress: transfer.values.spenderAddress,
+            amount: BigNumber(transfer.values.amount)
+              .multipliedBy(
+                BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
+              )
+              .toNumber(),
+            fa1_2Address: transfer.values.fa1_2Address,
+          })
+        );
+
+        return {
+          execute_lambda: {
+            metadata: convert(
+              JSON.stringify({
+                payload: {
+                  spender_address: transfer.values.spenderAddress,
+                  amount: transfer.values.amount,
+                  fa1_2_address: transfer.values.fa1_2Address,
+                  name: token.token.metadata?.name ?? "No name",
+                },
+              })
+            ),
+            lambda: michelsonCode,
+          },
+        };
+      }
+
+      case "fa1.2-transfer": {
+        const parser = new Parser();
+
+        const token = transfer.values.token as unknown as fa1_2Token;
+
+        const michelsonCode = parser.parseMichelineExpression(
+          generateFA1_2TransferMichelson(this.version, {
+            walletAddress: cc.address,
+            amount: BigNumber(transfer.values.amount)
+              .multipliedBy(
+                BigNumber(10).pow(token.token.metadata?.decimals ?? 0)
+              )
+              .toNumber(),
+            fa1_2Address: transfer.values.fa1_2Address,
+            targetAddress: transfer.values.targetAddress,
+          })
+        );
+
+        return {
+          execute_lambda: {
+            metadata: convert(
+              JSON.stringify({
+                payload: {
+                  amount: Number(transfer.values.amount),
+                  fa1_2_address: transfer.values.fa1_2Address,
+                  to: transfer.values.targetAddress,
+                  name: token.token.metadata?.name ?? "No name",
+                },
+              })
+            ),
+            lambda: michelsonCode,
+          },
+        };
+      }
+      default:
+        return {};
+    }
   }
   static override toContractState(
     contract: any,

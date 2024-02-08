@@ -28,7 +28,7 @@ import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { AppStateContext, contractStorage } from "../context/state";
 import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
-import { Versioned, proposals } from "../versioned/interface";
+import { Versioned, proposals, transfer } from "../versioned/interface";
 import {
   hasTzip27Support,
   hasTzip27SupportWithPoEChallenge,
@@ -357,8 +357,10 @@ const addNewField = (
   if (window.scrollY > 200) window.scrollTo(0, 0);
 };
 
-const initialProps: proposals = {
-  transfers: [],
+const initialProps = {
+  transfers: [] as transfer[],
+  signImmediatelyFlag: true,
+  resolveImmediatelyFlag: false,
 };
 
 function TransferForm(
@@ -506,12 +508,22 @@ function TransferForm(
         setFormState(values);
         setLoading(true);
         try {
-          let cc = await state.connection.wallet.at(props.address);
+          const cc = await state.connection.wallet.at(props.address);
+          const versioned = VersionedApi(props.contract.version, props.address);
+          const proposals: proposals = { transfers: values.transfers };
 
-          let versioned = VersionedApi(props.contract.version, props.address);
           setTimeoutAndHash(
-            await versioned.submitTxProposals(cc, state.connection, values)
+            await versioned.submitTxProposals(
+              cc,
+              state.connection,
+              proposals,
+              undefined,
+              undefined,
+              values.signImmediatelyFlag,
+              values.resolveImmediatelyFlag
+            )
           );
+
           setResult(true);
           setFormState(initialProps);
         } catch (e) {
@@ -1262,16 +1274,65 @@ function TransferForm(
                           </section>
                         );
                       })}
-                    <div className="order-first mb-auto flex flex-row justify-around md:mx-auto md:w-1/3">
-                      {values.transfers.length > 0 && (
-                        <button
-                          className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
-                          type="submit"
-                        >
-                          Submit
-                        </button>
-                      )}
-                    </div>
+
+                    {
+                      <div className="order-first flex flex-col justify-around pt-8">
+                        {values.transfers.length > 0 && (
+                          <>
+                            <div className="md-2 flex w-full items-center space-x-4">
+                              <label className="font-medium text-white">
+                                Sign immediately:
+                              </label>
+                              <Field
+                                name="signImmediatelyFlag"
+                                type="checkbox"
+                                onChange={(
+                                  e: ChangeEvent<HTMLInputElement>
+                                ) => {
+                                  if (!e.target.checked) {
+                                    setFieldValue(
+                                      "resolveImmediatelyFlag",
+                                      e.target.checked
+                                    );
+                                  }
+                                  setFieldValue(
+                                    "signImmediatelyFlag",
+                                    e.target.checked
+                                  );
+                                }}
+                                className="h-4 w-4 rounded-md p-2"
+                              />
+                              <ErrorMessage name="signImmediatelyFlag" />
+                            </div>
+
+                            {state.currentContract &&
+                              state.contracts[
+                                state.currentContract
+                              ]?.threshold.toNumber() <= 1 && (
+                                <div className="md-2 flex w-full items-center space-x-4">
+                                  <label className="font-medium text-white">
+                                    Resolve immediately:
+                                  </label>
+                                  <Field
+                                    disabled={!values.signImmediatelyFlag}
+                                    name="resolveImmediatelyFlag"
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded-md p-2"
+                                  />
+                                  <ErrorMessage name="resolveImmediatelyFlag" />
+                                </div>
+                              )}
+
+                            <button
+                              className="mt-8 rounded bg-primary p-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 md:mx-auto"
+                              type="submit"
+                            >
+                              Submit
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    }
                   </div>
                 </div>
               )}
