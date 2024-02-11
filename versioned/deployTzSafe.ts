@@ -46,14 +46,6 @@ export type settings =
       execution_duration: BigNumber;
     };
 
-function numberToBytes32(num: number): Uint8Array {
-  const arrayBuffer = new ArrayBuffer(4); // 4 bytes for a 32-bit number
-  const view32 = new Uint32Array(arrayBuffer);
-  view32[0] = num;
-  const view8 = new Uint8Array(arrayBuffer);
-  return view8;
-}
-
 function createledger(
   token_id: number,
   ownersAndLiquidity: ownerAndLiquidity[]

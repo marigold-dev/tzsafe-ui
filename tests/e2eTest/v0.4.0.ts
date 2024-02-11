@@ -2,7 +2,6 @@ import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
 import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { describe, expect, it, beforeAll } from "vitest";
-import { proposal } from "../../types/Proposal0_1_1";
 import { contractStorage } from "../../types/app";
 import { VersionedApi } from "../../versioned/apis";
 import deployTzSafe, { settings } from "../../versioned/deployTzSafe";
@@ -52,7 +51,6 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         console.log(`${version} is deployed, ${addr}`);
         const storage: contractStorage = await retry(() => tzsafe.storage());
 
-        console.log(JSON.stringify(storage));
         expect(tzsafe.address).toBeDefined();
         expect(storage.wallet.proposal_counter.isEqualTo(BigNumber(0))).toBe(
           true
@@ -69,8 +67,40 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           storage.wallet.execution_duration.isEqualTo(BigNumber(300000))
         ).toBe(true);
         expect(storage.fa2.extension.lock_keys).toStrictEqual([]);
-        // TODO: check init token and metadata and supply
-        //expect(await retry(() => storage.fa2.extension.total_supply.get(1))
+
+        const actual_supply: BigNumber = await retry(() =>
+          storage.fa2.extension.total_supply.get(1)
+        );
+        expect(actual_supply.isEqualTo(BigNumber(300))).toBe(true);
+
+        const owner1: BigNumber = await retry(() =>
+          storage.fa2.ledger.get({ 0: owner, 1: BigNumber(1) })
+        );
+        expect(owner1.isEqualTo(100)).toBe(true);
+
+        const owner2: BigNumber = await retry(() =>
+          storage.fa2.ledger.get({
+            0: "tz1inzFwAjE4oWXMabJFZdPHoDQN5S4XB3wH",
+            1: BigNumber(1),
+          })
+        );
+        expect(owner2.isEqualTo(200)).toBe(true);
+
+        const token_metadata: {
+          token_id: BigNumber;
+          token_info: MichelsonMap<string, string>;
+        } = await retry(() => storage.fa2.token_metadata.get(BigNumber(1)));
+
+        expect(token_metadata.token_id.isEqualTo(BigNumber(1))).toBe(true);
+
+        expect(token_metadata.token_info.get("token_id")).toBe(char2Bytes("1"));
+        expect(token_metadata.token_info.get("decimals")).toBe(char2Bytes("6"));
+        expect(token_metadata.token_info.get("name")).toBe(
+          char2Bytes("testDao")
+        );
+        expect(token_metadata.token_info.get("symbol")).toBe(
+          char2Bytes("testDao")
+        );
 
         // TODO
         //storage.metadata.get("").then((value: string) => {
