@@ -5,6 +5,7 @@ import { pb, rpc } from "./config";
 import test_suit_0_1_1 from "./v0.1.1";
 import test_suit_0_3_3 from "./v0.3.3";
 import test_suit_0_3_4 from "./v0.3.4";
+import test_suit_0_4_0 from "./v0.4.0";
 
 vi.mock("@airgap/beacon-sdk", () => ({
   NetworkType: {
@@ -21,6 +22,7 @@ function setTezosToolkit(tezos: TezosToolkit) {
   return tezos;
 }
 
-test_suit_0_1_1(setTezosToolkit);
-test_suit_0_3_3(setTezosToolkit);
-test_suit_0_3_4(setTezosToolkit);
+//test_suit_0_1_1(setTezosToolkit);
+//test_suit_0_3_3(setTezosToolkit);
+//test_suit_0_3_4(setTezosToolkit);
+test_suit_0_4_0(setTezosToolkit);

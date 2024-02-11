@@ -5,7 +5,7 @@ import { describe, expect, it, beforeAll } from "vitest";
 import { proposal } from "../../types/Proposal0_1_1";
 import { contractStorage } from "../../types/app";
 import { VersionedApi } from "../../versioned/apis";
-import deployTzSafe from "../../versioned/deployTzSafe";
+import deployTzSafe, { settings } from "../../versioned/deployTzSafe";
 import { proposals } from "../../versioned/interface";
 import { owner } from "./config";
 import { retry } from "./util";
@@ -27,9 +27,14 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
     it(
       "test originate tzsafe",
       async () => {
-        const tzsafe = await retry(() =>
-          deployTzSafe(tezos.wallet, [owner], 1, 864000, version)
-        );
+        const settings: settings = {
+          type: "multisig",
+          version,
+          owners: [owner],
+          threshold: 1,
+          effective_period: 864000,
+        };
+        const tzsafe = await retry(() => deployTzSafe(tezos.wallet, settings));
         addr = tzsafe.address;
         console.log(`${version} is deployed, ${addr}`);
         const storage: contractStorage = await retry(() => tzsafe.storage());

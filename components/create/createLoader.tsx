@@ -8,7 +8,7 @@ import {
 } from "../../context/state";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
-import deployTzSafe from "../../versioned/deployTzSafe";
+import deployTzSafe, { settings } from "../../versioned/deployTzSafe";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
@@ -29,20 +29,26 @@ function Success() {
             ).toMillis() / 1000
           );
 
-          if (!formState?.version || formState.version === "unknown version")
+          if (
+            !formState?.version ||
+            formState.version === "0.4.0" ||
+            formState.version === "unknown version"
+          )
             throw Error("The contract version is unknown or undefined.");
 
           if (!state) {
             throw new Error("state is undefined");
           }
 
-          const tzsafe = await deployTzSafe(
-            state?.connection.wallet,
-            formState!.validators.map(x => x.address),
-            formState!.requiredSignatures,
-            effective_period,
-            formState.version
-          );
+          const settings: settings = {
+            type: "multisig",
+            version: formState.version,
+            owners: formState!.validators.map(x => x.address),
+            threshold: formState!.requiredSignatures,
+            effective_period: effective_period,
+          };
+
+          const tzsafe = await deployTzSafe(state?.connection.wallet, settings);
           const c = (await tzsafe!.storage()) as contractStorage;
           const balance = await state?.connection.tz.getBalance(
             tzsafe!.address!

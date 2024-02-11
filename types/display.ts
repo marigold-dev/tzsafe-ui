@@ -73,7 +73,7 @@ type proposal = {
   signatures: { signer: string; result: boolean }[];
   content: proposalContent[];
 };
-type version =
+type multisigVersion =
   | "0.0.6"
   | "0.0.8"
   | "0.0.9"
@@ -86,6 +86,10 @@ type version =
   | "0.3.3"
   | "0.3.4"
   | "unknown version";
+
+type daoVersion = "0.4.0" | "unknown version";
+
+type version = multisigVersion | daoVersion;
 
 export enum TransferType {
   MUTEZ = -1,
@@ -120,6 +124,8 @@ export {
   type removeOwners,
   type proposalContent,
   type version,
+  type multisigVersion,
+  type daoVersion,
   type mutezTransfer,
   type status,
 };

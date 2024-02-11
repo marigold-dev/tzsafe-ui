@@ -10,9 +10,11 @@ import { TZKT_API_URL } from "./config";
 import ct0_1_1 from "./contract/v0.1.1";
 import ct0_3_3 from "./contract/v0.3.3";
 import ct0_3_4 from "./contract/v0.3.4";
+import ct0_4_0 from "./contract/v0.4.0";
 import meta0_1_1 from "./metadata/v0.1.1";
 import meta0_3_3 from "./metadata/v0.3.3";
-import meta0_3_4 from "./metadata/v.0.3.4";
+import meta0_3_4 from "./metadata/v0.3.4";
+import meta0_4_0 from "./metadata/v0.4.0";
 
 declare const ABSTRACTION_KEY: unique symbol;
 const dispatch: { [key: string]: version } = {
@@ -27,6 +29,7 @@ const dispatch: { [key: string]: version } = {
   "0.3.2": "0.3.2",
   "0.3.3": "0.3.3",
   "0.3.4": "0.3.4",
+  "0.4.0": "0.4.0",
 };
 
 // undefined means tzsafe does not support deploying that version
@@ -46,6 +49,7 @@ export const CONTRACTS: {
   "0.3.2": undefined,
   "0.3.3": [ct0_3_3, meta0_3_3],
   "0.3.4": [ct0_3_4, meta0_3_4],
+  "0.4.0": [ct0_4_0, meta0_4_0],
   "unknown version": undefined,
 };
 
@@ -53,6 +57,7 @@ export const CONTRACTS: {
 type typeHash = string;
 type codeHash = string;
 
+// TODO
 const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
   "0.0.6": "1047066606:471411811",
   "0.0.8": "2045366626:-1526481454",
@@ -67,6 +72,7 @@ const HASHES: { [k in version]: `${typeHash}:${codeHash}` | undefined } = {
   "0.3.2": "66001562:-1892417854",
   "0.3.3": "-623288749:1866000220",
   "0.3.4": "1138255963:-521664810",
+  "0.4.0": ":",
   "unknown version": undefined,
 };
 
@@ -85,6 +91,7 @@ const VERSION_HASH: { [k: `${typeHash}:${codeHash}`]: version } = {
   [HASHES["0.3.2"]!]: "0.3.2",
   [HASHES["0.3.3"]!]: "0.3.3",
   [HASHES["0.3.4"]!]: "0.3.4",
+  [HASHES["0.4.0"]!]: "0.4.0",
 };
 
 async function fetchVersion(
