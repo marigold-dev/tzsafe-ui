@@ -3,10 +3,16 @@ import { char2Bytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import fromIpfs from "../context/fromIpfs";
 import { CONTRACTS } from "../context/version";
+import {
+  daoStorage,
+  metadata,
+  token_metadata,
+  total_supply,
+} from "../types/app";
 
 type tokenMetadata = {
-  token_id: number;
-  decimals: number;
+  token_id: BigNumber;
+  decimals: BigNumber;
   name?: string;
   symbol?: string;
 };
@@ -40,17 +46,18 @@ export type settings =
       version: "0.4.0";
       token_info: tokenMetadata;
       owners: ownerAndLiquidity[];
-      supermajority: number;
-      quorum: number;
+      supermajority: BigNumber;
+      quorum: BigNumber;
       voting_duration: BigNumber;
       execution_duration: BigNumber;
     };
 
 function createledger(
-  token_id: number,
+  token_id: BigNumber,
   ownersAndLiquidity: ownerAndLiquidity[]
-): MichelsonMap<any, any> {
-  const storageMap = new MichelsonMap();
+): MichelsonMap<{ 0: string; 1: string }, BigNumber> {
+  const storageMap: MichelsonMap<{ 0: string; 1: string }, BigNumber> =
+    new MichelsonMap();
 
   ownersAndLiquidity.forEach(({ owner, quantity }) => {
     storageMap.set({ 0: owner, 1: token_id.toString() }, quantity);
@@ -86,12 +93,8 @@ export default async function deployTzSafe(wallet: Wallet, s: settings) {
       })
       .send();
   } else if (s.type === "dao") {
-    const total_supply = s.owners.reduce(
-      (acc, curr) => acc.plus(curr.quantity),
-      new BigNumber(0)
-    );
     const token_id = s.token_info.token_id;
-    const token_info = new MichelsonMap();
+    const token_info: MichelsonMap<string, string> = new MichelsonMap();
 
     token_info.set("token_id", char2Bytes(s.token_info.token_id.toString()));
     token_info.set("decimals", char2Bytes(s.token_info.decimals.toString()));
@@ -102,39 +105,46 @@ export default async function deployTzSafe(wallet: Wallet, s: settings) {
     if ("symbol" in s.token_info && s.token_info.symbol !== undefined)
       token_info.set("symbol", char2Bytes(s.token_info.symbol));
 
-    const r_token_metadata: Record<number, Record<any, any>> = {};
-    r_token_metadata[token_id] = { token_id, token_info };
+    const token_metadata: token_metadata = new MichelsonMap();
+    token_metadata.set(token_id, { token_id, token_info });
 
-    const r_total_supply: Record<number, BigNumber> = {};
-    r_total_supply[token_id] = total_supply;
+    const token_total_supply = s.owners.reduce(
+      (acc, curr) => acc.plus(curr.quantity),
+      new BigNumber(0)
+    );
+    const total_supply: total_supply = new MichelsonMap();
+    total_supply.set(token_id, token_total_supply);
+
+    const storage: daoStorage = {
+      fa2: {
+        ledger: createledger(token_id, s.owners),
+        operators: new MichelsonMap(),
+        token_metadata,
+        metadata: new MichelsonMap(),
+        extension: {
+          total_supply,
+          lock_table: new MichelsonMap(),
+          lock_keys: [],
+        },
+      },
+      wallet: {
+        proposal_counter: new BigNumber(0),
+        proposals: new MichelsonMap(),
+        archives: new MichelsonMap(),
+        voting_history: new MichelsonMap(),
+        token: new BigNumber(token_id),
+        supermajority: new BigNumber(s.supermajority),
+        quorum: new BigNumber(s.quorum),
+        voting_duration: s.voting_duration,
+        execution_duration: s.execution_duration,
+      },
+      metadata: metablob.metadata as metadata,
+    };
+
     deploy = await wallet
       .originate({
         code: deploying_contract,
-        storage: {
-          fa2: {
-            ledger: createledger(token_id, s.owners),
-            operators: [],
-            token_metadata: MichelsonMap.fromLiteral(r_token_metadata),
-            metadata: [],
-            extension: {
-              total_supply: MichelsonMap.fromLiteral(r_total_supply),
-              lock_table: [],
-              lock_keys: [],
-            },
-          },
-          wallet: {
-            proposal_counter: 0,
-            proposals: [],
-            archives: [],
-            voting_history: [],
-            token: token_id,
-            supermajority: s.supermajority,
-            quorum: s.quorum,
-            voting_duration: s.voting_duration,
-            execution_duration: s.execution_duration,
-          },
-          ...metablob,
-        },
+        storage,
       })
       .send();
   } else throw Error(`unknown wallet type: settings ${s}`);

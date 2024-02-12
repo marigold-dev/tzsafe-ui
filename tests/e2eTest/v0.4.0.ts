@@ -29,8 +29,8 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           type: "dao",
           version,
           token_info: {
-            token_id: 1,
-            decimals: 6,
+            token_id: new BigNumber(1),
+            decimals: new BigNumber(6),
             name: "testDao",
             symbol: "testDao",
           },
@@ -41,8 +41,8 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
               quantity: new BigNumber(200),
             },
           ],
-          supermajority: 80,
-          quorum: 80,
+          supermajority: new BigNumber(80),
+          quorum: new BigNumber(80),
           voting_duration: new BigNumber(300000),
           execution_duration: new BigNumber(300000),
         };
