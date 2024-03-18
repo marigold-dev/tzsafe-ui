@@ -19,7 +19,7 @@
     "**/*": "prettier --write --ignore-unknown pages/ components/ context/ types/ versioned/ utils/"
   },
   "dependencies": {
-    "@airgap/beacon-sdk": "4.0.13-beta.1",
+    "@airgap/beacon-sdk": "^4.1.3-beta.1",
     "@ariakit/react": "^0.1.8",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-select": "^1.2.0",
