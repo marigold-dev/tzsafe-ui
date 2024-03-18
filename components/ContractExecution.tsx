@@ -538,7 +538,7 @@ function ExecuteForm(
       >
         {_ => (
           <Form className="align-self-center col-span-2 flex w-full grow flex-col items-center justify-center justify-self-center">
-            <div className="h-fit-content mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto md:min-h-96">
+            <div className="h-fit-content md:min-h-96 mb-2 grid w-full grid-flow-row items-start gap-4 overflow-y-auto">
               {!!props.shape.token && (
                 <RenderItem token={props.shape.token} showTitle={false} />
               )}
