@@ -44,6 +44,14 @@ jobs:
           default_prerelease_bump: prepatch
           append_to_pre_release_tag: rc
 
+      - name: Testing
+        if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+      - run: npm ci
+      - run: npm t
+
       - name: Build
         if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
         uses: docker/build-push-action@v4
