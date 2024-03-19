@@ -49,8 +49,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-      - run: npm ci
-      - run: npm t -- --dangerouslyIgnoreUnhandledErrors #FIXME To remove this flag, find the reason of https://github.com/marigold-dev/tzsafe-ui/actions/runs/8340949390/job/22826790835#step:6:276
+          #FIXME To remove this flag (--dangerouslyIgnoreUnhandledErrors), find the reason of https://github.com/marigold-dev/tzsafe-ui/actions/runs/8340949390/job/22826790835#step:6:276
+          run: |
+            npm ci
+            npm t -- --dangerouslyIgnoreUnhandledErrors
 
       - name: Build
         if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
