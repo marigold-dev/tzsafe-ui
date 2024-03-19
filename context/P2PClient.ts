@@ -109,6 +109,7 @@ class P2PClient extends WalletClient {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: false,
+      payloadHash: this.proofOfEvent.message.payload,
     });
   }
 
@@ -127,8 +128,6 @@ class P2PClient extends WalletClient {
           payload: message.payload,
         };
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
-        break;
-      case BeaconMessageType.ProofOfEventChallengeRecorded:
         break;
       case BeaconMessageType.SignPayloadRequest:
         this.events.emit(Event.SIGN_PAYLOAD, message);
