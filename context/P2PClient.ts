@@ -12,6 +12,7 @@ import {
 } from "@airgap/beacon-sdk";
 import { PreapplyParams } from "@taquito/rpc";
 import { TinyEmitter } from "tiny-emitter";
+import { generatePoEPayloadHash } from "../utils/hash";
 
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
@@ -95,6 +96,7 @@ class P2PClient extends WalletClient {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: true,
+      payloadHash: generatePoEPayloadHash(this.proofOfEvent.message.payload),
     };
 
     this.proofOfEvent = { message: undefined, data: undefined };
@@ -109,7 +111,7 @@ class P2PClient extends WalletClient {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: false,
-      payloadHash: this.proofOfEvent.message.payload,
+      payloadHash: generatePoEPayloadHash(this.proofOfEvent.message.payload),
     });
   }
 
