@@ -5,11 +5,12 @@ import {
   WalletOperationBatch,
   OpKind,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { stringToBytes, bytesToString } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { content, contractStorage as c1 } from "../types/Proposal0_3_4";
 import { contractStorage } from "../types/app";
 import { proposalContent } from "../types/display";
+import { generatePoEPayloadHash } from "../utils/hash";
 import { toStorage } from "./apis";
 import { proposals } from "./interface";
 import Version0_3_3 from "./version0_3_3";
@@ -70,7 +71,7 @@ class Version0_3_4 extends Version0_3_3 {
 
     poe_proposals.forEach(async v => {
       if (v.type === "poe") {
-        const content = char2Bytes(v.values.payload);
+        const content = stringToBytes(generatePoEPayloadHash(v.values.payload));
         const params = cc.methods.proof_of_event_challenge(content);
 
         if (!batchOp) {
@@ -129,7 +130,7 @@ class Version0_3_4 extends Version0_3_3 {
       const metadata = content.execute_lambda.metadata;
 
       const meta = !!metadata
-        ? bytes2Char(typeof metadata === "string" ? metadata : metadata.Some)
+        ? bytesToString(typeof metadata === "string" ? metadata : metadata.Some)
         : "No meta supplied";
 
       const lambda = Array.isArray(contentLambda)
