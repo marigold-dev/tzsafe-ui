@@ -58,7 +58,7 @@ export default function App({ Component, pageProps }: AppProps) {
         ? state.currentContract
         : contracts[0];
 
-      router.replace(`/${contract}/proposals`);
+      router.replace(`/${contract}/dashboard`);
       return;
     } else if (path === "/" || path === "") {
       // Get rid of query in case it comes from beacon
