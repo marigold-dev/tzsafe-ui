@@ -9,10 +9,10 @@ import {
   WalletClientOptions,
   SigningType,
   BeaconResponseInputMessage,
+  encodePoeChallengePayload,
 } from "@airgap/beacon-sdk";
 import { PreapplyParams } from "@taquito/rpc";
 import { TinyEmitter } from "tiny-emitter";
-import { generatePoEPayloadHash } from "../utils/hash";
 
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
@@ -96,7 +96,8 @@ class P2PClient extends WalletClient {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: true,
-      payloadHash: generatePoEPayloadHash(this.proofOfEvent.message.payload),
+      payloadHash: encodePoeChallengePayload(this.proofOfEvent.message.payload),
+      payload: undefined,
     };
 
     this.proofOfEvent = { message: undefined, data: undefined };
@@ -107,12 +108,17 @@ class P2PClient extends WalletClient {
   async refusePoeChallenge() {
     if (!this.proofOfEvent.message) throw new Error("Poe not received");
 
-    return this.respond({
+    const payload = {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: false,
-      payloadHash: generatePoEPayloadHash(this.proofOfEvent.message.payload),
-    });
+      payloadHash: encodePoeChallengePayload(this.proofOfEvent.message.payload),
+      payload: undefined,
+    };
+
+    this.proofOfEvent = { message: undefined, data: undefined };
+
+    return this.respond(payload as BeaconResponseInputMessage);
   }
 
   handleMessages = async (
