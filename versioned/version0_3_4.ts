@@ -71,7 +71,7 @@ class Version0_3_4 extends Version0_3_3 {
 
     poe_proposals.forEach(async v => {
       if (v.type === "poe") {
-        const content = stringToBytes(generatePoEPayloadHash(v.values.payload));
+        const content = stringToBytes(v.values.payload);
         const params = cc.methods.proof_of_event_challenge(content);
 
         if (!batchOp) {
