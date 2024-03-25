@@ -10,7 +10,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params }) => {
 
   return {
     redirect: {
-      destination: `/${params.walletAddress}/proposals`,
+      destination: `/${params.walletAddress}/dashboard`,
       permanent: true,
     },
   };
