@@ -10,6 +10,7 @@ import {
   Tzip16Module,
 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
+import Router from "next/router";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
@@ -44,6 +45,7 @@ type tezosState = {
 type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  allContracts: { [address: string]: contractStorage };
 };
 
 let emptyState = (): tezosState => {
@@ -151,6 +153,7 @@ type action =
     };
 
 const saveState = (state: tezosState) => {
+  const storage = JSON.parse(localStorage.getItem("app_state")!);
   localStorage.setItem(
     "app_state",
     JSON.stringify({
@@ -158,6 +161,7 @@ const saveState = (state: tezosState) => {
       aliases: state.aliases,
       currentContract: state.currentContract,
       connectedDapps: state.connectedDapps,
+      allContracts: { ...storage.allContracts, ...state.contracts },
     })
   );
 };
@@ -295,18 +299,38 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "login": {
+      const rawStorage = localStorage.getItem("app_state")!;
+      const storage: storage = JSON.parse(rawStorage);
+      const contracts = Object.entries(storage.allContracts)
+        .filter(([_, c]) => c.owners.includes(action.address))
+        .reduce(
+          (acc, [addr, contract]) => ({
+            ...acc,
+            [addr]: {
+              ...contract,
+              threshold: new BigNumber(contract.threshold),
+              proposal_counter: new BigNumber(contract.proposal_counter),
+              effective_period: new BigNumber(contract.effective_period),
+            },
+          }),
+          {}
+        );
+      const currentContract = Object.keys(contracts).at(0) || null;
+      if (currentContract) Router.push(`/${currentContract}/proposals`);
       return {
         ...state,
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
         attemptedInitialLogin: true,
+        contracts,
+        currentContract,
       };
     }
     case "logout": {
       let { connection } = emptyState();
 
-      return {
+      const newState = {
         ...state,
         beaconWallet: null,
         balance: null,
@@ -314,7 +338,12 @@ function reducer(state: tezosState, action: action): tezosState {
         address: null,
         connection: connection,
         p2pClient: null,
+        contracts: {},
       };
+
+      saveState(newState);
+
+      return newState;
     }
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;
