@@ -35,7 +35,7 @@ const Dashboard = ({ balance, tokens, price }: DashboardProps) => {
             </div>
             {tokens.length !== 0 && (
               <Donut
-                title="Token Repartition"
+                title="Assets Repartition"
                 tokens={tokens}
                 colors={["#6F2DBD", "#98D2EB", "#FEFFA5", "#E86A92", "#3f3f49"]}
               />
