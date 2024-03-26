@@ -61,10 +61,17 @@ export default function App({ Component, pageProps }: AppProps) {
     } else if (path === "/" || path === "") {
       // Get rid of query in case it comes from beacon
       router.replace("/");
+    } else if (contracts.length <= 0) {
+      router.replace("/");
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract, path, state.attemptedInitialLogin]);
+  }, [
+    state.currentContract,
+    path,
+    state.attemptedInitialLogin,
+    state.contracts,
+  ]);
 
   useEffect(() => {
     (async () => {
