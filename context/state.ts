@@ -41,11 +41,16 @@ type tezosState = {
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
   attemptedInitialLogin: boolean;
+  importedWallets: {
+    [address: string]: { [contractAddr: string]: contractStorage };
+  };
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
-  allContracts: { [address: string]: contractStorage };
+  importedWallets: {
+    [address: string]: { [contractAddr: string]: contractStorage };
+  };
 };
 
 let emptyState = (): tezosState => {
@@ -84,6 +89,7 @@ let emptyState = (): tezosState => {
     connectedDapps: {},
     proposalRefresher: 0,
     attemptedInitialLogin: false,
+    importedWallets: {},
   };
 };
 
@@ -153,6 +159,7 @@ type action =
     };
 
 const saveState = (state: tezosState) => {
+  console.log("state.currentContract", state.currentContract);
   const storage = JSON.parse(localStorage.getItem("app_state")!);
   localStorage.setItem(
     "app_state",
@@ -161,7 +168,9 @@ const saveState = (state: tezosState) => {
       aliases: state.aliases,
       currentContract: state.currentContract,
       connectedDapps: state.connectedDapps,
-      allContracts: { ...storage.allContracts, ...state.contracts },
+      importedWallets: storage
+        ? { ...storage.importedWallets, ...state.importedWallets }
+        : state.importedWallets,
     })
   );
 };
@@ -215,13 +224,24 @@ function reducer(state: tezosState, action: action): tezosState {
         [action.payload.address]: action.payload.contract,
       };
 
+      console.log("---- ", state, action);
+
       const newState = {
         ...state,
         contracts: contracts,
         aliases: aliases,
         currentContract: state.currentContract,
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
+        importedWallets: {
+          ...state.importedWallets,
+          [state.address!]: {
+            ...state.importedWallets[state.address!],
+            [action.payload.address]: action.payload.contract,
+          },
+        },
       };
+
+      console.warn(newState);
 
       saveState(newState);
 
@@ -301,22 +321,24 @@ function reducer(state: tezosState, action: action): tezosState {
     case "login": {
       const rawStorage = localStorage.getItem("app_state")!;
       const storage: storage = JSON.parse(rawStorage);
-      const contracts = Object.entries(storage.allContracts)
-        .filter(([_, c]) => c.owners.includes(action.address))
-        .reduce(
-          (acc, [addr, contract]) => ({
-            ...acc,
-            [addr]: {
-              ...contract,
-              threshold: new BigNumber(contract.threshold),
-              proposal_counter: new BigNumber(contract.proposal_counter),
-              effective_period: new BigNumber(contract.effective_period),
-            },
-          }),
-          {}
-        );
-      const currentContract = Object.keys(contracts).at(0) || null;
-      if (currentContract) Router.push(`/${currentContract}/proposals`);
+      const contracts =
+        storage?.importedWallets && storage.importedWallets[action.address]
+          ? Object.entries(storage.importedWallets[action.address]).reduce(
+              (acc, [addr, contract]) => ({
+                ...acc,
+                [addr]: {
+                  ...contract,
+                  threshold: new BigNumber(contract.threshold),
+                  proposal_counter: new BigNumber(contract.proposal_counter),
+                  effective_period: new BigNumber(contract.effective_period),
+                },
+              }),
+              {}
+            )
+          : {};
+      // const currentContract = Object.keys(contracts).at(0) || null;
+      // if (currentContract) Router.push(`/${currentContract}/proposals`);
+      console.log("contracts", contracts);
       return {
         ...state,
         balance: action.balance,
@@ -324,7 +346,8 @@ function reducer(state: tezosState, action: action): tezosState {
         address: action.address,
         attemptedInitialLogin: true,
         contracts,
-        currentContract,
+        // currentContract,
+        // importedWallets: {...state.importedWallets, [action.address] : {}}
       };
     }
     case "logout": {
@@ -339,6 +362,7 @@ function reducer(state: tezosState, action: action): tezosState {
         connection: connection,
         p2pClient: null,
         contracts: {},
+        currentContract: null,
       };
 
       saveState(newState);
