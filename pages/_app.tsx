@@ -54,9 +54,7 @@ export default function App({ Component, pageProps }: AppProps) {
     const contracts = Object.keys(state.contracts);
 
     if ((path === "/" || path === "") && contracts.length > 0) {
-      const contract = !!state.currentContract
-        ? state.currentContract
-        : contracts[0];
+      const contract = contracts[0];
 
       router.replace(`/${contract}/dashboard`);
       return;
