@@ -61,8 +61,6 @@ export default function App({ Component, pageProps }: AppProps) {
     } else if (path === "/" || path === "") {
       // Get rid of query in case it comes from beacon
       router.replace("/");
-    } else if (contracts.length <= 0) {
-      router.replace("/");
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -136,10 +134,10 @@ export default function App({ Component, pageProps }: AppProps) {
           payload: storage as contractStorage & { address: string },
         });
 
-        dispatch({
-          type: "setCurrentContract",
-          payload: router.query.walletAddress,
-        });
+        // dispatch({
+        //   type: "setCurrentContract",
+        //   payload: router.query.walletAddress,
+        // });
         setIsFetching(false);
       } catch (e) {
         setIsFetching(false);
@@ -157,7 +155,7 @@ export default function App({ Component, pageProps }: AppProps) {
     state.currentStorage,
     state.connection,
   ]);
-
+  console.log("state", state);
   useEffect(() => {
     (async () => {
       if (state!.beaconWallet === null) {
