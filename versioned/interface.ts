@@ -318,7 +318,7 @@ abstract class Versioned {
       c.version === "0.3.3" ||
       c.version === "0.3.4"
     ) {
-      return c.owners;
+      return c.proposal_counter;
     }
     if (c.version === "unknown version") {
       return BigNumber(0);
