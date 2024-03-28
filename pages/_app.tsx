@@ -155,7 +155,6 @@ export default function App({ Component, pageProps }: AppProps) {
     state.currentStorage,
     state.connection,
   ]);
-  console.log("state", state);
   useEffect(() => {
     (async () => {
       if (state!.beaconWallet === null) {
