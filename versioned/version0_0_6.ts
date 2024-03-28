@@ -162,6 +162,7 @@ class Version0_0_6 extends Versioned {
       threshold: c!.threshold!,
       signers: c!.signers!,
       version: "0.0.6",
+      owners: [], // owners property is not defined for this version.
     };
   }
 
