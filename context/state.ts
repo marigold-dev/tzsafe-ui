@@ -10,7 +10,6 @@ import {
   Tzip16Module,
 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
-import Router from "next/router";
 import { Context, createContext, Dispatch } from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
@@ -30,6 +29,7 @@ type tezosState = {
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  aliasesByUser: { [address: string]: { [addr: string]: string } };
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
@@ -48,6 +48,7 @@ type tezosState = {
 type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  aliasesByUser: { [address: string]: { [addr: string]: string } };
   importedWallets: {
     [address: string]: { [contractAddr: string]: contractStorage };
   };
@@ -90,6 +91,7 @@ let emptyState = (): tezosState => {
     proposalRefresher: 0,
     attemptedInitialLogin: false,
     importedWallets: {},
+    aliasesByUser: {},
   };
 };
 
@@ -159,7 +161,6 @@ type action =
     };
 
 const saveState = (state: tezosState) => {
-  console.log("state.currentContract", state.currentContract);
   const storage = JSON.parse(localStorage.getItem("app_state")!);
   localStorage.setItem(
     "app_state",
@@ -171,6 +172,9 @@ const saveState = (state: tezosState) => {
       importedWallets: storage
         ? { ...storage.importedWallets, ...state.importedWallets }
         : state.importedWallets,
+      aliasesByUser: storage
+        ? { ...storage.aliasesByUser, ...state.aliasesByUser }
+        : state.aliasesByUser,
     })
   );
 };
@@ -224,9 +228,7 @@ function reducer(state: tezosState, action: action): tezosState {
         [action.payload.address]: action.payload.contract,
       };
 
-      console.log("---- ", state, action);
-
-      const newState = {
+      const newState: tezosState = {
         ...state,
         contracts: contracts,
         aliases: aliases,
@@ -239,9 +241,11 @@ function reducer(state: tezosState, action: action): tezosState {
             [action.payload.address]: action.payload.contract,
           },
         },
+        aliasesByUser: {
+          ...state.aliasesByUser,
+          [state.address!]: aliases,
+        },
       };
-
-      console.warn(newState);
 
       saveState(newState);
 
@@ -336,9 +340,12 @@ function reducer(state: tezosState, action: action): tezosState {
               {}
             )
           : {};
-      // const currentContract = Object.keys(contracts).at(0) || null;
-      // if (currentContract) Router.push(`/${currentContract}/proposals`);
-      console.log("contracts", contracts);
+      const aliases =
+        storage?.aliasesByUser && storage.aliasesByUser[action.address]
+          ? storage.aliasesByUser[action.address]
+          : state.aliases;
+
+      const currentContract = Object.keys(contracts).at(0) || null;
       return {
         ...state,
         balance: action.balance,
@@ -346,14 +353,14 @@ function reducer(state: tezosState, action: action): tezosState {
         address: action.address,
         attemptedInitialLogin: true,
         contracts,
-        // currentContract,
-        // importedWallets: {...state.importedWallets, [action.address] : {}}
+        currentContract,
+        aliases,
       };
     }
     case "logout": {
       let { connection } = emptyState();
 
-      const newState = {
+      const newState: tezosState = {
         ...state,
         beaconWallet: null,
         balance: null,
@@ -363,6 +370,7 @@ function reducer(state: tezosState, action: action): tezosState {
         p2pClient: null,
         contracts: {},
         currentContract: null,
+        aliases: {},
       };
 
       saveState(newState);
