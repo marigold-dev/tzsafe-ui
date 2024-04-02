@@ -134,6 +134,11 @@ export default function App({ Component, pageProps }: AppProps) {
           payload: storage as contractStorage & { address: string },
         });
 
+        dispatch({
+          type: "setCurrentContract",
+          payload: router.query.walletAddress,
+        });
+
         setIsFetching(false);
       } catch (e) {
         setIsFetching(false);
