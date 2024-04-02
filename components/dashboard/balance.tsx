@@ -20,7 +20,7 @@ const Balance = ({ balance, evolution, price }: BalanceProps) => {
             isPriceIncreasing ? "text-emerald-500" : "text-red-500"
           }`}
         >
-          ({isPriceIncreasing ? "+" : "-"}
+          ({isPriceIncreasing ? "+" : ""}
           {evolution && ((evolution - 1) * 100).toFixed(2)}%)
         </span>
       </div>
