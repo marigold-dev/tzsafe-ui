@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "env-cmd -f ./config/.env.dev next dev",
+    "dev": "env-cmd -f ./config/.env next dev",
     "sandbox": "env-cmd -f ./config/.env.sandbox next dev --port 4000",
     "build": "next build",
     "build:dev": "env-cmd -f ./config/.env.dev next build",

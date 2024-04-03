@@ -1,10 +1,10 @@
 import { TriangleDownIcon } from "@radix-ui/react-icons";
 import BigNumber from "bignumber.js";
 import { useMemo, useState } from "react";
-import { TransferType } from "../types/display";
-import Alias from "./Alias";
-import { fa1_2Token } from "./FA1_2";
-import { fa2Token } from "./FA2Transfer";
+import { TransferType } from "../../types/display";
+import Alias from "../Alias";
+import { fa1_2Token } from "../FA1_2";
+import { fa2Token } from "../FA2Transfer";
 
 type props = {
   transferType: TransferType;
