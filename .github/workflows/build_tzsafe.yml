@@ -45,14 +45,13 @@ jobs:
           append_to_pre_release_tag: rc
 
       - name: Testing
-        if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/main' }}
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-          #FIXME To remove this flag (--dangerouslyIgnoreUnhandledErrors), find the reason of https://github.com/marigold-dev/tzsafe-ui/actions/runs/8340949390/job/22826790835#step:6:276
           run: |
             npm ci
-            npm t -- --dangerouslyIgnoreUnhandledErrors
+            npm t
 
       - name: Build
         if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
@@ -76,7 +75,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: ENV=dev
       - name: Build and push release version
-        if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/release' }}
+        if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/release' }}
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile
