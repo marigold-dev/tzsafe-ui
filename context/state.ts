@@ -345,7 +345,8 @@ function reducer(state: tezosState, action: action): tezosState {
           ? storage.aliasesByUser[action.address]
           : state.aliases;
 
-      const currentContract = Object.keys(contracts).at(0) || null;
+      const currentContract =
+        state.currentContract || Object.keys(contracts).at(0) || null;
       return {
         ...state,
         balance: action.balance,
