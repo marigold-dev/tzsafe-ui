@@ -2,6 +2,10 @@
 
 TzSafe is a website to interact with multi-signatures wallets. The goal is to have a UI layer above the LIGO contracts that you can find [here](https://github.com/marigold-dev/tzsafe).
 
+- Documentation can be found [here](https://docs.tzsafe.marigold.dev/).
+- Ghostnet version of this frontend UI can be found on [ghostnet.tzsafe.marigold.dev](https://ghostnet.tzsafe.marigold.dev/).
+- Mainnet version of this frontend UI can be found on [tzsafe.marigold.dev](https://tzsafe.marigold.dev/).
+
 ## How to develop ?
 
 First, clone the repository:
