@@ -1,5 +1,6 @@
 import { useContext, useMemo } from "react";
 import { AppStateContext } from "../context/state";
+import { useTzktAccountAlias } from "../utils/getTzktAlias";
 import Copy from "./Copy";
 
 const Alias = ({
@@ -14,6 +15,8 @@ const Alias = ({
   disabled?: boolean;
 }) => {
   const state = useContext(AppStateContext)!;
+  const tzktAlias = useTzktAccountAlias(address);
+  console.log("🚀 ~ tzktAlias:", tzktAlias);
   const formatted = useMemo(
     () =>
       `${(address ?? "").substring(0, length)}...${(address ?? "").substring(
@@ -25,11 +28,12 @@ const Alias = ({
   const toDisplay = useMemo(
     () =>
       state.aliases[address] === ""
-        ? formatted
-        : state.aliases[address] ?? formatted,
-    [state, address, formatted]
+        ? tzktAlias ?? formatted
+        : state.aliases[address],
+    [state.aliases, address, formatted, tzktAlias]
   );
 
+  console;
   return (
     <Copy value={address} text="Copy address" disabled={disabled}>
       <span className={className} title={address}>
