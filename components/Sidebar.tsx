@@ -28,6 +28,7 @@ import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import { hasTzip27Support } from "../versioned/util";
+import Alias from "./Alias";
 import Copy from "./Copy";
 import Tooltip from "./Tooltip";
 
@@ -68,7 +69,7 @@ const SelectedItem = ({
         <p className="text-xl text-white">{name}</p>
         <p>{threshold}</p>
       </div>
-      <Copy value={address ?? ""} disabled={disableCopy}>
+      {/* <Copy value={address ?? ""} disabled={disableCopy}>
         <span className="mt-1 text-sm text-zinc-400" data-name="copy">
           {!address ? (
             <span>...</span>
@@ -78,7 +79,9 @@ const SelectedItem = ({
             )}`
           )}
         </span>
-      </Copy>
+      </Copy> */}
+
+      <Alias address={address} disabled />
       <div className="mt-2 flex items-center justify-between">
         <Tooltip text={formattedBalance.toString() + " Tez"}>
           <p className="text-lg">{formattedBalance.toFixed(2)} Tez</p>
@@ -256,9 +259,11 @@ const Sidebar = ({
                     className="radix-disabled:opacity-50 relative flex select-none items-center rounded-md px-8 py-2 text-sm font-medium text-zinc-300 focus:bg-zinc-800 focus:bg-zinc-900 focus:outline-none"
                   >
                     <Select.ItemText>
-                      <p className="text-xl text-white">
+                      {/* <p className="text-xl text-white">
                         {state.aliases[address]}
-                      </p>
+                      </p> */}
+
+                      <Alias address={address} />
 
                       <p className="mt-1 text-sm text-zinc-400">
                         {address.substring(0, 5)}...
