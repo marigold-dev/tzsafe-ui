@@ -1,5 +1,6 @@
 import { Parser, unpackDataBytes, MichelsonType } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
+import { PreapplyParams } from "@taquito/rpc";
 import {
   TezosToolkit,
   WalletContract,
@@ -118,6 +119,12 @@ abstract class Versioned {
     this.version = version;
     this.contractAddress = contractAddress;
   }
+
+  abstract generateSpoeOps(
+    payload: string,
+    cc: WalletContract,
+    t: TezosToolkit
+  ): Promise<PreapplyParams>;
 
   abstract submitTxProposals(
     cc: WalletContract,
@@ -311,7 +318,7 @@ abstract class Versioned {
       c.version === "0.3.3" ||
       c.version === "0.3.4"
     ) {
-      return c.owners;
+      return c.proposal_counter;
     }
     if (c.version === "unknown version") {
       return BigNumber(0);

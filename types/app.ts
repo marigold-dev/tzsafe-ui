@@ -6,4 +6,5 @@ export type contractStorage = { version: version } & {
   proposal_counter: BigNumber;
   balance: string;
   threshold: BigNumber;
+  owners: Array<string>;
 };

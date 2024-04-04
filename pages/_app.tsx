@@ -54,11 +54,9 @@ export default function App({ Component, pageProps }: AppProps) {
     const contracts = Object.keys(state.contracts);
 
     if ((path === "/" || path === "") && contracts.length > 0) {
-      const contract = !!state.currentContract
-        ? state.currentContract
-        : contracts[0];
+      const contract = contracts[0];
 
-      router.replace(`/${contract}/proposals`);
+      router.replace(`/${contract}/dashboard`);
       return;
     } else if (path === "/" || path === "") {
       // Get rid of query in case it comes from beacon
@@ -66,7 +64,12 @@ export default function App({ Component, pageProps }: AppProps) {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract, path, state.attemptedInitialLogin]);
+  }, [
+    state.currentContract,
+    path,
+    state.attemptedInitialLogin,
+    state.contracts,
+  ]);
 
   useEffect(() => {
     (async () => {
@@ -135,6 +138,7 @@ export default function App({ Component, pageProps }: AppProps) {
           type: "setCurrentContract",
           payload: router.query.walletAddress,
         });
+
         setIsFetching(false);
       } catch (e) {
         setIsFetching(false);
@@ -152,7 +156,6 @@ export default function App({ Component, pageProps }: AppProps) {
     state.currentStorage,
     state.connection,
   ]);
-
   useEffect(() => {
     (async () => {
       if (state!.beaconWallet === null) {
@@ -178,6 +181,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
         const wallet = new BeaconWallet({
           name: "TzSafe",
+          //@ts-expect-error NetworkType does not match with expected preferredNetwork type (types between Taquito and Beacon doesn't match)
           preferredNetwork: PREFERED_NETWORK,
           //@ts-expect-error Beacon beta and taquito's beacon are incompatible, but it's only a type error
           storage: new LocalStorage("WALLET"),

@@ -16,6 +16,7 @@ import { Trie } from "../utils/radixTrie";
 import { p2pData } from "../versioned/interface";
 import P2PClient from "./P2PClient";
 import { IPFS_NODE, RPC_URL } from "./config";
+import { BeaconSigner } from "./signer";
 
 type tezosState = {
   connection: TezosToolkit;
@@ -28,6 +29,7 @@ type tezosState = {
   accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  aliasesByUser: { [address: string]: { [addr: string]: string } };
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
@@ -39,10 +41,17 @@ type tezosState = {
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
   attemptedInitialLogin: boolean;
+  importedWallets: {
+    [address: string]: { [contractAddr: string]: contractStorage };
+  };
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
+  aliasesByUser: { [address: string]: { [addr: string]: string } };
+  importedWallets: {
+    [address: string]: { [contractAddr: string]: contractStorage };
+  };
 };
 
 let emptyState = (): tezosState => {
@@ -81,6 +90,8 @@ let emptyState = (): tezosState => {
     connectedDapps: {},
     proposalRefresher: 0,
     attemptedInitialLogin: false,
+    importedWallets: {},
+    aliasesByUser: {},
   };
 };
 
@@ -150,6 +161,7 @@ type action =
     };
 
 const saveState = (state: tezosState) => {
+  const storage = JSON.parse(localStorage.getItem("app_state")!);
   localStorage.setItem(
     "app_state",
     JSON.stringify({
@@ -157,6 +169,12 @@ const saveState = (state: tezosState) => {
       aliases: state.aliases,
       currentContract: state.currentContract,
       connectedDapps: state.connectedDapps,
+      importedWallets: storage
+        ? { ...storage.importedWallets, ...state.importedWallets }
+        : state.importedWallets,
+      aliasesByUser: storage
+        ? { ...storage.aliasesByUser, ...state.aliasesByUser }
+        : state.aliasesByUser,
     })
   );
 };
@@ -168,6 +186,7 @@ function reducer(state: tezosState, action: action): tezosState {
         rpc: RPC_URL,
         wallet: action.payload,
       });
+      state.connection.setSignerProvider(new BeaconSigner(action.payload));
       return { ...state, beaconWallet: action.payload };
     }
     case "p2pConnect": {
@@ -209,12 +228,23 @@ function reducer(state: tezosState, action: action): tezosState {
         [action.payload.address]: action.payload.contract,
       };
 
-      const newState = {
+      const newState: tezosState = {
         ...state,
         contracts: contracts,
         aliases: aliases,
         currentContract: state.currentContract,
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
+        importedWallets: {
+          ...state.importedWallets,
+          [state.address!]: {
+            ...state.importedWallets[state.address!],
+            [action.payload.address]: action.payload.contract,
+          },
+        },
+        aliasesByUser: {
+          ...state.aliasesByUser,
+          [state.address!]: aliases,
+        },
       };
 
       saveState(newState);
@@ -293,18 +323,45 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "login": {
+      const rawStorage = localStorage.getItem("app_state")!;
+      const storage: storage = JSON.parse(rawStorage);
+      const contracts =
+        storage?.importedWallets && storage.importedWallets[action.address]
+          ? Object.entries(storage.importedWallets[action.address]).reduce(
+              (acc, [addr, contract]) => ({
+                ...acc,
+                [addr]: {
+                  ...contract,
+                  threshold: new BigNumber(contract.threshold),
+                  proposal_counter: new BigNumber(contract.proposal_counter),
+                  effective_period: new BigNumber(contract.effective_period),
+                },
+              }),
+              {}
+            )
+          : {};
+      const aliases =
+        storage?.aliasesByUser && storage.aliasesByUser[action.address]
+          ? storage.aliasesByUser[action.address]
+          : state.aliases;
+
+      const currentContract =
+        state.currentContract || Object.keys(contracts).at(0) || null;
       return {
         ...state,
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
         attemptedInitialLogin: true,
+        contracts,
+        currentContract,
+        aliases,
       };
     }
     case "logout": {
       let { connection } = emptyState();
 
-      return {
+      const newState: tezosState = {
         ...state,
         beaconWallet: null,
         balance: null,
@@ -312,7 +369,14 @@ function reducer(state: tezosState, action: action): tezosState {
         address: null,
         connection: connection,
         p2pClient: null,
+        contracts: {},
+        currentContract: null,
+        aliases: {},
       };
+
+      saveState(newState);
+
+      return newState;
     }
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;

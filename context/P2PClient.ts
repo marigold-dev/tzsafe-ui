@@ -8,14 +8,16 @@ import {
   WalletClient,
   WalletClientOptions,
   SigningType,
-  PeerInfo,
   BeaconResponseInputMessage,
+  encodePoeChallengePayload,
 } from "@airgap/beacon-sdk";
+import { PreapplyParams } from "@taquito/rpc";
 import { TinyEmitter } from "tiny-emitter";
 
 export enum Event {
   PERMISSION_REQUEST = "PERMISSION_REQUEST",
   PROOF_OF_EVENT_CHALLENGE_REQUEST = "PROOF_OF_EVENT_CHALLENGE_REQUEST",
+  SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST = "SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST",
   INCOMING_OPERATION = "INCOMING_OPERATION",
   SIGN_PAYLOAD = "SIGN_PAYLOAD",
 }
@@ -94,6 +96,8 @@ class P2PClient extends WalletClient {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: true,
+      payloadHash: encodePoeChallengePayload(this.proofOfEvent.message.payload),
+      payload: undefined,
     };
 
     this.proofOfEvent = { message: undefined, data: undefined };
@@ -104,11 +108,17 @@ class P2PClient extends WalletClient {
   async refusePoeChallenge() {
     if (!this.proofOfEvent.message) throw new Error("Poe not received");
 
-    return this.respond({
+    const payload = {
       ...this.proofOfEvent.message,
       type: BeaconMessageType.ProofOfEventChallengeResponse,
       isAccepted: false,
-    });
+      payloadHash: encodePoeChallengePayload(this.proofOfEvent.message.payload),
+      payload: undefined,
+    };
+
+    this.proofOfEvent = { message: undefined, data: undefined };
+
+    return this.respond(payload as BeaconResponseInputMessage);
   }
 
   handleMessages = async (
@@ -127,8 +137,6 @@ class P2PClient extends WalletClient {
         };
         this.events.emit(Event.PROOF_OF_EVENT_CHALLENGE_REQUEST, message);
         break;
-      case BeaconMessageType.ProofOfEventChallengeRecorded:
-        break;
       case BeaconMessageType.SignPayloadRequest:
         this.events.emit(Event.SIGN_PAYLOAD, message);
         break;
@@ -138,11 +146,21 @@ class P2PClient extends WalletClient {
 
       case BeaconMessageType.BroadcastRequest:
         window.alert("Broadcast requests are not supported");
+        break;
+
+      case BeaconMessageType.SimulatedProofOfEventChallengeRequest:
+        this.events.emit(
+          Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
+          message
+        );
+        break;
 
       default:
         await this.respond({
           type: BeaconMessageType.Error,
           errorType: BeaconErrorType.UNKNOWN_ERROR,
+          // @ts-expect-error - As we handle all the cases the message is of type never
+          // But it's better to handle it in case new message type is added
           id: message.id,
           senderId: await this.beaconId,
         });
@@ -186,6 +204,16 @@ class P2PClient extends WalletClient {
       senderId: await this.beaconId,
       signingType,
       signature,
+    });
+  }
+
+  async spoeResponse(id: string, ops: PreapplyParams, errorMessage?: string) {
+    return this.respond({
+      type: BeaconMessageType.SimulatedProofOfEventChallengeResponse,
+      id,
+      senderId: await this.beaconId,
+      operationsList: Buffer.from(JSON.stringify(ops)).toString("base64"),
+      errorMessage: errorMessage ?? "",
     });
   }
 

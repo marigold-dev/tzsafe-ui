@@ -83,7 +83,7 @@ function Success() {
         Wallet successfully imported!
       </p>
       <Link
-        href={`/${address.address}/proposals`}
+        href={`/${address.address}/dashboard`}
         onClick={() => {
           dispatch!({ type: "setCurrentContract", payload: address.address });
         }}
