@@ -31,6 +31,7 @@ export default function Custom404(props: any) {
     props.walletPaths.includes(page)
   ) {
     router.push(path);
+    return <></>;
   }
 
   return (
