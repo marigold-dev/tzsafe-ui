@@ -14,7 +14,7 @@ RUN \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-FROM node:16-alpine AS builder
+FROM node:18-alpine AS builder
 ARG ENV=dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
