@@ -6,6 +6,7 @@
     "dev": "env-cmd -f ./config/.env.dev next dev",
     "sandbox": "env-cmd -f ./config/.env.sandbox next dev --port 4000",
     "build": "next build",
+    "build:dev": "env-cmd -f ./config/.env.dev next build",
     "start": "next start --port 80",
     "lint": "next lint",
     "format": "prettier --write pages/ components/ context/ types/ versioned/ utils/ test/",
