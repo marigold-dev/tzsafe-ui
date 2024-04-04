@@ -1,3 +1,3 @@
-import Proposals from "./proposals";
+import DashboardPage from "./dashboard";
 
-export default Proposals;
+export default DashboardPage;
