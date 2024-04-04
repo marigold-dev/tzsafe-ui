@@ -36,7 +36,6 @@ jobs:
       - name: Build app
         run: |
           ./node_modules/.bin/next build
-          ./node_modules/.bin/next export -o build
         env:
           NEXT_PUBLIC_RPC_URL: "https://ghostnet.tezos.marigold.dev/"
           NEXT_PUBLIC_API_URL: "https://api.ghostnet.tzkt.io"
@@ -45,7 +44,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          path: out
 
   deploy:
     # Add a dependency to the build job
