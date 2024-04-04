@@ -20,7 +20,6 @@ const Alias = ({
     aliasesCtx.getAlias(address, length).then(setAlias);
   }, [address, aliasesCtx, length]);
 
-  console;
   return (
     <Copy value={address} text="Copy address" disabled={disabled}>
       <span className={className} title={address}>
