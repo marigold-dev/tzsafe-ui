@@ -20,7 +20,7 @@ const DashboardPage = () => {
   return (
     <div className="min-h-content relative flex grow flex-col">
       <Meta title={"Dashboard - TzSafe"} />
-      <Dashboard balance={balance} tokens={tokens} price={price} />;
+      <Dashboard balance={balance} tokens={tokens} price={price} />
     </div>
   );
 };
