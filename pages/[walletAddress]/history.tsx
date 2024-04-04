@@ -1,7 +1,6 @@
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress, ValidationResult } from "@taquito/utils";
 import { useContext, useEffect, useMemo, useReducer, useRef } from "react";
-import Alias from "../../components/Alias";
 import ProposalCard from "../../components/ProposalCard";
 import Spinner from "../../components/Spinner";
 import HistoryFaToken from "../../components/history/HistoryFaToken";
@@ -150,7 +149,6 @@ const getLatestTimestamp = (og: {
 
 const History = () => {
   const globalState = useContext(AppStateContext)!;
-  console.log("🚀 ~ History ~ globalState:", globalState);
   const globalDispatch = useContext(AppDispatchContext)!;
 
   const walletTokens = useWalletTokens();
@@ -178,7 +176,7 @@ const History = () => {
     if (globalState.currentContract === state.currentAddress) return;
 
     dispatch({ type: "resetRefresh" });
-  }, [globalState.currentContract]);
+  }, [globalState.currentContract, state.currentAddress]);
 
   useEffect(() => {
     if (!globalState.currentContract) return;
@@ -382,10 +380,9 @@ const History = () => {
             filteredProposals.length > 0 && (
               <div className="space-y-6">
                 {filteredProposals.map(x => {
-                  console.log("x", x, (x[1] as any)?.sender?.address);
                   switch (x[0]) {
                     case TransferType.MUTEZ:
-                      <HistoryTransfer proposal={x} />;
+                      return <HistoryTransfer proposal={x} />;
                     case TransferType.FA2:
                     case TransferType.FA1_2:
                       return (
