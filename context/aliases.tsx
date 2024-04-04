@@ -3,11 +3,11 @@ import { createContext } from "react";
 import { TZKT_API_URL } from "./config";
 
 type AliasesContextType = {
-  getAlias(address: string, length: number): Promise<string>;
+  getAlias(address: string, defaultAlias: string): Promise<string>;
 }; // Map address with his alias. Alias can be from TZKT or Tzsafe or address by default
 
 export const AliasesContext = createContext<AliasesContextType>({
-  getAlias: (address: string) => Promise.resolve(address),
+  getAlias: (address: string, defaultAlias: string) => Promise.resolve(address),
 });
 
 export const AliasesProvider = ({
@@ -42,13 +42,11 @@ export const AliasesProvider = ({
     return alias;
   };
 
-  const getAlias = async (address: string, length: number = 5) => {
+  const getAlias = async (address: string, defaultAlias: string) => {
     const alias = await getTzktAlias(address);
     if (alias) return alias;
     if (aliasesFromState[address]) return aliasesFromState[address];
-    return `${address.substring(0, length)}...${address.substring(
-      address.length - length
-    )}`;
+    return defaultAlias;
   };
 
   return (

@@ -7,18 +7,22 @@ const Alias = ({
   className,
   disabled = false,
   length = 5,
+  defaultAlias = `${address.substring(0, length)}...${address.substring(
+    address.length - length
+  )}`,
 }: {
   address: string;
   className?: string;
   length?: number;
   disabled?: boolean;
+  defaultAlias?: string;
 }) => {
   const [alias, setAlias] = useState<string | undefined>(undefined);
   const aliasesCtx = useAliases();
 
   useEffect(() => {
-    aliasesCtx.getAlias(address, length).then(setAlias);
-  }, [address, aliasesCtx, length]);
+    aliasesCtx.getAlias(address, defaultAlias).then(setAlias);
+  }, [address, aliasesCtx]);
 
   return (
     <Copy value={address} text="Copy address" disabled={disabled}>
