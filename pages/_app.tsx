@@ -14,6 +14,7 @@ import Spinner from "../components/Spinner";
 import Footer from "../components/footer";
 import NavBar from "../components/navbar";
 import P2PClient from "../context/P2PClient";
+import { AliasesProvider } from "../context/aliases";
 import { PREFERED_NETWORK } from "../context/config";
 import {
   tezosState,
@@ -39,7 +40,6 @@ export default function App({ Component, pageProps }: AppProps) {
   const [data, setData] = useState<undefined | string>();
   const path = usePathname();
   const router = useRouter();
-
   useEffect(() => {
     if (!path) return;
 
@@ -155,6 +155,7 @@ export default function App({ Component, pageProps }: AppProps) {
     router,
     state.currentStorage,
     state.connection,
+    state.contracts,
   ]);
   useEffect(() => {
     (async () => {
@@ -228,60 +229,62 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <AppStateContext.Provider value={state}>
       <AppDispatchContext.Provider value={dispatch}>
-        <div className="relative min-h-screen">
-          <div id="modal" />
-          {!!data && (
-            <LoginModal
-              data={data}
-              onEnd={() => {
-                setData(undefined);
-              }}
-            />
-          )}
-          <PoeModal />
-          <Banner>
-            <span className="font-light">Make sure the URL is </span>
-            {PREFERED_NETWORK === NetworkType.MAINNET
-              ? "tzsafe.marigold.dev"
-              : PREFERED_NETWORK === NetworkType.GHOSTNET
-              ? "ghostnet.tzsafe.marigold.dev"
-              : "a valid URL"}
-          </Banner>
-          <NavBar />
-
-          {isSidebarHidden ? null : (
-            <Sidebar
-              isOpen={hasSidebar}
-              onClose={() => setHasSidebar(false)}
-              isLoading={isFetching}
-            />
-          )}
-
-          <div
-            className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
-              state.hasBanner ? "mt-12" : ""
-            }`}
-          >
-            <button
-              className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
-              onClick={() => {
-                setHasSidebar(true);
-              }}
-            >
-              <span className="text-xs">Open sidebar</span>
-              <ArrowRightIcon className="h-4 w-4" />
-            </button>
-
-            {isFetching || !state.attemptedInitialLogin ? (
-              <div className="mt-12 flex w-full items-center justify-center">
-                <Spinner />
-              </div>
-            ) : (
-              <Component {...pageProps} />
+        <AliasesProvider aliasesFromState={state.aliases}>
+          <div className="relative min-h-screen">
+            <div id="modal" />
+            {!!data && (
+              <LoginModal
+                data={data}
+                onEnd={() => {
+                  setData(undefined);
+                }}
+              />
             )}
+            <PoeModal />
+            <Banner>
+              <span className="font-light">Make sure the URL is </span>
+              {PREFERED_NETWORK === NetworkType.MAINNET
+                ? "tzsafe.marigold.dev"
+                : PREFERED_NETWORK === NetworkType.GHOSTNET
+                ? "ghostnet.tzsafe.marigold.dev"
+                : "a valid URL"}
+            </Banner>
+            <NavBar />
+
+            {isSidebarHidden ? null : (
+              <Sidebar
+                isOpen={hasSidebar}
+                onClose={() => setHasSidebar(false)}
+                isLoading={isFetching}
+              />
+            )}
+
+            <div
+              className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
+                state.hasBanner ? "mt-12" : ""
+              }`}
+            >
+              <button
+                className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
+                onClick={() => {
+                  setHasSidebar(true);
+                }}
+              >
+                <span className="text-xs">Open sidebar</span>
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+
+              {isFetching || !state.attemptedInitialLogin ? (
+                <div className="mt-12 flex w-full items-center justify-center">
+                  <Spinner />
+                </div>
+              ) : (
+                <Component {...pageProps} />
+              )}
+            </div>
+            <Footer shouldRemovePadding={isSidebarHidden} />
           </div>
-          <Footer shouldRemovePadding={isSidebarHidden} />
-        </div>
+        </AliasesProvider>
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   );
