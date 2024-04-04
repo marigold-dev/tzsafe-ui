@@ -29,6 +29,7 @@ import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
 import { hasTzip27Support } from "../versioned/util";
 import Alias from "./Alias";
+import Copy from "./Copy";
 import Tooltip from "./Tooltip";
 
 type selectItemProps = {
@@ -39,6 +40,8 @@ type selectItemProps = {
   version: string | undefined;
   disableCopy?: boolean;
 };
+
+const LENGTH = 5;
 
 const linkClass = (isActive: boolean, isDisabled: boolean = false) =>
   `${
@@ -65,10 +68,27 @@ const SelectedItem = ({
   return (
     <div className="w-4/5 overflow-hidden text-left">
       <div className="flex items-center justify-between">
-        <p className="text-xl text-white">{name}</p>
+        <Alias
+          address={address ?? ""}
+          disabled={true}
+          className="text-xl text-white"
+          defaultAlias=""
+        />
         <p>{threshold}</p>
       </div>
-      <Alias address={address ?? ""} disabled={disableCopy} />
+      <div className="mt-1 text-sm text-zinc-400">
+        {address && (
+          <Copy
+            value={address ?? ""}
+            text="Copy address"
+            disabled={disableCopy}
+          >
+            {`${address.substring(0, LENGTH)}...${address.substring(
+              address.length - LENGTH
+            )}`}
+          </Copy>
+        )}
+      </div>
       <div className="mt-2 flex items-center justify-between">
         <Tooltip text={formattedBalance.toString() + " Tez"}>
           <p className="text-lg">{formattedBalance.toFixed(2)} Tez</p>
