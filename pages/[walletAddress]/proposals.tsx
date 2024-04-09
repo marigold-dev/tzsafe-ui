@@ -346,7 +346,9 @@ const Proposals = () => {
                 Invalid contract address: {currentContract}
               </p>
             </div>
-          ) : state.isLoading || !walletTokens ? (
+          ) : state.isLoading ||
+            !walletTokens ||
+            !globalState.currentStorage ? (
             <div className="mt-8 flex justify-center">
               <Spinner />
             </div>
