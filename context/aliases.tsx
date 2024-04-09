@@ -29,6 +29,10 @@ export const AliasesProvider = ({
         `${TZKT_API_URL}/v1/accounts/${address}`
       ).then(async response => {
         if (response.status >= 200 && response.status < 300) {
+          if (response.status === 204) {
+            // Meaning no content = no alias
+            return undefined;
+          }
           const json = await response.json();
           if (json["alias"]) {
             return json["alias"] as string;
