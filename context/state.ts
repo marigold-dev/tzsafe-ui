@@ -151,9 +151,8 @@ type action =
     };
 
 const saveState = (state: tezosState) => {
-  const storage = JSON.parse(localStorage.getItem("app_state")!);
   localStorage.setItem(
-    "app_state",
+    `app_state:${state.address}`,
     JSON.stringify({
       contracts: state.contracts,
       aliases: state.aliases,
@@ -296,8 +295,13 @@ function reducer(state: tezosState, action: action): tezosState {
       };
     }
     case "login": {
+      const rawStorage = window!.localStorage.getItem(
+        `app_state:${action.address}`
+      )!;
+      const storage: storage = JSON.parse(rawStorage);
       return {
         ...state,
+        ...storage,
         balance: action.balance,
         accountInfo: action.accountInfo,
         address: action.address,
@@ -369,14 +373,9 @@ function reducer(state: tezosState, action: action): tezosState {
   }
 }
 function init(): tezosState {
-  let rawStorage = window!.localStorage.getItem("app_state")!;
-  let storage: storage = JSON.parse(rawStorage);
-
-  return {
-    ...emptyState(),
-    ...storage,
-  };
+  return emptyState();
 }
+
 let AppStateContext: Context<tezosState | null> =
   createContext<tezosState | null>(null);
 let AppDispatchContext: Context<Dispatch<action> | null> =
