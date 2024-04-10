@@ -37,9 +37,9 @@ jobs:
         run: |
           ./node_modules/.bin/next build
         env:
-          NEXT_PUBLIC_RPC_URL: "https://ghostnet.tezos.marigold.dev/"
-          NEXT_PUBLIC_API_URL: "https://api.ghostnet.tzkt.io"
-          NEXT_PUBLIC_NETWORK_TYPE: "ghostnet"
+          NEXT_PUBLIC_RPC_URL: "https://mainnet.tezos.marigold.dev/"
+          NEXT_PUBLIC_API_URL: "https://api.tzkt.io"
+          NEXT_PUBLIC_NETWORK_TYPE: "mainnet"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
