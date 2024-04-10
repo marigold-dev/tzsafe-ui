@@ -3,10 +3,10 @@ name: Automatic deploy to GHPages
 on:
   push:
     branches:
-      - main
+      - release
   pull_request:
     branches:
-      - main
+      - release
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -59,6 +59,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/release' }}
         id: deployment
         uses: actions/deploy-pages@v4
