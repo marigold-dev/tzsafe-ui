@@ -61,7 +61,10 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ENV=prod
+          build-args: |
+            PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/
+            PUBLIC_API_URL=https://api.tzkt.io
+            PUBLIC_NETWORK_TYPE=mainnet
 
       - name: Build and push staging version
         if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
@@ -73,7 +76,10 @@ jobs:
             ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ENV=dev
+          build-args: |
+            PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/
+            PUBLIC_API_URL=https://api.ghostnet.tzkt.io
+            PUBLIC_NETWORK_TYPE=ghostnet
       - name: Build and push release version
         if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/release' }}
         uses: docker/build-push-action@v4
@@ -85,4 +91,7 @@ jobs:
             ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}-release
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ENV=prod
+          build-args: |
+            PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/
+            PUBLIC_API_URL=https://api.tzkt.io
+            PUBLIC_NETWORK_TYPE=mainnet
