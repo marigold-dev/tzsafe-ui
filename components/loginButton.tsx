@@ -1,19 +1,22 @@
 import { useContext } from "react";
 import { AppDispatchContext, AppStateContext } from "../context/state";
+import { useWallet } from "../context/wallet";
 import { connectWallet } from "../utils/connectWallet";
 
 const LoginButton = () => {
   const state = useContext(AppStateContext)!;
   const dispatch = useContext(AppDispatchContext)!;
+  const {
+    state: { wallet },
+    connectWallet,
+  } = useWallet();
 
   return (
     <button
-      onClick={async () => {
-        await connectWallet(state, dispatch);
-      }}
+      onClick={connectWallet}
       type="button"
       className={`rounded-full p-1 text-primary hover:text-white focus:ring-white focus:ring-offset-2  focus:ring-offset-gray-800 md:bg-primary md:px-2 md:text-black ${
-        !state.beaconWallet ? "pointer-events-none opacity-50" : ""
+        !wallet ? "pointer-events-none opacity-50" : ""
       }`}
     >
       <svg

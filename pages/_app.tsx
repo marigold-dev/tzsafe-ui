@@ -26,10 +26,16 @@ import {
   AppDispatchContext,
   contractStorage,
 } from "../context/state";
+import { TezosToolkitProvider } from "../context/tezos-toolkit";
+import { WalletProvider, useWallet } from "../context/wallet";
 import "../styles/globals.css";
 import { fetchContract } from "../utils/fetchContract";
 
 export default function App({ Component, pageProps }: AppProps) {
+  const {
+    state: { wallet },
+  } = useWallet();
+
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
     reducer,
     emptyState()
@@ -180,29 +186,22 @@ export default function App({ Component, pageProps }: AppProps) {
           });
         });
 
-        const wallet = new BeaconWallet({
-          name: "TzSafe",
-          //@ts-expect-error NetworkType does not match with expected preferredNetwork type (types between Taquito and Beacon doesn't match)
-          preferredNetwork: PREFERED_NETWORK,
-          //@ts-expect-error Beacon beta and taquito's beacon are incompatible, but it's only a type error
-          storage: new LocalStorage("WALLET"),
-        });
-
-        dispatch!({ type: "beaconConnect", payload: wallet });
         dispatch!({ type: "p2pConnect", payload: p2pClient });
 
         if (state.attemptedInitialLogin) return;
 
-        const activeAccount = await wallet.client.getActiveAccount();
+        const activeAccount = await wallet?.client.getActiveAccount();
         if (activeAccount && state?.accountInfo == null) {
-          const userAddress = await wallet.getPKH();
-          const balance = await state?.connection.tz.getBalance(userAddress);
+          const userAddress = await wallet?.getPKH();
+          const balance = await state?.connection.tz.getBalance(
+            userAddress || ""
+          );
           dispatch({
             type: "login",
             // TODO: FIX
             //@ts-ignore
             accountInfo: activeAccount!,
-            address: userAddress,
+            address: userAddress || "",
             balance: balance!.toString(),
           });
         } else {
@@ -227,65 +226,69 @@ export default function App({ Component, pageProps }: AppProps) {
       path === "/address-book");
 
   return (
-    <AppStateContext.Provider value={state}>
-      <AppDispatchContext.Provider value={dispatch}>
-        <AliasesProvider aliasesFromState={state.aliases}>
-          <div className="relative min-h-screen">
-            <div id="modal" />
-            {!!data && (
-              <LoginModal
-                data={data}
-                onEnd={() => {
-                  setData(undefined);
-                }}
-              />
-            )}
-            <PoeModal />
-            <Banner>
-              <span className="font-light">Make sure the URL is </span>
-              {PREFERED_NETWORK === NetworkType.MAINNET
-                ? "tzsafe.marigold.dev"
-                : PREFERED_NETWORK === NetworkType.GHOSTNET
-                ? "ghostnet.tzsafe.marigold.dev"
-                : "a valid URL"}
-            </Banner>
-            <NavBar />
+    <TezosToolkitProvider>
+      <WalletProvider>
+        <AppStateContext.Provider value={state}>
+          <AppDispatchContext.Provider value={dispatch}>
+            <AliasesProvider aliasesFromState={state.aliases}>
+              <div className="relative min-h-screen">
+                <div id="modal" />
+                {!!data && (
+                  <LoginModal
+                    data={data}
+                    onEnd={() => {
+                      setData(undefined);
+                    }}
+                  />
+                )}
+                <PoeModal />
+                <Banner>
+                  <span className="font-light">Make sure the URL is </span>
+                  {PREFERED_NETWORK === NetworkType.MAINNET
+                    ? "tzsafe.marigold.dev"
+                    : PREFERED_NETWORK === NetworkType.GHOSTNET
+                    ? "ghostnet.tzsafe.marigold.dev"
+                    : "a valid URL"}
+                </Banner>
+                <NavBar />
 
-            {isSidebarHidden ? null : (
-              <Sidebar
-                isOpen={hasSidebar}
-                onClose={() => setHasSidebar(false)}
-                isLoading={isFetching}
-              />
-            )}
+                {isSidebarHidden ? null : (
+                  <Sidebar
+                    isOpen={hasSidebar}
+                    onClose={() => setHasSidebar(false)}
+                    isLoading={isFetching}
+                  />
+                )}
 
-            <div
-              className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
-                state.hasBanner ? "mt-12" : ""
-              }`}
-            >
-              <button
-                className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
-                onClick={() => {
-                  setHasSidebar(true);
-                }}
-              >
-                <span className="text-xs">Open sidebar</span>
-                <ArrowRightIcon className="h-4 w-4" />
-              </button>
+                <div
+                  className={`pb-28 pt-20 ${
+                    isSidebarHidden ? "" : "md:pl-72"
+                  } ${state.hasBanner ? "mt-12" : ""}`}
+                >
+                  <button
+                    className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
+                    onClick={() => {
+                      setHasSidebar(true);
+                    }}
+                  >
+                    <span className="text-xs">Open sidebar</span>
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
 
-              {isFetching || !state.attemptedInitialLogin ? (
-                <div className="mt-12 flex w-full items-center justify-center">
-                  <Spinner />
+                  {isFetching || !state.attemptedInitialLogin ? (
+                    <div className="mt-12 flex w-full items-center justify-center">
+                      <Spinner />
+                    </div>
+                  ) : (
+                    <Component {...pageProps} />
+                  )}
                 </div>
-              ) : (
-                <Component {...pageProps} />
-              )}
-            </div>
-            <Footer shouldRemovePadding={isSidebarHidden} />
-          </div>
-        </AliasesProvider>
-      </AppDispatchContext.Provider>
-    </AppStateContext.Provider>
+                <Footer shouldRemovePadding={isSidebarHidden} />
+              </div>
+            </AliasesProvider>
+          </AppDispatchContext.Provider>
+        </AppStateContext.Provider>
+      </WalletProvider>
+    </TezosToolkitProvider>
   );
 }
