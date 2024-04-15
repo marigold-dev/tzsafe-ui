@@ -26,19 +26,37 @@ Finally you can develop with:
 npm run dev
 ```
 
-### How to build the code
+### How to run
 
-Once you updated the code, you can build it with:
+There are two ways to run TzSafe, with or without docker.
 
-```bash
-npm run build
-```
-
-And serve the build with:
+#### Docker
 
 ```bash
-npm start
+docker build -t tzsafe .
+docker run -p 8080:80 tzsafe
 ```
+
+When building the application you can specify which node and which network you want to use:
+
+```bash
+docker build --build-arg="PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev" -t tzsafe .
+```
+
+You can override:
+
+- PUBLIC_RPC_URL: the URL of the node you want to use (default: https://rpc.tzkt.io/mainnet/)
+- PUBLIC_API_URL: the URL of a tzkt instance (default: https://api.tzkt.io)
+- PUBLIC_NETWORK_TYPE: the type of the network (default: mainnet)
+
+### With NPM
+
+```
+npm i
+npm run start:mainnet
+```
+
+You can override the variable by editing the file `/config/.env.mainnet`
 
 ## Sandbox
 
