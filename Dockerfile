@@ -21,17 +21,16 @@ COPY --from=deps /app/node_modules ./node_modules
 
 COPY . .
 
-RUN \
-  if [ "$ENV" = "prod" ]; then \
-    echo -en "NEXT_PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=mainnet" > .env.local; \
-  else \
-    echo -en "NEXT_PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/\nNEXT_PUBLIC_API_URL=https://api.ghostnet.tzkt.io\nNEXT_PUBLIC_NETWORK_TYPE=ghostnet" > .env.local; \
-  fi
+ARG PUBLIC_RPC_URL="https://rpc.tzkt.io/mainnet/"
+ARG PUBLIC_API_URL="https://api.tzkt.io"
+ARG PUBLIC_NETWORK_TYPE="mainnet"
 
+RUN echo -en "NEXT_PUBLIC_RPC_URL=$PUBLIC_RPC_URL/\nNEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL\NEXT_PUBLIC_NETWORK_TYPE=$PUBLIC_NETWORK_TYPE" > .env.local;
 
 RUN npm run build
 
-EXPOSE 80
+FROM nginx:alpine
+COPY --from=builder /app/out/ /usr/share/nginx/html
 
-CMD ["npm", "start"]
+EXPOSE 80
 
