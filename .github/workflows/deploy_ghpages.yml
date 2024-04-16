@@ -1,12 +1,13 @@
 name: Automatic deploy to GHPages
+#deploys the mainnet version to GHPages
 
 on:
   push:
     branches:
-      - release
+      - mainnet
   pull_request:
     branches:
-      - release
+      - mainnet
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -59,6 +60,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ github.ref == 'refs/heads/release' }}
+        if: ${{ github.ref == 'refs/heads/mainnet' }}
         id: deployment
         uses: actions/deploy-pages@v4
