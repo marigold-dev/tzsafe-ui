@@ -1,14 +1,23 @@
 name: Automatic build and push
+#builds docker img and creates tags for the versions
 
 on:
   push:
     branches:
-      - main
-      - release
+      - dev
+      - ghostnet
+      - mainnet
   pull_request:
     branches:
-      - main
-      - release
+      - dev
+      - ghostnet
+      - mainnet
+  workflow_dispatch:
+    inputs:
+      manual_tagging_version:
+        description: "Create version at current head commit on mainnet branch, specify tag/version bellow (e.g., v1.2.3)"
+        required: true
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,6 +28,7 @@ jobs:
     name: "Docker build"
     runs-on: ubuntu-latest
     steps:
+      # setting up the environment
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -31,30 +41,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          release_branches: release
-          pre_release_branches: main
-          default_bump: minor
-          default_prerelease_bump: prepatch
-          append_to_pre_release_tag: rc
-
-      - name: Testing
-        if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/main' }}
+      # Testing
+      - name: Testing code
+        if: ${{ github.ref == 'refs/heads/ghostnet' }}
         uses: actions/setup-node@v4
         with:
           node-version: "18.x"
           run: |
             npm ci
             npm t
-
-      - name: Build
-        if: ${{ startsWith(github.ref,'refs/heads/') || github.event_name == 'pull_request' }}
+      # Build testing
+      - name: Testing docker build
+        if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/dev' }}
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile
@@ -62,26 +60,71 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/
-            PUBLIC_API_URL=https://api.tzkt.io
-            PUBLIC_NETWORK_TYPE=mainnet
+            PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/
+            PUBLIC_API_URL=https://api.ghostnet.tzkt.io
+            PUBLIC_NETWORK_TYPE=ghostnet
+      # tagging
+      - name: Set tagging variables
+        if: ${{ github.ref != 'refs/heads/dev' }}
+        id: vars
+        run: |
+          echo "date=$(date +%Y-%m-%dT%H-%M-%S)" >> "${GITHUB_OUTPUT}"
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "${GITHUB_OUTPUT}"
 
-      - name: Build and push staging version
-        if: ${{ ! github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      - name: Fetch tags
+        if: ${{ github.ref != 'refs/heads/dev' }}
+        run: |
+          git fetch --prune --unshallow
+
+      - name: Determine Tag Version
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/mainnet' }}
+        id: tag_version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.manual_tagging_version }}" ]]; then
+            NEW_TAG="${{ github.event.inputs.manual_tagging_version }}"
+            echo "Manual version override: $NEW_TAG"
+          else
+            # Determine new stable version
+            TAG=$(git tag -l | grep -v 'rc' | sort -V | tail -n1)
+            MAJOR=$(echo $TAG | sed -r 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/\1/')
+            MINOR=$(echo $TAG | sed -r 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/\2/')
+            if [ "$MINOR" -eq 99 ]; then
+              NEW_MAJOR=$((MAJOR + 1))
+              NEW_MINOR=0
+            else
+              NEW_MAJOR=$MAJOR
+              NEW_MINOR=$((MINOR + 1))
+            fi
+            NEW_TAG="v${NEW_MAJOR}.${NEW_MINOR}.0"
+            echo "Previous Tag: $TAG"
+            echo "Automatically calculated new version: $NEW_TAG"
+          fi
+          echo "new_version=$NEW_TAG" >> "${GITHUB_OUTPUT}"
+          echo "Tag that will be used: $NEW_TAG"
+
+      - name: Create Git tag
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/mainnet' }}
+        run: git tag ${{ steps.tag_version.outputs.new_version}} && git push origin ${{ steps.tag_version.outputs.new_version}}
+
+      # building and pushing docker images
+      - name: Build and push staging docker image
+        if: ${{ github.ref == 'refs/heads/ghostnet' }}
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}
+            ghcr.io/marigold-dev/tzsafe:staging
+            ghcr.io/marigold-dev/tzsafe:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}-staging
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             PUBLIC_RPC_URL=https://ghostnet.tezos.marigold.dev/
             PUBLIC_API_URL=https://api.ghostnet.tzkt.io
             PUBLIC_NETWORK_TYPE=ghostnet
-      - name: Build and push release version
-        if: ${{ github.event_name == 'pull_request' && github.ref == 'refs/heads/release' }}
+
+      - name: Build and push release docker image
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/mainnet' }}
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile
@@ -89,6 +132,7 @@ jobs:
           tags: |
             ghcr.io/marigold-dev/tzsafe:stable
             ghcr.io/marigold-dev/tzsafe:${{ steps.tag_version.outputs.new_version}}-release
+            ghcr.io/marigold-dev/tzsafe:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}-${{ steps.tag_version.outputs.new_version}}-release
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
