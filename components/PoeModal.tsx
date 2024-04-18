@@ -17,15 +17,17 @@ import { tzip16 } from "@taquito/tzip16";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
-import { ChangeEvent, useContext, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
 import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
 } from "../context/generateLambda";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
+import { useTezosToolkit } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
+import { useWallet } from "../context/wallet";
 import { CustomView, customViewMatchers } from "../dapps";
 import { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
@@ -71,8 +73,14 @@ export const transferToProposalContent = (
   }
 };
 const PoeModal = () => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const {
+    state: { userAddress },
+  } = useWallet();
+
+  const { tezos } = useTezosToolkit();
+
   const path = usePathname();
 
   const walletTokens = useWalletTokens();
@@ -107,7 +115,7 @@ const PoeModal = () => {
 
     try {
       for (let i = 0; i < customViewMatchers.length; ++i) {
-        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        dapp = customViewMatchers[i](rows as transaction[], tezos);
         if (!!dapp) break;
       }
     } catch (e) {
@@ -161,9 +169,7 @@ const PoeModal = () => {
             case TezosOperationType.TRANSACTION:
               if (!!detail.parameters) {
                 try {
-                  const contract = await state.connection.contract.at(
-                    detail.destination
-                  );
+                  const contract = await tezos.contract.at(detail.destination);
 
                   if (
                     !contract.entrypoints.entrypoints[
@@ -308,10 +314,7 @@ const PoeModal = () => {
 
     const signPayloadCb = async (message: SignPayloadRequest) => {
       try {
-        const contract = await state.connection.wallet.at(
-          message.sourceAddress,
-          tzip16
-        );
+        const contract = await tezos.wallet.at(message.sourceAddress, tzip16);
 
         const storage: any = await contract.storage();
         let version = await fetchVersion(contract!);
@@ -327,7 +330,7 @@ const PoeModal = () => {
 
         let v = toStorage(version, storage, BigNumber(0));
 
-        if (!signers(v).includes(state.address ?? "")) {
+        if (!signers(v).includes(userAddress ?? "")) {
           state.p2pClient?.abortRequest(
             message.id,
             "Current user isn't a signer"
@@ -338,13 +341,11 @@ const PoeModal = () => {
         const signed =
           //@ts-expect-error For a reason I don't know I can't access client like in taquito documentation
           // See: https://tezostaquito.io/docs/signing/#generating-a-signature-with-beacon-sdk
-          await state.connection.wallet.walletProvider.client.requestSignPayload(
-            {
-              signingType: message.signingType,
-              payload: message.payload,
-              sourceAddress: state.address,
-            }
-          );
+          await tezos.wallet.walletProvider.client.requestSignPayload({
+            signingType: message.signingType,
+            payload: message.payload,
+            sourceAddress: userAddress,
+          });
         await state.p2pClient?.signResponse(
           message.id,
           message.signingType,
@@ -378,8 +379,8 @@ const PoeModal = () => {
       try {
         const ops = await api.generateSpoeOps(
           message.payload,
-          await state.connection.wallet.at(message.contractAddress),
-          state.connection
+          await tezos.wallet.at(message.contractAddress),
+          tezos
         );
 
         await state.p2pClient?.spoeResponse(message.id, ops);
@@ -413,7 +414,7 @@ const PoeModal = () => {
         simulatedProofOfEventCb
       );
     };
-  }, [state.p2pClient, state.address]);
+  }, [state.p2pClient, userAddress]);
 
   if (!message && !transfers) return null;
 
@@ -712,9 +713,7 @@ const PoeModal = () => {
 
                           let hash;
                           try {
-                            const cc = await state.connection.wallet.at(
-                              address
-                            );
+                            const cc = await tezos.wallet.at(address);
                             const versioned = VersionedApi(
                               state.contracts[address].version,
                               address
@@ -722,7 +721,7 @@ const PoeModal = () => {
                             const submitTimeoutAndHash =
                               await versioned.submitTxProposals(
                                 cc,
-                                state.connection,
+                                tezos,
                                 { transfers },
                                 false,
                                 undefined,
@@ -825,7 +824,7 @@ const PoeModal = () => {
                         try {
                           setCurrentState(State.TRANSACTION);
 
-                          const cc = await state.connection.wallet.at(address);
+                          const cc = await tezos.wallet.at(address);
                           const versioned = VersionedApi(
                             state.contracts[address].version,
                             address
@@ -834,7 +833,7 @@ const PoeModal = () => {
                           setTimeoutAndHash(
                             await versioned.submitTxProposals(
                               cc,
-                              state.connection,
+                              tezos,
                               {
                                 transfers: [
                                   {

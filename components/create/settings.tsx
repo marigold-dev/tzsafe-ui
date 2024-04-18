@@ -12,7 +12,8 @@ import React from "react";
 import { useContext } from "react";
 import { PROPOSAL_DURATION_WARNING } from "../../context/config";
 import FormContext from "../../context/formContext";
-import { AppStateContext } from "../../context/state";
+import { useAppState } from "../../context/state";
+import { useWallet } from "../../context/wallet";
 import {
   durationOfDaysHoursMinutes,
   parseIntOr,
@@ -37,11 +38,14 @@ function get(
 function Settings() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useContext(AppStateContext);
+  const state = useAppState();
+  const {
+    state: { userAddress },
+  } = useWallet();
   let byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
   );
-  if (state?.address == null) {
+  if (userAddress == null) {
     return null;
   }
 
@@ -54,7 +58,7 @@ function Settings() {
     validatorsError?: string;
   } = {
     validators: [
-      { address: state.address!, name: state.aliases[state.address!] || "" },
+      { address: userAddress!, name: state.aliases[userAddress!] || "" },
     ],
     requiredSignatures: 1,
     days: "1",
@@ -260,9 +264,7 @@ function Settings() {
                         );
                       })}
                     {values.validators.length > 0 &&
-                      !values.validators.find(
-                        v => v.address === state.address
-                      ) &&
+                      !values.validators.find(v => v.address === userAddress) &&
                       renderWarning("Your address is not in the owners")}
                     <button
                       type="button"

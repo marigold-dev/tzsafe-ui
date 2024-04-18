@@ -21,11 +21,9 @@ import {
   generateDelegateMichelson,
   generateUndelegateMichelson,
 } from "../context/generateLambda";
-import {
-  AppDispatchContext,
-  AppStateContext,
-  contractStorage,
-} from "../context/state";
+import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { TezosToolkitContext } from "../context/tezos-toolkit";
+import { useWallet } from "../context/wallet";
 import {
   durationOfDaysHoursMinutes,
   parseIntOr,
@@ -63,12 +61,12 @@ const DelegatorHelper = ({
   setFieldValue: (field: string, value: any, shouldValidate?: boolean) => void;
   bakerAddressRef: React.MutableRefObject<null | string>;
 }) => {
-  const state = useContext(AppStateContext)!;
+  const { tezos } = useContext(TezosToolkitContext);
 
   useEffect(() => {
     if (!address) return;
 
-    state.connection.tz
+    tezos.tz
       .getDelegate(address)
       .then(bakerAddress => {
         bakerAddressRef.current = bakerAddress;
@@ -88,8 +86,12 @@ const SignersForm: FC<{
   contract: contractStorage | undefined;
   disabled?: boolean;
 }> = props => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const {
+    state: { userAddress },
+  } = useWallet();
+  const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const bakerAddressRef = useRef<null | string>(null);
 
@@ -234,11 +236,9 @@ const SignersForm: FC<{
   const updateSettings = async (ops: ownersForm[]) => {
     if (!props.contract) return;
 
-    let cc = await state.connection.wallet.at(props.address);
+    let cc = await tezos.wallet.at(props.address);
     let api = VersionedApi(props.contract.version, props.address);
-    setTimeoutAndHash(
-      await api.submitSettingsProposals(cc, state.connection, ops)
-    );
+    setTimeoutAndHash(await api.submitSettingsProposals(cc, tezos, ops));
   };
 
   if (timeoutAndHash[0]) {
@@ -619,10 +619,8 @@ const SignersForm: FC<{
                         );
                       })}
                     {values.validators.length > 0 &&
-                      !!state.address &&
-                      !values.validators.find(
-                        v => v.address === state.address
-                      ) &&
+                      !!userAddress &&
+                      !values.validators.find(v => v.address === userAddress) &&
                       renderWarning("Your address is not in the owners")}
 
                     <button

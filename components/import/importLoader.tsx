@@ -3,30 +3,32 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import {
-  AppDispatchContext,
-  AppStateContext,
   contractStorage,
+  useAppDispatch,
+  useAppState,
 } from "../../context/state";
+import { useTezosToolkit } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
-  let state = useContext(AppStateContext);
-  let dispatch = useContext(AppDispatchContext);
+  let state = useAppState();
+  let dispatch = useAppDispatch();
   let [address, setAddress] = useState({
     status: 0,
     address: formState!.walletAddress!,
   });
   let [loading, setLoading] = useState(true);
+  const { tezos } = useTezosToolkit();
 
   useEffect(() => {
     (async () => {
       if (loading && address.status == 0) {
         try {
-          let cc = await state?.connection.wallet.at(address.address, tzip16);
+          let cc = await tezos.wallet.at(address.address, tzip16);
           let storage: contractStorage = await cc?.storage()!;
-          let balance = await state?.connection.tz.getBalance(address.address);
+          let balance = await tezos.tz.getBalance(address.address);
           let version = await fetchVersion(cc!);
           let v = toStorage(version, storage, balance!);
 

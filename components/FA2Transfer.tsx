@@ -2,17 +2,10 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import { Field, FieldProps, useFormikContext } from "formik";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
-import { AppStateContext } from "../context/state";
+import { useAppState } from "../context/state";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import ErrorMessage from "./ErrorMessage";
@@ -90,7 +83,7 @@ const FA2Transfer = ({
   toExclude,
   autoSetField = true,
 }: fa2TransferProps) => {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const { getFieldProps, setFieldValue, errors } =
     useFormikContext<proposals>();
 

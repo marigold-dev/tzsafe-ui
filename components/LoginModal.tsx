@@ -1,6 +1,7 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
+import { useWallet } from "../context/wallet";
 import { decodeData } from "../pages/[walletAddress]/beacon";
 import { connectWallet } from "../utils/connectWallet";
 import { signers } from "../versioned/apis";
@@ -19,20 +20,23 @@ enum State {
 }
 
 const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
 
   const [parsedData, setParsedData] = useState<undefined | p2pData>();
   const [error, setError] = useState<undefined | string>();
 
+  const {
+    state: { userAddress, wallet },
+  } = useWallet();
+
   const options = useMemo(() => {
-    if (!state.address) return [];
+    if (!userAddress) return [];
 
     return Object.keys(state.contracts).flatMap(address => {
       if (!hasTzip27Support(state.contracts[address].version)) return [];
 
-      if (!signers(state.contracts[address]).includes(state.address!))
-        return [];
+      if (!signers(state.contracts[address]).includes(userAddress!)) return [];
 
       return [
         {
@@ -42,7 +46,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
         },
       ];
     });
-  }, [state.contracts, state.address]);
+  }, [state.contracts, userAddress]);
 
   const [selectedWallet, setSelectedWallet] = useState<
     { id: string; value: string; label: string } | undefined
@@ -51,7 +55,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [currentState, setCurrentState] = useState(() => State.LOADING);
 
   useEffect(() => {
-    if (!state.p2pClient || !state.attemptedInitialLogin) return;
+    if (!state.p2pClient) return;
 
     try {
       const decoded = decodeData(data);
@@ -59,7 +63,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       setParsedData(decoded);
 
       state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
-        if (state.attemptedInitialLogin && !state.address) {
+        if (!userAddress) {
           setCurrentState(State.LOGIN);
         } else if (
           decoded.name.toLowerCase().includes("tzsafe") ||
@@ -77,13 +81,13 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       setError((e as Error).message);
       setCurrentState(State.ERROR);
     }
-  }, [data, state.p2pClient, state.attemptedInitialLogin]);
+  }, [data, state.p2pClient]);
 
   useEffect(() => {
-    if (currentState === State.LOGIN && !!state.address) {
+    if (currentState === State.LOGIN && !!userAddress) {
       setCurrentState(State.INITIAL);
     }
-  }, [state.address]);
+  }, [userAddress]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">
@@ -259,9 +263,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                       }}
                       type="button"
                       className={`rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 ${
-                        !state.beaconWallet
-                          ? "pointer-events-none opacity-50"
-                          : ""
+                        !wallet ? "pointer-events-none opacity-50" : ""
                       }`}
                     >
                       Connect{" "}

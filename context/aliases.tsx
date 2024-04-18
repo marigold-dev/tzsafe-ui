@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { createContext } from "react";
 import { TZKT_API_URL } from "./config";
+import { useAppState } from "./state";
 
 type AliasesContextType = {
   getAlias(address: string, defaultAlias: string): Promise<string>;
@@ -12,12 +13,12 @@ export const AliasesContext = createContext<AliasesContextType>({
 
 export const AliasesProvider = ({
   children,
-  aliasesFromState,
 }: {
   children: React.ReactNode;
-  aliasesFromState: { [address: string]: string };
 }) => {
   const aliases = useRef<Record<string, Promise<string | undefined>>>({});
+
+  const aliasesFromState = useAppState().aliases;
 
   const getTzktAlias = async (address: string) => {
     // address can be empty string...

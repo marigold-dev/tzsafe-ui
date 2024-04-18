@@ -1,7 +1,8 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import * as Switch from "@radix-ui/react-switch";
-import { useContext, useState, useMemo } from "react";
-import { AppStateContext } from "../context/state";
+import { useState, useMemo } from "react";
+import { useAppState } from "../context/state";
+import { useTezosToolkit } from "../context/tezos-toolkit";
 import { CustomView, customViewMatchers } from "../dapps";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
@@ -45,7 +46,8 @@ const ProposalCard = ({
   isSignable = false,
   shouldResolve = false,
 }: ProposalCardProps) => {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
+  const { tezos } = useTezosToolkit();
   const currentContract = state.currentContract ?? "";
 
   const [isOpen, setIsOpen] = useState(false);
@@ -75,7 +77,7 @@ const ProposalCard = ({
 
     try {
       for (let i = 0; i < customViewMatchers.length; ++i) {
-        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        dapp = customViewMatchers[i](rows as transaction[], tezos);
         if (!!dapp) break;
       }
     } catch (e) {

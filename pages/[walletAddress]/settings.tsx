@@ -1,15 +1,13 @@
-import { getSenderId } from "@airgap/beacon-sdk";
-import { Cross1Icon } from "@radix-ui/react-icons";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import { useAppDispatch, useAppState } from "../../context/state";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
 

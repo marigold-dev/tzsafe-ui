@@ -2,20 +2,22 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import {
-  AppDispatchContext,
-  AppStateContext,
   contractStorage,
+  useAppDispatch,
+  useAppState,
 } from "../../context/state";
+import { useTezosToolkit } from "../../context/tezos-toolkit";
 import { durationOfDaysHoursMinutes } from "../../utils/adaptiveTime";
 import { toStorage } from "../../versioned/apis";
 import deployTzSafe from "../../versioned/deployTzSafe";
 
 function Success() {
   const { formState } = useContext(FormContext)!;
-  const state = useContext(AppStateContext);
-  const dispatch = useContext(AppDispatchContext);
+  const state = useAppState();
+  const dispatch = useAppDispatch();
   const [address, setAddress] = useState({ status: 0, address: "" });
   const [loading, setLoading] = useState(true);
+  const { tezos } = useTezosToolkit();
 
   useEffect(() => {
     (async () => {
@@ -37,16 +39,14 @@ function Success() {
           }
 
           const tzsafe = await deployTzSafe(
-            state?.connection.wallet,
+            tezos.wallet,
             formState!.validators.map(x => x.address),
             formState!.requiredSignatures,
             effective_period,
             formState.version
           );
           const c = (await tzsafe!.storage()) as contractStorage;
-          const balance = await state?.connection.tz.getBalance(
-            tzsafe!.address!
-          );
+          const balance = await tezos.tz.getBalance(tzsafe!.address!);
           setAddress({ address: tzsafe?.address!, status: 1 });
           setLoading(false);
           dispatch!({

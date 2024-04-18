@@ -10,7 +10,12 @@ import {
 import { useContext } from "react";
 import renderError from "../components/formUtils";
 import Meta from "../components/meta";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import {
+  AppDispatchContext,
+  AppStateContext,
+  useAppDispatch,
+  useAppState,
+} from "../context/state";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -26,8 +31,8 @@ function get(
   }
 }
 function Home() {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
 
   const byName = Object.fromEntries(
     Object.entries(state.aliases).map(([k, v]) => [v, k])

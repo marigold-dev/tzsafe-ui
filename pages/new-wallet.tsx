@@ -5,27 +5,29 @@ import Meta from "../components/meta";
 import Stepper from "../components/stepper";
 import FormContext from "../context/formContext";
 import { AppDispatchContext, AppStateContext } from "../context/state";
-import { connectWallet } from "../utils/connectWallet";
+import { useWallet } from "../context/wallet";
 
 function Create() {
   const [formState, setFormState] = useState<any>(null);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [formStatus, setFormStatus] = useState("");
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
-  let router = useRouter();
+  const router = useRouter();
+  const {
+    state: { userAddress, wallet },
+    connectWallet,
+  } = useWallet();
 
   useEffect(() => {
     (async () => {
-      if (!state?.address && state?.beaconWallet) {
+      if (!userAddress && wallet) {
         try {
-          await connectWallet(state, dispatch);
+          await connectWallet();
         } catch (e) {
           router.replace("/");
         }
       }
     })();
-  }, [router, dispatch, state]);
+  }, [router, connectWallet, userAddress]);
 
   return (
     <div className="h-full grow">

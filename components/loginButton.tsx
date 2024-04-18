@@ -4,8 +4,6 @@ import { useWallet } from "../context/wallet";
 import { connectWallet } from "../utils/connectWallet";
 
 const LoginButton = () => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
   const {
     state: { wallet },
     connectWallet,

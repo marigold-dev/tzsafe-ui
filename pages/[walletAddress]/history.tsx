@@ -10,10 +10,11 @@ import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import { getTokenTransfers, getTransfers } from "../../context/proposals";
 import {
-  AppDispatchContext,
-  AppStateContext,
   contractStorage,
+  useAppDispatch,
+  useAppState,
 } from "../../context/state";
+import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
 import {
   TransferType,
@@ -148,9 +149,10 @@ const getLatestTimestamp = (og: {
 }) => (!!og.resolver ? og.resolver.timestamp : og.proposer.timestamp);
 
 const History = () => {
-  const globalState = useContext(AppStateContext)!;
-  const globalDispatch = useContext(AppDispatchContext)!;
+  const globalState = useAppState();
+  const globalDispatch = useAppDispatch();
 
+  const { tezos } = useContext(TezosToolkitContext);
   const walletTokens = useWalletTokens();
 
   const [state, dispatch] = useReducer<typeof reducer>(reducer, {
@@ -202,13 +204,8 @@ const History = () => {
     (async () => {
       if (!globalState.currentContract) return;
 
-      const c = await globalState.connection.wallet.at(
-        globalState.currentContract,
-        tzip16
-      );
-      const balance = await globalState.connection.tz.getBalance(
-        globalState.currentContract
-      );
+      const c = await tezos.wallet.at(globalState.currentContract, tzip16);
+      const balance = await tezos.tz.getBalance(globalState.currentContract);
 
       const storage = (await c.storage()) as contractStorage;
 

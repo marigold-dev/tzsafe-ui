@@ -25,7 +25,9 @@ import React, {
   useState,
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
-import { AppStateContext, contractStorage } from "../context/state";
+import { contractStorage, useAppState } from "../context/state";
+import { TezosToolkitContext } from "../context/tezos-toolkit";
+import { useWallet } from "../context/wallet";
 import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals, transfer } from "../versioned/interface";
@@ -45,7 +47,7 @@ import TextInputWithCompletion from "./textInputWithComplete";
 
 type Nullable<T> = T | null | undefined;
 
-function Basic({
+export function Basic({
   id,
   setFormState,
   defaultValues,
@@ -69,7 +71,8 @@ function Basic({
     { setTouched: setAddressTouched },
   ] = useField(`transfers.${id}.walletAddress`);
 
-  const state = useContext(AppStateContext)!;
+  const { tezos } = useContext(TezosToolkitContext);
+
   const [localFormState, setLocalFormState] = useState<{
     amount: number | undefined;
     address: string;
@@ -127,7 +130,7 @@ function Basic({
                       setContractLoading(true);
                       const exists = await (async () => {
                         try {
-                          await state.connection.contract.at(address.trim());
+                          await tezos.contract.at(address.trim());
                           return true;
                         } catch (e) {
                           return false;
@@ -216,7 +219,7 @@ function Basic({
   );
 }
 
-type state = {
+export type state = {
   address: string;
   amount: number;
   shape: object;
@@ -233,6 +236,9 @@ function ExecuteContractForm(
 ) {
   const { submitCount, setFieldValue } = useFormikContext();
   const submitCountRef = useRef(submitCount);
+  const {
+    state: { userAddress },
+  } = useWallet();
 
   const [state, setState] = useState(
     () => props.defaultState ?? { address: "", amount: 0, shape: {} }
@@ -272,14 +278,14 @@ function ExecuteContractForm(
         onAddressChange={address => {
           setState({ ...state, address });
         }}
-        withContinue={!state.address}
-        address={state.address}
+        withContinue={!userAddress}
+        address={userAddress}
         defaultValues={{
           amount: undefined,
           address: undefined,
         }}
       />
-      {!!state.address && (
+      {!!userAddress && (
         <ExecuteForm
           loading={loading}
           setLoading={setLoader}
@@ -294,7 +300,7 @@ function ExecuteContractForm(
             setState(v => ({ ...v, shape }));
           }}
           reset={() => setState({ address: "", amount: 0, shape: {} })}
-          address={state.address}
+          address={userAddress}
           amount={state.amount}
           setField={(lambda: string, metadata: string) => {
             props.setField(lambda, metadata);
@@ -370,8 +376,12 @@ function TransferForm(
     contract: contractStorage;
   }>
 ) {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const router = useRouter();
+  const {
+    state: { userAddress },
+  } = useWallet();
+  const { tezos } = useContext(TezosToolkitContext);
   const portalIdx = useRef(0);
 
   const [isMenuOpen, setIsMenuOpen] = useState(true);
@@ -381,7 +391,7 @@ function TransferForm(
   const [formState, setFormState] = useState(() => initialProps);
   const executeContractStateRef = useRef<{ [k: number]: state }>({});
 
-  if (state?.address == null) {
+  if (userAddress == null) {
     return null;
   }
 
@@ -508,14 +518,14 @@ function TransferForm(
         setFormState(values);
         setLoading(true);
         try {
-          const cc = await state.connection.wallet.at(props.address);
+          const cc = await tezos.wallet.at(props.address);
           const versioned = VersionedApi(props.contract.version, props.address);
           const proposals: proposals = { transfers: values.transfers };
 
           setTimeoutAndHash(
             await versioned.submitTxProposals(
               cc,
-              state.connection,
+              tezos,
               proposals,
               undefined,
               undefined,

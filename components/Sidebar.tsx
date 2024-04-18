@@ -18,12 +18,10 @@ import React, {
   useState,
 } from "react";
 import { PREFERED_NETWORK } from "../context/config";
-import {
-  AppDispatchContext,
-  AppStateContext,
-  contractStorage,
-} from "../context/state";
+import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
+import { useWallet } from "../context/wallet";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
@@ -140,8 +138,13 @@ const Sidebar = ({
 
   const [isClient, setIsClient] = useState(false);
 
-  let state = useContext(AppStateContext)!;
-  let dispatch = useContext(AppDispatchContext)!;
+  let state = useAppState();
+  let dispatch = useAppDispatch();
+  const {
+    state: { userAddress },
+  } = useWallet();
+
+  const { tezos } = useContext(TezosToolkitContext);
 
   const isOwner = useIsOwner();
 
@@ -159,8 +162,8 @@ const Sidebar = ({
     (async () => {
       if (!state.currentContract) return;
 
-      let c = await state.connection.wallet.at(state.currentContract, tzip16);
-      let balance = await state.connection.tz.getBalance(state.currentContract);
+      let c = await tezos.wallet.at(state.currentContract, tzip16);
+      let balance = await tezos.tz.getBalance(state.currentContract);
 
       const storage = (await c.storage()) as contractStorage;
       let version = await (state.contracts[state.currentContract]
@@ -439,7 +442,7 @@ const Sidebar = ({
           href={`/${state.currentContract}/fund-wallet`}
           className={linkClass(
             path?.includes("/fund-wallet") ?? false,
-            !state.address || isLoading
+            !userAddress || isLoading
           )}
           onClick={onClose}
         >

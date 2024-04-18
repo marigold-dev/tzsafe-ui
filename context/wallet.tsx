@@ -11,6 +11,7 @@ type WalletState = {
   wallet: BeaconWallet | undefined;
   userAccount: AccountInfo | undefined;
   userAddress: string | undefined;
+  userBalance: number | undefined;
 };
 
 type WalletContextType = {
@@ -39,6 +40,7 @@ const initialState: WalletState = {
   wallet: undefined,
   userAccount: undefined,
   userAddress: undefined,
+  userBalance: undefined,
 };
 
 export const WalletContext = createContext<WalletContextType>({
@@ -60,8 +62,9 @@ const connectWallet = async (tezos: TezosToolkit) => {
 
   return await wallet.client.getActiveAccount().then(async userAccount => {
     const userAddress = await wallet.getPKH();
+    const userBalance = (await tezos.tz.getBalance(userAddress)).toNumber();
 
-    return { wallet, userAddress, userAccount };
+    return { wallet, userAddress, userAccount, userBalance };
   });
 };
 

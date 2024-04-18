@@ -9,6 +9,7 @@ import {
 } from "formik";
 import React, { useContext, useEffect } from "react";
 import { AppStateContext } from "../context/state";
+import { useTezosToolkit } from "../context/tezos-toolkit";
 import {
   parseContract,
   genLambda,
@@ -485,10 +486,11 @@ function ExecuteForm(
     onShapeChange: (v: object) => void;
   }>
 ) {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
+
+  const { tezos } = useTezosToolkit();
 
   const address = props.address;
-  const conn = state.connection;
   const setLoading = props.setLoading;
   const loading = props.loading;
 
@@ -497,7 +499,7 @@ function ExecuteForm(
       (async () => {
         try {
           setLoading(true);
-          const c = await conn.contract.at(address);
+          const c = await tezos.contract.at(address);
           const initTokenTable: Record<string, tokenValueType> = {};
           const token: token = parseContract(c, initTokenTable);
 

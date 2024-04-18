@@ -7,7 +7,9 @@ import { useRouter } from "next/router";
 import React, { useContext, useState, useMemo } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { PROPOSAL_DURATION_WARNING } from "../context/config";
-import { AppStateContext } from "../context/state";
+import { AppStateContext, useAppState } from "../context/state";
+import { TezosToolkitContext } from "../context/tezos-toolkit";
+import { useWallet } from "../context/wallet";
 import { CustomView, customViewMatchers } from "../dapps";
 import { version, proposal } from "../types/display";
 import { canExecute, canReject } from "../utils/proposals";
@@ -43,8 +45,14 @@ function ProposalSignForm({
   walletTokens: walletToken[];
   onSuccess?: () => void;
 }) {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const currentContract = state.currentContract ?? "";
+
+  const {
+    state: { userAddress },
+  } = useWallet();
+
+  const { tezos } = useContext(TezosToolkitContext);
 
   const router = useRouter();
 
@@ -67,7 +75,7 @@ function ProposalSignForm({
 
     try {
       for (let i = 0; i < customViewMatchers.length; ++i) {
-        dapp = customViewMatchers[i](rows as transaction[], state.connection);
+        dapp = customViewMatchers[i](rows as transaction[], tezos);
         if (!!dapp) break;
       }
     } catch (e) {
@@ -87,13 +95,13 @@ function ProposalSignForm({
     result: boolean | undefined,
     resolve: boolean
   ) {
-    let cc = await state.connection.wallet.at(address);
+    let cc = await tezos.wallet.at(address);
     let versioned = VersionedApi(version, address);
 
     setTimeoutAndHash(
       await versioned.signProposal(
         cc,
-        state.connection,
+        tezos,
         new BigNumber(proposal),
         result,
         resolve
@@ -344,9 +352,9 @@ function ProposalSignForm({
                 !!rows.find(
                   v =>
                     v.type === "RemoveSigner" &&
-                    !!state.address &&
+                    !!userAddress &&
                     !!v.addresses &&
-                    v.addresses.includes(state.address)
+                    v.addresses.includes(userAddress)
                 ) && (
                   <li className="mt-1">
                     Your ownership will be revoked, resulting in your removal

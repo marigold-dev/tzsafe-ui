@@ -3,13 +3,13 @@ import { Cross1Icon } from "@radix-ui/react-icons";
 import bs58check from "bs58check";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Spinner from "../../components/Spinner";
 import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import { Event } from "../../context/P2PClient";
 import { MODAL_TIMEOUT } from "../../context/config";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import { useAppDispatch, useAppState } from "../../context/state";
 import useIsOwner from "../../utils/useIsOwner";
 import { p2pData } from "../../versioned/interface";
 import { hasTzip27Support } from "../../versioned/util";
@@ -38,8 +38,8 @@ export function decodeData(data: string): p2pData {
 }
 
 const Beacon = () => {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
 
