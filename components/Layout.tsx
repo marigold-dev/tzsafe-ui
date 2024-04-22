@@ -152,29 +152,24 @@ export default function Layout({
   ]);
   useEffect(() => {
     (async () => {
-      if (wallet === null) {
-        let a = init();
-        dispatch({ type: "init", payload: a });
+      const p2pClient = new P2PClient({
+        name: "TzSafe",
+        storage: new LocalStorage("P2P"),
+      });
 
-        const p2pClient = new P2PClient({
-          name: "TzSafe",
-          storage: new LocalStorage("P2P"),
+      await p2pClient.init();
+      await p2pClient.connect(p2pClient.handleMessages);
+
+      // Connect stored peers
+      Object.entries(state.connectedDapps).forEach(async ([address, dapps]) => {
+        Object.values(dapps).forEach(data => {
+          p2pClient
+            .addPeer(data)
+            .catch(_ => console.log("Failed to connect to peer", data));
         });
+      });
 
-        await p2pClient.init();
-        await p2pClient.connect(p2pClient.handleMessages);
-
-        // Connect stored peers
-        Object.entries(a.connectedDapps).forEach(async ([address, dapps]) => {
-          Object.values(dapps).forEach(data => {
-            p2pClient
-              .addPeer(data)
-              .catch(_ => console.log("Failed to connect to peer", data));
-          });
-        });
-
-        dispatch!({ type: "p2pConnect", payload: p2pClient });
-      }
+      dispatch!({ type: "p2pConnect", payload: p2pClient });
     })();
   }, [wallet]);
 
