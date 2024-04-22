@@ -1,7 +1,7 @@
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import { TezosToolkit } from "@taquito/taquito";
-import { bytes2Char } from "@taquito/tzip16";
+import { bytesToString } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import React, { ReactNode, useEffect, useState } from "react";
 import { contracts, CustomViewData, CustomView } from ".";
@@ -377,7 +377,7 @@ export function tezosDomains(
                 action: COMMIT_ADDRESS.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -401,7 +401,7 @@ export function tezosDomains(
                 action: BUY_ADDRESS.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -410,7 +410,7 @@ export function tezosDomains(
 
           const data = buySchema.Execute(micheline);
 
-          const domain = `${bytes2Char(data.label)}${
+          const domain = `${bytesToString(data.label)}${
             transaction.addresses === tezosDomainsContracts.BUY_ADDRESS.mainnet
               ? ".tez"
               : ".gho"
@@ -458,7 +458,7 @@ export function tezosDomains(
                 action: CLAIM_REVERSE_RECORD.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -467,7 +467,9 @@ export function tezosDomains(
 
           const data = claimReverseRecordSchema.Execute(micheline);
 
-          const domain = !!data.name ? bytes2Char(data.name.Some) : undefined;
+          const domain = !!data.name
+            ? bytesToString(data.name.Some)
+            : undefined;
 
           return [
             {
@@ -507,7 +509,7 @@ export function tezosDomains(
                 action: UPDATE_REVERSE_RECORD.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -516,7 +518,7 @@ export function tezosDomains(
 
           const data = updateReverseRecordSchema.Execute(micheline);
 
-          const domain = bytes2Char(data.name?.Some ?? "");
+          const domain = bytesToString(data.name?.Some ?? "");
 
           return [
             {
@@ -559,7 +561,7 @@ export function tezosDomains(
                 action: UPDATE_RECORD.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -568,11 +570,11 @@ export function tezosDomains(
 
           const data = updateRecordSchema.Execute(micheline);
 
-          const recordName = bytes2Char(data.name);
+          const recordName = bytesToString(data.name);
 
           const parsedData = Array.from(
             (data.data as MichelsonMap<string, string>).entries()
-          ).map(([key, value]) => `${key}: ${bytes2Char(value)}`);
+          ).map(([key, value]) => `${key}: ${bytesToString(value)}`);
 
           return [
             {
@@ -617,7 +619,7 @@ export function tezosDomains(
                 action: BID.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -626,7 +628,7 @@ export function tezosDomains(
 
           const data = bidSchema.Execute(micheline);
 
-          const domain = `${bytes2Char(data.label)}${
+          const domain = `${bytesToString(data.label)}${
             transaction.addresses === BID.mainnet ? ".tez" : ".gho"
           }`;
 
@@ -664,7 +666,7 @@ export function tezosDomains(
                 action: SETTLE.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -673,7 +675,7 @@ export function tezosDomains(
 
           const data = settleSchema.Execute(micheline);
 
-          const domain = `${bytes2Char(data.label)}${
+          const domain = `${bytesToString(data.label)}${
             transaction.addresses === SETTLE.mainnet ? ".tez" : ".gho"
           }`;
 
@@ -718,7 +720,7 @@ export function tezosDomains(
                 action: WITHDRAW.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -749,7 +751,7 @@ export function tezosDomains(
                 action: RENEW.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -758,7 +760,7 @@ export function tezosDomains(
 
           const data = renewSchema.Execute(micheline);
 
-          const domain = `${bytes2Char(data.label)}${
+          const domain = `${bytesToString(data.label)}${
             transaction.addresses === RENEW.mainnet ? ".tez" : ".gho"
           }`;
 
@@ -799,7 +801,7 @@ export function tezosDomains(
                 action: SET_CHILD_RECORD.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -808,7 +810,9 @@ export function tezosDomains(
 
           const data = setChildRecordSchema.Execute(micheline);
 
-          const domain = `${bytes2Char(data.label)}.${bytes2Char(data.parent)}`;
+          const domain = `${bytesToString(data.label)}.${bytesToString(
+            data.parent
+          )}`;
           return [
             {
               action: SET_CHILD_RECORD.name,
@@ -845,7 +849,7 @@ export function tezosDomains(
                 action: CHECK_ADDRESS.name,
                 description: (
                   <p>
-                    TzSafe doesn't support the entrypoint:{" "}
+                    {"TzSafe doesn't support the entrypoint:"}
                     {transaction.entrypoints}
                   </p>
                 ),
@@ -859,7 +863,7 @@ export function tezosDomains(
               action: CHECK_ADDRESS.name,
               description: (
                 <ul className="list-inside list-disc space-y-1 pt-1 font-light">
-                  <li>Name: {bytes2Char(data.name)}</li>
+                  <li>Name: {bytesToString(data.name)}</li>
                   <li>
                     Address: <Alias address={data.address} />{" "}
                   </li>
@@ -957,7 +961,7 @@ export function tezosDomains(
                   action: "Internal",
                   description: (
                     <p>
-                      TzSafe doesn't support the entrypoint:{" "}
+                      {"TzSafe doesn't support the entrypoint:"}
                       {transaction.entrypoints}
                     </p>
                   ),
@@ -1082,7 +1086,7 @@ export function tezosDomains(
                   action: "Domain",
                   description: (
                     <p>
-                      TzSafe doesn't support the entrypoint:{" "}
+                      {"TzSafe doesn't support the entrypoint:"}
                       {transaction.entrypoints}
                     </p>
                   ),

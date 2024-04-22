@@ -2,27 +2,27 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import tzSafeLogo from "../assets/images/TzSafe.svg";
 import { PREFERED_NETWORK } from "../context/config";
-import { AppDispatchContext, AppStateContext } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
+import { useWallet } from "../context/wallet";
 import Alias from "./Alias";
 import LinkComponent from "./links";
 import LoginButton from "./loginButton";
 
 const NavBar = (_: React.PropsWithChildren) => {
+  const { userAddress, disconnectWallet } = useWallet();
   let [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext);
+  const state = useAppState();
+  const dispatch = useAppDispatch();
 
-  const disconnectWallet = async (): Promise<void> => {
-    if (state?.beaconWallet) {
-      await state.beaconWallet.clearActiveAccount();
-    }
+  const disconnect = async (): Promise<void> => {
+    disconnectWallet();
 
-    dispatch!({ type: "logout" });
+    dispatch({ type: "logout" });
     router.push("/");
   };
 
@@ -92,7 +92,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 </svg>
               </button>
 
-              {state?.address == null ? (
+              {userAddress == null ? (
                 <div className="relative ml-3">
                   <LoginButton />
                 </div>
@@ -109,7 +109,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                       <span className="sr-only">Open user menu</span>
                       <div className="flex flex-col items-center text-white">
                         <Alias
-                          address={state.address}
+                          address={userAddress}
                           disabled
                           className="cursor-pointer"
                         />
@@ -125,7 +125,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                     <button
                       onClick={async e => {
                         e.preventDefault();
-                        await disconnectWallet();
+                        await disconnect();
                       }}
                       className="text-md block px-4 py-2 text-dark"
                       role="menuitem"
@@ -141,7 +141,7 @@ const NavBar = (_: React.PropsWithChildren) => {
 
           {state && state.contracts && (
             <div className={`-mr-2 flex space-x-4 md:hidden`}>
-              {state?.address == null ? (
+              {!userAddress ? (
                 <div className="mx-2 flex items-center justify-center">
                   <LoginButton />
                 </div>
@@ -150,7 +150,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                   <div className="md:ml-3">
                     <div className="text-base font-medium leading-none text-white">
                       <Alias
-                        address={state.address}
+                        address={userAddress}
                         length={3}
                         className="block w-28 truncate text-right"
                       />
@@ -225,7 +225,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             text={"Import wallet"}
           />
         </div>
-        {!!state?.address && (
+        {!!userAddress && (
           <div className="-mt-1 space-y-1 px-2">
             <button
               onClick={async e => {

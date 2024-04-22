@@ -21,7 +21,9 @@ class Version0_3_4 extends Version0_3_3 {
     const encodedPayload = stringToBytes(payload);
 
     const ops = [
-      cc.methods.proof_of_event_challenge(encodedPayload).toTransferParams(),
+      cc.methodsObject
+        .proof_of_event_challenge(encodedPayload)
+        .toTransferParams(),
       cc.methodsObject
         .sign_proposal({
           agreement: true,

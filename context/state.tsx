@@ -1,32 +1,23 @@
-import { AccountInfo, getSenderId } from "@airgap/beacon-sdk";
-import { BeaconWallet } from "@taquito/beacon-wallet";
-import { PollingSubscribeProvider, TezosToolkit } from "@taquito/taquito";
-import { Tzip12Module } from "@taquito/tzip12";
-import {
-  Handler,
-  IpfsHttpHandler,
-  MetadataProvider,
-  TezosStorageHandler,
-  Tzip16Module,
-} from "@taquito/tzip16";
+import { getSenderId } from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
-import { Context, createContext, Dispatch } from "react";
+import {
+  Context,
+  createContext,
+  Dispatch,
+  useContext,
+  useEffect,
+  useReducer,
+} from "react";
 import { contractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
 import { p2pData } from "../versioned/interface";
 import P2PClient from "./P2PClient";
-import { IPFS_NODE, RPC_URL } from "./config";
-import { BeaconSigner } from "./signer";
+import { useWallet } from "./wallet";
 
 type tezosState = {
-  connection: TezosToolkit;
-  beaconWallet: BeaconWallet | null;
   p2pClient: P2PClient | null;
-  address: string | null;
-  balance: string | null;
   currentContract: string | null;
   currentStorage: contractStorage | null;
-  accountInfo: AccountInfo | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
   aliasTrie: Trie<string>;
@@ -39,7 +30,6 @@ type tezosState = {
   };
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
-  attemptedInitialLogin: boolean;
 };
 type storage = {
   contracts: { [address: string]: contractStorage };
@@ -47,54 +37,23 @@ type storage = {
 };
 
 let emptyState = (): tezosState => {
-  const connection = new TezosToolkit(RPC_URL);
-
-  const customHandler = new Map<string, Handler>([
-    ["ipfs", new IpfsHttpHandler(IPFS_NODE)],
-    ["tezos-storage", new TezosStorageHandler()],
-  ]);
-
-  const customMetadataProvider = new MetadataProvider(customHandler);
-  connection.addExtension(new Tzip16Module(customMetadataProvider));
-  connection.addExtension(new Tzip12Module());
-
-  connection.setStreamProvider(
-    connection.getFactory(PollingSubscribeProvider)({
-      shouldObservableSubscriptionRetry: true,
-      pollingIntervalMilliseconds: 500,
-    })
-  );
-
   return {
-    beaconWallet: null,
     p2pClient: null,
     contracts: {},
     aliases: {},
-    balance: null,
-    address: null,
     currentContract: null,
     currentStorage: null,
-    accountInfo: null,
-    connection,
     aliasTrie: new Trie<string>(),
     hasBanner: true,
     delegatorAddresses: undefined,
     connectedDapps: {},
     proposalRefresher: 0,
-    attemptedInitialLogin: false,
   };
 };
 
 type action =
-  | { type: "beaconConnect"; payload: BeaconWallet }
   | { type: "p2pConnect"; payload: P2PClient }
   | { type: "init"; payload: tezosState }
-  | {
-      type: "login";
-      accountInfo: AccountInfo;
-      address: string;
-      balance: string;
-    }
   | {
       type: "addContract";
       payload: {
@@ -116,7 +75,6 @@ type action =
       payload: string;
     }
   | { type: "removeContract"; address: string }
-  | { type: "logout" }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
   | { type: "setDelegatorAddresses"; payload: string[] }
@@ -148,11 +106,14 @@ type action =
   | {
       type: "setAttemptedInitialLogin";
       payload: boolean;
+    }
+  | {
+      type: "logout";
     };
 
-const saveState = (state: tezosState) => {
+const saveState = (state: tezosState, userAddress: string) => {
   localStorage.setItem(
-    `app_state:${state.address}`,
+    `app_state:${userAddress}`,
     JSON.stringify({
       contracts: state.contracts,
       aliases: state.aliases,
@@ -162,28 +123,28 @@ const saveState = (state: tezosState) => {
   );
 };
 
-function reducer(state: tezosState, action: action): tezosState {
+const loadState = (userAddress: string) => {
+  const rawStorage = localStorage.getItem(`app_state:${userAddress}`);
+  if (!rawStorage) return {};
+  return JSON.parse(rawStorage);
+};
+
+function reducer(
+  state: tezosState,
+  action: action,
+  { userAddress }: { userAddress: string }
+): tezosState {
   switch (action.type) {
-    case "beaconConnect": {
-      state.connection.setProvider({
-        rpc: RPC_URL,
-        wallet: action.payload,
-      });
-      state.connection.setSignerProvider(new BeaconSigner(action.payload));
-      return { ...state, beaconWallet: action.payload };
-    }
     case "p2pConnect": {
       return { ...state, p2pClient: action.payload };
     }
     case "addDapp": {
-      if (!state.address) return state;
-
       state.connectedDapps[action.payload.address] ??= {};
 
       state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
         action.payload.data;
 
-      saveState(state);
+      saveState(state, userAddress);
 
       return state;
     }
@@ -198,7 +159,7 @@ function reducer(state: tezosState, action: action): tezosState {
 
       delete newState.connectedDapps[state.currentContract][action.payload];
 
-      saveState(newState);
+      saveState(newState, userAddress);
 
       return newState;
     }
@@ -219,7 +180,7 @@ function reducer(state: tezosState, action: action): tezosState {
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
 
-      saveState(newState);
+      saveState(newState, userAddress);
 
       return newState;
     }
@@ -239,7 +200,7 @@ function reducer(state: tezosState, action: action): tezosState {
         aliasTrie: Trie.fromAliases(Object.entries(aliases)),
       };
 
-      saveState(newState);
+      saveState(newState, userAddress);
 
       return newState;
     }
@@ -253,7 +214,8 @@ function reducer(state: tezosState, action: action): tezosState {
         contracts,
       };
 
-      if (state.contracts[action.payload.address]) saveState(newState);
+      if (state.contracts[action.payload.address])
+        saveState(newState, userAddress);
 
       return newState;
     }
@@ -263,7 +225,7 @@ function reducer(state: tezosState, action: action): tezosState {
         currentContract: action.payload,
       };
 
-      saveState(newState);
+      saveState(newState, userAddress);
 
       return newState;
     case "setCurrentStorage":
@@ -287,42 +249,13 @@ function reducer(state: tezosState, action: action): tezosState {
       return {
         ...action.payload,
         contracts,
-        attemptedInitialLogin: state.attemptedInitialLogin,
         currentContract:
           state.currentContract ?? action.payload.currentContract,
         currentStorage: state.currentStorage,
         aliasTrie: Trie.fromAliases(Object.entries(action.payload.aliases)),
       };
     }
-    case "login": {
-      const rawStorage = window!.localStorage.getItem(
-        `app_state:${action.address}`
-      )!;
-      const storage: storage = JSON.parse(rawStorage);
-      return {
-        ...state,
-        ...storage,
-        balance: action.balance,
-        accountInfo: action.accountInfo,
-        address: action.address,
-        attemptedInitialLogin: true,
-      };
-    }
-    case "logout": {
-      let { connection } = emptyState();
 
-      const newState: tezosState = {
-        ...state,
-        beaconWallet: null,
-        balance: null,
-        accountInfo: null,
-        address: null,
-        connection: connection,
-        p2pClient: null,
-      };
-
-      return newState;
-    }
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;
       const { [action.address]: __, ...aliases } = state.aliases;
@@ -352,7 +285,7 @@ function reducer(state: tezosState, action: action): tezosState {
         connectedDapps,
       };
 
-      saveState(newState);
+      saveState(newState, userAddress);
 
       return newState;
     }
@@ -365,8 +298,13 @@ function reducer(state: tezosState, action: action): tezosState {
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
       return { ...state, proposalRefresher: state.proposalRefresher + 1 };
-    case "setAttemptedInitialLogin":
-      return { ...state, attemptedInitialLogin: action.payload };
+    case "loadStorage": {
+      return { ...state, ...action.payload };
+    }
+    case "logout": {
+      return { ...init() };
+    }
+
     default: {
       throw `notImplemented: ${action.type}`;
     }
@@ -376,10 +314,38 @@ function init(): tezosState {
   return emptyState();
 }
 
-let AppStateContext: Context<tezosState | null> =
-  createContext<tezosState | null>(null);
-let AppDispatchContext: Context<Dispatch<action> | null> =
+const AppStateContext = createContext<{
+  state: tezosState;
+  dispatch: React.Dispatch<action>;
+}>({ state: emptyState(), dispatch: () => {} });
+const AppDispatchContext: Context<Dispatch<action> | null> =
   createContext<Dispatch<action> | null>(null);
+
+const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
+  const { userAddress } = useWallet();
+
+  useEffect(() => {
+    // If we are in anonymous mode don't load the previous storage
+    if (userAddress)
+      dispatch({ type: "loadStorage", payload: loadState(userAddress) });
+  }, [userAddress]);
+
+  const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
+    (state: tezosState, action: action) =>
+      reducer(state, action, { userAddress: userAddress || "" }),
+    emptyState()
+  );
+
+  return (
+    <AppStateContext.Provider value={{ state, dispatch }}>
+      {children}
+    </AppStateContext.Provider>
+  );
+};
+
+const useAppState = () => useContext(AppStateContext).state;
+const useAppDispatch = () => useContext(AppStateContext).dispatch;
+
 export {
   type tezosState,
   type action,
@@ -389,4 +355,7 @@ export {
   AppDispatchContext,
   emptyState,
   reducer,
+  AppStateProvider,
+  useAppState,
+  useAppDispatch,
 };

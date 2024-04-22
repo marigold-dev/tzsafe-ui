@@ -10,8 +10,7 @@ import {
 import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
-import { AppStateContext } from "../../context/state";
-import { adaptiveTime } from "../../utils/adaptiveTime";
+import { useAppState } from "../../context/state";
 import renderError from "../formUtils";
 
 function get(
@@ -30,7 +29,7 @@ function get(
 function Aliases() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useContext(AppStateContext);
+  const state = useAppState();
 
   const byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])

@@ -1,3 +1,4 @@
+import { TezosToolkit } from "@taquito/taquito";
 import { tzip16 } from "@taquito/tzip16";
 import { validateContractAddress, ValidationResult } from "@taquito/utils";
 import { Dispatch, useContext, useEffect, useReducer, useRef } from "react";
@@ -7,13 +8,15 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import {
-  AppDispatchContext,
-  AppStateContext,
   tezosState,
   action as globalAction,
   contractStorage,
+  useAppDispatch,
+  useAppState,
 } from "../../context/state";
+import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
+import { useWallet } from "../../context/wallet";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
@@ -139,14 +142,12 @@ async function getProposals(
   globalState: tezosState,
   globalDispatch: Dispatch<globalAction>,
   dispatch: Dispatch<action>,
-  state: state
+  state: state,
+  tezos: TezosToolkit
 ) {
   if (!globalState.currentContract) return;
 
-  const c = await globalState.connection.wallet.at(
-    globalState.currentContract,
-    tzip16
-  );
+  const c = await tezos.wallet.at(globalState.currentContract, tzip16);
 
   const storage: contractStorage = await c.storage();
 
@@ -175,9 +176,7 @@ async function getProposals(
   });
 
   if (globalState.contracts[globalState.currentContract ?? ""]) {
-    const balance = await globalState.connection.tz.getBalance(
-      globalState.currentContract
-    );
+    const balance = await tezos.tz.getBalance(globalState.currentContract);
 
     globalDispatch({
       type: "updateContract",
@@ -192,10 +191,14 @@ async function getProposals(
 }
 
 const Proposals = () => {
-  const globalState = useContext(AppStateContext)!;
-  const globalDispatch = useContext(AppDispatchContext)!;
+  const globalState = useAppState();
+  const globalDispatch = useAppDispatch();
   const isOwner = useIsOwner();
   const walletTokens = useWalletTokens();
+
+  const { userAddress } = useWallet();
+
+  const { tezos } = useContext(TezosToolkitContext);
 
   const [state, dispatch] = useReducer<typeof reducer>(reducer, {
     isLoading: true,
@@ -248,7 +251,8 @@ const Proposals = () => {
         globalState,
         globalDispatch,
         dispatch,
-        state
+        state,
+        tezos
       );
 
       if (!proposals) return;
@@ -283,7 +287,8 @@ const Proposals = () => {
         globalState,
         globalDispatch,
         dispatch,
-        state
+        state,
+        tezos
       );
 
       if (!proposals) return;
@@ -401,7 +406,7 @@ const Proposals = () => {
                     hasDeadlinePassed || isExecutable || isRejectable;
 
                   const hasSigned = !!signatures.find(
-                    x => x.signer == globalState.address
+                    x => x.signer == userAddress
                   );
 
                   return (
@@ -441,7 +446,7 @@ const Proposals = () => {
                       proposer={x[1].og.proposer}
                       resolver={x[1].og.resolver}
                       isSignable={
-                        !!globalState.address &&
+                        !!userAddress &&
                         !!globalState.currentContract &&
                         isOwner &&
                         (!hasSigned || shouldResolve)

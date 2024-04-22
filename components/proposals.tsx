@@ -1,5 +1,6 @@
-import { FC, useContext, useState } from "react";
-import { AppStateContext, tezosState, contractStorage } from "../context/state";
+import { FC, useState } from "react";
+import { tezosState, contractStorage, useAppState } from "../context/state";
+import { useWallet } from "../context/wallet";
 import {
   mutezTransfer,
   proposal,
@@ -23,8 +24,9 @@ const Proposals: FC<{
   transfers: mutezTransfer[];
   setCloseModal: (_: number, arg: boolean | undefined) => void;
 }> = ({ proposals, address, contract, setCloseModal, transfers }) => {
+  const { userAddress } = useWallet();
   let [currentTab, setCurrentTab] = useState(0);
-  let state = useContext(AppStateContext)!;
+  let state = useAppState();
 
   return (
     <div className="col-span-1 md:col-span-2">
@@ -102,9 +104,9 @@ const Proposals: FC<{
                     prop={x[1]}
                     address={address}
                     signable={
-                      !!state.address &&
+                      !!userAddress &&
                       !!!x[1].ui.signatures.find(
-                        x => x.signer == state.address
+                        x => x.signer == userAddress
                       ) &&
                       true
                     }
@@ -165,7 +167,8 @@ const Transfer: FC<{
   prop: mutezTransfer;
   address: string;
 }> = ({ prop, address }) => {
-  let state = useContext(AppStateContext)!;
+  let state = useAppState();
+
   return (
     <li className="border-2 border-white p-2">
       <div>
@@ -219,8 +222,9 @@ const Card: FC<{
   contract: contractStorage;
   setCloseModal?: (arg: boolean | undefined) => void;
 }> = ({ contract, prop, address, id, signable, setCloseModal = () => {} }) => {
-  let state = useContext(AppStateContext)!;
+  let state = useAppState();
   let [loading, setLoading] = useState(false);
+  const { userAddress } = useWallet();
   function resolvable(
     signatures: { signer: string; result: boolean }[]
   ): boolean {
@@ -288,8 +292,8 @@ const Card: FC<{
       </div>
       <div className="mt-4 flex flex-col md:flex-row">
         <ContractLoader loading={loading}>
-          {state.address &&
-            signers(contract).includes(state.address) &&
+          {userAddress &&
+            signers(contract).includes(userAddress) &&
             signable && (
               <button
                 type="button"
@@ -304,8 +308,8 @@ const Card: FC<{
                 Reject
               </button>
             )}
-          {state.address &&
-            signers(contract).includes(state.address) &&
+          {userAddress &&
+            signers(contract).includes(userAddress) &&
             resolvable(prop.ui.signatures) &&
             "Executed" !== prop.ui.status && (
               <button
@@ -321,8 +325,8 @@ const Card: FC<{
                 Resolve
               </button>
             )}
-          {state.address &&
-            signers(contract).includes(state.address) &&
+          {userAddress &&
+            signers(contract).includes(userAddress) &&
             signable && (
               <button
                 type="button"
@@ -337,8 +341,8 @@ const Card: FC<{
                 Sign
               </button>
             )}
-          {state.address &&
-            signers(contract).includes(state.address) &&
+          {userAddress &&
+            signers(contract).includes(userAddress) &&
             !resolvable(prop.ui.signatures) &&
             !signable &&
             "Proposing" === prop.ui.status && (

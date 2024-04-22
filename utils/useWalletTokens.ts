@@ -1,13 +1,13 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
 import { TZKT_API_URL } from "../context/config";
-import { AppStateContext } from "../context/state";
+import { useAppState } from "../context/state";
 
 export type walletToken = fa1_2Token | fa2Token;
 
 const useWalletTokens = () => {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const [tokens, setTokens] = useState<undefined | walletToken[]>();
 
   useEffect(() => {

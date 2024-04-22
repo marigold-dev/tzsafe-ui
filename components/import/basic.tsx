@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import { AppStateContext, contractStorage } from "../../context/state";
+import { contractStorage, useAppState } from "../../context/state";
+import { useTezosToolkit } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
 import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
@@ -18,8 +19,9 @@ function Basic() {
 
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const params = useSearchParams();
+  const { tezos } = useTezosToolkit();
 
   let [initialState, set] = useState({
     walletName: "TzSafe Wallet",
@@ -51,7 +53,7 @@ function Basic() {
         }
         let exists = await (async () => {
           try {
-            await state.connection.contract.at(values.walletAddress);
+            await tezos.contract.at(values.walletAddress);
             return true;
           } catch (e) {
             return false;
@@ -75,10 +77,7 @@ function Basic() {
         setError(undefined);
 
         try {
-          const contract = await state.connection.wallet.at(
-            values.walletAddress,
-            tzip16
-          );
+          const contract = await tezos.wallet.at(values.walletAddress, tzip16);
           const storage: contractStorage = await contract.storage();
           let version = await fetchVersion(contract!);
 
@@ -86,9 +85,7 @@ function Basic() {
             throw new Error("The contract is not a TzSafe contract");
           }
 
-          let balance = await state?.connection.tz.getBalance(
-            values.walletAddress
-          );
+          let balance = await tezos.tz.getBalance(values.walletAddress);
           let v = toStorage(version, storage, balance);
           const validators = signers(v).map((x: string) => ({
             address: x,

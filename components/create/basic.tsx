@@ -2,13 +2,15 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import Link from "next/link";
 import { useContext } from "react";
 import FormContext from "../../context/formContext";
-import { AppStateContext } from "../../context/state";
+import { useAppState } from "../../context/state";
+import { useWallet } from "../../context/wallet";
 import renderError from "../formUtils";
 
 function Basic() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
+  const { userAddress } = useWallet();
 
   const byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
@@ -98,7 +100,7 @@ function Basic() {
           </Link>
           <button
             className={`${
-              !state.address ? "pointer-events-none opacity-50" : ""
+              !userAddress ? "pointer-events-none opacity-50" : ""
             } my-2 rounded bg-primary p-2 font-medium text-white hover:outline-none`}
             type="submit"
           >

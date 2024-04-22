@@ -4,18 +4,22 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import Alias from "../../components/Alias";
 import Spinner from "../../components/Spinner";
-import renderError, { renderWarning } from "../../components/formUtils";
+import { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
-import { TZKT_API_URL, PREFERED_NETWORK } from "../../context/config";
-import { AppDispatchContext, AppStateContext } from "../../context/state";
+import { TZKT_API_URL } from "../../context/config";
+import { useAppDispatch, useAppState } from "../../context/state";
+import { TezosToolkitContext } from "../../context/tezos-toolkit";
+import { useWallet } from "../../context/wallet";
 import { makeWertWidget } from "../../context/wert";
 import { mutezToTez } from "../../utils/tez";
 import { signers } from "../../versioned/apis";
 
 const TopUpPage = () => {
-  const state = useContext(AppStateContext)!;
-  const disptach = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const disptach = useAppDispatch();
+  const { userAddress } = useWallet();
+  const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +47,7 @@ const TopUpPage = () => {
     }
 
     try {
-      const sent = await state.connection.wallet
+      const sent = await tezos.wallet
         .transfer({ to: state.currentContract, amount })
         .send();
 
@@ -68,16 +72,16 @@ const TopUpPage = () => {
 
   const wertWidgetRef = useRef(
     makeWertWidget({
-      wallet: state.address ?? "",
+      wallet: userAddress ?? "",
       onSuccess,
     })
   );
 
   useEffect(() => {
-    if (!state.currentContract || !state.address) return;
+    if (!state.currentContract || !userAddress) return;
 
     wertWidgetRef.current = makeWertWidget({
-      wallet: state.address ?? "",
+      wallet: userAddress ?? "",
       onSuccess,
     });
   }, [state.currentContract]);
@@ -86,8 +90,7 @@ const TopUpPage = () => {
     if (
       !router.query.walletAddress ||
       Array.isArray(router.query.walletAddress) ||
-      !!state.address ||
-      !state.attemptedInitialLogin
+      !!userAddress
     )
       return;
 
@@ -99,7 +102,7 @@ const TopUpPage = () => {
     }
 
     router.replace(`/${router.query.walletAddress}/proposals`);
-  }, [router.query.walletAddress, state.address, state.attemptedInitialLogin]);
+  }, [router.query.walletAddress, userAddress]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -116,7 +119,7 @@ const TopUpPage = () => {
             {!signers(
               state.contracts[state.currentContract ?? ""] ??
                 state.currentStorage
-            ).includes(state.address ?? "") &&
+            ).includes(userAddress ?? "") &&
               renderWarning("You're not the owner of this wallet")}
           </div>
         </div>
@@ -156,7 +159,7 @@ const TopUpPage = () => {
               ) : isSuccess ? (
                 <span className="font-light text-white">
                   Transferred the funds from{" "}
-                  <Alias address={state.address ?? ""} disabled /> to{" "}
+                  <Alias address={userAddress ?? ""} disabled /> to{" "}
                   <Alias disabled address={state.currentContract ?? ""} />{" "}
                 </span>
               ) : null}
@@ -169,7 +172,7 @@ const TopUpPage = () => {
           ) : (
             <>
               <h2 className="mt-12 text-xl text-white">
-                Send from <Alias address={state.address ?? ""} disabled />
+                Send from <Alias address={userAddress ?? ""} disabled />
               </h2>
               <TopUp
                 address={state.currentContract ?? ""}

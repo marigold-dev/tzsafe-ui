@@ -18,7 +18,7 @@ const TextInputWithCompletion: FC<
   }
 > = props => {
   const [field, _, helpers] = useField(props);
-  // const state = useContext(AppStateContext)!;
+  // const state = useAppState();
   // Show inline feedback if EITHER
   // - the input is focused AND value is longer than 2 characters
   // - or, the has been visited (touched === true)

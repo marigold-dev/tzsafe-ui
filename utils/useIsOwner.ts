@@ -1,24 +1,21 @@
-import { useContext, useMemo } from "react";
-import { AppStateContext } from "../context/state";
+import { useMemo } from "react";
+import { useAppState } from "../context/state";
+import { useWallet } from "../context/wallet";
 import { signers } from "../versioned/apis";
 
 const useIsOwner = () => {
-  let state = useContext(AppStateContext)!;
+  let state = useAppState();
+  const { userAddress } = useWallet();
 
   const isOwner = useMemo(
     () =>
-      !!state.address &&
+      !!userAddress &&
       (state.contracts[state.currentContract ?? ""]?.owners?.includes(
-        state.address
+        userAddress
       ) ??
         (!!state.currentStorage &&
-          signers(state.currentStorage).includes(state.address!))),
-    [
-      state.currentContract,
-      state.address,
-      state.contracts,
-      state.currentStorage,
-    ]
+          signers(state.currentStorage).includes(userAddress!))),
+    [state.currentContract, userAddress, state.contracts, state.currentStorage]
   );
 
   return isOwner;

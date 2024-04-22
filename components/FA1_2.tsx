@@ -1,7 +1,7 @@
 import { Field, useFormikContext } from "formik";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
-import { AppStateContext } from "../context/state";
+import { useAppState } from "../context/state";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import ErrorMessage from "./ErrorMessage";
@@ -75,7 +75,7 @@ const tokenToOption = (fa1_2Token: fa1_2Token) => {
 };
 
 const FA1_2 = ({ index, remove, children }: props) => {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
   const { setFieldValue, getFieldProps } = useFormikContext<proposals>();
 
   const [isFetching, setIsFetching] = useState(true);

@@ -12,22 +12,20 @@ import React, {
   useState,
 } from "react";
 import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
-import {
-  AppDispatchContext,
-  AppStateContext,
-  contractStorage,
-} from "../context/state";
+import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
+import { useWallet } from "../context/wallet";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
-import { signers, toStorage } from "../versioned/apis";
+import { toStorage } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import { fa1_2Token } from "./FA1_2";
 import { fa2Token } from "./FA2Transfer";
 import RenderTokenOption from "./RenderTokenOption";
 import Select from "./Select";
 import ContractLoader from "./contractLoader";
-import renderError, { renderWarning } from "./formUtils";
+import renderError from "./formUtils";
 
 const FETCH_COUNT = 20;
 
@@ -83,8 +81,10 @@ function TopUp(props: {
   address: string;
   closeModal: (contract: contractStorage) => void;
 }) {
-  const state = useContext(AppStateContext)!;
-  const dispatch = useContext(AppDispatchContext)!;
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const { userAddress } = useWallet();
+  const { tezos } = useContext(TezosToolkitContext);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<undefined | boolean>(undefined);
 
@@ -94,12 +94,13 @@ function TopUp(props: {
   const [filterValue, setFilterValue] = useState("");
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
+  const { userBalance } = useWallet();
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       promiseWithTimeout(
         fetch(
-          `${TZKT_API_URL}/v1/tokens/balances?account=${state.address}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.in=fa1.2,fa2`
+          `${TZKT_API_URL}/v1/tokens/balances?account=${userAddress}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.in=fa1.2,fa2`
         )
           .catch(e => {
             console.log(e);
@@ -176,10 +177,10 @@ function TopUp(props: {
 
     const fa2Transfers = (await Promise.all(
       Object.entries(fa2).map(async ([address, tokens]) => {
-        const contract = await state.connection.contract.at(address);
+        const contract = await tezos.contract.at(address);
 
         const data = p.parseMichelineExpression(
-          `{ Pair "${state.address}" { ${tokens
+          `{ Pair "${userAddress}" { ${tokens
             .map(
               ({ tokenId, amount, token }) =>
                 `Pair "${state.currentContract}" (Pair ${tokenId} ${BigNumber(
@@ -204,13 +205,13 @@ function TopUp(props: {
     const fa1_2Transfers = (
       await Promise.all(
         Object.entries(fa1_2).map(async ([address, tokens]) => {
-          const contract = await state.connection.contract.at(address);
+          const contract = await tezos.contract.at(address);
 
           return tokens.map(formToken => ({
             kind: OpKind.TRANSACTION,
             ...contract.methods
               .transfer(
-                state.address,
+                userAddress,
                 state.currentContract,
                 BigNumber(formToken.amount ?? 0)
                   .multipliedBy(
@@ -226,7 +227,7 @@ function TopUp(props: {
       )
     ).flat() as transfer;
 
-    const batch = state.connection.wallet.batch(
+    const batch = tezos.wallet.batch(
       (!!amount && Number(amount) > 0
         ? ([
             {
@@ -276,8 +277,8 @@ function TopUp(props: {
         setLoading(true);
         try {
           await transfer(values);
-          const c = await state.connection.wallet.at(props.address, tzip16);
-          const balance = await state.connection.tz.getBalance(props.address);
+          const c = await tezos.wallet.at(props.address, tzip16);
+          const balance = await tezos.tz.getBalance(props.address);
           const cs: contractStorage = await c.storage();
           const version = await fetchVersion(c);
 
@@ -360,12 +361,12 @@ function TopUp(props: {
                   className="w-full rounded-md p-2"
                   placeholder="1"
                 />
-                {!!state.balance && (
+                {!!userBalance && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
                     Max:{" "}
-                    {mutezToTez(Number(state.balance)) > 1000
+                    {mutezToTez(Number(userBalance)) > 1000
                       ? "1000+"
-                      : mutezToTez(Number(state.balance))}
+                      : mutezToTez(Number(userBalance))}
                   </span>
                 )}
               </div>

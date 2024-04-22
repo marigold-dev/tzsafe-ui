@@ -6,7 +6,7 @@ import {
   WalletContract,
   WalletOperationBatch,
 } from "@taquito/taquito";
-import { char2Bytes, bytes2Char } from "@taquito/utils";
+import { stringToBytes, bytesToString } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { fa1_2Token } from "../components/FA1_2";
 import { fa2Token } from "../components/FA2Transfer";
@@ -210,7 +210,7 @@ class Version0_3_3 extends Versioned {
       const metadata = content.execute_lambda.metadata;
 
       const meta = !!metadata
-        ? bytes2Char(typeof metadata === "string" ? metadata : metadata.Some)
+        ? bytesToString(typeof metadata === "string" ? metadata : metadata.Some)
         : "No meta supplied";
 
       const lambda = Array.isArray(contentLambda)
@@ -295,7 +295,7 @@ class Version0_3_3 extends Versioned {
           transfer.values.lambda
         );
         let meta = !!transfer.values.metadata
-          ? char2Bytes(transfer.values.metadata)
+          ? stringToBytes(transfer.values.metadata)
           : null;
         return {
           execute_lambda: {
@@ -401,7 +401,7 @@ class Version0_3_3 extends Versioned {
         return {
           add_or_update_metadata: {
             key: "",
-            value: char2Bytes(transfer.values.tzip16_metadata),
+            value: stringToBytes(transfer.values.tzip16_metadata),
           },
         };
       }

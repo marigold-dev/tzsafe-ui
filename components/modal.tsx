@@ -1,9 +1,9 @@
-import React, { useContext, useEffect } from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
-import { AppStateContext } from "../context/state";
+import { useAppState } from "../context/state";
 
 function Modal(props: React.PropsWithChildren<{ opened: boolean }>) {
-  const state = useContext(AppStateContext)!;
+  const state = useAppState();
 
   useEffect(() => {
     document.body.style.overflow = props.opened ? "hidden" : "";
