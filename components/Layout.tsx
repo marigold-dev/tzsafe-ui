@@ -91,7 +91,6 @@ export default function Layout({
           payload: router.query.walletAddress,
         });
         setIsFetching(false);
-        return;
       }
 
       if (
