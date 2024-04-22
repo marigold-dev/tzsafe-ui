@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import React, { useState } from "react";
 import tzSafeLogo from "../assets/images/TzSafe.svg";
 import { PREFERED_NETWORK } from "../context/config";
-import { useAppState } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
 import Alias from "./Alias";
 import LinkComponent from "./links";
@@ -17,10 +17,12 @@ const NavBar = (_: React.PropsWithChildren) => {
 
   const router = useRouter();
   const state = useAppState();
+  const dispatch = useAppDispatch();
 
   const disconnect = async (): Promise<void> => {
     disconnectWallet();
 
+    dispatch({ type: "logout" });
     router.push("/");
   };
 

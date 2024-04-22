@@ -106,6 +106,9 @@ type action =
   | {
       type: "setAttemptedInitialLogin";
       payload: boolean;
+    }
+  | {
+      type: "logout";
     };
 
 const saveState = (state: tezosState, userAddress: string) => {
@@ -297,6 +300,9 @@ function reducer(
       return { ...state, proposalRefresher: state.proposalRefresher + 1 };
     case "loadStorage": {
       return { ...state, ...action.payload };
+    }
+    case "logout": {
+      return { ...init() };
     }
 
     default: {
