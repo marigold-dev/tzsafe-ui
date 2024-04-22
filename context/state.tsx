@@ -5,6 +5,7 @@ import {
   createContext,
   Dispatch,
   useContext,
+  useEffect,
   useReducer,
 } from "react";
 import { contractStorage } from "../types/app";
@@ -117,6 +118,12 @@ const saveState = (state: tezosState, userAddress: string) => {
       connectedDapps: state.connectedDapps,
     })
   );
+};
+
+const loadState = (userAddress: string) => {
+  const rawStorage = localStorage.getItem(`app_state:${userAddress}`);
+  if (!rawStorage) return {};
+  return JSON.parse(rawStorage);
 };
 
 function reducer(
@@ -288,6 +295,9 @@ function reducer(
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
       return { ...state, proposalRefresher: state.proposalRefresher + 1 };
+    case "loadStorage": {
+      return { ...state, ...action.payload };
+    }
 
     default: {
       throw `notImplemented: ${action.type}`;
@@ -306,9 +316,14 @@ const AppDispatchContext: Context<Dispatch<action> | null> =
   createContext<Dispatch<action> | null>(null);
 
 const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
+
+  useEffect(() => {
+    // If we are in anonymous mode don't load the previous storage
+    if (userAddress)
+      dispatch({ type: "loadStorage", payload: loadState(userAddress) });
+  }, [userAddress]);
+
   const [state, dispatch]: [tezosState, React.Dispatch<action>] = useReducer(
     (state: tezosState, action: action) =>
       reducer(state, action, { userAddress: userAddress || "" }),
