@@ -7,8 +7,8 @@ import {
   Formik,
   useFormikContext,
 } from "formik";
-import React, { useContext, useEffect } from "react";
-import { AppStateContext } from "../context/state";
+import React, { useEffect } from "react";
+import { useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
 import {
   parseContract,

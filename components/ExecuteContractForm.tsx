@@ -19,9 +19,7 @@ export function ExecuteContractForm(
 ) {
   const { submitCount, setFieldValue } = useFormikContext();
   const submitCountRef = useRef(submitCount);
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const [state, setState] = useState(
     () => props.defaultState ?? { address: "", amount: 0, shape: {} }

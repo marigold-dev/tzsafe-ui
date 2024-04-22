@@ -1,13 +1,7 @@
-import { useContext } from "react";
-import { AppDispatchContext, AppStateContext } from "../context/state";
 import { useWallet } from "../context/wallet";
-import { connectWallet } from "../utils/connectWallet";
 
 const LoginButton = () => {
-  const {
-    state: { wallet },
-    connectWallet,
-  } = useWallet();
+  const { wallet, connectWallet } = useWallet();
 
   return (
     <button

@@ -12,10 +12,7 @@ import LinkComponent from "./links";
 import LoginButton from "./loginButton";
 
 const NavBar = (_: React.PropsWithChildren) => {
-  const {
-    state: { userAddress },
-    disconnectWallet,
-  } = useWallet();
+  const { userAddress, disconnectWallet } = useWallet();
   let [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();

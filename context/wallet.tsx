@@ -17,7 +17,10 @@ type WalletState = {
 type WalletContextType = {
   connectWallet: () => void;
   disconnectWallet: () => void;
-  state: WalletState;
+  wallet: BeaconWallet | undefined;
+  userAccount: AccountInfo | undefined;
+  userAddress: string | undefined;
+  userBalance: number | undefined;
 };
 
 const createWalletConnection = (tezos: TezosToolkit) => {
@@ -44,7 +47,10 @@ const initialState: WalletState = {
 };
 
 export const WalletContext = createContext<WalletContextType>({
-  state: initialState,
+  wallet: undefined,
+  userAccount: undefined,
+  userAddress: undefined,
+  userBalance: undefined,
   connectWallet: () => {},
   disconnectWallet: () => {},
 });
@@ -101,7 +107,7 @@ const reducer = (
     case "CONNECT_WALLET":
       return { ...state, ...action.payload };
     case "DISCONNECT_WALLET":
-      return initialState;
+      return { ...initialState, wallet: state.wallet };
     case "HYDRATE_WALLET": {
       const { userAddress, userAccount, wallet } = action;
       return { ...state, userAddress, userAccount, wallet };
@@ -132,7 +138,7 @@ export const WalletProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <WalletContext.Provider
       value={{
-        state,
+        ...state,
         connectWallet: () =>
           connectWallet(tezos).then(payload =>
             dispatch({ type: "CONNECT_WALLET", payload })

@@ -3,7 +3,6 @@ import { Event } from "../context/P2PClient";
 import { useAppDispatch, useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
 import { decodeData } from "../pages/[walletAddress]/beacon";
-import { connectWallet } from "../utils/connectWallet";
 import { signers } from "../versioned/apis";
 import { p2pData } from "../versioned/interface";
 import { hasTzip27Support } from "../versioned/util";
@@ -26,9 +25,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [parsedData, setParsedData] = useState<undefined | p2pData>();
   const [error, setError] = useState<undefined | string>();
 
-  const {
-    state: { userAddress, wallet },
-  } = useWallet();
+  const { userAddress, wallet, connectWallet } = useWallet();
 
   const options = useMemo(() => {
     if (!userAddress) return [];
@@ -258,9 +255,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                       Cancel
                     </button>
                     <button
-                      onClick={async () => {
-                        await connectWallet(state, dispatch);
-                      }}
+                      onClick={connectWallet}
                       type="button"
                       className={`rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500 ${
                         !wallet ? "pointer-events-none opacity-50" : ""

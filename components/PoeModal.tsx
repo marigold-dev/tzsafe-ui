@@ -75,9 +75,7 @@ export const transferToProposalContent = (
 const PoeModal = () => {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const { tezos } = useTezosToolkit();
 

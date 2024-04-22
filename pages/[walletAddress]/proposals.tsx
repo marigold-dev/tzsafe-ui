@@ -196,9 +196,7 @@ const Proposals = () => {
   const isOwner = useIsOwner();
   const walletTokens = useWalletTokens();
 
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const { tezos } = useContext(TezosToolkitContext);
 

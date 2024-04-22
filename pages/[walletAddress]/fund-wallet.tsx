@@ -4,10 +4,10 @@ import { useRouter } from "next/router";
 import { useContext, useEffect, useRef, useState } from "react";
 import Alias from "../../components/Alias";
 import Spinner from "../../components/Spinner";
-import renderError, { renderWarning } from "../../components/formUtils";
+import { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
-import { TZKT_API_URL, PREFERED_NETWORK } from "../../context/config";
+import { TZKT_API_URL } from "../../context/config";
 import { useAppDispatch, useAppState } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import { useWallet } from "../../context/wallet";
@@ -18,9 +18,7 @@ import { signers } from "../../versioned/apis";
 const TopUpPage = () => {
   const state = useAppState();
   const disptach = useAppDispatch();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();

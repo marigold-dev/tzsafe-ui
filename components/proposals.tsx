@@ -24,9 +24,7 @@ const Proposals: FC<{
   transfers: mutezTransfer[];
   setCloseModal: (_: number, arg: boolean | undefined) => void;
 }> = ({ proposals, address, contract, setCloseModal, transfers }) => {
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   let [currentTab, setCurrentTab] = useState(0);
   let state = useAppState();
 
@@ -226,9 +224,7 @@ const Card: FC<{
 }> = ({ contract, prop, address, id, signable, setCloseModal = () => {} }) => {
   let state = useAppState();
   let [loading, setLoading] = useState(false);
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   function resolvable(
     signatures: { signer: string; result: boolean }[]
   ): boolean {

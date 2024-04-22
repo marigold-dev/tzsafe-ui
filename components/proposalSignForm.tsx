@@ -48,9 +48,7 @@ function ProposalSignForm({
   const state = useAppState();
   const currentContract = state.currentContract ?? "";
 
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const { tezos } = useContext(TezosToolkitContext);
 

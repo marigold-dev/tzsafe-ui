@@ -1,10 +1,9 @@
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Step from "../components/create/createStep";
 import Meta from "../components/meta";
 import Stepper from "../components/stepper";
 import FormContext from "../context/formContext";
-import { AppDispatchContext, AppStateContext } from "../context/state";
 import { useWallet } from "../context/wallet";
 
 function Create() {
@@ -12,10 +11,7 @@ function Create() {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [formStatus, setFormStatus] = useState("");
   const router = useRouter();
-  const {
-    state: { userAddress, wallet },
-    connectWallet,
-  } = useWallet();
+  const { userAddress, wallet, connectWallet } = useWallet();
 
   useEffect(() => {
     (async () => {
@@ -27,7 +23,7 @@ function Create() {
         }
       }
     })();
-  }, [router, connectWallet, userAddress]);
+  }, [router, connectWallet, userAddress, wallet]);
 
   return (
     <div className="h-full grow">

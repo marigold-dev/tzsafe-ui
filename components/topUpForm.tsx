@@ -83,9 +83,7 @@ function TopUp(props: {
 }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   const { tezos } = useContext(TezosToolkitContext);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<undefined | boolean>(undefined);
@@ -96,9 +94,7 @@ function TopUp(props: {
   const [filterValue, setFilterValue] = useState("");
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
-  const {
-    state: { userBalance },
-  } = useWallet();
+  const { userBalance } = useWallet();
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>

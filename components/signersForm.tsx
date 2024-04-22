@@ -88,9 +88,7 @@ const SignersForm: FC<{
 }> = props => {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const bakerAddressRef = useRef<null | string>(null);

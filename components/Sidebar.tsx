@@ -140,9 +140,7 @@ const Sidebar = ({
 
   let state = useAppState();
   let dispatch = useAppDispatch();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const { tezos } = useContext(TezosToolkitContext);
 

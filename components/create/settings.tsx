@@ -39,9 +39,7 @@ function Settings() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
   const state = useAppState();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
   let byName = Object.fromEntries(
     Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
   );

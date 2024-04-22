@@ -5,9 +5,7 @@ import { signers } from "../versioned/apis";
 
 const useIsOwner = () => {
   let state = useAppState();
-  const {
-    state: { userAddress },
-  } = useWallet();
+  const { userAddress } = useWallet();
 
   const isOwner = useMemo(
     () =>

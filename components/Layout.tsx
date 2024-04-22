@@ -27,9 +27,7 @@ export default function Layout({
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { tezos } = useTezosToolkit();
-  const {
-    state: { wallet },
-  } = useWallet();
+  const { wallet } = useWallet();
 
   const [data, setData] = useState<undefined | string>();
   const [hasSidebar, setHasSidebar] = useState(false);
