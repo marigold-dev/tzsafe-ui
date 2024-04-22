@@ -1,5 +1,5 @@
 import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
-import { char2Bytes } from "@taquito/tzip16";
+import { stringToBytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { describe, expect, it, beforeAll } from "vitest";
 import { proposal } from "../../types/Proposal0_3_4";
@@ -39,7 +39,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         expect(storage.proposal_counter.isEqualTo(BigNumber(0))).toBe(true);
         expect(storage.owners).toEqual([owner]);
         storage.metadata.get("").then((value: string) => {
-          expect(value).toEqual(char2Bytes(ipfs_file));
+          expect(value).toEqual(stringToBytes(ipfs_file));
         });
       },
       { timeout: tenMins }
