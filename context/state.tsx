@@ -20,7 +20,7 @@ type tezosState = {
   currentStorage: contractStorage | null;
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
-  aliasTrie: Trie<string>;
+  aliasTrie: Trie<string>; // c'est pour l'autocomplete qui est commenté
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
   connectedDapps: {

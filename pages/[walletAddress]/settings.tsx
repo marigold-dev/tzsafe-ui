@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
 import { useAppDispatch, useAppState } from "../../context/state";
+import { useContracts } from "../../context/useContracts";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
@@ -10,6 +11,7 @@ const Settings = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
+  const { currentContract } = useContracts();
 
   const [canDelete, setCanDelete] = useState(
     !!state.currentContract && !!state.contracts[state.currentContract]
