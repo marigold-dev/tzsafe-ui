@@ -8,31 +8,30 @@ import {
   useEffect,
   useReducer,
 } from "react";
-import { contractStorage } from "../types/app";
+import { ContractStorage, P2pData } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { p2pData } from "../versioned/interface";
 import P2PClient from "./P2PClient";
 import { useWallet } from "./wallet";
 
 type tezosState = {
   p2pClient: P2PClient | null;
   currentContract: string | null;
-  currentStorage: contractStorage | null;
-  contracts: { [address: string]: contractStorage };
+  currentStorage: ContractStorage | null;
+  contracts: { [address: string]: ContractStorage };
   aliases: { [address: string]: string };
   aliasTrie: Trie<string>;
   hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
   connectedDapps: {
     [address: string]: {
-      [id: string]: p2pData;
+      [id: string]: P2pData;
     };
   };
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
 };
 type storage = {
-  contracts: { [address: string]: contractStorage };
+  contracts: { [address: string]: ContractStorage };
   aliases: { [address: string]: string };
 };
 
@@ -59,16 +58,16 @@ type action =
       payload: {
         aliases: { [address: string]: string };
         address: string;
-        contract: contractStorage;
+        contract: ContractStorage;
       };
     }
   | {
       type: "updateContract";
-      payload: { address: string; contract: contractStorage };
+      payload: { address: string; contract: ContractStorage };
     }
   | {
       type: "setCurrentStorage";
-      payload: contractStorage & { address: string };
+      payload: ContractStorage & { address: string };
     }
   | {
       type: "setCurrentContract";
@@ -92,7 +91,7 @@ type action =
   | {
       type: "addDapp";
       payload: {
-        data: p2pData;
+        data: P2pData;
         address: string;
       };
     }
@@ -244,7 +243,7 @@ function reducer(
           };
           return acc;
         },
-        {} as { [address: string]: contractStorage }
+        {} as { [address: string]: ContractStorage }
       );
       return {
         ...action.payload,
@@ -349,7 +348,7 @@ const useAppDispatch = () => useContext(AppStateContext).dispatch;
 export {
   type tezosState,
   type action,
-  type contractStorage,
+  type ContractStorage,
   init,
   AppStateContext,
   AppDispatchContext,
