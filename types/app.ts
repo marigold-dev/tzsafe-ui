@@ -1,4 +1,5 @@
 import BigNumber from "bignumber.js";
+import { ParsedUrlQuery } from "querystring";
 import { version } from "./display";
 
 export type ContractStorage = { version: version } & {
@@ -25,3 +26,7 @@ export type ConnectedDapps = {
 };
 export type Contracts = { [address: string]: ContractStorage };
 export type Aliases = { [address: string]: string };
+
+export interface ParsedUrlQueryContract extends ParsedUrlQuery {
+  walletAddress: string;
+}

@@ -1,15 +1,13 @@
-import { LocalStorage, NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
-import router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import P2PClient from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
-import { init, useAppDispatch, useAppState } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
-import { useWallet } from "../context/wallet";
 import { contractStorage } from "../types/Proposal0_3_1";
 import { fetchContract } from "../utils/fetchContract";
 import Banner from "./Banner";
@@ -27,7 +25,6 @@ export default function Layout({
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { tezos } = useTezosToolkit();
-  const { wallet } = useWallet();
 
   const [data, setData] = useState<undefined | string>();
   const [hasSidebar, setHasSidebar] = useState(false);
@@ -149,28 +146,6 @@ export default function Layout({
     tezos,
     state.contracts,
   ]);
-  useEffect(() => {
-    (async () => {
-      const p2pClient = new P2PClient({
-        name: "TzSafe",
-        storage: new LocalStorage("P2P"),
-      });
-
-      await p2pClient.init();
-      await p2pClient.connect(p2pClient.handleMessages);
-
-      // Connect stored peers
-      Object.entries(state.connectedDapps).forEach(async ([address, dapps]) => {
-        Object.values(dapps).forEach(data => {
-          p2pClient
-            .addPeer(data)
-            .catch(_ => console.log("Failed to connect to peer", data));
-        });
-      });
-
-      dispatch!({ type: "p2pConnect", payload: p2pClient });
-    })();
-  }, [wallet]);
 
   useEffect(() => {
     setHasSidebar(false);

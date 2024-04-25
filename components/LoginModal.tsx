@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
-import { useAppDispatch, useAppState } from "../context/state";
+import { useDapps, useP2PClient } from "../context/dapps";
+import { useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
 import { decodeData } from "../pages/[walletAddress]/beacon";
+import { P2pData } from "../types/app";
 import { signers } from "../versioned/apis";
-import { p2pData } from "../versioned/interface";
 import { hasTzip27Support } from "../versioned/util";
 import Select from "./Select";
 import Spinner from "./Spinner";
@@ -20,9 +21,10 @@ enum State {
 
 const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const state = useAppState();
-  const dispatch = useAppDispatch();
+  const p2pClient = useP2PClient();
+  const { addDapp } = useDapps();
 
-  const [parsedData, setParsedData] = useState<undefined | p2pData>();
+  const [parsedData, setParsedData] = useState<undefined | P2pData>();
   const [error, setError] = useState<undefined | string>();
 
   const { userAddress, wallet, connectWallet } = useWallet();
@@ -52,14 +54,12 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [currentState, setCurrentState] = useState(() => State.LOADING);
 
   useEffect(() => {
-    if (!state.p2pClient) return;
-
     try {
       const decoded = decodeData(data);
 
       setParsedData(decoded);
 
-      state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
+      p2pClient.on(Event.PERMISSION_REQUEST, () => {
         if (!userAddress) {
           setCurrentState(State.LOGIN);
         } else if (
@@ -73,12 +73,12 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
         }
       });
 
-      state.p2pClient!.addPeer(decoded);
+      p2pClient.addPeer(decoded);
     } catch (e) {
       setError((e as Error).message);
       setCurrentState(State.ERROR);
     }
-  }, [data, state.p2pClient]);
+  }, [data, p2pClient]);
 
   useEffect(() => {
     if (currentState === State.LOGIN && !!userAddress) {
@@ -118,7 +118,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                       <button
                         className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                         onClick={() => {
-                          state.p2pClient?.refusePermission();
+                          p2pClient?.refusePermission();
                           onEnd();
                         }}
                       >
@@ -156,10 +156,9 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                       onClick={async e => {
                         e.preventDefault();
 
-                        if (!state.p2pClient!.hasReceivedPermissionRequest())
-                          return;
+                        if (!p2pClient.hasReceivedPermissionRequest()) return;
 
-                        await state.p2pClient!.refusePermission();
+                        await p2pClient.refusePermission();
                         setCurrentState(State.REFUSED);
                       }}
                     >
@@ -175,23 +174,15 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
 
                         if (
                           !parsedData ||
-                          !state.p2pClient!.hasReceivedPermissionRequest() ||
+                          !p2pClient.hasReceivedPermissionRequest() ||
                           !selectedWallet
                         )
                           return;
 
                         setCurrentState(State.LOADING);
-                        await state.p2pClient!.approvePermission(
-                          selectedWallet.value
-                        );
+                        await p2pClient.approvePermission(selectedWallet.value);
                         setCurrentState(State.AUTHORIZED);
-                        dispatch({
-                          type: "addDapp",
-                          payload: {
-                            data: parsedData,
-                            address: selectedWallet.value,
-                          },
-                        });
+                        addDapp(selectedWallet.value, parsedData);
                       }}
                     >
                       Authorize
@@ -248,7 +239,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                     <button
                       className="rounded border bg-transparent px-4 py-2 font-medium text-white "
                       onClick={() => {
-                        state.p2pClient?.refusePermission();
+                        p2pClient?.refusePermission();
                         onEnd();
                       }}
                     >
@@ -275,7 +266,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
                     <button
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={async () => {
-                        await state.p2pClient?.refusePermission();
+                        await p2pClient?.refusePermission();
                         onEnd();
                       }}
                     >
