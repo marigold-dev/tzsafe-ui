@@ -25,9 +25,10 @@ import React, {
   useState,
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
-import { contractStorage, useAppState } from "../context/state";
+import { useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import { useWallet } from "../context/wallet";
+import { ContractStorage } from "../types/app";
 import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
 import { Versioned, proposals, transfer } from "../versioned/interface";
@@ -371,7 +372,7 @@ function TransferForm(
   props: React.PropsWithoutRef<{
     address: string;
     closeModal: () => void;
-    contract: contractStorage;
+    contract: ContractStorage;
   }>
 ) {
   const state = useAppState();

@@ -22,7 +22,7 @@ import {
   proposal as p1,
   contractStorage as c1,
 } from "../types/Proposal0_0_11";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { tezToMutez } from "../utils/tez";
 import { promiseWithTimeout } from "../utils/timeout";
@@ -173,7 +173,7 @@ class Version0_0_11 extends Versioned {
   static override toContractState(
     contract: any,
     balance: BigNumber
-  ): contractStorage {
+  ): ContractStorage {
     let c: c1 = contract;
     return {
       balance: balance!.toString() || "0",

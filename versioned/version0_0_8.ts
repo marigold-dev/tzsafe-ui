@@ -15,7 +15,7 @@ import {
   proposal as p1,
   contractStorage as c1,
 } from "../types/Proposal0_0_8";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { promiseWithTimeout } from "../utils/timeout";
 import { matchLambda, toStorage } from "./apis";
@@ -240,7 +240,7 @@ class Version0_0_8 extends Versioned {
   static override toContractState(
     contract: any,
     balance: BigNumber
-  ): contractStorage {
+  ): ContractStorage {
     let c: c1 = contract;
     return {
       balance: balance!.toString() || "0",

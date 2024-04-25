@@ -18,10 +18,11 @@ import React, {
   useState,
 } from "react";
 import { PREFERED_NETWORK } from "../context/config";
-import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
 import { useWallet } from "../context/wallet";
+import { ContractStorage } from "../types/app";
 import { version } from "../types/display";
 import useIsOwner from "../utils/useIsOwner";
 import { signers, toStorage } from "../versioned/apis";
@@ -163,7 +164,7 @@ const Sidebar = ({
       let c = await tezos.wallet.at(state.currentContract, tzip16);
       let balance = await tezos.tz.getBalance(state.currentContract);
 
-      const storage = (await c.storage()) as contractStorage;
+      const storage = (await c.storage()) as ContractStorage;
       let version = await (state.contracts[state.currentContract]
         ? Promise.resolve<version>(
             state.contracts[state.currentContract].version

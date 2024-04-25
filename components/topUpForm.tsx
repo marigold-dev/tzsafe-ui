@@ -12,10 +12,11 @@ import React, {
   useState,
 } from "react";
 import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
-import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
 import { useWallet } from "../context/wallet";
+import { ContractStorage } from "../types/app";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { toStorage } from "../versioned/apis";
@@ -79,7 +80,7 @@ type formToken = {
 
 function TopUp(props: {
   address: string;
-  closeModal: (contract: contractStorage) => void;
+  closeModal: (contract: ContractStorage) => void;
 }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
@@ -279,7 +280,7 @@ function TopUp(props: {
           await transfer(values);
           const c = await tezos.wallet.at(props.address, tzip16);
           const balance = await tezos.tz.getBalance(props.address);
-          const cs: contractStorage = await c.storage();
+          const cs: ContractStorage = await c.storage();
           const version = await fetchVersion(c);
 
           const storage = toStorage(version, cs, balance);
@@ -297,7 +298,7 @@ function TopUp(props: {
 
             dispatch({
               type: "setCurrentStorage",
-              payload: storage as contractStorage & { address: string },
+              payload: storage as ContractStorage & { address: string },
             });
           }
 

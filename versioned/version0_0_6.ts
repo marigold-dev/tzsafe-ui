@@ -11,7 +11,7 @@ import { BigNumber } from "bignumber.js";
 import { DEFAULT_TIMEOUT } from "../context/config";
 import { generateFA2Michelson } from "../context/generateLambda";
 import { content, contractStorage as storage } from "../types/Proposal0_0_6";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { proposal, proposalContent, status } from "../types/display";
 import { promiseWithTimeout } from "../utils/timeout";
 import { matchLambda, toStorage } from "./apis";
@@ -148,7 +148,7 @@ class Version0_0_6 extends Versioned {
   static override toContractState(
     contract: any,
     balance: BigNumber
-  ): contractStorage {
+  ): ContractStorage {
     let c: {
       proposal_counter: BigNumber;
       proposal_map: BigMapAbstraction;

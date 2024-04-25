@@ -3,7 +3,7 @@ import { stringToBytes } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { describe, expect, it, beforeAll } from "vitest";
 import { proposal } from "../../types/Proposal0_3_4";
-import { contractStorage } from "../../types/app";
+import { ContractStorage } from "../../types/app";
 import { VersionedApi } from "../../versioned/apis";
 import deployTzSafe from "../../versioned/deployTzSafe";
 import { proposals } from "../../versioned/interface";
@@ -32,7 +32,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         );
         addr = tzsafe.address;
         console.log(`${version} is deployed, ${addr}`);
-        const storage: contractStorage = await retry(() => tzsafe.storage());
+        const storage: ContractStorage = await retry(() => tzsafe.storage());
 
         expect(tzsafe.address).toBeDefined();
         expect(storage.threshold.isEqualTo(BigNumber(1))).toBe(true);
@@ -69,7 +69,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           ],
         };
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_proposal_counter: BigNumber =
@@ -82,7 +82,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         const [_, msg] = deployed_result;
         expect(msg.startsWith("op")).toBeDefined();
 
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const after_proposal_counter: BigNumber =
@@ -107,7 +107,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         const v = VersionedApi(version, addr);
         const tzsafe = await tezos.wallet.at(addr);
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_proposal: any = await retry(() =>
@@ -127,7 +127,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           )
         );
 
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const after_proposal: any = await retry(() =>
@@ -152,7 +152,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         const v = VersionedApi(version, addr);
         const tzsafe = await tezos.wallet.at(addr);
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_arcihve: any = await retry(() =>
@@ -170,7 +170,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           )
         );
 
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const after_archive: { executed: Symbol } = await retry(() =>
@@ -188,7 +188,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         const v = VersionedApi(version, addr);
         const tzsafe = await tezos.wallet.at(addr);
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_effectivePeriod = before_storage.effective_period;
@@ -209,7 +209,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           )
         );
 
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         expect(after_storage.effective_period.toNumber()).toBe(
@@ -257,7 +257,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           ],
         };
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_proposal_counter: BigNumber =
@@ -270,7 +270,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         const [_, msg] = deployed_result;
         expect(msg.startsWith("op")).toBeDefined();
 
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const after_proposal_counter: BigNumber =
@@ -337,7 +337,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
           ],
         };
 
-        const before_storage: contractStorage = await retry(() =>
+        const before_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const before_proposal_counter: BigNumber =
@@ -359,7 +359,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         expect(msg.startsWith("op")).toBeDefined();
 
         // proposal validation
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
 
@@ -450,7 +450,7 @@ const test_suit = (setTezosToolkit: (tezos: TezosToolkit) => TezosToolkit) =>
         expect(msg.startsWith("op")).toBeDefined();
 
         // resolve validation
-        const after_storage: contractStorage = await retry(() =>
+        const after_storage: ContractStorage = await retry(() =>
           tzsafe.storage()
         );
         const after_archive: { executed: Symbol } = await retry(() =>
