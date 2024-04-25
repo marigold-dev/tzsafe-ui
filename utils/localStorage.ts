@@ -4,7 +4,7 @@ type AppStorage = {
   contracts: Contracts;
   aliases: Aliases;
   currentContract: string | null;
-  connectedDapps: ConnectedDapps;
+  connectedDapps: ConnectedDapps | undefined; //FIXME Shouldn't be undefined
 };
 
 const emptyStorage: AppStorage = {
@@ -16,34 +16,37 @@ const emptyStorage: AppStorage = {
 
 const save =
   (userAddress: string) =>
-  (data: Contracts | Aliases | string | ConnectedDapps) => {
+  (
+    key: "contracts" | "aliases" | "currentContract" | "connectedDapps",
+    data: Contracts | Aliases | string | ConnectedDapps
+  ) => {
     const storage = loadStorage(userAddress);
     localStorage.setItem(
-      `app_state:${userAddress}`,
-      JSON.stringify({ ...storage, data })
+      `new_app_state:${userAddress}`, //FIXME Temporarily to avoid collision between old and new state management
+      JSON.stringify({ ...storage, [key]: data })
     );
   };
 
 export const saveContractsToStorage = (
   userAddress: string,
   contracts: Contracts
-) => save(userAddress)(contracts);
+) => save(userAddress)("contracts", contracts);
 
 export const saveAliasesToStorage = (userAddress: string, aliases: Aliases) =>
-  save(userAddress)(aliases);
+  save(userAddress)("aliases", aliases);
 
 export const saveCurrentContractToStorage = (
   userAddress: string,
   currentContract: string
-) => save(userAddress)(currentContract);
+) => save(userAddress)("currentContract", currentContract);
 
 export const saveConnectedDappsToStorage = (
   userAddress: string,
   connectedDapps: ConnectedDapps
-) => save(userAddress)(connectedDapps);
+) => save(userAddress)("connectedDapps", connectedDapps);
 
 export const loadStorage = (userAddress: string): AppStorage => {
-  const rawStorage = localStorage.getItem(`app_state:${userAddress}`);
+  const rawStorage = localStorage.getItem(`new_app_state:${userAddress}`);
   if (!rawStorage) return emptyStorage;
   return JSON.parse(rawStorage);
 };
