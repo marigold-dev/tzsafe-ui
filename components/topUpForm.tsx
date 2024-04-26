@@ -288,13 +288,6 @@ function TopUp(props: {
           const storage = toStorage(version, cs, balance);
 
           if (!!state.contracts[props.address]) {
-            // dispatch({
-            //   type: "updateContract",
-            //   payload: {
-            //     address: props.address,
-            //     contract: toStorage(version, cs, balance),
-            //   },
-            // });
             addOrUpdateContract(props.address, toStorage(version, cs, balance));
           } else {
             storage.address = props.address;

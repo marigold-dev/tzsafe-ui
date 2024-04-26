@@ -177,15 +177,6 @@ const Sidebar = ({
 
       if (state.contracts[state.currentContract])
         addOrUpdateContract(state.currentContract, updatedContract);
-      // state.contracts[state.currentContract]
-      //   ? dispatch({
-      //       type: "updateContract",
-      //       payload: {
-      //         address: state.currentContract,
-      //         contract: updatedContract,
-      //       },
-      //     })
-      //   : null;
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentContract]);

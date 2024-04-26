@@ -1,22 +1,84 @@
-import React, { useRef } from "react";
+import React, { useEffect, useReducer, useRef } from "react";
 import { createContext } from "react";
+import { Aliases } from "../types/app";
+import { loadAliases, saveAliasesToStorage } from "../utils/localStorage";
 import { TZKT_API_URL } from "./config";
 import { useAppState } from "./state";
+import { useWallet } from "./wallet";
 
 type AliasesContextType = {
+  addAlias(address: string, alias: string): void;
+  removeAlias(address: string): void;
+  updateAliases(aliases: Array<{ address: string; name: string }>): void;
+  addressBook: Aliases; // Aliases defined in Tzsafe
   getAlias(address: string, defaultAlias: string): Promise<string>;
 }; // Map address with his alias. Alias can be from TZKT or Tzsafe or address by default
 
+type AliasesActions =
+  | {
+      type: "LOAD_ALIASES";
+      aliases: Aliases;
+    }
+  | {
+      type: "REMOVE_ALIAS";
+      payload: { address: string };
+    }
+  | {
+      type: "ADD_ALIAS";
+      payload: { address: string; alias: string };
+    }
+  | {
+      type: "UPDATE_ALIASES";
+      aliases: Array<{ address: string; name: string }>;
+    };
+
 export const AliasesContext = createContext<AliasesContextType>({
+  addressBook: {},
   getAlias: (address: string, defaultAlias: string) => Promise.resolve(address),
+  removeAlias: () => {},
+  addAlias: () => {},
+  updateAliases: () => {},
 });
+
+const reducer = (state: Aliases, action: AliasesActions) => {
+  switch (action.type) {
+    case "ADD_ALIAS":
+      return { ...state, [action.payload.address]: action.payload.alias };
+    case "REMOVE_ALIAS":
+      const { [action.payload.address]: deleted, ...others } = state;
+      return { ...state, ...others };
+    case "LOAD_ALIASES":
+      return action.aliases;
+    case "UPDATE_ALIASES":
+      const newAliases = Object.fromEntries(
+        action.aliases.map(({ name, address }) => [address, name])
+      );
+      return { ...state, ...newAliases };
+    default:
+      return state;
+  }
+};
 
 export const AliasesProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
+  const { userAddress } = useWallet();
   const aliases = useRef<Record<string, Promise<string | undefined>>>({});
+
+  const [state, dispatch] = useReducer(reducer, {});
+
+  useEffect(() => {
+    const loadedAliases = userAddress ? loadAliases(userAddress) : {};
+    dispatch({ type: "LOAD_ALIASES", aliases: loadedAliases ?? {} });
+  }, [userAddress]);
+
+  // Save state to storage when state is updated
+  useEffect(() => {
+    if (Object.keys(state).length !== 0)
+      saveAliasesToStorage(userAddress || "", state);
+  }, [state, userAddress]);
 
   const aliasesFromState = useAppState().aliases;
 
@@ -58,6 +120,12 @@ export const AliasesProvider = ({
     <AliasesContext.Provider
       value={{
         getAlias,
+        addressBook: state,
+        addAlias: (address, alias) =>
+          dispatch({ type: "ADD_ALIAS", payload: { address, alias } }),
+        removeAlias: address =>
+          dispatch({ type: "REMOVE_ALIAS", payload: { address } }),
+        updateAliases: aliases => dispatch({ type: "UPDATE_ALIASES", aliases }),
       }}
     >
       {children}

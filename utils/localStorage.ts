@@ -56,3 +56,6 @@ export const loadDapps = (userAddress: string) =>
 
 export const loadContracts = (userAddress: string) =>
   loadStorage(userAddress).contracts;
+
+export const loadAliases = (userAddress: string) =>
+  loadStorage(userAddress).aliases;

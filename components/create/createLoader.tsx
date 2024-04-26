@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
+import { useAliases } from "../../context/aliases";
 import { useContracts } from "../../context/contracts";
 import FormContext from "../../context/formContext";
 import {
@@ -20,6 +21,7 @@ function Success() {
   const [loading, setLoading] = useState(true);
   const { tezos } = useTezosToolkit();
   const { addOrUpdateContract } = useContracts();
+  const { updateAliases } = useAliases();
 
   useEffect(() => {
     (async () => {
@@ -51,22 +53,16 @@ function Success() {
           const balance = await tezos.tz.getBalance(tzsafe!.address!);
           setAddress({ address: tzsafe?.address!, status: 1 });
           setLoading(false);
-          // dispatch!({
-          //   type: "addContract",
-          //   payload: {
-          //     aliases: Object.fromEntries([
-          //       ...formState!.validators!.map(x => [x.address, x.name]),
-          //       [tzsafe?.address!, formState?.walletName || ""],
-          //     ]),
-          //     contract: toStorage(formState.version, c, balance!),
-          //     address: tzsafe!.address!,
-          //   },
-          // });
           addOrUpdateContract(
             tzsafe!.address,
             toStorage(formState.version, c, balance!)
           );
-          // TODO ADD ALIAS
+          updateAliases(
+            Object.fromEntries([
+              ...formState.validators.map(x => [x.address, x.name]),
+              [tzsafe?.address!, formState?.walletName || ""],
+            ])
+          );
         } catch (err) {
           console.log(err);
           setAddress({ status: -1, address: "" });

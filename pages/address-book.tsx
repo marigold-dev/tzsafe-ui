@@ -7,15 +7,10 @@ import {
   Field,
   FormikErrors,
 } from "formik";
-import { useContext } from "react";
 import renderError from "../components/formUtils";
 import Meta from "../components/meta";
-import {
-  AppDispatchContext,
-  AppStateContext,
-  useAppDispatch,
-  useAppState,
-} from "../context/state";
+import { useAliases } from "../context/aliases";
+import { useAppState } from "../context/state";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -32,7 +27,7 @@ function get(
 }
 function Home() {
   const state = useAppState();
-  const dispatch = useAppDispatch();
+  const { updateAliases } = useAliases();
 
   const byName = Object.fromEntries(
     Object.entries(state.aliases).map(([k, v]) => [v, k])
@@ -109,10 +104,7 @@ function Home() {
                 return errors;
               }}
               onSubmit={values => {
-                dispatch!({
-                  type: "updateAliases",
-                  payload: { aliases: values.validators, keepOld: false },
-                });
+                updateAliases(values.validators);
               }}
             >
               {({ values, errors, setTouched }) => {

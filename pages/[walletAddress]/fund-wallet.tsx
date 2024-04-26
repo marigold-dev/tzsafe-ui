@@ -61,10 +61,7 @@ const TopUpPage = () => {
       newContract.balance = new BigNumber(newContract.balance)
         .plus(transaction[0].amount as number)
         .toString();
-      // disptach({
-      //   type: "updateContract",
-      //   payload: { contract: newContract, address: state.currentContract },
-      // });
+
       addOrUpdateContract(state.currentContract, newContract);
 
       setIsLoading(false);

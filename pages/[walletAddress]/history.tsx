@@ -10,7 +10,7 @@ import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import { useContracts } from "../../context/contracts";
 import { getTokenTransfers, getTransfers } from "../../context/proposals";
-import { useAppDispatch, useAppState } from "../../context/state";
+import { useAppState } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
 import { ContractStorage } from "../../types/app";
@@ -21,7 +21,6 @@ import {
   tokenTransfer,
   version,
 } from "../../types/display";
-import { mutezToTez } from "../../utils/tez";
 import useWalletTokens from "../../utils/useWalletTokens";
 import {
   getProposalsBigmapId,
@@ -148,7 +147,6 @@ const getLatestTimestamp = (og: {
 
 const History = () => {
   const globalState = useAppState();
-  const globalDispatch = useAppDispatch();
 
   const { tezos } = useContext(TezosToolkitContext);
   const walletTokens = useWalletTokens();
@@ -217,15 +215,6 @@ const History = () => {
 
       if (globalState.contracts[globalState.currentContract])
         addOrUpdateContract(globalState.currentContract, updatedContract);
-      // globalState.contracts[globalState.currentContract]
-      //   ? globalDispatch({
-      //       type: "updateContract",
-      //       payload: {
-      //         address: globalState.currentContract,
-      //         contract: updatedContract,
-      //       },
-      //     })
-      //   : null;
 
       storage.version = version;
 

@@ -180,14 +180,6 @@ async function getProposals(
   if (globalState.contracts[globalState.currentContract ?? ""]) {
     const balance = await tezos.tz.getBalance(globalState.currentContract);
 
-    // globalDispatch({
-    //   type: "updateContract",
-    //   payload: {
-    //     address: globalState.currentContract,
-    //     contract: toStorage(version, storage, balance),
-    //   },
-    // });
-
     addOrUpdateContract(
       globalState.currentContract,
       toStorage(version, storage, balance)

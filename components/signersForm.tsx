@@ -11,6 +11,7 @@ import {
 } from "formik";
 import { useRouter } from "next/router";
 import { FC, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useAliases } from "../context/aliases";
 import {
   MODAL_TIMEOUT,
   PREFERED_NETWORK,
@@ -90,6 +91,7 @@ const SignersForm: FC<{
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { userAddress } = useWallet();
+  const { updateAliases } = useAliases();
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const bakerAddressRef = useRef<null | string>(null);
@@ -474,10 +476,7 @@ const SignersForm: FC<{
         try {
           await updateSettings(getOpsHelper(values));
           setResult(true);
-          dispatch!({
-            type: "updateAliases",
-            payload: { aliases: values.validators, keepOld: true },
-          });
+          updateAliases(values.validators);
         } catch (e) {
           console.log(e);
           setResult(false);
