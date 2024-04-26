@@ -10,7 +10,6 @@ import { useAppDispatch, useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
 import { contractStorage } from "../types/Proposal0_3_1";
 import { fetchContract } from "../utils/fetchContract";
-import Banner from "./Banner";
 import LoginModal from "./LoginModal";
 import PoeModal from "./PoeModal";
 import Sidebar from "./Sidebar";
@@ -163,14 +162,7 @@ export default function Layout({
         />
       )}
       <PoeModal />
-      <Banner>
-        <span className="font-light">Make sure the URL is </span>
-        {PREFERED_NETWORK === NetworkType.MAINNET
-          ? "tzsafe.marigold.dev"
-          : PREFERED_NETWORK === NetworkType.GHOSTNET
-          ? "ghostnet.tzsafe.marigold.dev"
-          : "a valid URL"}
-      </Banner>
+
       <NavBar />
 
       {isSidebarHidden ? null : (
@@ -181,11 +173,7 @@ export default function Layout({
         />
       )}
 
-      <div
-        className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
-          state.hasBanner ? "mt-12" : ""
-        }`}
-      >
+      <div className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"}`}>
         <button
           className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
           onClick={() => {

@@ -52,10 +52,6 @@ type action =
   | { type: "writeStorage"; payload: storage }
   | { type: "setDelegatorAddresses"; payload: string[] }
   | {
-      type: "setBanner";
-      payload: boolean;
-    }
-  | {
       type: "refreshProposals";
     }
   | {
