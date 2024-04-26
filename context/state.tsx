@@ -1,4 +1,3 @@
-import { getSenderId } from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
 import {
   Context,
@@ -8,67 +7,54 @@ import {
   useEffect,
   useReducer,
 } from "react";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import { p2pData } from "../versioned/interface";
-import P2PClient from "./P2PClient";
 import { useWallet } from "./wallet";
 
 type tezosState = {
-  p2pClient: P2PClient | null;
   currentContract: string | null;
-  currentStorage: contractStorage | null;
-  contracts: { [address: string]: contractStorage };
+  currentStorage: ContractStorage | null;
+  contracts: { [address: string]: ContractStorage };
   aliases: { [address: string]: string };
   aliasTrie: Trie<string>;
-  hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
-  connectedDapps: {
-    [address: string]: {
-      [id: string]: p2pData;
-    };
-  };
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
 };
 type storage = {
-  contracts: { [address: string]: contractStorage };
+  contracts: { [address: string]: ContractStorage };
   aliases: { [address: string]: string };
 };
 
 let emptyState = (): tezosState => {
   return {
-    p2pClient: null,
     contracts: {},
     aliases: {},
     currentContract: null,
     currentStorage: null,
     aliasTrie: new Trie<string>(),
-    hasBanner: true,
     delegatorAddresses: undefined,
-    connectedDapps: {},
     proposalRefresher: 0,
   };
 };
 
 type action =
-  | { type: "p2pConnect"; payload: P2PClient }
   | { type: "init"; payload: tezosState }
   | {
       type: "addContract";
       payload: {
         aliases: { [address: string]: string };
         address: string;
-        contract: contractStorage;
+        contract: ContractStorage;
       };
     }
   | {
       type: "updateContract";
-      payload: { address: string; contract: contractStorage };
+      payload: { address: string; contract: ContractStorage };
     }
   | {
       type: "setCurrentStorage";
-      payload: contractStorage & { address: string };
+      payload: ContractStorage & { address: string };
     }
   | {
       type: "setCurrentContract";
@@ -90,17 +76,6 @@ type action =
       payload: boolean;
     }
   | {
-      type: "addDapp";
-      payload: {
-        data: p2pData;
-        address: string;
-      };
-    }
-  | {
-      type: "removeDapp";
-      payload: string;
-    }
-  | {
       type: "refreshProposals";
     }
   | {
@@ -118,7 +93,6 @@ const saveState = (state: tezosState, userAddress: string) => {
       contracts: state.contracts,
       aliases: state.aliases,
       currentContract: state.currentContract,
-      connectedDapps: state.connectedDapps,
     })
   );
 };
@@ -135,34 +109,34 @@ function reducer(
   { userAddress }: { userAddress: string }
 ): tezosState {
   switch (action.type) {
-    case "p2pConnect": {
-      return { ...state, p2pClient: action.payload };
-    }
-    case "addDapp": {
-      state.connectedDapps[action.payload.address] ??= {};
+    // case "p2pConnect": {
+    //   return { ...state, p2pClient: action.payload };
+    // }
+    // case "addDapp": {
+    //   state.connectedDapps[action.payload.address] ??= {};
 
-      state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
-        action.payload.data;
+    //   state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
+    //     action.payload.data;
 
-      saveState(state, userAddress);
+    //   saveState(state, userAddress);
 
-      return state;
-    }
-    case "removeDapp": {
-      if (
-        !state.currentContract ||
-        !state.connectedDapps[state.currentContract][action.payload]
-      )
-        return state;
+    //   return state;
+    // }
+    // case "removeDapp": {
+    //   if (
+    //     !state.currentContract ||
+    //     !state.connectedDapps[state.currentContract][action.payload]
+    //   )
+    //     return state;
 
-      const newState = { ...state };
+    //   const newState = { ...state };
 
-      delete newState.connectedDapps[state.currentContract][action.payload];
+    //   delete newState.connectedDapps[state.currentContract][action.payload];
 
-      saveState(newState, userAddress);
+    //   saveState(newState, userAddress);
 
-      return newState;
-    }
+    //   return newState;
+    // }
     case "addContract": {
       let al = action.payload.aliases;
       let aliases = { ...state.aliases, ...al };
@@ -244,7 +218,7 @@ function reducer(
           };
           return acc;
         },
-        {} as { [address: string]: contractStorage }
+        {} as { [address: string]: ContractStorage }
       );
       return {
         ...action.payload,
@@ -259,20 +233,21 @@ function reducer(
     case "removeContract": {
       const { [action.address]: _, ...contracts } = state.contracts;
       const { [action.address]: __, ...aliases } = state.aliases;
-      const { [action.address]: contractDapps, ...connectedDapps } =
-        state.connectedDapps;
+      // TODO WHEN SPLIT CONTRACTS INTO CONTEXT
+      // const { [action.address]: contractDapps, ...connectedDapps } =
+      //   state.connectedDapps;
 
-      Object.values(contractDapps ?? {}).forEach(async dapp => {
-        const senderId = await getSenderId(dapp.publicKey);
-        state.p2pClient?.removePeer(
-          {
-            ...dapp,
-            type: "p2p-pairing-response",
-            senderId,
-          },
-          true
-        );
-      });
+      // Object.values(contractDapps ?? {}).forEach(async dapp => {
+      //   const senderId = await getSenderId(dapp.publicKey);
+      //   state.p2pClient?.removePeer(
+      //     {
+      //       ...dapp,
+      //       type: "p2p-pairing-response",
+      //       senderId,
+      //     },
+      //     true
+      //   );
+      // });
 
       const addresses = Object.keys(contracts);
       const currentContract = addresses.length > 0 ? addresses[0] : null;
@@ -282,18 +257,13 @@ function reducer(
         contracts,
         currentContract,
         aliases,
-        connectedDapps,
+        // connectedDapps,
       };
 
       saveState(newState, userAddress);
 
       return newState;
     }
-    case "setBanner":
-      return {
-        ...state,
-        hasBanner: action.payload,
-      };
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
@@ -349,7 +319,7 @@ const useAppDispatch = () => useContext(AppStateContext).dispatch;
 export {
   type tezosState,
   type action,
-  type contractStorage,
+  type ContractStorage,
   init,
   AppStateContext,
   AppDispatchContext,

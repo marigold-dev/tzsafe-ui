@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import { contractStorage, useAppState } from "../../context/state";
+import { useAppState } from "../../context/state";
 import { useTezosToolkit } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
+import { ContractStorage } from "../../types/app";
 import { secondsToDuration } from "../../utils/adaptiveTime";
 import { signers, toStorage } from "../../versioned/apis";
 import Spinner from "../Spinner";
@@ -78,7 +79,7 @@ function Basic() {
 
         try {
           const contract = await tezos.wallet.at(values.walletAddress, tzip16);
-          const storage: contractStorage = await contract.storage();
+          const storage: ContractStorage = await contract.storage();
           let version = await fetchVersion(contract!);
 
           if (version === "unknown version") {

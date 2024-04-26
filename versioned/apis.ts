@@ -9,7 +9,7 @@ import { ParameterSchema } from "@taquito/michelson-encoder";
 import { MichelsonMap, WalletContract } from "@taquito/taquito";
 import { encodePubKey } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { version, proposal } from "../types/display";
 import { Versioned } from "./interface";
 import Version0_0_6 from "./version0_0_6";
@@ -24,7 +24,7 @@ import Version0_3_2 from "./version0_3_2";
 import Version0_3_3 from "./version0_3_3";
 import Version0_3_4 from "./version0_3_4";
 
-function signers(c: contractStorage): string[] {
+function signers(c: ContractStorage): string[] {
   return Versioned.signers(c);
 }
 
@@ -70,12 +70,12 @@ function VersionedApi(version: version, contractAddress: string): Versioned {
 }
 function toStorage(
   version: version,
-  c: contractStorage,
+  c: ContractStorage,
   balance: BigNumber
-): contractStorage {
+): ContractStorage {
   return dispatchUi[version]().toContractState(c, balance);
 }
-function getProposalsBigmapId(version: version, c: contractStorage): string {
+function getProposalsBigmapId(version: version, c: ContractStorage): string {
   return dispatchUi[version]().getProposalsBigmapId(c);
 }
 function toProposal(version: version, c: WalletContract): proposal {

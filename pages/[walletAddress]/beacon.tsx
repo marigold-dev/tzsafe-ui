@@ -9,9 +9,10 @@ import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import { Event } from "../../context/P2PClient";
 import { MODAL_TIMEOUT } from "../../context/config";
+import { useDapps, useP2PClient } from "../../context/dapps";
 import { useAppDispatch, useAppState } from "../../context/state";
+import { P2pData, ParsedUrlQueryContract } from "../../types/app";
 import useIsOwner from "../../utils/useIsOwner";
-import { p2pData } from "../../versioned/interface";
 import { hasTzip27Support } from "../../versioned/util";
 
 export enum State {
@@ -24,14 +25,14 @@ export enum State {
   TRANSACTION = 40,
 }
 
-export function decodeData(data: string): p2pData {
+export function decodeData(data: string): P2pData {
   try {
     const decoded = JSON.parse(
       new TextDecoder().decode(bs58check.decode(data))
     );
 
     if ("name" in decoded && "id" in decoded && "relayServer" in decoded)
-      return decoded as p2pData;
+      return decoded as P2pData;
   } catch {}
 
   throw new Error("The code is not valid");
@@ -42,29 +43,31 @@ const Beacon = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
+  const p2pClient = useP2PClient();
+  const { getDappsByContract, removeDapp, addDapp } = useDapps();
 
   const searchParams = useSearchParams();
-  const [data, setData] = useState<p2pData | undefined>();
+  const [data, setData] = useState<P2pData | undefined>();
 
   const [validationState, setValidationState] = useState(State.LOADING);
   const inputRef = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState<undefined | string>(undefined);
   const [error, setError] = useState<undefined | string>(undefined);
 
+  const { walletAddress: currentContract } =
+    router.query as ParsedUrlQueryContract;
+
   useEffect(() => {
     if (
-      !state.currentContract ||
       !isOwner ||
       !hasTzip27Support(
-        state.contracts[state.currentContract ?? ""]?.version ??
+        state.contracts[currentContract]?.version ??
           state.currentStorage?.version
       )
     ) {
       router.replace("/");
       return;
     }
-
-    if (!state.currentContract || !state.p2pClient) return;
 
     if (!searchParams.has("data") && !searchParams.has("type") && !code) {
       setValidationState(State.CODE);
@@ -83,12 +86,12 @@ const Beacon = () => {
 
     setData(data);
 
-    state.p2pClient!.on(Event.PERMISSION_REQUEST, () => {
+    p2pClient.on(Event.PERMISSION_REQUEST, () => {
       setValidationState(State.AUTHORIZE);
     });
 
-    state.p2pClient!.addPeer(data);
-  }, [searchParams, state.currentContract, state.p2pClient, code, isOwner]);
+    p2pClient.addPeer(data);
+  }, [searchParams, p2pClient, code, isOwner]);
 
   useEffect(() => {
     if (
@@ -106,9 +109,7 @@ const Beacon = () => {
     };
   }, [validationState]);
 
-  const connectedDapps = Object.values(
-    state.connectedDapps[state.currentContract ?? ""] ?? {}
-  );
+  const connectedDapps = getDappsByContract(currentContract);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -122,10 +123,10 @@ const Beacon = () => {
             </h1>
 
             <ul className="mt-2 w-full space-y-2">
-              {connectedDapps.length === 0 ? (
+              {!connectedDapps ? (
                 <p className="text-zinc-500">There are no connected Dapps</p>
               ) : (
-                connectedDapps.map(data => {
+                Object.values(connectedDapps).map(data => {
                   return (
                     <li
                       key={data.id}
@@ -134,24 +135,8 @@ const Beacon = () => {
                       <button
                         className="rounded bg-primary p-1 text-sm text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                         title="Disconnect"
-                        onClick={async () => {
-                          const senderId = await getSenderId(data.publicKey);
-
-                          state.p2pClient?.removePeer(
-                            {
-                              ...data,
-                              type: "p2p-pairing-response",
-                              senderId,
-                            },
-                            true
-                          );
-
-                          await state.p2pClient?.removeAppMetadata(senderId);
-
-                          dispatch({
-                            type: "removeDapp",
-                            payload: data.appUrl,
-                          });
+                        onClick={() => {
+                          removeDapp(data, currentContract);
                         }}
                       >
                         <Cross1Icon />
@@ -211,7 +196,6 @@ const Beacon = () => {
 
                       try {
                         const data = decodeData(inputRef.current.value);
-
                         if (
                           data.appUrl.includes("tzsafe") ||
                           data.name.toLowerCase() === "tzsafe"
@@ -236,13 +220,13 @@ const Beacon = () => {
           if (!data) return null;
 
           if (
-            !!state.connectedDapps[data.id] &&
+            !!connectedDapps?.[data.id] &&
             validationState !== State.AUTHORIZED
           )
             return (
               <p>
                 {data?.name} is already connected with{" "}
-                {state.aliases[state.currentContract ?? ""]}
+                {state.aliases[currentContract]}
               </p>
             );
 
@@ -254,8 +238,7 @@ const Beacon = () => {
                 <>
                   <p>
                     Do you want to allow the connection to{" "}
-                    {state.aliases[state.currentContract ?? ""] ??
-                      state.currentContract}
+                    {state.aliases[currentContract] ?? currentContract}
                   </p>
                   <div className="mt-4 flex items-center space-x-4">
                     <button
@@ -263,10 +246,9 @@ const Beacon = () => {
                       className="rounded border-2 bg-transparent px-3 py-1 font-medium text-white hover:outline-none"
                       onClick={async e => {
                         e.preventDefault();
-                        if (!state.p2pClient!.hasReceivedPermissionRequest())
-                          return;
+                        if (!p2pClient.hasReceivedPermissionRequest()) return;
 
-                        await state.p2pClient!.refusePermission();
+                        await p2pClient.refusePermission();
                         setValidationState(State.REFUSED);
                       }}
                     >
@@ -279,21 +261,12 @@ const Beacon = () => {
                       }
                       onClick={async e => {
                         e.preventDefault();
-                        if (
-                          !state.p2pClient!.hasReceivedPermissionRequest() ||
-                          !state.currentContract
-                        )
-                          return;
+                        if (!p2pClient.hasReceivedPermissionRequest()) return;
 
                         setValidationState(State.LOADING);
-                        await state.p2pClient!.approvePermission(
-                          state.currentContract
-                        );
+                        await p2pClient.approvePermission(currentContract);
                         setValidationState(State.AUTHORIZED);
-                        dispatch({
-                          type: "addDapp",
-                          payload: { data, address: state.currentContract },
-                        });
+                        addDapp(currentContract, data);
                       }}
                     >
                       Authorize
@@ -306,8 +279,7 @@ const Beacon = () => {
               return (
                 <p>
                   {data?.name} has been authorized to connect to{" "}
-                  {state.aliases[state.currentContract ?? ""] ??
-                    state.currentContract}
+                  {state.aliases[currentContract ?? ""] ?? currentContract}
                 </p>
               );
             case State.REFUSED:

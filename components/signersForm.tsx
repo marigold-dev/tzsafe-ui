@@ -21,9 +21,10 @@ import {
   generateDelegateMichelson,
   generateUndelegateMichelson,
 } from "../context/generateLambda";
-import { contractStorage, useAppDispatch, useAppState } from "../context/state";
+import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import { useWallet } from "../context/wallet";
+import { ContractStorage } from "../types/app";
 import {
   durationOfDaysHoursMinutes,
   parseIntOr,
@@ -83,7 +84,7 @@ const DelegatorHelper = ({
 const SignersForm: FC<{
   closeModal: () => void;
   address: string;
-  contract: contractStorage | undefined;
+  contract: ContractStorage | undefined;
   disabled?: boolean;
 }> = props => {
   const state = useAppState();
@@ -149,7 +150,7 @@ const SignersForm: FC<{
     minutes: duration?.minutes?.toString(),
     requiredSignatures: !props.contract
       ? 0
-      : (props.contract as contractStorage).threshold.toNumber(),
+      : (props.contract as ContractStorage).threshold.toNumber(),
     bakerAddress: undefined,
   };
 

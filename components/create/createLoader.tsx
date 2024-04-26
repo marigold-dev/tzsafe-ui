@@ -2,7 +2,7 @@ import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
 import {
-  contractStorage,
+  ContractStorage,
   useAppDispatch,
   useAppState,
 } from "../../context/state";
@@ -45,7 +45,7 @@ function Success() {
             effective_period,
             formState.version
           );
-          const c = (await tzsafe!.storage()) as contractStorage;
+          const c = (await tzsafe!.storage()) as ContractStorage;
           const balance = await tezos.tz.getBalance(tzsafe!.address!);
           setAddress({ address: tzsafe?.address!, status: 1 });
           setLoading(false);

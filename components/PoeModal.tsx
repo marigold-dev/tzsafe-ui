@@ -20,6 +20,7 @@ import { usePathname } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { PREFERED_NETWORK } from "../context/config";
+import { useP2PClient } from "../context/dapps";
 import {
   generateDelegateMichelson,
   generateExecuteContractMichelson,
@@ -78,6 +79,7 @@ const PoeModal = () => {
   const { userAddress } = useWallet();
 
   const { tezos } = useTezosToolkit();
+  const p2pClient = useP2PClient();
 
   const path = usePathname();
 
@@ -123,8 +125,6 @@ const PoeModal = () => {
   }, [transfers]);
 
   useEffect(() => {
-    if (!state.p2pClient) return;
-
     const challengeCb = (message: ProofOfEventChallengeRequestOutput) => {
       setMessage(message);
       setAddress(message.contractAddress);
@@ -132,7 +132,7 @@ const PoeModal = () => {
 
     const transactionCb = async (message: OperationRequestOutput) => {
       if (!state.contracts[message.sourceAddress]) {
-        state.p2pClient?.abortRequest(
+        p2pClient.abortRequest(
           message.id,
           "The contract is not an imported TzSafe one"
         );
@@ -140,17 +140,14 @@ const PoeModal = () => {
       }
 
       if (!!currentMetadata) {
-        state.p2pClient?.abortRequest(
-          message.id,
-          "There's already a pending request"
-        );
+        p2pClient.abortRequest(message.id, "There's already a pending request");
         return;
       }
       setAddress(message.sourceAddress);
       setCurrentMetadata([message.id, message.appMetadata]);
 
       if (message.operationDetails.length === 0) {
-        await state.p2pClient?.sendError(
+        await p2pClient.sendError(
           message.id,
           "Request was empty",
           BeaconErrorType.TRANSACTION_INVALID_ERROR
@@ -238,7 +235,7 @@ const PoeModal = () => {
                   setTransactionError(errorMessage);
                   console.log("Contract conversion error:", e);
 
-                  state.p2pClient
+                  p2pClient
                     ?.sendError(
                       message.id,
                       errorMessage,
@@ -254,7 +251,7 @@ const PoeModal = () => {
                   isNaN(Number(detail.amount)) ||
                   Number(detail.amount) < 0
                 ) {
-                  state.p2pClient?.sendError(
+                  p2pClient.sendError(
                     message.id,
                     "Invalid parameters",
                     BeaconErrorType.TRANSACTION_INVALID_ERROR
@@ -277,7 +274,7 @@ const PoeModal = () => {
                 validateAddress(detail.delegate ?? "") !==
                 ValidationResult.VALID
               ) {
-                state.p2pClient?.sendError(
+                p2pClient.sendError(
                   message.id,
                   "Invalid delegation addess " + detail.delegate,
                   BeaconErrorType.TRANSACTION_INVALID_ERROR
@@ -318,10 +315,7 @@ const PoeModal = () => {
         let version = await fetchVersion(contract!);
 
         if (version === "unknown version") {
-          state.p2pClient?.abortRequest(
-            message.id,
-            "Current user isn't a signer"
-          );
+          p2pClient.abortRequest(message.id, "Current user isn't a signer");
 
           throw new Error("The contract is not a TzSafe contract");
         }
@@ -329,10 +323,7 @@ const PoeModal = () => {
         let v = toStorage(version, storage, BigNumber(0));
 
         if (!signers(v).includes(userAddress ?? "")) {
-          state.p2pClient?.abortRequest(
-            message.id,
-            "Current user isn't a signer"
-          );
+          p2pClient.abortRequest(message.id, "Current user isn't a signer");
           return;
         }
 
@@ -344,13 +335,13 @@ const PoeModal = () => {
             payload: message.payload,
             sourceAddress: userAddress,
           });
-        await state.p2pClient?.signResponse(
+        await p2pClient.signResponse(
           message.id,
           message.signingType,
           signed.signature
         );
       } catch (e) {
-        state.p2pClient?.sendError(
+        p2pClient.sendError(
           message.id,
           `Failed to sign the payload: ${(e as Error).message}`,
           BeaconErrorType.SIGNATURE_TYPE_NOT_SUPPORTED
@@ -364,7 +355,7 @@ const PoeModal = () => {
       const contract = state.contracts[message.contractAddress];
 
       if (!contract) {
-        state.p2pClient?.sendError(
+        p2pClient.sendError(
           message.id,
           "The address is not a TzSafe one",
           BeaconErrorType.UNKNOWN_ERROR
@@ -381,24 +372,20 @@ const PoeModal = () => {
           tezos
         );
 
-        await state.p2pClient?.spoeResponse(message.id, ops);
+        await p2pClient.spoeResponse(message.id, ops);
       } catch (e) {
-        await state.p2pClient?.spoeResponse(
-          message.id,
-          [],
-          (e as Error).message
-        );
+        await p2pClient.spoeResponse(message.id, [], (e as Error).message);
       }
     };
 
-    const tinyEmitter = state.p2pClient.on(
+    const tinyEmitter = p2pClient.on(
       Event.PROOF_OF_EVENT_CHALLENGE_REQUEST,
       challengeCb
     );
 
-    state.p2pClient.on(Event.INCOMING_OPERATION, transactionCb);
-    state.p2pClient.on(Event.SIGN_PAYLOAD, signPayloadCb);
-    state.p2pClient.on(
+    p2pClient.on(Event.INCOMING_OPERATION, transactionCb);
+    p2pClient.on(Event.SIGN_PAYLOAD, signPayloadCb);
+    p2pClient.on(
       Event.SIMULATED_PROOF_OF_EVENT_CHALLENGE_REQUEST,
       simulatedProofOfEventCb
     );
@@ -412,7 +399,7 @@ const PoeModal = () => {
         simulatedProofOfEventCb
       );
     };
-  }, [state.p2pClient, userAddress]);
+  }, [p2pClient, userAddress]);
 
   if (!message && !transfers) return null;
 
@@ -693,7 +680,7 @@ const PoeModal = () => {
 
                           const metadata = currentMetadata[0];
                           reset();
-                          await state.p2pClient?.abortRequest(
+                          await p2pClient.abortRequest(
                             metadata,
                             "Cancelled by the user"
                           );
@@ -743,7 +730,7 @@ const PoeModal = () => {
                               dispatch({ type: "refreshProposals" });
                             }
                           } catch (e) {
-                            state.p2pClient?.abortRequest(
+                            p2pClient.abortRequest(
                               currentMetadata[0],
                               "User cancelled the transaction"
                             );
@@ -756,7 +743,7 @@ const PoeModal = () => {
                           }
 
                           try {
-                            await state.p2pClient?.transactionResponse(
+                            await p2pClient.transactionResponse(
                               currentMetadata[0],
                               hash
                             );
@@ -792,7 +779,7 @@ const PoeModal = () => {
                   <ul className="mt-2 space-y-1">
                     <li className="truncate">
                       <span className="font-light">Payload:</span>{" "}
-                      {state.p2pClient?.proofOfEvent.data?.payload}
+                      {p2pClient.proofOfEvent.data?.payload}
                     </li>
                   </ul>
 
@@ -802,7 +789,7 @@ const PoeModal = () => {
                     <button
                       className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
                       onClick={async () => {
-                        await state.p2pClient?.refusePoeChallenge();
+                        await p2pClient.refusePoeChallenge();
                         reset();
                       }}
                     >
@@ -812,7 +799,7 @@ const PoeModal = () => {
                       className="rounded bg-primary px-4 py-2 font-medium text-white hover:bg-red-500 hover:outline-none focus:bg-red-500"
                       onClick={async () => {
                         if (
-                          !state.p2pClient!.hasReceivedProofOfEventRequest() ||
+                          !p2pClient.hasReceivedProofOfEventRequest() ||
                           !address
                         )
                           return;
@@ -838,8 +825,8 @@ const PoeModal = () => {
                                     type: "poe",
                                     values: {
                                       payload:
-                                        state.p2pClient?.proofOfEvent.data
-                                          ?.payload ?? "",
+                                        p2pClient.proofOfEvent.data?.payload ??
+                                        "",
                                     },
                                     fields: [],
                                   },
@@ -857,7 +844,7 @@ const PoeModal = () => {
                             return;
                           }
 
-                          await state.p2pClient!.approvePoeChallenge();
+                          await p2pClient.approvePoeChallenge();
 
                           dispatch({ type: "refreshProposals" });
                         } catch (e) {
@@ -868,10 +855,10 @@ const PoeModal = () => {
                           if (
                             (e as Error).message.includes("[ABORTED_ERROR]")
                           ) {
-                            await state.p2pClient!.dismissPoeChallenge();
+                            await p2pClient.dismissPoeChallenge();
                           } else {
-                            await state.p2pClient!.sendError(
-                              state.p2pClient!.proofOfEvent.message!.id,
+                            await p2pClient.sendError(
+                              p2pClient.proofOfEvent.message!.id,
                               (e as Error).message,
                               BeaconErrorType.UNKNOWN_ERROR
                             );
@@ -897,7 +884,7 @@ const PoeModal = () => {
                     <button
                       className="rounded border-2 bg-transparent px-4 py-2 font-medium text-white hover:outline-none"
                       onClick={async () => {
-                        await state.p2pClient?.refusePoeChallenge();
+                        await p2pClient.refusePoeChallenge();
                         reset();
                       }}
                     >

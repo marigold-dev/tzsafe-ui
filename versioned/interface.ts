@@ -19,7 +19,7 @@ import {
   archiveProposalSchema as proposalSchema_0_3_4,
   proposalType as proposalType_0_3_4,
 } from "../types/Proposal0_3_4";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { proposal, proposalContent, version } from "../types/display";
 import { ownersForm } from "./forms";
 import { hasTzip27Support, hasTzip27SupportWithPoEChallenge } from "./util";
@@ -39,16 +39,6 @@ type archiveProposal = {
 };
 
 export type timeoutAndHash = [boolean, string];
-
-export type p2pData = {
-  appUrl: string;
-  id: string;
-  name: string;
-  publicKey: string;
-  relayServer: string;
-  type: string;
-  version: string;
-};
 
 type common = {
   fields: {
@@ -154,9 +144,9 @@ abstract class Versioned {
   ): Promise<timeoutAndHash>;
 
   static toContractState(
-    _contract: contractStorage,
+    _contract: ContractStorage,
     _balance: BigNumber
-  ): contractStorage {
+  ): ContractStorage {
     throw new Error("not implemented!");
   }
 
@@ -229,7 +219,7 @@ abstract class Versioned {
   }
 
   static proposalsHistory(
-    c: contractStorage,
+    c: ContractStorage,
     address: string,
 
     bigmapId: string,
@@ -277,7 +267,7 @@ abstract class Versioned {
     }
   }
 
-  static signers(c: contractStorage): string[] {
+  static signers(c: ContractStorage): string[] {
     if (typeof c == "undefined") {
       return [];
     }
@@ -304,7 +294,7 @@ abstract class Versioned {
     throw new Error("unknown version");
   }
 
-  static proposalCounter(c: contractStorage): BigNumber {
+  static proposalCounter(c: ContractStorage): BigNumber {
     if (
       c.version === "0.0.6" ||
       c.version === "0.0.8" ||
@@ -327,7 +317,7 @@ abstract class Versioned {
     throw new Error("unknown version");
   }
 
-  static lambdaForm(c: contractStorage): {
+  static lambdaForm(c: ContractStorage): {
     values: { [key: string]: string };
     fields: {
       field: string;
@@ -419,7 +409,7 @@ abstract class Versioned {
     throw new Error("Invalid version");
   }
 
-  static transferForm(c: contractStorage): {
+  static transferForm(c: ContractStorage): {
     values: { [key: string]: string };
     fields: {
       field: string;
@@ -513,7 +503,7 @@ abstract class Versioned {
     throw new Error("unknown version");
   }
 
-  static fa2(c: contractStorage): {
+  static fa2(c: ContractStorage): {
     values: { [key: string]: string }[];
     fields: {
       field: string;
@@ -569,7 +559,7 @@ abstract class Versioned {
     };
   }
 
-  static fa1_2_approve(c: contractStorage): {
+  static fa1_2_approve(c: ContractStorage): {
     values: { [key: string]: string };
     fields: {
       field: string;
@@ -623,7 +613,7 @@ abstract class Versioned {
     };
   }
 
-  static fa1_2_transfer(c: contractStorage): {
+  static fa1_2_transfer(c: ContractStorage): {
     values: { [key: string]: string };
     fields: {
       field: string;

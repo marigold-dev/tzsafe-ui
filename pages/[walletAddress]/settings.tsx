@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
 import { useAppDispatch, useAppState } from "../../context/state";
+import { ParsedUrlQueryContract } from "../../types/app";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
@@ -10,21 +11,17 @@ const Settings = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
+  const { walletAddress: currentContract } =
+    router.query as ParsedUrlQueryContract;
 
   const [canDelete, setCanDelete] = useState(
-    !!state.currentContract && !!state.contracts[state.currentContract]
+    !!state.contracts[currentContract]
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      if (!state.currentContract) return;
-
-      setCanDelete(
-        !!state.currentContract && !!state.contracts[state.currentContract]
-      );
-    })();
-  }, [state.currentContract, state.contracts]);
+    setCanDelete(!!state.contracts[currentContract]);
+  }, [currentContract, state.contracts]);
 
   useEffect(() => {
     if (!isDeleting) return;
@@ -49,13 +46,11 @@ const Settings = () => {
               canDelete && !isDeleting ? "" : "pointer-events-none opacity-50"
             } self-end rounded bg-primary p-2 text-white hover:bg-red-500`}
             onClick={() => {
-              if (!state.currentContract) return;
-
               setIsDeleting(true);
               setCanDelete(false);
               dispatch!({
                 type: "removeContract",
-                address: state.currentContract,
+                address: currentContract,
               });
 
               const addresses = Object.keys(state.contracts);
@@ -72,16 +67,16 @@ const Settings = () => {
       </div>
       <main className="min-h-fit grow">
         <div className="mx-auto min-h-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          {!state.currentContract ? (
+          {!currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
             </h2>
           ) : (
             <SignersForm
               disabled={!isOwner}
-              address={state.currentContract}
+              address={currentContract}
               contract={
-                state.contracts[state.currentContract] ?? state.currentStorage
+                state.contracts[currentContract] ?? state.currentStorage
               }
               closeModal={console.log}
             />

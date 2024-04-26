@@ -1,6 +1,7 @@
 import type { AppProps } from "next/app";
 import Layout from "../components/Layout";
 import { AliasesProvider } from "../context/aliases";
+import { P2PProvider } from "../context/dapps";
 import { AppStateProvider } from "../context/state";
 import { TezosToolkitProvider } from "../context/tezos-toolkit";
 import { WalletProvider } from "../context/wallet";
@@ -12,7 +13,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <WalletProvider>
         <AppStateProvider>
           <AliasesProvider>
-            <Layout Component={Component} pageProps={pageProps} />
+            <P2PProvider>
+              <Layout Component={Component} pageProps={pageProps} />
+            </P2PProvider>
           </AliasesProvider>
         </AppStateProvider>
       </WalletProvider>

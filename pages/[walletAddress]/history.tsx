@@ -9,13 +9,10 @@ import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
 import { getTokenTransfers, getTransfers } from "../../context/proposals";
-import {
-  contractStorage,
-  useAppDispatch,
-  useAppState,
-} from "../../context/state";
+import { useAppDispatch, useAppState } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
+import { ContractStorage } from "../../types/app";
 import {
   TransferType,
   mutezTransfer,
@@ -207,7 +204,7 @@ const History = () => {
       const c = await tezos.wallet.at(globalState.currentContract, tzip16);
       const balance = await tezos.tz.getBalance(globalState.currentContract);
 
-      const storage = (await c.storage()) as contractStorage;
+      const storage = (await c.storage()) as ContractStorage;
 
       const version = await (globalState.contracts[globalState.currentContract]
         ? Promise.resolve<version>(

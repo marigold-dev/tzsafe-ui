@@ -1,6 +1,7 @@
 import { FC, useState } from "react";
-import { tezosState, contractStorage, useAppState } from "../context/state";
+import { tezosState, useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
+import { ContractStorage } from "../types/app";
 import {
   mutezTransfer,
   proposal,
@@ -20,7 +21,7 @@ function getClass(x: number, active: number): string {
 const Proposals: FC<{
   proposals: [number, { og: any; ui: proposal }][];
   address: string;
-  contract: contractStorage;
+  contract: ContractStorage;
   transfers: mutezTransfer[];
   setCloseModal: (_: number, arg: boolean | undefined) => void;
 }> = ({ proposals, address, contract, setCloseModal, transfers }) => {
@@ -219,7 +220,7 @@ const Card: FC<{
   address: string;
   id: number;
   signable: boolean;
-  contract: contractStorage;
+  contract: ContractStorage;
   setCloseModal?: (arg: boolean | undefined) => void;
 }> = ({ contract, prop, address, id, signable, setCloseModal = () => {} }) => {
   let state = useAppState();
@@ -360,7 +361,7 @@ function renderContent(
   x: proposalContent,
   state: tezosState,
   address: string,
-  contract: contractStorage
+  contract: ContractStorage
 ): string {
   if ("transfer" in x) {
     return `${mutezToTez(x.transfer.amount)} Tez to ${

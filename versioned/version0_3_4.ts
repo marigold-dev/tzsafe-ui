@@ -8,7 +8,7 @@ import {
 import { stringToBytes, bytesToString } from "@taquito/utils";
 import { BigNumber } from "bignumber.js";
 import { content, contractStorage as c1 } from "../types/Proposal0_3_4";
-import { contractStorage } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { proposalContent } from "../types/display";
 import { toStorage } from "./apis";
 import { proposals } from "./interface";
@@ -65,7 +65,7 @@ class Version0_3_4 extends Version0_3_3 {
     const poe_proposals = proposals.transfers.filter(v => v.type === "poe");
     const regular_proposals = proposals.transfers.filter(v => v.type !== "poe");
 
-    let storage: contractStorage | undefined = undefined;
+    let storage: ContractStorage | undefined = undefined;
     if (poe_proposals.length > 0 && isSigning) {
       storage = toStorage(this.version, await cc.storage(), BigNumber(0));
     }
@@ -117,7 +117,7 @@ class Version0_3_4 extends Version0_3_3 {
   static override toContractState(
     contract: any,
     balance: BigNumber
-  ): contractStorage {
+  ): ContractStorage {
     let c: c1 = contract;
     return {
       ...super.toContractState(contract, balance),

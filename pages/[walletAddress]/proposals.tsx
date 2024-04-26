@@ -10,13 +10,13 @@ import ProposalSignForm from "../../components/proposalSignForm";
 import {
   tezosState,
   action as globalAction,
-  contractStorage,
   useAppDispatch,
   useAppState,
 } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
 import { useWallet } from "../../context/wallet";
+import { ContractStorage } from "../../types/app";
 import { proposal, version } from "../../types/display";
 import { canExecute, canReject } from "../../utils/proposals";
 import useIsOwner from "../../utils/useIsOwner";
@@ -149,7 +149,7 @@ async function getProposals(
 
   const c = await tezos.wallet.at(globalState.currentContract, tzip16);
 
-  const storage: contractStorage = await c.storage();
+  const storage: ContractStorage = await c.storage();
 
   const version = await (globalState.contracts[globalState.currentContract]
     ? Promise.resolve<version>(

@@ -2,13 +2,10 @@ import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
 import FormContext from "../../context/formContext";
-import {
-  contractStorage,
-  useAppDispatch,
-  useAppState,
-} from "../../context/state";
+import { useAppDispatch, useAppState } from "../../context/state";
 import { useTezosToolkit } from "../../context/tezos-toolkit";
 import fetchVersion from "../../context/version";
+import { ContractStorage } from "../../types/app";
 import { toStorage } from "../../versioned/apis";
 
 function Success() {
@@ -27,7 +24,7 @@ function Success() {
       if (loading && address.status == 0) {
         try {
           let cc = await tezos.wallet.at(address.address, tzip16);
-          let storage: contractStorage = await cc?.storage()!;
+          let storage: ContractStorage = await cc?.storage()!;
           let balance = await tezos.tz.getBalance(address.address);
           let version = await fetchVersion(cc!);
           let v = toStorage(version, storage, balance!);
