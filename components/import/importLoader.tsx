@@ -1,6 +1,7 @@
 import { tzip16 } from "@taquito/tzip16";
 import Link from "next/link";
 import React, { useContext, useEffect, useState } from "react";
+import { useContracts } from "../../context/contracts";
 import FormContext from "../../context/formContext";
 import { useAppDispatch, useAppState } from "../../context/state";
 import { useTezosToolkit } from "../../context/tezos-toolkit";
@@ -18,6 +19,7 @@ function Success() {
   });
   let [loading, setLoading] = useState(true);
   const { tezos } = useTezosToolkit();
+  const { addOrUpdateContract } = useContracts();
 
   useEffect(() => {
     (async () => {
@@ -31,17 +33,19 @@ function Success() {
 
           setAddress({ address: address.address, status: 1 });
           setLoading(false);
-          dispatch!({
-            type: "addContract",
-            payload: {
-              aliases: Object.fromEntries([
-                ...formState!.validators!.map(x => [x.address, x.name]),
-                [address.address!, formState?.walletName || ""],
-              ]),
-              contract: v,
-              address: address.address,
-            },
-          });
+          // dispatch!({
+          //   type: "addContract",
+          //   payload: {
+          //     aliases: Object.fromEntries([
+          //       ...formState!.validators!.map(x => [x.address, x.name]),
+          //       [address.address!, formState?.walletName || ""],
+          //     ]),
+          //     contract: v,
+          //     address: address.address,
+          //   },
+          // });
+          // TODO ADD ALIAS
+          addOrUpdateContract(address.address, v);
         } catch (err) {
           console.log(err);
           setAddress({ status: -1, address: "" });

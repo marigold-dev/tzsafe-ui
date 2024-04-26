@@ -2,17 +2,20 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Meta from "../../components/meta";
 import SignersForm from "../../components/signersForm";
-import { useAppDispatch, useAppState } from "../../context/state";
+import { useContracts } from "../../context/contracts";
+import { useDapps } from "../../context/dapps";
+import { useAppState } from "../../context/state";
 import { ParsedUrlQueryContract } from "../../types/app";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
   const state = useAppState();
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
   const { walletAddress: currentContract } =
     router.query as ParsedUrlQueryContract;
+  const { removeContract } = useContracts();
+  const { removeContractDapps } = useDapps();
 
   const [canDelete, setCanDelete] = useState(
     !!state.contracts[currentContract]
@@ -48,10 +51,12 @@ const Settings = () => {
             onClick={() => {
               setIsDeleting(true);
               setCanDelete(false);
-              dispatch!({
-                type: "removeContract",
-                address: currentContract,
-              });
+              // dispatch!({
+              //   type: "removeContract",
+              //   address: currentContract,
+              // });
+              removeContract(currentContract);
+              removeContractDapps(currentContract);
 
               const addresses = Object.keys(state.contracts);
               if (addresses.length === 0) {

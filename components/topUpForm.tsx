@@ -12,6 +12,7 @@ import React, {
   useState,
 } from "react";
 import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
+import { useContracts } from "../context/contracts";
 import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
@@ -96,6 +97,7 @@ function TopUp(props: {
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
   const { userBalance } = useWallet();
+  const { addOrUpdateContract } = useContracts();
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
@@ -286,13 +288,14 @@ function TopUp(props: {
           const storage = toStorage(version, cs, balance);
 
           if (!!state.contracts[props.address]) {
-            dispatch({
-              type: "updateContract",
-              payload: {
-                address: props.address,
-                contract: toStorage(version, cs, balance),
-              },
-            });
+            // dispatch({
+            //   type: "updateContract",
+            //   payload: {
+            //     address: props.address,
+            //     contract: toStorage(version, cs, balance),
+            //   },
+            // });
+            addOrUpdateContract(props.address, toStorage(version, cs, balance));
           } else {
             storage.address = props.address;
 

@@ -18,6 +18,7 @@ import React, {
   useState,
 } from "react";
 import { PREFERED_NETWORK } from "../context/config";
+import { useContracts } from "../context/contracts";
 import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
@@ -144,6 +145,7 @@ const Sidebar = ({
   const { userAddress } = useWallet();
 
   const { tezos } = useContext(TezosToolkitContext);
+  const { addOrUpdateContract } = useContracts();
 
   const isOwner = useIsOwner();
 
@@ -173,15 +175,17 @@ const Sidebar = ({
 
       const updatedContract = toStorage(version, storage, balance);
 
-      state.contracts[state.currentContract]
-        ? dispatch({
-            type: "updateContract",
-            payload: {
-              address: state.currentContract,
-              contract: updatedContract,
-            },
-          })
-        : null;
+      if (state.contracts[state.currentContract])
+        addOrUpdateContract(state.currentContract, updatedContract);
+      // state.contracts[state.currentContract]
+      //   ? dispatch({
+      //       type: "updateContract",
+      //       payload: {
+      //         address: state.currentContract,
+      //         contract: updatedContract,
+      //       },
+      //     })
+      //   : null;
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.currentContract]);

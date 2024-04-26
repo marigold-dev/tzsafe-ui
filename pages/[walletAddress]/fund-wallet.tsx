@@ -8,6 +8,7 @@ import { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
 import { TZKT_API_URL } from "../../context/config";
+import { useContracts } from "../../context/contracts";
 import { useAppDispatch, useAppState } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import { useWallet } from "../../context/wallet";
@@ -24,6 +25,7 @@ const TopUpPage = () => {
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { addOrUpdateContract } = useContracts();
 
   const onSuccess = async (txId: string) => {
     if (!state.currentContract) return;
@@ -59,10 +61,12 @@ const TopUpPage = () => {
       newContract.balance = new BigNumber(newContract.balance)
         .plus(transaction[0].amount as number)
         .toString();
-      disptach({
-        type: "updateContract",
-        payload: { contract: newContract, address: state.currentContract },
-      });
+      // disptach({
+      //   type: "updateContract",
+      //   payload: { contract: newContract, address: state.currentContract },
+      // });
+      addOrUpdateContract(state.currentContract, newContract);
+
       setIsLoading(false);
       setIsSuccess(true);
     } catch (e) {
