@@ -1,4 +1,3 @@
-import { getSenderId } from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
 import {
   Context,
@@ -8,9 +7,8 @@ import {
   useEffect,
   useReducer,
 } from "react";
-import { ContractStorage, P2pData } from "../types/app";
+import { ContractStorage } from "../types/app";
 import { Trie } from "../utils/radixTrie";
-import P2PClient from "./P2PClient";
 import { useWallet } from "./wallet";
 
 type tezosState = {
@@ -19,7 +17,6 @@ type tezosState = {
   contracts: { [address: string]: ContractStorage };
   aliases: { [address: string]: string };
   aliasTrie: Trie<string>;
-  hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
   // Increasing this number will trigger a useEffect in the proposal page
   proposalRefresher: number;
@@ -36,7 +33,6 @@ let emptyState = (): tezosState => {
     currentContract: null,
     currentStorage: null,
     aliasTrie: new Trie<string>(),
-    hasBanner: true,
     delegatorAddresses: undefined,
     proposalRefresher: 0,
   };
@@ -268,11 +264,6 @@ function reducer(
 
       return newState;
     }
-    case "setBanner":
-      return {
-        ...state,
-        hasBanner: action.payload,
-      };
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
