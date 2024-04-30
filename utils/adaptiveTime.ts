@@ -70,15 +70,6 @@ export function adaptiveTime(x: string): string {
   return duration.normalize().toHuman();
 }
 
-export function countdown(x: string, createdOn: string): string {
-  let created = DateTime.fromISO(new Date(createdOn).toISOString()).toObject();
-  let duration = Duration.fromMillis(Number(x) * 1000)
-    .plus(Duration.fromObject(created))
-    .minus(Duration.fromObject(DateTime.now().toObject()))
-    .rescale();
-  return conv(duration).toHuman();
-}
-
 export const parseIntOr = <T>(
   value: string | undefined,
   defaultValue: T
