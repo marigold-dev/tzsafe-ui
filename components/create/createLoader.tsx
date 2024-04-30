@@ -57,12 +57,10 @@ function Success() {
             tzsafe!.address,
             toStorage(formState.version, c, balance!)
           );
-          updateAliases(
-            Object.fromEntries([
-              ...formState.validators.map(x => [x.address, x.name]),
-              [tzsafe?.address!, formState?.walletName || ""],
-            ])
-          );
+          updateAliases([
+            ...formState!.validators,
+            { address: address.address, name: formState?.walletName || "" },
+          ]);
         } catch (err) {
           console.log(err);
           setAddress({ status: -1, address: "" });

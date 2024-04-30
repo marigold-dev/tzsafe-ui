@@ -36,12 +36,10 @@ function Success() {
           setAddress({ address: address.address, status: 1 });
           setLoading(false);
           addOrUpdateContract(address.address, v);
-          updateAliases(
-            Object.fromEntries([
-              ...formState!.validators.map(x => [x.address, x.name]),
-              [address.address!, formState?.walletName || ""],
-            ])
-          );
+          updateAliases([
+            ...formState!.validators,
+            { address: address.address, name: formState?.walletName || "" },
+          ]);
         } catch (err) {
           console.log(err);
           setAddress({ status: -1, address: "" });
