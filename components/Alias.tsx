@@ -22,7 +22,7 @@ const Alias = ({
 
   useEffect(() => {
     aliasesCtx.getAlias(address, defaultAlias).then(setAlias);
-  }, [address, aliasesCtx]);
+  }, [address, aliasesCtx, defaultAlias]);
 
   return (
     <Copy value={address} text="Copy address" disabled={disabled}>
