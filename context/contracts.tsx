@@ -1,16 +1,15 @@
 import { createContext, useContext, useEffect, useReducer } from "react";
 import { ContractStorage, Contracts } from "../types/app";
-import {
-  loadContracts,
-  loadDapps,
-  saveContractsToStorage,
-} from "../utils/localStorage";
+import { fetchContract } from "../utils/fetchContract";
+import { loadContracts, saveContractsToStorage } from "../utils/localStorage";
+import { useTezosToolkit } from "./tezos-toolkit";
 import { useWallet } from "./wallet";
 
 type ContractsContextType = {
   contracts: Contracts;
   addOrUpdateContract(addr: string, contract: ContractStorage): void;
   removeContract(addr: string): void;
+  fetchContract(addr: string): Promise<ContractStorage>;
 };
 
 type ContractsActions =
@@ -31,6 +30,7 @@ const ContractsContext = createContext<ContractsContextType>({
   contracts: {},
   addOrUpdateContract: () => {},
   removeContract: () => {},
+  fetchContract: () => Promise.reject(),
 });
 
 const reducer = (state: Contracts, action: ContractsActions) => {
@@ -58,6 +58,19 @@ export const ContractsProvider = ({
 }) => {
   const [state, dispatch] = useReducer(reducer, {});
   const { userAddress } = useWallet();
+  const { tezos } = useTezosToolkit();
+
+  const fetch = async (address: string) => {
+    const contract = await fetchContract(tezos, address);
+    if (contract) {
+      dispatch({
+        type: "ADD_OR_UPDATE_CONTRACT",
+        payload: { contractAddress: address, contract },
+      });
+      return contract;
+    }
+    return Promise.reject("Unknown contract");
+  };
 
   useEffect(() => {
     const contracts = userAddress ? loadContracts(userAddress) : {};
@@ -87,6 +100,7 @@ export const ContractsProvider = ({
             type: "REMOVE_CONTRACT",
             payload: { contractAddress: addr },
           }),
+        fetchContract: addr => fetch(addr),
       }}
     >
       {children}
@@ -95,3 +109,7 @@ export const ContractsProvider = ({
 };
 
 export const useContracts = () => useContext(ContractsContext);
+export const useContract = (address: string): ContractStorage | undefined => {
+  const { contracts } = useContext(ContractsContext);
+  return contracts[address];
+};
