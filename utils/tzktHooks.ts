@@ -10,13 +10,17 @@ export const useTzktBalance = (address: string | null) => {
   useEffect(() => {
     if (!address) return;
     (async () => {
-      const response = await fetch(
-        `${TZKT_API_URL}/v1/accounts/${address}/balance`
-      );
+      try {
+        const response = await fetch(
+          `${TZKT_API_URL}/v1/accounts/${address}/balance`
+        );
 
-      if (response.status === 200) {
-        const json: number = await response.json();
-        setBalance(json / 1_000_000); // Divided by the XTZ decimal
+        if (response.status === 200) {
+          const json: number = await response.json();
+          setBalance(json / 1_000_000); // Divided by the XTZ decimal
+        }
+      } catch (err) {
+        console.error("Cannot fetch balance", err);
       }
     })();
   }, [address]);
@@ -64,43 +68,47 @@ export const useTzktDefiTokens = (address: string | null) => {
   useEffect(() => {
     if (address === null) return;
     (async () => {
-      const response = await fetch(
-        `${TZKT_API_URL}/v1/tokens/balances?account=${address}`
-      );
-      // Check if the response is a success
-      if (response.status !== 200) {
-        return;
+      try {
+        const response = await fetch(
+          `${TZKT_API_URL}/v1/tokens/balances?account=${address}`
+        );
+        // Check if the response is a success
+        if (response.status !== 200) {
+          return;
+        }
+        const tokens: Array<Tzkt_token> = await response.json();
+        // First removes what is not a DeFi token
+        const defi = tokens
+          .filter(token => {
+            return (
+              token.token.metadata &&
+              token.token.metadata.decimals &&
+              token.token.metadata.symbol // If this field is defined then it's a defi token
+            );
+          })
+          .map(token => {
+            const contract = token.token.contract.address;
+            const decimals: number =
+              10 ** Number.parseInt(token.token.metadata?.decimals || "0"); // Should be defined because of filter
+            const balance = Number.parseInt(token.balance) / decimals; // the balance is now a float
+            const symbol: string = token.token.metadata?.symbol as string; // Checked above to be non null
+            const thumbnailUri = token.token.metadata?.thumbnailUri;
+            let icon = "";
+            if (thumbnailUri && thumbnailUri.startsWith("ipfs://")) {
+              icon = thumbnailUri.replace("ipfs://", "https://ipfs.io/ipfs/");
+            } else if (thumbnailUri && thumbnailUri.startsWith("https://")) {
+              icon = thumbnailUri;
+            } else if (!thumbnailUri) {
+              icon = `https://services.tzkt.io/v1/avatars/${contract}`; // using Tzkt avatar API
+            } else {
+            }
+            return { contract, balance, symbol, icon };
+          })
+          .filter(token => token.balance !== 0); // We don't care about tokens with 0 balance, I prefer to filter here because the balance is converted to number
+        setDefi(defi);
+      } catch (err) {
+        console.error("Cannot fetch DeFi tokens", err);
       }
-      const tokens: Array<Tzkt_token> = await response.json();
-      // First removes what is not a DeFi token
-      const defi = tokens
-        .filter(token => {
-          return (
-            token.token.metadata &&
-            token.token.metadata.decimals &&
-            token.token.metadata.symbol // If this field is defined then it's a defi token
-          );
-        })
-        .map(token => {
-          const contract = token.token.contract.address;
-          const decimals: number =
-            10 ** Number.parseInt(token.token.metadata?.decimals || "0"); // Should be defined because of filter
-          const balance = Number.parseInt(token.balance) / decimals; // the balance is now a float
-          const symbol: string = token.token.metadata?.symbol as string; // Checked above to be non null
-          const thumbnailUri = token.token.metadata?.thumbnailUri;
-          let icon = "";
-          if (thumbnailUri && thumbnailUri.startsWith("ipfs://")) {
-            icon = thumbnailUri.replace("ipfs://", "https://ipfs.io/ipfs/");
-          } else if (thumbnailUri && thumbnailUri.startsWith("https://")) {
-            icon = thumbnailUri;
-          } else if (!thumbnailUri) {
-            icon = `https://services.tzkt.io/v1/avatars/${contract}`; // using Tzkt avatar API
-          } else {
-          }
-          return { contract, balance, symbol, icon };
-        })
-        .filter(token => token.balance !== 0); // We don't care about tokens with 0 balance, I prefer to filter here because the balance is converted to number
-      setDefi(defi);
     })();
   }, [address]);
   return defi;
@@ -120,32 +128,37 @@ export const useTzktPrice = (currency = "usd") => {
   const [price, setPrice] = useState<Price | null>(null);
   useEffect(() => {
     (async () => {
-      // Let's compute the price evolution
-      const pricesResponse = await fetch(
-        `https://back.tzkt.io/v1/home?quote=${currency}`
-      );
-      if (pricesResponse.status !== 200) return;
-      const pricesJson = await pricesResponse.json();
-      const prices: Array<{ date: string; value: number }> =
-        pricesJson.priceChart;
-      // let's find the oldest and the most recent date
-      prices.sort((price1, price2) => {
-        const date1 = new Date(price1.date);
-        const date2 = new Date(price2.date);
-        return date1.getTime() - date2.getTime();
-      });
-      const first = prices[0];
-      const last = prices[prices.length - 1];
-      const evolution = last.value / first.value;
+      try {
+        // Let's compute the price evolution
+        const pricesResponse = await fetch(
+          `https://back.tzkt.io/v1/home?quote=${currency}`
+        );
+        if (pricesResponse.status !== 200) return;
+        const pricesJson = await pricesResponse.json();
+        const prices: Array<{ date: string; value: number }> =
+          pricesJson.priceChart;
+        // let's find the oldest and the most recent date
+        prices.sort((price1, price2) => {
+          const date1 = new Date(price1.date);
+          const date2 = new Date(price2.date);
+          return date1.getTime() - date2.getTime();
+        });
+        const first = prices[0];
+        const last = prices[prices.length - 1];
+        const evolution = last.value / first.value;
 
-      // Let's get the current price
-      const headResponse = await fetch("https://back.tzkt.io/v1/head");
-      if (headResponse.status !== 200) return;
-      const headJson = await headResponse.json();
-      const value = currency === "usd" ? headJson.quoteUsd : headJson.quoteUsd; // by default we returned the usd price
+        // Let's get the current price
+        const headResponse = await fetch("https://back.tzkt.io/v1/head");
+        if (headResponse.status !== 200) return;
+        const headJson = await headResponse.json();
+        const value =
+          currency === "usd" ? headJson.quoteUsd : headJson.quoteUsd; // by default we returned the usd price
 
-      // update the hook state
-      setPrice({ value, evolution });
+        // update the hook state
+        setPrice({ value, evolution });
+      } catch (err) {
+        console.error("Cannot fetch price", err);
+      }
     })();
   }, [currency]);
   return price;

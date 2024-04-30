@@ -3,7 +3,6 @@ import { createContext } from "react";
 import { Aliases } from "../types/app";
 import { loadAliases, saveAliasesToStorage } from "../utils/localStorage";
 import { TZKT_API_URL } from "./config";
-import { useAppState } from "./state";
 import { useWallet } from "./wallet";
 
 type AliasesContextType = {
@@ -80,29 +79,30 @@ export const AliasesProvider = ({
       saveAliasesToStorage(userAddress || "", state);
   }, [state, userAddress]);
 
-  const aliasesFromState = useAppState().aliases;
-
   const getTzktAlias = async (address: string) => {
     // address can be empty string...
     if (address === "") return undefined;
 
     const alias = aliases.current[address];
     if (!alias) {
-      const aliasFromTzkt = fetch(
-        `${TZKT_API_URL}/v1/accounts/${address}`
-      ).then(async response => {
-        if (response.status >= 200 && response.status < 300) {
-          if (response.status === 204) {
-            // Meaning no content = no alias
+      const aliasFromTzkt = fetch(`${TZKT_API_URL}/v1/accounts/${address}`)
+        .then(async response => {
+          if (response.status >= 200 && response.status < 300) {
+            if (response.status === 204) {
+              // Meaning no content = no alias
+              return undefined;
+            }
+            const json = await response.json();
+            if (json["alias"]) {
+              return json["alias"] as string;
+            }
             return undefined;
-          }
-          const json = await response.json();
-          if (json["alias"]) {
-            return json["alias"] as string;
-          }
+          } else return undefined;
+        })
+        .catch(err => {
+          console.error("Cannot fetch alias", err);
           return undefined;
-        } else return undefined;
-      });
+        });
       aliases.current[address] = aliasFromTzkt;
       return aliasFromTzkt;
     }
@@ -112,7 +112,7 @@ export const AliasesProvider = ({
   const getAlias = async (address: string, defaultAlias: string) => {
     const alias = await getTzktAlias(address);
     if (alias) return alias;
-    if (aliasesFromState[address]) return aliasesFromState[address];
+    if (state[address]) return state[address];
     return defaultAlias;
   };
 
