@@ -1,15 +1,13 @@
-import { NetworkType } from "@airgap/beacon-sdk";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 import { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { PREFERED_NETWORK } from "../context/config";
-import { useAppDispatch, useAppState } from "../context/state";
+import { useContracts } from "../context/contracts";
+import { useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
-import { contractStorage } from "../types/Proposal0_3_1";
-import { fetchContract } from "../utils/fetchContract";
+import useCurrentContract from "../hooks/useCurrentContract";
 import LoginModal from "./LoginModal";
 import PoeModal from "./PoeModal";
 import Sidebar from "./Sidebar";
@@ -22,16 +20,17 @@ export default function Layout({
   pageProps,
 }: Pick<AppProps, "Component" | "pageProps">) {
   const state = useAppState();
-  const dispatch = useAppDispatch();
   const { tezos } = useTezosToolkit();
 
   const [data, setData] = useState<undefined | string>();
   const [hasSidebar, setHasSidebar] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const router = useRouter();
   const path = usePathname();
+  const { contracts, fetchContract } = useContracts();
+  const currentContract = useCurrentContract();
   const isSidebarHidden =
-    Object.values(state.contracts).length === 0 &&
+    Object.values(contracts).length === 0 &&
     (path === "/" ||
       path === "/new-wallet" ||
       path === "/import-wallet" ||
@@ -48,10 +47,10 @@ export default function Layout({
       setData(queryParams.get("data")!);
     }
 
-    const contracts = Object.keys(state.contracts);
+    const contractsAddress = Object.keys(contracts);
 
-    if ((path === "/" || path === "") && contracts.length > 0) {
-      const contract = contracts[0];
+    if ((path === "/" || path === "") && contractsAddress.length > 0) {
+      const contract = contractsAddress[0];
 
       router.replace(`/${contract}/dashboard`);
       return;
@@ -61,90 +60,24 @@ export default function Layout({
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract, path, state.contracts]);
+  }, [currentContract, path, contracts]);
 
   useEffect(() => {
     (async () => {
-      if (
-        router.pathname.includes("[walletAddress]") &&
-        !router.query.walletAddress
-      )
-        return;
-
-      if (
-        !router.query.walletAddress ||
-        Array.isArray(router.query.walletAddress) ||
-        (router.query.walletAddress === state.currentContract &&
-          !!state.currentStorage)
-      ) {
+      if (validateAddress(currentContract) !== ValidationResult.VALID) {
         setIsFetching(false);
+        router.replace(`/invalid-contract?address=${currentContract}`);
         return;
       }
-
-      if (!!state.contracts[router.query.walletAddress]) {
-        dispatch({
-          type: "setCurrentContract",
-          payload: router.query.walletAddress,
-        });
-        setIsFetching(false);
-      }
-
-      if (
-        validateAddress(router.query.walletAddress) !== ValidationResult.VALID
-      ) {
-        setIsFetching(false);
-        router.replace(
-          `/invalid-contract?address=${router.query.walletAddress}`
-        );
-        return;
-      }
-
-      if (state.currentStorage?.address === router.query.walletAddress) {
-        setIsFetching(false);
-        return;
-      }
-
-      try {
-        const storage = await fetchContract(tezos, router.query.walletAddress);
-
-        if (!storage) {
+      setIsFetching(true);
+      fetchContract(currentContract)
+        .then(() => setIsFetching(false))
+        .catch(() => {
           setIsFetching(false);
-          router.replace(
-            `/invalid-contract?address=${router.query.walletAddress}`
-          );
-          return;
-        }
-
-        storage.address = router.query.walletAddress;
-
-        dispatch({
-          type: "setCurrentStorage",
-          payload: storage as contractStorage & { address: string },
+          router.replace(`/invalid-contract?address=${currentContract}`);
         });
-
-        dispatch({
-          type: "setCurrentContract",
-          payload: router.query.walletAddress,
-        });
-
-        setIsFetching(false);
-      } catch (e) {
-        setIsFetching(false);
-
-        router.replace(
-          `/invalid-contract?address=${router.query.walletAddress}`
-        );
-      }
     })();
-  }, [
-    router.query.walletAddress,
-    state.currentContract,
-    dispatch,
-    router,
-    state.currentStorage,
-    tezos,
-    state.contracts,
-  ]);
+  }, [currentContract, state.currentStorage, tezos]);
 
   useEffect(() => {
     setHasSidebar(false);

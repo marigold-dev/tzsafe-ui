@@ -25,9 +25,11 @@ import React, {
   useState,
 } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
+import { useContracts } from "../context/contracts";
 import { useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import { useWallet } from "../context/wallet";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { ContractStorage } from "../types/app";
 import { tezToMutez } from "../utils/tez";
 import { VersionedApi } from "../versioned/apis";
@@ -73,7 +75,6 @@ export function Basic({
   ] = useField(`transfers.${id}.walletAddress`);
 
   const { tezos } = useContext(TezosToolkitContext);
-
   const [localFormState, setLocalFormState] = useState<{
     amount: number | undefined;
     address: string;
@@ -380,6 +381,8 @@ function TransferForm(
   const { userAddress } = useWallet();
   const { tezos } = useContext(TezosToolkitContext);
   const portalIdx = useRef(0);
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -427,7 +430,7 @@ function TransferForm(
           <button
             className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
             onClick={() => {
-              router.push(`/${state.currentContract}/proposals`);
+              router.push(`/${currentContract}/proposals`);
             }}
           >
             Go to proposals
@@ -1310,9 +1313,9 @@ function TransferForm(
                               <ErrorMessage name="signImmediatelyFlag" />
                             </div>
 
-                            {state.currentContract &&
-                              state.contracts[
-                                state.currentContract
+                            {currentContract &&
+                              contracts[
+                                currentContract
                               ]?.threshold.toNumber() <= 1 && (
                                 <div className="md-2 flex w-full items-center space-x-4">
                                   <label className="font-medium text-white">

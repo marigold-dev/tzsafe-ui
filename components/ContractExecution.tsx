@@ -8,8 +8,10 @@ import {
   useFormikContext,
 } from "formik";
 import React, { useEffect } from "react";
+import { useContracts } from "../context/contracts";
 import { useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
+import useCurrentContract from "../hooks/useCurrentContract";
 import {
   parseContract,
   genLambda,
@@ -489,6 +491,8 @@ function ExecuteForm(
   const state = useAppState();
 
   const { tezos } = useTezosToolkit();
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const address = props.address;
   const setLoading = props.setLoading;
@@ -528,7 +532,7 @@ function ExecuteForm(
           props.onShapeChange(values);
           try {
             genLambda(
-              state.contracts[state.currentContract ?? ""]?.version ??
+              contracts[currentContract]?.version ??
                 state.currentStorage?.version,
               props,
               values

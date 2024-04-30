@@ -1,9 +1,11 @@
 import { InfoCircledIcon, TriangleDownIcon } from "@radix-ui/react-icons";
 import * as Switch from "@radix-ui/react-switch";
 import { useState, useMemo } from "react";
+import { useContracts } from "../context/contracts";
 import { useAppState } from "../context/state";
 import { useTezosToolkit } from "../context/tezos-toolkit";
 import { CustomView, customViewMatchers } from "../dapps";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { proposalContent } from "../types/display";
 import { walletToken } from "../utils/useWalletTokens";
 import { signers } from "../versioned/apis";
@@ -48,7 +50,8 @@ const ProposalCard = ({
 }: ProposalCardProps) => {
   const state = useAppState();
   const { tezos } = useTezosToolkit();
-  const currentContract = state.currentContract ?? "";
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const [isOpen, setIsOpen] = useState(false);
   const [hasDefaultView, setHasDefaultView] = useState(false);
@@ -57,14 +60,13 @@ const ProposalCard = ({
   const resolveDate = new Date(resolver?.timestamp ?? 0);
 
   const allSigners = signers(
-    state.contracts[currentContract] ?? state.currentStorage
+    contracts[currentContract] ?? state.currentStorage
   );
 
   const { rows, dapp } = useMemo(() => {
     const rows = content.map(v =>
       contentToData(
-        state.contracts[state.currentContract ?? ""]?.version ??
-          state.currentStorage?.version,
+        contracts[currentContract]?.version ?? state.currentStorage?.version,
         v,
         walletTokens
       )
@@ -85,7 +87,7 @@ const ProposalCard = ({
     }
 
     return { rows, dapp };
-  }, [content, state.currentContract, state.currentStorage, state.contracts]);
+  }, [content, currentContract, state.currentStorage, contracts]);
 
   return (
     <div
@@ -133,8 +135,8 @@ const ProposalCard = ({
                         !!v.executeLambda.metadata?.includes("lambda")
                         ? labelOfProposalContentMetadata(v)
                         : labelOfProposalContentLambda(
-                            state.contracts[state.currentContract ?? ""]
-                              ?.version ?? state.currentStorage?.version,
+                            contracts[currentContract]?.version ??
+                              state.currentStorage?.version,
                             v
                           );
                     })
@@ -150,8 +152,8 @@ const ProposalCard = ({
                     !!v.executeLambda.metadata?.includes("lambda")
                       ? labelOfProposalContentMetadata(v)
                       : labelOfProposalContentLambda(
-                          state.contracts[state.currentContract ?? ""]
-                            ?.version ?? state.currentStorage?.version,
+                          contracts[currentContract]?.version ??
+                            state.currentStorage?.version,
                           v
                         )
                   )

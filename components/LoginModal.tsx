@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
 import { useAliases } from "../context/aliases";
+import { useContracts } from "../context/contracts";
 import { useDapps, useP2PClient } from "../context/dapps";
-import { useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
 import { decodeData } from "../pages/[walletAddress]/beacon";
 import { P2pData } from "../types/app";
@@ -21,7 +21,6 @@ enum State {
 }
 
 const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
-  const state = useAppState();
   const p2pClient = useP2PClient();
   const { addDapp } = useDapps();
 
@@ -30,14 +29,15 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
 
   const { userAddress, wallet, connectWallet } = useWallet();
   const { addressBook } = useAliases();
+  const { contracts } = useContracts();
 
   const options = useMemo(() => {
     if (!userAddress) return [];
 
-    return Object.keys(state.contracts).flatMap(address => {
-      if (!hasTzip27Support(state.contracts[address].version)) return [];
+    return Object.keys(contracts).flatMap(address => {
+      if (!hasTzip27Support(contracts[address].version)) return [];
 
-      if (!signers(state.contracts[address]).includes(userAddress!)) return [];
+      if (!signers(contracts[address]).includes(userAddress!)) return [];
 
       return [
         {
@@ -47,7 +47,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
         },
       ];
     });
-  }, [state.contracts, userAddress]);
+  }, [contracts, userAddress, addressBook]);
 
   const [selectedWallet, setSelectedWallet] = useState<
     { id: string; value: string; label: string } | undefined
@@ -80,13 +80,13 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
       setError((e as Error).message);
       setCurrentState(State.ERROR);
     }
-  }, [data, p2pClient]);
+  }, [data, p2pClient, userAddress]);
 
   useEffect(() => {
     if (currentState === State.LOGIN && !!userAddress) {
       setCurrentState(State.INITIAL);
     }
-  }, [userAddress]);
+  }, [userAddress, currentState]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/30">

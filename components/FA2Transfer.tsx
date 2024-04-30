@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
 import { useAppState } from "../context/state";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { debounce } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import ErrorMessage from "./ErrorMessage";
@@ -94,6 +95,7 @@ const FA2Transfer = ({
   const [currentToken, setCurrentToken] = useState<fa2Token | undefined>();
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
+  const currentContract = useCurrentContract();
 
   const makeName = (key: string) =>
     `transfers.${proposalIndex}.values.${localIndex}.${key}`;
@@ -126,9 +128,7 @@ const FA2Transfer = ({
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
       fetch(
-        `${TZKT_API_URL}/v1/tokens/balances?account=${
-          state.currentContract
-        }&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
+        `${TZKT_API_URL}/v1/tokens/balances?account=${currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa2${
           !!fa2ContractAddress ? "&token.contract=" + fa2ContractAddress : ""
         }`
       )
@@ -148,7 +148,7 @@ const FA2Transfer = ({
             v.filter(token => !toExclude.includes(token.id))
           );
         }),
-    [state.currentContract, toExclude]
+    [currentContract, toExclude]
   );
 
   useEffect(() => {

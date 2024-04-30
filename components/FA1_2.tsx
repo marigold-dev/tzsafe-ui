@@ -2,6 +2,7 @@ import { Field, useFormikContext } from "formik";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TZKT_API_URL, THUMBNAIL_URL } from "../context/config";
 import { useAppState } from "../context/state";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
 import { proposals } from "../versioned/interface";
 import ErrorMessage from "./ErrorMessage";
@@ -77,7 +78,7 @@ const tokenToOption = (fa1_2Token: fa1_2Token) => {
 const FA1_2 = ({ index, remove, children }: props) => {
   const state = useAppState();
   const { setFieldValue, getFieldProps } = useFormikContext<proposals>();
-
+  const currentContract = useCurrentContract();
   const [isFetching, setIsFetching] = useState(true);
   const [canSeeMore, setCanSeeMore] = useState(true);
   const [selectError, setSelectError] = useState<undefined | string>();
@@ -103,7 +104,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
     (value: string, offset: number) =>
       promiseWithTimeout(
         fetch(
-          `${TZKT_API_URL}/v1/tokens/balances?account=${state.currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
+          `${TZKT_API_URL}/v1/tokens/balances?account=${currentContract}&offset=${offset}&limit=${FETCH_COUNT}&token.metadata.name.as=*${value}*&balance.ne=0&sort.desc=lastTime&token.standard.eq=fa1.2`
         )
           .catch(e => {
             console.log(e);
@@ -126,7 +127,7 @@ const FA1_2 = ({ index, remove, children }: props) => {
 
         return Promise.resolve(v);
       }),
-    [state.currentContract]
+    [currentContract]
   );
 
   useEffect(() => {

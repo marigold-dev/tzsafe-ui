@@ -5,26 +5,24 @@ import SignersForm from "../../components/signersForm";
 import { useContracts } from "../../context/contracts";
 import { useDapps } from "../../context/dapps";
 import { useAppState } from "../../context/state";
-import { ParsedUrlQueryContract } from "../../types/app";
+import useCurrentContract from "../../hooks/useCurrentContract";
 import useIsOwner from "../../utils/useIsOwner";
 
 const Settings = () => {
   const state = useAppState();
   const router = useRouter();
   const isOwner = useIsOwner();
-  const { walletAddress: currentContract } =
-    router.query as ParsedUrlQueryContract;
-  const { removeContract } = useContracts();
-  const { removeContractDapps } = useDapps();
 
-  const [canDelete, setCanDelete] = useState(
-    !!state.contracts[currentContract]
-  );
+  const { removeContract, contracts } = useContracts();
+  const { removeContractDapps } = useDapps();
+  const currentContract = useCurrentContract();
+
+  const [canDelete, setCanDelete] = useState(!!contracts[currentContract]);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    setCanDelete(!!state.contracts[currentContract]);
-  }, [currentContract, state.contracts]);
+    setCanDelete(!!contracts[currentContract]);
+  }, [currentContract, contracts]);
 
   useEffect(() => {
     if (!isDeleting) return;
@@ -51,14 +49,11 @@ const Settings = () => {
             onClick={() => {
               setIsDeleting(true);
               setCanDelete(false);
-              // dispatch!({
-              //   type: "removeContract",
-              //   address: currentContract,
-              // });
+
               removeContract(currentContract);
               removeContractDapps(currentContract);
 
-              const addresses = Object.keys(state.contracts);
+              const addresses = Object.keys(contracts);
               if (addresses.length === 0) {
                 router.replace(`/`);
               } else {
@@ -80,9 +75,7 @@ const Settings = () => {
             <SignersForm
               disabled={!isOwner}
               address={currentContract}
-              contract={
-                state.contracts[currentContract] ?? state.currentStorage
-              }
+              contract={contracts[currentContract] ?? state.currentStorage}
               closeModal={console.log}
             />
           )}

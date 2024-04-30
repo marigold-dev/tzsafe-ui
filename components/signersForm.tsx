@@ -18,6 +18,7 @@ import {
   PROPOSAL_DURATION_WARNING,
 } from "../context/config";
 import { TZKT_API_URL } from "../context/config";
+import { useContracts } from "../context/contracts";
 import {
   generateDelegateMichelson,
   generateUndelegateMichelson,
@@ -25,6 +26,7 @@ import {
 import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import { useWallet } from "../context/wallet";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { ContractStorage } from "../types/app";
 import {
   durationOfDaysHoursMinutes,
@@ -95,6 +97,8 @@ const SignersForm: FC<{
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const bakerAddressRef = useRef<null | string>(null);
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const [loading, setLoading] = useState(false);
   const [timeoutAndHash, setTimeoutAndHash] = useState([false, ""]);
@@ -168,7 +172,7 @@ const SignersForm: FC<{
     if (!props.contract) return [];
 
     const version =
-      state.contracts[state.currentContract ?? ""]?.version ??
+      contracts[currentContract ?? ""]?.version ??
       state.currentStorage?.version;
 
     const initialSigners = new Set<string>(
@@ -278,7 +282,7 @@ const SignersForm: FC<{
           <button
             className="rounded border-2 border-primary bg-primary px-4 py-2 text-white hover:border-red-500 hover:bg-red-500"
             onClick={() => {
-              router.push(`/${state.currentContract}/proposals`);
+              router.push(`/${currentContract}/proposals`);
             }}
           >
             Go to proposals
@@ -506,7 +510,7 @@ const SignersForm: FC<{
         return (
           <Form className="align-self-center flex h-full w-full grow flex-col items-center justify-center justify-self-center">
             <DelegatorHelper
-              address={state.currentContract}
+              address={currentContract}
               setFieldValue={setFieldValue}
               bakerAddressRef={bakerAddressRef}
             />

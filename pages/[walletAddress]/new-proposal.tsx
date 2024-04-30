@@ -2,8 +2,9 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 import Meta from "../../components/meta";
 import TransferForm from "../../components/transferForm";
+import { useContracts } from "../../context/contracts";
 import { useAppState } from "../../context/state";
-import { ParsedUrlQueryContract } from "../../types/app";
+import useCurrentContract from "../../hooks/useCurrentContract";
 import useIsOwner from "../../utils/useIsOwner";
 
 const CreateProposal = () => {
@@ -12,12 +13,12 @@ const CreateProposal = () => {
   const router = useRouter();
   const isOwner = useIsOwner();
 
-  const { walletAddress: currentContract } =
-    router.query as ParsedUrlQueryContract;
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   useEffect(() => {
-    if (!isOwner) router.replace(`/${router.query.walletAddress}/proposals`);
-  }, [isOwner, router]);
+    if (!isOwner) router.replace(`/${currentContract}/proposals`);
+  }, [isOwner, router, currentContract]);
 
   return (
     <div className="min-h-content relative flex grow flex-col">
@@ -36,9 +37,7 @@ const CreateProposal = () => {
           ) : (
             <TransferForm
               address={currentContract}
-              contract={
-                state.contracts[currentContract] ?? state.currentStorage
-              }
+              contract={contracts[currentContract] ?? state.currentStorage}
               closeModal={console.log}
             />
           )}

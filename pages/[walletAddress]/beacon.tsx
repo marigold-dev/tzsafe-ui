@@ -1,4 +1,3 @@
-import { getSenderId } from "@airgap/beacon-sdk";
 import { Cross1Icon } from "@radix-ui/react-icons";
 import bs58check from "bs58check";
 import { useSearchParams } from "next/navigation";
@@ -10,9 +9,11 @@ import Meta from "../../components/meta";
 import { Event } from "../../context/P2PClient";
 import { useAliases } from "../../context/aliases";
 import { MODAL_TIMEOUT } from "../../context/config";
+import { useContracts } from "../../context/contracts";
 import { useDapps, useP2PClient } from "../../context/dapps";
-import { useAppDispatch, useAppState } from "../../context/state";
-import { P2pData, ParsedUrlQueryContract } from "../../types/app";
+import { useAppState } from "../../context/state";
+import useCurrentContract from "../../hooks/useCurrentContract";
+import { P2pData } from "../../types/app";
 import useIsOwner from "../../utils/useIsOwner";
 import { hasTzip27Support } from "../../versioned/util";
 
@@ -46,6 +47,8 @@ const Beacon = () => {
   const p2pClient = useP2PClient();
   const { getDappsByContract, removeDapp, addDapp } = useDapps();
   const { addressBook } = useAliases();
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const searchParams = useSearchParams();
   const [data, setData] = useState<P2pData | undefined>();
@@ -55,15 +58,11 @@ const Beacon = () => {
   const [code, setCode] = useState<undefined | string>(undefined);
   const [error, setError] = useState<undefined | string>(undefined);
 
-  const { walletAddress: currentContract } =
-    router.query as ParsedUrlQueryContract;
-
   useEffect(() => {
     if (
       !isOwner ||
       !hasTzip27Support(
-        state.contracts[currentContract]?.version ??
-          state.currentStorage?.version
+        contracts[currentContract]?.version ?? state.currentStorage?.version
       )
     ) {
       router.replace("/");

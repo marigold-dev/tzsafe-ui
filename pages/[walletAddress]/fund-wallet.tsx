@@ -14,6 +14,7 @@ import { useAppDispatch, useAppState } from "../../context/state";
 import { TezosToolkitContext } from "../../context/tezos-toolkit";
 import { useWallet } from "../../context/wallet";
 import { makeWertWidget } from "../../context/wert";
+import useCurrentContract from "../../hooks/useCurrentContract";
 import { mutezToTez } from "../../utils/tez";
 import { signers } from "../../versioned/apis";
 
@@ -27,10 +28,11 @@ const TopUpPage = () => {
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { addOrUpdateContract } = useContracts();
+  const { addOrUpdateContract, contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const onSuccess = async (txId: string) => {
-    if (!state.currentContract) return;
+    if (!currentContract) return;
 
     let amount = 0;
     let transaction;
@@ -52,19 +54,19 @@ const TopUpPage = () => {
 
     try {
       const sent = await tezos.wallet
-        .transfer({ to: state.currentContract, amount })
+        .transfer({ to: currentContract, amount })
         .send();
 
       setIsLoading(true);
 
       await sent.confirmation();
 
-      const newContract = state.contracts[state.currentContract];
+      const newContract = contracts[currentContract];
       newContract.balance = new BigNumber(newContract.balance)
         .plus(transaction[0].amount as number)
         .toString();
 
-      addOrUpdateContract(state.currentContract, newContract);
+      addOrUpdateContract(currentContract, newContract);
 
       setIsLoading(false);
       setIsSuccess(true);
@@ -81,13 +83,13 @@ const TopUpPage = () => {
   );
 
   useEffect(() => {
-    if (!state.currentContract || !userAddress) return;
+    if (!currentContract || !userAddress) return;
 
     wertWidgetRef.current = makeWertWidget({
       wallet: userAddress ?? "",
       onSuccess,
     });
-  }, [state.currentContract]);
+  }, [currentContract]);
 
   useEffect(() => {
     if (
@@ -97,7 +99,7 @@ const TopUpPage = () => {
     )
       return;
 
-    if (state.currentContract !== router.query.walletAddress) {
+    if (currentContract !== router.query.walletAddress) {
       disptach({
         type: "setCurrentContract",
         payload: router.query.walletAddress,
@@ -115,15 +117,14 @@ const TopUpPage = () => {
           <h1 className="text-2xl font-extrabold text-white">
             {`Fund
             ${
-              addressBook[state.currentContract ?? ""] ?? (
-                <Alias address={state.currentContract ?? ""} disabled />
+              addressBook[currentContract ?? ""] ?? (
+                <Alias address={currentContract ?? ""} disabled />
               )
             }`}
           </h1>
           <div>
             {!signers(
-              state.contracts[state.currentContract ?? ""] ??
-                state.currentStorage
+              contracts[currentContract ?? ""] ?? state.currentStorage
             ).includes(userAddress ?? "") &&
               renderWarning("You're not the owner of this wallet")}
           </div>
@@ -156,8 +157,8 @@ const TopUpPage = () => {
               {!!error ? (
                 <span className="text-red-600">
                   {error}. All funds are currently held in{" "}
-                  <Alias address={state.currentContract ?? ""} />, you may
-                  manually move the funds to your TzSafe wallet.
+                  <Alias address={currentContract ?? ""} />, you may manually
+                  move the funds to your TzSafe wallet.
                 </span>
               ) : isLoading ? (
                 <Spinner />
@@ -165,12 +166,12 @@ const TopUpPage = () => {
                 <span className="font-light text-white">
                   Transferred the funds from{" "}
                   <Alias address={userAddress ?? ""} disabled /> to{" "}
-                  <Alias disabled address={state.currentContract ?? ""} />{" "}
+                  <Alias disabled address={currentContract ?? ""} />{" "}
                 </span>
               ) : null}
             </p>
           </div>
-          {!state.currentContract ? (
+          {!currentContract ? (
             <h2 className="text-center text-xl text-zinc-600">
               Please select a wallet in the sidebar
             </h2>
@@ -179,10 +180,7 @@ const TopUpPage = () => {
               <h2 className="mt-12 text-xl text-white">
                 Send from <Alias address={userAddress ?? ""} disabled />
               </h2>
-              <TopUp
-                address={state.currentContract ?? ""}
-                closeModal={() => {}}
-              />
+              <TopUp address={currentContract ?? ""} closeModal={() => {}} />
             </>
           )}
         </div>

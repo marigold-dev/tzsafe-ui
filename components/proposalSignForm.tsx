@@ -7,10 +7,12 @@ import { useRouter } from "next/router";
 import React, { useContext, useState, useMemo } from "react";
 import { MODAL_TIMEOUT, PREFERED_NETWORK } from "../context/config";
 import { PROPOSAL_DURATION_WARNING } from "../context/config";
-import { AppStateContext, useAppState } from "../context/state";
+import { useContracts } from "../context/contracts";
+import { useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
 import { useWallet } from "../context/wallet";
 import { CustomView, customViewMatchers } from "../dapps";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { version, proposal } from "../types/display";
 import { canExecute, canReject } from "../utils/proposals";
 import { walletToken } from "../utils/useWalletTokens";
@@ -46,7 +48,8 @@ function ProposalSignForm({
   onSuccess?: () => void;
 }) {
   const state = useAppState();
-  const currentContract = state.currentContract ?? "";
+  const { contracts } = useContracts();
+  const currentContract = useCurrentContract();
 
   const { userAddress } = useWallet();
 
@@ -62,8 +65,7 @@ function ProposalSignForm({
   const { rows, dapp } = useMemo(() => {
     const rows = proposal.ui.content.map(v =>
       contentToData(
-        state.contracts[currentContract]?.version ??
-          state.currentStorage?.version,
+        contracts[currentContract]?.version ?? state.currentStorage?.version,
         v,
         walletTokens
       )
@@ -80,12 +82,7 @@ function ProposalSignForm({
       console.log("Failed to parse dapp:", e);
     }
     return { rows, dapp };
-  }, [
-    proposal.ui.content,
-    state.currentContract,
-    state.contracts,
-    state.currentStorage,
-  ]);
+  }, [proposal.ui.content, currentContract, contracts, state.currentStorage]);
 
   async function sign(
     proposal: number,
@@ -195,7 +192,7 @@ function ProposalSignForm({
   }
 
   const allSigners = signers(
-    state.contracts[currentContract] ?? state.currentStorage
+    contracts[currentContract] ?? state.currentStorage
   );
 
   const signatures = proposal.ui.signatures.filter(({ signer }) =>
