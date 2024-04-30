@@ -7,6 +7,7 @@ import Spinner from "../../components/Spinner";
 import { renderWarning } from "../../components/formUtils";
 import Meta from "../../components/meta";
 import TopUp from "../../components/topUpForm";
+import { useAliases } from "../../context/aliases";
 import { TZKT_API_URL } from "../../context/config";
 import { useContracts } from "../../context/contracts";
 import { useAppDispatch, useAppState } from "../../context/state";
@@ -20,6 +21,7 @@ const TopUpPage = () => {
   const state = useAppState();
   const disptach = useAppDispatch();
   const { userAddress } = useWallet();
+  const { addressBook } = useAliases();
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const [error, setError] = useState<string | undefined>();
@@ -111,10 +113,12 @@ const TopUpPage = () => {
       <div>
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-extrabold text-white">
-            Fund{" "}
-            {state.aliases[state.currentContract ?? ""] ?? (
-              <Alias address={state.currentContract ?? ""} disabled />
-            )}
+            {`Fund
+            ${
+              addressBook[state.currentContract ?? ""] ?? (
+                <Alias address={state.currentContract ?? ""} disabled />
+              )
+            }`}
           </h1>
           <div>
             {!signers(

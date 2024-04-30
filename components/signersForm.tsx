@@ -91,7 +91,7 @@ const SignersForm: FC<{
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { userAddress } = useWallet();
-  const { updateAliases } = useAliases();
+  const { updateAliases, addressBook } = useAliases();
   const { tezos } = useContext(TezosToolkitContext);
   const router = useRouter();
   const bakerAddressRef = useRef<null | string>(null);
@@ -145,7 +145,7 @@ const SignersForm: FC<{
       : signers(props.contract)
     ).map((x: string) => ({
       address: x,
-      name: state.aliases[x] || "",
+      name: addressBook[x] || "",
     })),
     days: duration?.days?.toString(),
     hours: duration?.hours?.toString(),

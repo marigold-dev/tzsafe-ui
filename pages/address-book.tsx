@@ -10,7 +10,6 @@ import {
 import renderError from "../components/formUtils";
 import Meta from "../components/meta";
 import { useAliases } from "../context/aliases";
-import { useAppState } from "../context/state";
 
 function get(
   s: string | FormikErrors<{ name: string; address: string }>
@@ -25,12 +24,11 @@ function get(
     }
   }
 }
-function Home() {
-  const state = useAppState();
-  const { updateAliases } = useAliases();
+function AddressBook() {
+  const { updateAliases, addressBook } = useAliases();
 
   const byName = Object.fromEntries(
-    Object.entries(state.aliases).map(([k, v]) => [v, k])
+    Object.entries(addressBook).map(([k, v]) => [v, k])
   );
   const initialProps: {
     validators: {
@@ -40,7 +38,7 @@ function Home() {
     }[];
     validatorsError?: string;
   } = {
-    validators: Object.entries(state.aliases).map(([k, v]) => ({
+    validators: Object.entries(addressBook).map(([k, v]) => ({
       name: v,
       address: k,
       initial: { name: v, address: k },
@@ -257,4 +255,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default AddressBook;

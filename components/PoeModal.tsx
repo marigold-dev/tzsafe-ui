@@ -19,6 +19,7 @@ import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
+import { useAliases } from "../context/aliases";
 import { PREFERED_NETWORK } from "../context/config";
 import { useP2PClient } from "../context/dapps";
 import {
@@ -80,6 +81,7 @@ const PoeModal = () => {
 
   const { tezos } = useTezosToolkit();
   const p2pClient = useP2PClient();
+  const { addressBook } = useAliases();
 
   const path = usePathname();
 
@@ -772,13 +774,13 @@ const PoeModal = () => {
                     Message Signing Request from {message.appMetadata.name}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {message.appMetadata.name} requests message signing from{" "}
-                    {state.aliases[address ?? ""]}. The payload of the message
-                    is as follows:
+                    {`${message.appMetadata.name} requests message signing from
+                    ${addressBook[address ?? ""]}. The payload of the message
+                    is as follows:`}
                   </p>
                   <ul className="mt-2 space-y-1">
                     <li className="truncate">
-                      <span className="font-light">Payload:</span>{" "}
+                      <span className="font-light">{`Payload: `}</span>
                       {p2pClient.proofOfEvent.data?.payload}
                     </li>
                   </ul>
@@ -877,8 +879,8 @@ const PoeModal = () => {
                     Does not support message signing {"(TZIP27)"}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {state.aliases[address ?? ""]} version is {version};
-                    however, version 0.3.4 or higher is required.
+                    {`${addressBook[address ?? ""]} version is ${version};
+                    however, version 0.3.4 or higher is required.`}
                   </p>
                   <div className="mt-8 flex justify-around">
                     <button

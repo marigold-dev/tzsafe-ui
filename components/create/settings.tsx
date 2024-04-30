@@ -10,9 +10,9 @@ import {
 import Link from "next/link";
 import React from "react";
 import { useContext } from "react";
+import { useAliases } from "../../context/aliases";
 import { PROPOSAL_DURATION_WARNING } from "../../context/config";
 import FormContext from "../../context/formContext";
-import { useAppState } from "../../context/state";
 import { useWallet } from "../../context/wallet";
 import {
   durationOfDaysHoursMinutes,
@@ -38,12 +38,12 @@ function get(
 function Settings() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useAppState();
+  const { addressBook } = useAliases();
   const { userAddress } = useWallet();
   let byName = Object.fromEntries(
-    Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
+    Object.entries(addressBook).map(([k, v]) => [v, k])
   );
-  if (userAddress == null) {
+  if (!userAddress) {
     return null;
   }
 
@@ -56,7 +56,7 @@ function Settings() {
     validatorsError?: string;
   } = {
     validators: [
-      { address: userAddress!, name: state.aliases[userAddress!] || "" },
+      { address: userAddress, name: addressBook[userAddress] || "" },
     ],
     requiredSignatures: 1,
     days: "1",

@@ -8,6 +8,7 @@ import Spinner from "../../components/Spinner";
 import renderError from "../../components/formUtils";
 import Meta from "../../components/meta";
 import { Event } from "../../context/P2PClient";
+import { useAliases } from "../../context/aliases";
 import { MODAL_TIMEOUT } from "../../context/config";
 import { useDapps, useP2PClient } from "../../context/dapps";
 import { useAppDispatch, useAppState } from "../../context/state";
@@ -40,11 +41,11 @@ export function decodeData(data: string): P2pData {
 
 const Beacon = () => {
   const state = useAppState();
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const isOwner = useIsOwner();
   const p2pClient = useP2PClient();
   const { getDappsByContract, removeDapp, addDapp } = useDapps();
+  const { addressBook } = useAliases();
 
   const searchParams = useSearchParams();
   const [data, setData] = useState<P2pData | undefined>();
@@ -226,7 +227,7 @@ const Beacon = () => {
             return (
               <p>
                 {data?.name} is already connected with{" "}
-                {state.aliases[currentContract]}
+                {addressBook[currentContract]}
               </p>
             );
 
@@ -238,7 +239,7 @@ const Beacon = () => {
                 <>
                   <p>
                     Do you want to allow the connection to{" "}
-                    {state.aliases[currentContract] ?? currentContract}
+                    {addressBook[currentContract] ?? currentContract}
                   </p>
                   <div className="mt-4 flex items-center space-x-4">
                     <button
@@ -278,8 +279,8 @@ const Beacon = () => {
             case State.AUTHORIZED:
               return (
                 <p>
-                  {data?.name} has been authorized to connect to{" "}
-                  {state.aliases[currentContract ?? ""] ?? currentContract}
+                  {`${data.name} has been authorized to connect to
+                  ${addressBook[currentContract ?? ""] ?? currentContract}`}
                 </p>
               );
             case State.REFUSED:

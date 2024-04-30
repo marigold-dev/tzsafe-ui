@@ -17,6 +17,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useAliases } from "../context/aliases";
 import { PREFERED_NETWORK } from "../context/config";
 import { useContracts } from "../context/contracts";
 import { useAppDispatch, useAppState } from "../context/state";
@@ -141,11 +142,11 @@ const Sidebar = ({
   const [isClient, setIsClient] = useState(false);
 
   let state = useAppState();
-  let dispatch = useAppDispatch();
   const { userAddress } = useWallet();
 
   const { tezos } = useContext(TezosToolkitContext);
   const { addOrUpdateContract } = useContracts();
+  const { addressBook } = useAliases();
 
   const isOwner = useIsOwner();
 
@@ -218,7 +219,7 @@ const Sidebar = ({
               />
             ) : (
               <SelectedItem
-                name={state.aliases[currentContract]}
+                name={addressBook[currentContract]}
                 address={currentContract}
                 balance={
                   state.contracts[currentContract]?.balance ??

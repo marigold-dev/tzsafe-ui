@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
+import { useAliases } from "../context/aliases";
 import { useDapps, useP2PClient } from "../context/dapps";
 import { useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
@@ -28,6 +29,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
   const [error, setError] = useState<undefined | string>();
 
   const { userAddress, wallet, connectWallet } = useWallet();
+  const { addressBook } = useAliases();
 
   const options = useMemo(() => {
     if (!userAddress) return [];
@@ -41,7 +43,7 @@ const LoginModal = ({ data, onEnd }: { data: string; onEnd: () => void }) => {
         {
           id: address,
           value: address,
-          label: state.aliases[address],
+          label: addressBook[address],
         },
       ];
     });
