@@ -1,6 +1,7 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import Link from "next/link";
 import { useContext } from "react";
+import { useAliases } from "../../context/aliases";
 import FormContext from "../../context/formContext";
 import { useAppState } from "../../context/state";
 import { useWallet } from "../../context/wallet";
@@ -9,11 +10,11 @@ import renderError from "../formUtils";
 function Basic() {
   const { activeStepIndex, setActiveStepIndex, formState, setFormState } =
     useContext(FormContext)!;
-  const state = useAppState();
   const { userAddress } = useWallet();
+  const { addressBook } = useAliases();
 
   const byName = Object.fromEntries(
-    Object.entries(state?.aliases || {}).map(([k, v]) => [v, k])
+    Object.entries(addressBook).map(([k, v]) => [v, k])
   );
 
   return (

@@ -53,3 +53,9 @@ export const loadStorage = (userAddress: string): AppStorage => {
 
 export const loadDapps = (userAddress: string) =>
   loadStorage(userAddress).connectedDapps;
+
+export const loadContracts = (userAddress: string) =>
+  loadStorage(userAddress).contracts;
+
+export const loadAliases = (userAddress: string) =>
+  loadStorage(userAddress).aliases;

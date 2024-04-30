@@ -4,6 +4,8 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+import { useAliases } from "../../context/aliases";
+import { useContracts } from "../../context/contracts";
 import FormContext from "../../context/formContext";
 import { useAppState } from "../../context/state";
 import { useTezosToolkit } from "../../context/tezos-toolkit";
@@ -23,6 +25,8 @@ function Basic() {
   const state = useAppState();
   const params = useSearchParams();
   const { tezos } = useTezosToolkit();
+  const { addressBook } = useAliases();
+  const { contracts } = useContracts();
 
   let [initialState, set] = useState({
     walletName: "TzSafe Wallet",
@@ -63,7 +67,7 @@ function Basic() {
         if (!exists) {
           errors.walletAddress = `Contract does not exist at address ${values.walletAddress}`;
         }
-        if (state.contracts[values.walletAddress]) {
+        if (contracts[values.walletAddress]) {
           errors.walletName = `Contract already imported ${values.walletAddress}`;
         }
         if (byName[values.walletName]) {
@@ -90,7 +94,7 @@ function Basic() {
           let v = toStorage(version, storage, balance);
           const validators = signers(v).map((x: string) => ({
             address: x,
-            name: state.aliases[x] || "",
+            name: addressBook[x] || "",
           }));
 
           const duration = secondsToDuration(

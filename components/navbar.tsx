@@ -5,7 +5,8 @@ import { useRouter } from "next/router";
 import React, { useState } from "react";
 import tzSafeLogo from "../assets/images/TzSafe.svg";
 import { PREFERED_NETWORK } from "../context/config";
-import { useAppDispatch, useAppState } from "../context/state";
+import { useContracts } from "../context/contracts";
+import { useAppDispatch } from "../context/state";
 import { useWallet } from "../context/wallet";
 import Alias from "./Alias";
 import LinkComponent from "./links";
@@ -16,8 +17,8 @@ const NavBar = (_: React.PropsWithChildren) => {
   let [menuOpen, setMenuOpen] = useState(false);
 
   const router = useRouter();
-  const state = useAppState();
   const dispatch = useAppDispatch();
+  const { contracts } = useContracts();
 
   const disconnect = async (): Promise<void> => {
     disconnectWallet();
@@ -30,9 +31,9 @@ const NavBar = (_: React.PropsWithChildren) => {
 
   return (
     <nav
-      className={`${menuOpen ? "h-auto" : "h-20"} fixed ${
-        state?.hasBanner ? "top-12" : "top-0"
-      } left-0 right-0 z-40 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
+      className={`${
+        menuOpen ? "h-auto" : "h-20"
+      } fixed left-0 right-0 top-0 z-40 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
       <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">
@@ -92,7 +93,7 @@ const NavBar = (_: React.PropsWithChildren) => {
                 </svg>
               </button>
 
-              {userAddress == null ? (
+              {!userAddress ? (
                 <div className="relative ml-3">
                   <LoginButton />
                 </div>
@@ -139,7 +140,7 @@ const NavBar = (_: React.PropsWithChildren) => {
             </div>
           </div>
 
-          {state && state.contracts && (
+          {contracts && (
             <div className={`-mr-2 flex space-x-4 md:hidden`}>
               {!userAddress ? (
                 <div className="mx-2 flex items-center justify-center">

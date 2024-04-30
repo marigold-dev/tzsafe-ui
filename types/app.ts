@@ -28,5 +28,5 @@ export type Contracts = { [address: string]: ContractStorage };
 export type Aliases = { [address: string]: string };
 
 export interface ParsedUrlQueryContract extends ParsedUrlQuery {
-  walletAddress: string;
+  walletAddress: string | undefined;
 }

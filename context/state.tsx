@@ -41,18 +41,6 @@ let emptyState = (): tezosState => {
 type action =
   | { type: "init"; payload: tezosState }
   | {
-      type: "addContract";
-      payload: {
-        aliases: { [address: string]: string };
-        address: string;
-        contract: ContractStorage;
-      };
-    }
-  | {
-      type: "updateContract";
-      payload: { address: string; contract: ContractStorage };
-    }
-  | {
       type: "setCurrentStorage";
       payload: ContractStorage & { address: string };
     }
@@ -60,21 +48,9 @@ type action =
       type: "setCurrentContract";
       payload: string;
     }
-  | { type: "removeContract"; address: string }
   | { type: "loadStorage"; payload: storage }
   | { type: "writeStorage"; payload: storage }
   | { type: "setDelegatorAddresses"; payload: string[] }
-  | {
-      type: "updateAliases";
-      payload: {
-        aliases: { address: string; name: string }[];
-        keepOld: boolean;
-      };
-    }
-  | {
-      type: "setBanner";
-      payload: boolean;
-    }
   | {
       type: "refreshProposals";
     }
@@ -109,90 +85,6 @@ function reducer(
   { userAddress }: { userAddress: string }
 ): tezosState {
   switch (action.type) {
-    // case "p2pConnect": {
-    //   return { ...state, p2pClient: action.payload };
-    // }
-    // case "addDapp": {
-    //   state.connectedDapps[action.payload.address] ??= {};
-
-    //   state.connectedDapps[action.payload.address][action.payload.data.appUrl] =
-    //     action.payload.data;
-
-    //   saveState(state, userAddress);
-
-    //   return state;
-    // }
-    // case "removeDapp": {
-    //   if (
-    //     !state.currentContract ||
-    //     !state.connectedDapps[state.currentContract][action.payload]
-    //   )
-    //     return state;
-
-    //   const newState = { ...state };
-
-    //   delete newState.connectedDapps[state.currentContract][action.payload];
-
-    //   saveState(newState, userAddress);
-
-    //   return newState;
-    // }
-    case "addContract": {
-      let al = action.payload.aliases;
-      let aliases = { ...state.aliases, ...al };
-
-      let contracts = {
-        ...state.contracts,
-        [action.payload.address]: action.payload.contract,
-      };
-
-      const newState: tezosState = {
-        ...state,
-        contracts: contracts,
-        aliases: aliases,
-        currentContract: state.currentContract,
-        aliasTrie: Trie.fromAliases(Object.entries(aliases)),
-      };
-
-      saveState(newState, userAddress);
-
-      return newState;
-    }
-    case "updateAliases": {
-      const newAliases = Object.fromEntries(
-        action.payload.aliases.map(({ name, address }) => [address, name])
-      );
-
-      const aliases = {
-        ...(action.payload.keepOld ? state.aliases : {}),
-        ...newAliases,
-      };
-
-      const newState = {
-        ...state,
-        aliases: aliases,
-        aliasTrie: Trie.fromAliases(Object.entries(aliases)),
-      };
-
-      saveState(newState, userAddress);
-
-      return newState;
-    }
-    case "updateContract": {
-      let contracts = {
-        ...state.contracts,
-        [action.payload.address]: action.payload.contract,
-      };
-      const newState = {
-        ...state,
-        contracts,
-      };
-
-      if (state.contracts[action.payload.address])
-        saveState(newState, userAddress);
-
-      return newState;
-    }
     case "setCurrentContract":
       const newState = {
         ...state,
@@ -230,40 +122,6 @@ function reducer(
       };
     }
 
-    case "removeContract": {
-      const { [action.address]: _, ...contracts } = state.contracts;
-      const { [action.address]: __, ...aliases } = state.aliases;
-      // TODO WHEN SPLIT CONTRACTS INTO CONTEXT
-      // const { [action.address]: contractDapps, ...connectedDapps } =
-      //   state.connectedDapps;
-
-      // Object.values(contractDapps ?? {}).forEach(async dapp => {
-      //   const senderId = await getSenderId(dapp.publicKey);
-      //   state.p2pClient?.removePeer(
-      //     {
-      //       ...dapp,
-      //       type: "p2p-pairing-response",
-      //       senderId,
-      //     },
-      //     true
-      //   );
-      // });
-
-      const addresses = Object.keys(contracts);
-      const currentContract = addresses.length > 0 ? addresses[0] : null;
-
-      const newState = {
-        ...state,
-        contracts,
-        currentContract,
-        aliases,
-        // connectedDapps,
-      };
-
-      saveState(newState, userAddress);
-
-      return newState;
-    }
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":

@@ -5,7 +5,7 @@ import {
   ChevronUpIcon,
 } from "@radix-ui/react-icons";
 import * as Select from "@radix-ui/react-select";
-import { tzip16 } from "@taquito/tzip16";
+import { ValidationResult, validateAddress } from "@taquito/utils";
 import BigNumber from "bignumber.js";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,15 +17,14 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useAliases } from "../context/aliases";
 import { PREFERED_NETWORK } from "../context/config";
-import { useAppDispatch, useAppState } from "../context/state";
-import { TezosToolkitContext } from "../context/tezos-toolkit";
-import fetchVersion from "../context/version";
+import { useContracts } from "../context/contracts";
+import { useAppState } from "../context/state";
 import { useWallet } from "../context/wallet";
-import { ContractStorage } from "../types/app";
-import { version } from "../types/display";
+import useCurrentContract from "../hooks/useCurrentContract";
 import useIsOwner from "../utils/useIsOwner";
-import { signers, toStorage } from "../versioned/apis";
+import { signers } from "../versioned/apis";
 import { hasTzip27Support } from "../versioned/util";
 import Alias from "./Alias";
 import Copy from "./Copy";
@@ -140,61 +139,38 @@ const Sidebar = ({
   const [isClient, setIsClient] = useState(false);
 
   let state = useAppState();
-  let dispatch = useAppDispatch();
   const { userAddress } = useWallet();
 
-  const { tezos } = useContext(TezosToolkitContext);
+  const { addOrUpdateContract, contracts, fetchContract } = useContracts();
+  const { addressBook } = useAliases();
+  const currentContract = useCurrentContract();
 
   const isOwner = useIsOwner();
 
   const version =
-    state.contracts[state.currentContract ?? ""]?.version ??
-    state.currentStorage?.version;
+    contracts[currentContract]?.version ?? state.currentStorage?.version;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
-    if (!state.currentContract) return;
-
     (async () => {
-      if (!state.currentContract) return;
-
-      let c = await tezos.wallet.at(state.currentContract, tzip16);
-      let balance = await tezos.tz.getBalance(state.currentContract);
-
-      const storage = (await c.storage()) as ContractStorage;
-      let version = await (state.contracts[state.currentContract]
-        ? Promise.resolve<version>(
-            state.contracts[state.currentContract].version
-          )
-        : fetchVersion(c));
-
-      const updatedContract = toStorage(version, storage, balance);
-
-      state.contracts[state.currentContract]
-        ? dispatch({
-            type: "updateContract",
-            payload: {
-              address: state.currentContract,
-              contract: updatedContract,
-            },
+      if (validateAddress(currentContract) !== ValidationResult.VALID)
+        fetchContract(currentContract)
+          .then(updatedContract => {
+            addOrUpdateContract(currentContract, updatedContract);
           })
-        : null;
+          .catch(console.error);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.currentContract]);
+  }, [currentContract]);
 
   if (!isClient) return null;
 
-  const currentContract = state.currentContract ?? "";
-
   return (
     <aside
-      className={`fixed bottom-0 left-0 ${
-        state.hasBanner ? "top-32" : "top-20"
-      } z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
+      className={`fixed bottom-0 left-0 top-20 z-10 w-72 bg-zinc-700 px-4 py-4 md:py-8 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } overflow-y-auto md:-translate-x-0`}
     >
@@ -211,10 +187,10 @@ const Sidebar = ({
           router.push(`/${payload}/${path?.split("/")[2] ?? ""}`);
         }}
         value={currentContract}
-        disabled={Object.values(state.contracts).length === 0}
+        disabled={Object.values(contracts).length === 0}
       >
         <Select.Trigger asChild aria-label="Wallets">
-          <FixedTrigger disabled={Object.values(state.contracts).length === 0}>
+          <FixedTrigger disabled={Object.values(contracts).length === 0}>
             {isLoading ? (
               <SelectedItem
                 name={"-"}
@@ -225,16 +201,16 @@ const Sidebar = ({
               />
             ) : (
               <SelectedItem
-                name={state.aliases[currentContract]}
+                name={addressBook[currentContract]}
                 address={currentContract}
                 balance={
-                  state.contracts[currentContract]?.balance ??
+                  contracts[currentContract]?.balance ??
                   state.currentStorage?.balance
                 }
                 threshold={
-                  !!state.contracts[currentContract]
-                    ? `${state.contracts[currentContract].threshold}/${
-                        signers(state.contracts[currentContract]).length
+                  !!contracts[currentContract]
+                    ? `${contracts[currentContract].threshold}/${
+                        signers(contracts[currentContract]).length
                       }`
                     : !!state.currentStorage
                     ? `${state.currentStorage.threshold}/${
@@ -243,7 +219,7 @@ const Sidebar = ({
                     : "0/0"
                 }
                 version={
-                  state.contracts[currentContract]?.version ??
+                  contracts[currentContract]?.version ??
                   state.currentStorage?.version
                 }
               />
@@ -260,29 +236,27 @@ const Sidebar = ({
           </Select.ScrollUpButton>
           <Select.Viewport className="w-full rounded-lg bg-zinc-800 p-2 shadow-lg">
             <Select.Group>
-              {Object.entries(state.contracts).map(
-                ([address, _contract], i) => (
-                  <Select.Item
-                    key={`${address}-${i}`}
-                    value={address}
-                    className="radix-disabled:opacity-50 relative flex select-none items-center rounded-md px-8 py-2 text-sm font-medium text-zinc-300 focus:bg-zinc-800 focus:bg-zinc-900 focus:outline-none"
-                  >
-                    <Select.ItemText>
-                      <p className="text-xl text-white">
-                        <Alias address={address} />
-                      </p>
+              {Object.entries(contracts).map(([address, _contract], i) => (
+                <Select.Item
+                  key={`${address}-${i}`}
+                  value={address}
+                  className="radix-disabled:opacity-50 relative flex select-none items-center rounded-md px-8 py-2 text-sm font-medium text-zinc-300 focus:bg-zinc-800 focus:bg-zinc-900 focus:outline-none"
+                >
+                  <Select.ItemText>
+                    <p className="text-xl text-white">
+                      <Alias address={address} />
+                    </p>
 
-                      <p className="mt-1 text-sm text-zinc-400">
-                        {address.substring(0, 5)}...
-                        {address.substring(address.length - 5)}
-                      </p>
-                    </Select.ItemText>
-                    <Select.ItemIndicator className="absolute left-2 inline-flex items-center">
-                      <CheckIcon />
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                )
-              )}
+                    <p className="mt-1 text-sm text-zinc-400">
+                      {address.substring(0, 5)}...
+                      {address.substring(address.length - 5)}
+                    </p>
+                  </Select.ItemText>
+                  <Select.ItemIndicator className="absolute left-2 inline-flex items-center">
+                    <CheckIcon />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              ))}
             </Select.Group>
           </Select.Viewport>
           <Select.ScrollDownButton className="flex items-center justify-center text-zinc-300">
@@ -293,7 +267,7 @@ const Sidebar = ({
 
       <div className="mt-8 flex flex-col space-y-4">
         <Link
-          href={`/${state.currentContract}/dashboard`}
+          href={`/${currentContract}/dashboard`}
           className={linkClass(
             path?.includes("/dashboard") ?? false,
             isLoading
@@ -311,15 +285,15 @@ const Sidebar = ({
               xmlns="http://www.w3.org/2000/svg"
               d="M5.77778 10.2222V18C5.77778 19.1046 6.67321 20 7.77778 20H12M5.77778 10.2222L11.2929 4.70711C11.6834 4.31658 12.3166 4.31658 12.7071 4.70711L17.5 9.5M5.77778 10.2222L4 12M18.2222 10.2222V18C18.2222 19.1046 17.3268 20 16.2222 20H12M18.2222 10.2222L20 12M18.2222 10.2222L17.5 9.5M17.5 9.5V6M12 20V15"
               stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
           <span>Dashboard</span>
         </Link>
         <a
-          href={`https://${PREFERED_NETWORK}.tzkt.io/${state.currentContract}/balances/`}
+          href={`https://${PREFERED_NETWORK}.tzkt.io/${currentContract}/balances/`}
           target="_blank"
           rel="noreferrer"
           className={linkClass(false, isLoading)}
@@ -394,7 +368,7 @@ const Sidebar = ({
           </svg>
         </a>
         <Link
-          href={`/${state.currentContract}/proposals`}
+          href={`/${currentContract}/proposals`}
           className={linkClass(
             path?.includes("/proposals") ?? false,
             isLoading
@@ -416,7 +390,7 @@ const Sidebar = ({
           <span>Proposals</span>
         </Link>
         <Link
-          href={`/${state.currentContract}/new-proposal`}
+          href={`/${currentContract}/new-proposal`}
           className={linkClass(
             path?.includes("/new-proposal") ?? false,
             !isOwner || isLoading
@@ -438,7 +412,7 @@ const Sidebar = ({
           <span>New proposal</span>
         </Link>
         <Link
-          href={`/${state.currentContract}/fund-wallet`}
+          href={`/${currentContract}/fund-wallet`}
           className={linkClass(
             path?.includes("/fund-wallet") ?? false,
             !userAddress || isLoading
@@ -580,7 +554,7 @@ const Sidebar = ({
           <span>Fund wallet</span>
         </Link>
         <Link
-          href={`/${state.currentContract}/settings`}
+          href={`/${currentContract}/settings`}
           className={linkClass(path?.includes("/settings") ?? false, isLoading)}
           onClick={onClose}
         >
@@ -599,7 +573,7 @@ const Sidebar = ({
           <span>Settings</span>
         </Link>
         <Link
-          href={`/${state.currentContract}/history`}
+          href={`/${currentContract}/history`}
           className={linkClass(path?.includes("/history") ?? false, isLoading)}
           onClick={onClose}
         >
@@ -619,7 +593,7 @@ const Sidebar = ({
         </Link>
 
         <Link
-          href={`/${state.currentContract}/beacon`}
+          href={`/${currentContract}/beacon`}
           className={linkClass(
             path?.includes("/beacon") ?? false,
             isLoading || !isOwner || !hasTzip27Support(version)

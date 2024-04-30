@@ -1,6 +1,6 @@
 import Dashboard from "../../components/dashboard";
 import Meta from "../../components/meta";
-import { useAppState } from "../../context/state";
+import useCurrentContract from "../../hooks/useCurrentContract";
 import {
   useTzktBalance,
   useTzktDefiTokens,
@@ -8,8 +8,7 @@ import {
 } from "../../utils/tzktHooks";
 
 const DashboardPage = () => {
-  const state = useAppState();
-  const address = state.currentContract;
+  const address = useCurrentContract();
 
   // Get balance
   const balance = useTzktBalance(address);

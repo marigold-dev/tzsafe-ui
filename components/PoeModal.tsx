@@ -19,7 +19,9 @@ import BigNumber from "bignumber.js";
 import { usePathname } from "next/navigation";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Event } from "../context/P2PClient";
+import { useAliases } from "../context/aliases";
 import { PREFERED_NETWORK } from "../context/config";
+import { useContracts } from "../context/contracts";
 import { useP2PClient } from "../context/dapps";
 import {
   generateDelegateMichelson,
@@ -30,6 +32,7 @@ import { useTezosToolkit } from "../context/tezos-toolkit";
 import fetchVersion from "../context/version";
 import { useWallet } from "../context/wallet";
 import { CustomView, customViewMatchers } from "../dapps";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { State } from "../pages/[walletAddress]/beacon";
 import { proposalContent } from "../types/display";
 import useWalletTokens from "../utils/useWalletTokens";
@@ -80,6 +83,8 @@ const PoeModal = () => {
 
   const { tezos } = useTezosToolkit();
   const p2pClient = useP2PClient();
+  const { addressBook } = useAliases();
+  const { contracts } = useContracts();
 
   const path = usePathname();
 
@@ -102,9 +107,10 @@ const PoeModal = () => {
 
   const [signImmediatelyFlag, setSignImmediatelyFlag] = useState(true);
   const [resolveImmediatelyFlag, setResolveImmediatelyFlag] = useState(false);
+  const currentContract = useCurrentContract();
 
   const version =
-    state.contracts[address ?? ""]?.version ?? state.currentStorage?.version;
+    contracts[address ?? ""]?.version ?? state.currentStorage?.version;
 
   const { rows, dapp } = useMemo(() => {
     const rows = (transfers ?? []).map(t =>
@@ -131,7 +137,7 @@ const PoeModal = () => {
     };
 
     const transactionCb = async (message: OperationRequestOutput) => {
-      if (!state.contracts[message.sourceAddress]) {
+      if (!contracts[message.sourceAddress]) {
         p2pClient.abortRequest(
           message.id,
           "The contract is not an imported TzSafe one"
@@ -156,7 +162,7 @@ const PoeModal = () => {
         return;
       }
 
-      const version = state.contracts[message.sourceAddress].version;
+      const version = contracts[message.sourceAddress].version;
 
       const transfers = (await Promise.all(
         message.operationDetails.map(async detail => {
@@ -352,7 +358,7 @@ const PoeModal = () => {
     const simulatedProofOfEventCb = async (
       message: SimulatedProofOfEventChallengeRequest
     ) => {
-      const contract = state.contracts[message.contractAddress];
+      const contract = contracts[message.contractAddress];
 
       if (!contract) {
         p2pClient.sendError(
@@ -413,44 +419,49 @@ const PoeModal = () => {
     setAddress(undefined);
   };
 
-  const Checkboxes = () => (
-    <>
-      <div className="md-2 flex w-full items-center space-x-4 pt-8">
-        <label className="font-medium text-white">Sign immediately:</label>
-        <Checkbox
-          name="signImmediatelyFlag"
-          type="checkbox"
-          checked={signImmediatelyFlag}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            if (!e.target.checked) {
-              setResolveImmediatelyFlag(e.target.checked);
-            }
-            setSignImmediatelyFlag(e.target.checked);
-          }}
-          className="h-4 w-4 rounded-md p-2"
-        />
-      </div>
+  const Checkboxes = () => {
+    const currentContract = useCurrentContract();
 
-      {state.currentContract &&
-        state.contracts[state.currentContract]?.threshold.toNumber() <= 1 && (
-          <div className="md-2 flex w-full items-center space-x-4">
-            <label className="font-medium text-white">
-              Resolve immediately:
-            </label>
-            <Checkbox
-              disabled={!signImmediatelyFlag}
-              checked={resolveImmediatelyFlag}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+    return (
+      <>
+        <div className="md-2 flex w-full items-center space-x-4 pt-8">
+          <label className="font-medium text-white">Sign immediately:</label>
+          <Checkbox
+            name="signImmediatelyFlag"
+            type="checkbox"
+            checked={signImmediatelyFlag}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              if (!e.target.checked) {
                 setResolveImmediatelyFlag(e.target.checked);
-              }}
-              name="resolveImmediatelyFlag"
-              type="checkbox"
-              className="h-4 w-4 rounded-md p-2"
-            />
-          </div>
-        )}
-    </>
-  );
+              }
+              setSignImmediatelyFlag(e.target.checked);
+            }}
+            className="h-4 w-4 rounded-md p-2"
+          />
+        </div>
+
+        {/* TODO: get currentContract from outside state and Router */}
+        {currentContract &&
+          contracts[currentContract]?.threshold.toNumber() <= 1 && (
+            <div className="md-2 flex w-full items-center space-x-4">
+              <label className="font-medium text-white">
+                Resolve immediately:
+              </label>
+              <Checkbox
+                disabled={!signImmediatelyFlag}
+                checked={resolveImmediatelyFlag}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setResolveImmediatelyFlag(e.target.checked);
+                }}
+                name="resolveImmediatelyFlag"
+                type="checkbox"
+                className="h-4 w-4 rounded-md p-2"
+              />
+            </div>
+          )}
+      </>
+    );
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 top-12 z-50 flex items-center justify-center bg-black/30">
@@ -553,10 +564,10 @@ const PoeModal = () => {
                     <p className="self-start text-sm text-zinc-400">
                       <Alias address={address ?? ""} /> will create the proposal
                     </p>
-                    {state.currentContract !== address && (
+                    {currentContract !== address && (
                       <p className="self-start text-sm text-yellow-500">
                         The signing wallet is different from{" "}
-                        <Alias address={state.currentContract ?? ""} />
+                        <Alias address={currentContract} />
                       </p>
                     )}
                     {!!dapp?.logo && (
@@ -700,7 +711,7 @@ const PoeModal = () => {
                           try {
                             const cc = await tezos.wallet.at(address);
                             const versioned = VersionedApi(
-                              state.contracts[address].version,
+                              contracts[address].version,
                               address
                             );
                             const submitTimeoutAndHash =
@@ -725,7 +736,7 @@ const PoeModal = () => {
 
                             if (
                               path?.endsWith("proposals") &&
-                              address === state.currentContract
+                              address === currentContract
                             ) {
                               dispatch({ type: "refreshProposals" });
                             }
@@ -772,13 +783,13 @@ const PoeModal = () => {
                     Message Signing Request from {message.appMetadata.name}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {message.appMetadata.name} requests message signing from{" "}
-                    {state.aliases[address ?? ""]}. The payload of the message
-                    is as follows:
+                    {`${message.appMetadata.name} requests message signing from
+                    ${addressBook[address ?? ""]}. The payload of the message
+                    is as follows:`}
                   </p>
                   <ul className="mt-2 space-y-1">
                     <li className="truncate">
-                      <span className="font-light">Payload:</span>{" "}
+                      <span className="font-light">{`Payload: `}</span>
                       {p2pClient.proofOfEvent.data?.payload}
                     </li>
                   </ul>
@@ -811,7 +822,7 @@ const PoeModal = () => {
 
                           const cc = await tezos.wallet.at(address);
                           const versioned = VersionedApi(
-                            state.contracts[address].version,
+                            contracts[address].version,
                             address
                           );
 
@@ -877,8 +888,8 @@ const PoeModal = () => {
                     Does not support message signing {"(TZIP27)"}
                   </h1>
                   <p className="mt-4 font-light text-zinc-200">
-                    {state.aliases[address ?? ""]} version is {version};
-                    however, version 0.3.4 or higher is required.
+                    {`${addressBook[address ?? ""]} version is ${version};
+                    however, version 0.3.4 or higher is required.`}
                   </p>
                   <div className="mt-8 flex justify-around">
                     <button

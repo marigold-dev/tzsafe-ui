@@ -1,7 +1,6 @@
 import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { OpKind } from "@taquito/taquito";
-import { tzip16 } from "@taquito/tzip16";
 import BigNumber from "bignumber.js";
 import { Field, FieldArray, FieldProps, Form, Formik } from "formik";
 import React, {
@@ -12,14 +11,14 @@ import React, {
   useState,
 } from "react";
 import { TZKT_API_URL, MODAL_TIMEOUT, THUMBNAIL_URL } from "../context/config";
+import { useContracts } from "../context/contracts";
 import { useAppDispatch, useAppState } from "../context/state";
 import { TezosToolkitContext } from "../context/tezos-toolkit";
-import fetchVersion from "../context/version";
 import { useWallet } from "../context/wallet";
+import useCurrentContract from "../hooks/useCurrentContract";
 import { ContractStorage } from "../types/app";
 import { mutezToTez, tezToMutez } from "../utils/tez";
 import { debounce, promiseWithTimeout } from "../utils/timeout";
-import { toStorage } from "../versioned/apis";
 import ErrorMessage from "./ErrorMessage";
 import { fa1_2Token } from "./FA1_2";
 import { fa2Token } from "./FA2Transfer";
@@ -96,6 +95,8 @@ function TopUp(props: {
   const [options, setOptions] = useState<option[]>([]);
   const fetchOffsetRef = useRef(0);
   const { userBalance } = useWallet();
+  const { addOrUpdateContract, contracts, fetchContract } = useContracts();
+  const currentContract = useCurrentContract();
 
   const fetchTokens = useCallback(
     (value: string, offset: number) =>
@@ -124,7 +125,7 @@ function TopUp(props: {
 
         return Promise.resolve(v);
       }),
-    [state.currentContract]
+    [userAddress]
   );
 
   useEffect(() => {
@@ -147,8 +148,6 @@ function TopUp(props: {
     amount: string;
     tokens: formToken[];
   }) {
-    if (!state.currentContract) return;
-
     const { fa2, fa1_2 } = tokens.reduce<{
       fa2: { [k: string]: formToken[] };
       fa1_2: { [k: string]: formToken[] };
@@ -184,7 +183,7 @@ function TopUp(props: {
           `{ Pair "${userAddress}" { ${tokens
             .map(
               ({ tokenId, amount, token }) =>
-                `Pair "${state.currentContract}" (Pair ${tokenId} ${BigNumber(
+                `Pair "${currentContract}" (Pair ${tokenId} ${BigNumber(
                   amount ?? 0
                 )
                   .multipliedBy(
@@ -213,7 +212,7 @@ function TopUp(props: {
             ...contract.methods
               .transfer(
                 userAddress,
-                state.currentContract,
+                currentContract,
                 BigNumber(formToken.amount ?? 0)
                   .multipliedBy(
                     BigNumber(10).pow(
@@ -233,7 +232,7 @@ function TopUp(props: {
         ? ([
             {
               kind: OpKind.TRANSACTION,
-              to: state.currentContract,
+              to: currentContract,
               amount: tezToMutez(Number(amount)),
               mutez: true,
             },
@@ -278,29 +277,9 @@ function TopUp(props: {
         setLoading(true);
         try {
           await transfer(values);
-          const c = await tezos.wallet.at(props.address, tzip16);
-          const balance = await tezos.tz.getBalance(props.address);
-          const cs: ContractStorage = await c.storage();
-          const version = await fetchVersion(c);
-
-          const storage = toStorage(version, cs, balance);
-
-          if (!!state.contracts[props.address]) {
-            dispatch({
-              type: "updateContract",
-              payload: {
-                address: props.address,
-                contract: toStorage(version, cs, balance),
-              },
-            });
-          } else {
-            storage.address = props.address;
-
-            dispatch({
-              type: "setCurrentStorage",
-              payload: storage as ContractStorage & { address: string },
-            });
-          }
+          fetchContract(props.address).then(storage =>
+            addOrUpdateContract(props.address, storage)
+          );
 
           setResult(true);
         } catch (e) {
@@ -309,7 +288,7 @@ function TopUp(props: {
         }
         setLoading(false);
         setTimeout(() => {
-          props.closeModal(state.contracts[props.address]);
+          props.closeModal(contracts[props.address]);
         }, MODAL_TIMEOUT);
       }}
     >

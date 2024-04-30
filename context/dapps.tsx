@@ -14,6 +14,7 @@ type P2PContextType = {
   getDappsByContract(
     contractAddress: string
   ): { [appUrl: string]: P2pData } | undefined;
+  removeContractDapps(contractAddress: string): void;
 };
 
 type DappsActions =
@@ -28,7 +29,11 @@ type DappsActions =
       type: "REMOVE_DAPP";
       payload: { dappUrl: string; contractAddress: string };
     }
-  | { type: "LOAD_DAPPS"; payload: { dApps: ConnectedDapps } };
+  | { type: "LOAD_DAPPS"; payload: { dApps: ConnectedDapps } }
+  | {
+      type: "REMOVE_CONTRACT_DAPPS";
+      payload: { contractAddress: string };
+    };
 
 const P2PContext = createContext<P2PContextType>({
   client: new P2PClient({
@@ -39,6 +44,7 @@ const P2PContext = createContext<P2PContextType>({
   addDapp: () => {},
   removeDapp: () => {},
   getDappsByContract: () => ({}),
+  removeContractDapps: () => {},
 });
 
 const createP2PClientConnection = async () => {
@@ -97,6 +103,10 @@ const reducer = (state: ConnectedDapps, action: DappsActions) => {
         ...connectedDapps
       } = state;
       return { ...state, ...{ ...connectedDapps, othersApps } };
+    case "REMOVE_CONTRACT_DAPPS":
+      const { [action.payload.contractAddress]: deletedContract, ...others } =
+        state;
+      return { ...state, ...others };
     case "LOAD_DAPPS":
       return action.payload.dApps;
     default:
@@ -147,6 +157,15 @@ export const P2PProvider = ({ children }: { children: React.ReactNode }) => {
           });
         },
         getDappsByContract: contractAddress => state[contractAddress],
+        removeContractDapps: contractAddress => {
+          Object.values(state[contractAddress]).forEach(
+            async dapp => await removeDappConnection(dapp, client)
+          );
+          dispatch({
+            type: "REMOVE_CONTRACT_DAPPS",
+            payload: { contractAddress },
+          });
+        },
       }}
     >
       {children}

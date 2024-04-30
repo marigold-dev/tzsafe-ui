@@ -7,6 +7,7 @@ import Spinner from "../../components/Spinner";
 import Meta from "../../components/meta";
 import Modal from "../../components/modal";
 import ProposalSignForm from "../../components/proposalSignForm";
+import { useContracts } from "../../context/contracts";
 import {
   tezosState,
   action as globalAction,
@@ -143,7 +144,8 @@ async function getProposals(
   globalDispatch: Dispatch<globalAction>,
   dispatch: Dispatch<action>,
   state: state,
-  tezos: TezosToolkit
+  tezos: TezosToolkit,
+  addOrUpdateContract: any
 ) {
   if (!globalState.currentContract) return;
 
@@ -178,13 +180,10 @@ async function getProposals(
   if (globalState.contracts[globalState.currentContract ?? ""]) {
     const balance = await tezos.tz.getBalance(globalState.currentContract);
 
-    globalDispatch({
-      type: "updateContract",
-      payload: {
-        address: globalState.currentContract,
-        contract: toStorage(version, storage, balance),
-      },
-    });
+    addOrUpdateContract(
+      globalState.currentContract,
+      toStorage(version, storage, balance)
+    );
   }
 
   return proposals as proposals;
@@ -195,6 +194,7 @@ const Proposals = () => {
   const globalDispatch = useAppDispatch();
   const isOwner = useIsOwner();
   const walletTokens = useWalletTokens();
+  const { addOrUpdateContract } = useContracts();
 
   const { userAddress } = useWallet();
 
@@ -252,7 +252,8 @@ const Proposals = () => {
         globalDispatch,
         dispatch,
         state,
-        tezos
+        tezos,
+        addOrUpdateContract
       );
 
       if (!proposals) return;
@@ -288,7 +289,8 @@ const Proposals = () => {
         globalDispatch,
         dispatch,
         state,
-        tezos
+        tezos,
+        addOrUpdateContract
       );
 
       if (!proposals) return;
