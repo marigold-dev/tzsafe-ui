@@ -6,7 +6,6 @@ import type { AppProps } from "next/app";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import { useReducer, useEffect, useState } from "react";
-import Banner from "../components/Banner";
 import LoginModal from "../components/LoginModal";
 import PoeModal from "../components/PoeModal";
 import Sidebar from "../components/Sidebar";
@@ -241,14 +240,6 @@ export default function App({ Component, pageProps }: AppProps) {
               />
             )}
             <PoeModal />
-            <Banner>
-              <span className="font-light">Make sure the URL is </span>
-              {PREFERED_NETWORK === NetworkType.MAINNET
-                ? "tzsafe.marigold.dev"
-                : PREFERED_NETWORK === NetworkType.GHOSTNET
-                ? "ghostnet.tzsafe.marigold.dev"
-                : "a valid URL"}
-            </Banner>
             <NavBar />
 
             {isSidebarHidden ? null : (
@@ -259,11 +250,7 @@ export default function App({ Component, pageProps }: AppProps) {
               />
             )}
 
-            <div
-              className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"} ${
-                state.hasBanner ? "mt-12" : ""
-              }`}
-            >
+            <div className={`pb-28 pt-20 ${isSidebarHidden ? "" : "md:pl-72"}`}>
               <button
                 className="ml-4 mt-4 flex items-center space-x-2 text-zinc-300 md:hidden"
                 onClick={() => {
