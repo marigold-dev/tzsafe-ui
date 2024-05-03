@@ -30,9 +30,9 @@ const NavBar = (_: React.PropsWithChildren) => {
 
   return (
     <nav
-      className={`${menuOpen ? "h-auto" : "h-20"} fixed ${
-        state?.hasBanner ? "top-12" : "top-0"
-      } left-0 right-0 z-40 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
+      className={`${
+        menuOpen ? "h-auto" : "h-20"
+      } fixed left-0 right-0 top-0 z-40 flex w-full flex-col items-center border-b-4 border-zinc-500 bg-graybg md:flex-row`}
     >
       <div className="mx-auto w-full px-4">
         <div className="flex h-16 items-center justify-between">

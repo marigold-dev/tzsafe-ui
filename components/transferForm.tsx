@@ -546,9 +546,7 @@ function TransferForm(
                   id="top"
                 >
                   <div
-                    className={`sticky z-[5] ${
-                      state.hasBanner ? "top-36" : "top-24"
-                    } ${
+                    className={`sticky top-24 z-[5] ${
                       isMenuOpen
                         ? "w-full"
                         : "ml-auto h-12 w-full overflow-hidden"
