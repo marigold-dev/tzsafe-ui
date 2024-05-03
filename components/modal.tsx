@@ -11,9 +11,7 @@ function Modal(props: React.PropsWithChildren<{ opened: boolean }>) {
   return props.opened
     ? ReactDOM.createPortal(
         <div
-          className={`${
-            state.hasBanner ? "top-12 md:top-32" : "top-0 md:top-20"
-          } fixed bottom-0 left-0 right-0 z-50 flex grow items-center justify-center bg-black bg-slate-800 bg-opacity-70 md:left-72`}
+          className={`fixed bottom-0 left-0 right-0 top-0 z-50 flex grow items-center justify-center bg-black bg-slate-800 bg-opacity-70 md:left-72 md:top-20`}
         >
           <div
             className={
