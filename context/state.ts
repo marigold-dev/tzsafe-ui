@@ -30,7 +30,6 @@ type tezosState = {
   contracts: { [address: string]: contractStorage };
   aliases: { [address: string]: string };
   aliasTrie: Trie<string>;
-  hasBanner: boolean;
   delegatorAddresses: string[] | undefined;
   connectedDapps: {
     [address: string]: {
@@ -77,7 +76,6 @@ let emptyState = (): tezosState => {
     accountInfo: null,
     connection,
     aliasTrie: new Trie<string>(),
-    hasBanner: true,
     delegatorAddresses: undefined,
     connectedDapps: {},
     proposalRefresher: 0,
@@ -126,10 +124,6 @@ type action =
         aliases: { address: string; name: string }[];
         keepOld: boolean;
       };
-    }
-  | {
-      type: "setBanner";
-      payload: boolean;
     }
   | {
       type: "addDapp";
@@ -356,11 +350,7 @@ function reducer(state: tezosState, action: action): tezosState {
 
       return newState;
     }
-    case "setBanner":
-      return {
-        ...state,
-        hasBanner: action.payload,
-      };
+
     case "setDelegatorAddresses":
       return { ...state, delegatorAddresses: action.payload };
     case "refreshProposals":
