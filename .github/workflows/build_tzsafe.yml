@@ -136,6 +136,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            PUBLIC_RPC_URL=https://mainnet.tezos.marigold.dev/
+            PUBLIC_RPC_URL=https://mainnet.smartpy.io/
             PUBLIC_API_URL=https://api.tzkt.io
             PUBLIC_NETWORK_TYPE=mainnet
